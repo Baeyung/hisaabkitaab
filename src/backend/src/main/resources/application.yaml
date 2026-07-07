@@ -1,3 +1,24 @@
 spring:
   application:
-    name: demo
+    name: hisaabkitaab
+  datasource:
+    url: jdbc:postgresql://localhost:5432/hisaabkitaab
+    username: hkadmin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: hkadmin
+    password: admin
+    packages:
+      trust-all: true
