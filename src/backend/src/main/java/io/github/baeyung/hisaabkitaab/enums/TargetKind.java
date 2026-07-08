@@ -6,7 +6,7 @@ package io.github.baeyung.hisaabkitaab.enums;
 public enum TargetKind
 {
     CASH,
-    BANK,
+    BANK, // not supported in this release
     PARTY,
     STOCK
 }

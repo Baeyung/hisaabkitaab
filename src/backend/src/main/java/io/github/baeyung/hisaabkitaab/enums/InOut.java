@@ -7,5 +7,6 @@ public enum InOut
 {
     IN,
     OUT,
-    NONE
+    NONE,
+    UNKNOWN
 }
