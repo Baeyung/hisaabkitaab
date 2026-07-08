@@ -31,18 +31,15 @@ public class StoreItem
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
     @Column(nullable = false)
     private String name;
 
-    /** Unit of measure, e.g. meter / than / pc. */
     private String unit;
 
-    /** Prefilled sale price. */
     private BigDecimal salePrice;
 
-    /** Prefilled cost price. */
     private BigDecimal costPrice;
 }

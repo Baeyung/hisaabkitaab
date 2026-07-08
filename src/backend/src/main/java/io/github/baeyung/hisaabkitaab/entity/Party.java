@@ -29,7 +29,7 @@ public class Party
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "store_id",nullable = false)
     private Store store;
 
     @Column(nullable = false)

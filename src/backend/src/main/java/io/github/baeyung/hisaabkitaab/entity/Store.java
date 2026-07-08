@@ -29,7 +29,7 @@ public class Store
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "owner_user_id", nullable = false)
     private User owner;
 
     @Column(nullable = false)
