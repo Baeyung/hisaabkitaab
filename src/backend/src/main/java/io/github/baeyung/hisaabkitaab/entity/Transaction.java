@@ -41,7 +41,7 @@ public class Transaction
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
     @Enumerated(EnumType.STRING)
@@ -49,6 +49,7 @@ public class Transaction
     private TransactionEvent event;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "party_id")
     private Party party;
 
     private String bill;

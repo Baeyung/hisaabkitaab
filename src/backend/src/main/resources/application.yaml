@@ -10,15 +10,15 @@ spring:
     hibernate:
       ddl-auto: update
       naming:
-        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
-  activemq:
-    broker-url: tcp://localhost:61616
-    user: hkadmin
-    password: admin
-    packages:
-      trust-all: true
+#  activemq:
+#    broker-url: tcp://localhost:61616
+#    user: hkadmin
+#    password: admin
+#    packages:
+#      trust-all: true

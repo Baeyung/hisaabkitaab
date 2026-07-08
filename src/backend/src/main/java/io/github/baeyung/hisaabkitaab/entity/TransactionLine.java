@@ -1,14 +1,11 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
-import java.math.BigDecimal;
-import java.util.Map;
-
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
+import io.github.baeyung.hisaabkitaab.converters.ValueMetaDataConverter;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
+import io.github.baeyung.hisaabkitaab.models.ValueMetaData;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -25,6 +22,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "transaction_lines")
 @Getter
@@ -39,7 +38,7 @@ public class TransactionLine
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "transaction_id", nullable = false)
     private Transaction transaction;
 
     @Enumerated(EnumType.STRING)
@@ -47,6 +46,7 @@ public class TransactionLine
     private TargetKind targetKind;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "party_id")
     private Party party;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -56,8 +56,9 @@ public class TransactionLine
     @Column(nullable = false)
     private InOut inOut;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> valueMetaData;
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = ValueMetaDataConverter.class)
+    private ValueMetaData valueMetaData;
 
     private BigDecimal quantity;
 
