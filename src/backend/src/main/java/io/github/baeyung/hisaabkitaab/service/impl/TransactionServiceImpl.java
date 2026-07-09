@@ -32,18 +32,26 @@ public class TransactionServiceImpl implements TransactionService
     @Override
     public TransactionResponse create(TransactionRequest request)
     {
-        Transaction transaction = Transaction.builder()
-                .store(findStore(request.getStoreId()))
-                .event(request.getEvent())
-                .party(findParty(request.getPartyId()))
-                .bill(request.getBill())
-                .eventDate(request.getEventDate())
-                .entryDate(request.getEntryDate())
-                .description(request.getDescription())
-                .build();
-
-        return toResponse(transactionRepository.save(transaction));
+        return toResponse(createEntity(request));
     }
+
+    @Override
+    public Transaction createEntity(TransactionRequest request)
+    {
+        Transaction transaction = Transaction
+            .builder()
+            .store(findStore(request.getStoreId()))
+            .event(request.getEvent())
+            .party(findParty(request.getPartyId()))
+            .bill(request.getBill())
+            .eventDate(request.getEventDate())
+            .entryDate(request.getEntryDate())
+            .description(request.getDescription())
+            .build();
+
+        return transactionRepository.save(transaction);
+    }
+
 
     @Override
     @Transactional(readOnly = true)
