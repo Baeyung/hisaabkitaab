@@ -81,7 +81,8 @@ public class StoreItemServiceImpl implements StoreItemService
         storeItemRepository.deleteById(id);
     }
 
-    private StoreItem findEntity(String id)
+    @Override
+    public StoreItem findEntity(String id)
     {
         return storeItemRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("StoreItem", id));

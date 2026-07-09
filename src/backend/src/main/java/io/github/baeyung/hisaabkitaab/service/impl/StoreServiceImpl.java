@@ -47,6 +47,20 @@ public class StoreServiceImpl implements StoreService
         return toResponse(findEntity(id));
     }
 
+    @Transactional
+    @Override
+    public Store findFirstByOwnerId(String ownerId)
+    {
+        return storeRepository.findByOwnerId(ownerId).stream().findFirst().orElse(null);
+    }
+
+    @Transactional
+    @Override
+    public Store findFirstByOwnerEmail(String ownerId)
+    {
+        return storeRepository.findAllByOwnerEmail(ownerId).stream().findFirst().orElse(null);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<StoreResponse> getAll(String ownerId)
