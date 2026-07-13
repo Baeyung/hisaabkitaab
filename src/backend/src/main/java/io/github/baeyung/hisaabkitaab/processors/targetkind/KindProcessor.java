@@ -8,6 +8,8 @@ import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 
+import java.math.BigDecimal;
+
 public interface KindProcessor
 {
     TargetKind getTargetKind();
@@ -28,6 +30,8 @@ public interface KindProcessor
             InOut inOut
     )
     {
+        BigDecimal quantity = (payload.getItem() != null) ? payload.getItem().getQuantity() : null;
+
         return TransactionLine
                 .builder()
                 .inOut(inOut)
@@ -37,7 +41,7 @@ public interface KindProcessor
                 .targetKind(getTargetKind())
                 .unit("gaz")
                 .party(transaction.getParty())
-                .quantity(payload.getItem().getQuantity())
+                .quantity(quantity)
                 .build();
     }
 

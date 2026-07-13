@@ -2,10 +2,12 @@ package io.github.baeyung.hisaabkitaab.service.impl;
 
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
 import io.github.baeyung.hisaabkitaab.dto.transaction.TransactionRequest;
+import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
+import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.processors.targetkind.KindProcessor;
 import io.github.baeyung.hisaabkitaab.processors.transactionevent.EventProcessor;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
@@ -71,25 +73,32 @@ public class EventService
         this.storeItemService = storeItemService;
     }
 
-    public void publishEvent(EventRequest eventRequest, String ownerId)
+    public void publishEvent(EventRequest eventRequest, String ownerIdentifier)
     {
         EventProcessor processor = this.eventProcessorMap.get(eventRequest.getTransactionEvent());
 
         if (processor != null)
         {
-            // create a transaction post it and send aagay
+            Store store = storeService.findFirstByOwnerIdentifier(ownerIdentifier);
+
+            if (store == null)
+            {
+                throw ResourceNotFoundException.forEntity("Store for owner", ownerIdentifier);
+            }
+
             TransactionRequest transactionRequest = TransactionRequest
                     .builder()
+                    .event(eventRequest.getTransactionEvent())
                     .bill(eventRequest.getBillNumber())
                     .description(eventRequest.getDescription())
                     .entryDate(LocalDate.now())
                     .eventDate(eventRequest.getBillDate())
-                    .partyId(eventRequest.getParty().getPartyId())
-                    .storeId(storeService.findFirstByOwnerEmail(ownerId).getId())
+                    .partyId(resolvePartyId(eventRequest))
+                    .storeId(store.getId())
                     .build();
 
             Transaction transaction = transactionService.createEntity(transactionRequest);
-            StoreItem item = storeItemService.findEntity(eventRequest.getItem().getItemId());
+            StoreItem item = resolveItem(eventRequest);
 
 
             // post to kind processors
@@ -105,5 +114,21 @@ public class EventService
                 }
             });
         }
+    }
+
+    private String resolvePartyId(EventRequest eventRequest)
+    {
+        EventRequest.Party party = eventRequest.getParty();
+        return (party != null) ? party.getPartyId() : null;
+    }
+
+    private StoreItem resolveItem(EventRequest eventRequest)
+    {
+        EventRequest.Item item = eventRequest.getItem();
+        if (item == null || item.getItemId() == null)
+        {
+            return null;
+        }
+        return storeItemService.findEntity(item.getItemId());
     }
 }
