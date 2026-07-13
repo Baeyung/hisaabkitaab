@@ -4,10 +4,13 @@ import java.util.List;
 
 import io.github.baeyung.hisaabkitaab.dto.transactionline.TransactionLineRequest;
 import io.github.baeyung.hisaabkitaab.dto.transactionline.TransactionLineResponse;
+import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 
 public interface TransactionLineService
 {
     TransactionLineResponse create(TransactionLineRequest request);
+
+    TransactionLine create(TransactionLine request);
 
     TransactionLineResponse getById(String id);
 

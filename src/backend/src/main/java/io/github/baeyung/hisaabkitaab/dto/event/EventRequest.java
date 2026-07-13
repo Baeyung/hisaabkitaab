@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -14,8 +15,6 @@ public class EventRequest
 {
     @NotNull
     TransactionEvent transactionEvent;
-    @NotNull
-    String partyId;
     Double cashAmount;
     Double billAmount;
     String description;
@@ -32,11 +31,13 @@ public class EventRequest
         private String partyId;
         private String name;
     }
+
     @Getter
     @Setter
     @AllArgsConstructor
     public static class Item {
         private String itemId;
         private String name;
+        private BigDecimal quantity;
     }
 }

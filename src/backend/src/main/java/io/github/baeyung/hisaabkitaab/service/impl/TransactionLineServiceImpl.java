@@ -50,6 +50,12 @@ public class TransactionLineServiceImpl implements TransactionLineService
     }
 
     @Override
+    public TransactionLine create(TransactionLine request)
+    {
+        return transactionLineRepository.save(request);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public TransactionLineResponse getById(String id)
     {
