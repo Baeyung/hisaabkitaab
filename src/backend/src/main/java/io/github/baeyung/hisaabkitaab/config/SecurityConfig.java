@@ -1,16 +1,20 @@
 package io.github.baeyung.hisaabkitaab.config;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Placeholder security configuration: permits all requests so the CRUD REST API is
- * reachable before real authentication/authorization is implemented. Replace with
- * proper auth (e.g. JWT/session login backed by {@code UserRepository}) before this
- * app is exposed beyond local development.
+ * HTTP Basic auth backed by {@code CustomUserDetailsService}, which resolves the
+ * username against either a user's contact number or email. Sessions are stateless
+ * since Basic auth re-sends credentials on every request. Only signup is public;
+ * {@code /api/users} is an authenticated, admin-style CRUD API.
  */
 @Configuration
 public class SecurityConfig
@@ -20,7 +24,11 @@ public class SecurityConfig
     {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                        .anyRequest().authenticated())
+                .httpBasic(withDefaults());
 
         return http.build();
     }
