@@ -40,16 +40,7 @@ public class PartyProcessor implements KindProcessor
             StoreItem storeItem
     )
     {
-        PartyAmountCalculations partyAmountCalculations = getPartyAmountCalculations(payload, transactionEvent);
-
-        if (partyAmountCalculations == null)
-        {
-            partyAmountCalculations = PartyAmountCalculations
-                    .builder()
-                    .inOut(inOut)
-                    .amount(payload.getCashAmount())
-                    .build();
-        }
+        PartyAmountCalculations partyAmountCalculations = getPartyAmountCalculations(payload, transactionEvent, inOut);
 
         TransactionLine transactionLine = getTransactionLine(
                 payload,
@@ -64,51 +55,60 @@ public class PartyProcessor implements KindProcessor
 
     private PartyAmountCalculations getPartyAmountCalculations(
             EventRequest payload,
-            TransactionEvent transactionEvent
+            TransactionEvent transactionEvent,
+            InOut givenInOut
     )
     {
-        if (TransactionEvent.SALE.name().equals(transactionEvent.name()))
+        if (givenInOut == null || InOut.UNKNOWN.name().equals(givenInOut.name()))
         {
-            double amount = payload.getCashAmount() - payload.getBillAmount();
-            InOut inOut;
-            if (amount < 0.0d)
+            if (TransactionEvent.SALE.name().equals(transactionEvent.name()))
             {
-                inOut = InOut.IN;
-                amount = amount * -1.0d;
-            }
-            else
-            {
-                inOut = InOut.OUT;
+                double amount = payload.getCashAmount() - payload.getBillAmount();
+                InOut inOut;
+                if (amount < 0.0d)
+                {
+                    inOut = InOut.IN;
+                    amount = amount * -1.0d;
+                }
+                else
+                {
+                    inOut = InOut.OUT;
+                }
+
+                return PartyAmountCalculations
+                        .builder()
+                        .amount(amount)
+                        .inOut(inOut)
+                        .build();
             }
 
-            return PartyAmountCalculations
-                    .builder()
-                    .amount(amount)
-                    .inOut(inOut)
-                    .build();
+            if (TransactionEvent.PURCHASE.name().equals(transactionEvent.name()))
+            {
+                double amount = payload.getBillAmount() - payload.getCashAmount();
+                InOut inOut;
+                if (amount < 0.0d)
+                {
+                    inOut = InOut.IN;
+                    amount = amount * -1.0d;
+                }
+                else
+                {
+                    inOut = InOut.OUT;
+                }
+
+                return PartyAmountCalculations
+                        .builder()
+                        .amount(amount)
+                        .inOut(inOut)
+                        .build();
+            }
         }
 
-        if (TransactionEvent.PURCHASE.name().equals(transactionEvent.name()))
-        {
-            double amount = payload.getBillAmount() - payload.getCashAmount();
-            InOut inOut;
-            if (amount < 0.0d)
-            {
-                inOut = InOut.IN;
-                amount = amount * -1.0d;
-            }
-            else
-            {
-                inOut = InOut.OUT;
-            }
-
-            return PartyAmountCalculations
-                    .builder()
-                    .amount(amount)
-                    .inOut(inOut)
-                    .build();
-        }
-        return null;
+        return PartyAmountCalculations
+                .builder()
+                .inOut(givenInOut)
+                .amount(payload.getCashAmount())
+                .build();
     }
 
     @Getter

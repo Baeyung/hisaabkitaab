@@ -14,7 +14,7 @@ public interface StoreService
 
     Store findFirstByOwnerId(String ownerId);
 
-    Store findFirstByOwnerEmail(String ownerId);
+    Store findFirstByOwnerIdentifier(String identifier);
 
     List<StoreResponse> getAll(String ownerId);
 

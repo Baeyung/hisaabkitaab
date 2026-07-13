@@ -56,9 +56,12 @@ public class StoreServiceImpl implements StoreService
 
     @Transactional
     @Override
-    public Store findFirstByOwnerEmail(String ownerId)
+    public Store findFirstByOwnerIdentifier(String identifier)
     {
-        return storeRepository.findAllByOwnerEmail(ownerId).stream().findFirst().orElse(null);
+        // A user can log in with either their email or contact number, so try both.
+        return storeRepository.findAllByOwnerEmail(identifier).stream().findFirst()
+                .or(() -> storeRepository.findAllByOwnerContactNumber(identifier).stream().findFirst())
+                .orElse(null);
     }
 
     @Override
