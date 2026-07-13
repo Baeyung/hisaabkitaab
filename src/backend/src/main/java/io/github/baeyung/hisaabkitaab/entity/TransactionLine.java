@@ -1,11 +1,8 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
-import io.github.baeyung.hisaabkitaab.converters.ValueMetaDataConverter;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
-import io.github.baeyung.hisaabkitaab.models.ValueMetaData;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -56,9 +53,9 @@ public class TransactionLine
     @Column(nullable = false)
     private InOut inOut;
 
-    @Column(columnDefinition = "TEXT")
-    @Convert(converter = ValueMetaDataConverter.class)
-    private ValueMetaData valueMetaData;
+//    @Column(columnDefinition = "TEXT")
+//    @Convert(converter = ValueMetaDataConverter.class)
+    private Double value;
 
     private BigDecimal quantity;
 

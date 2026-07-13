@@ -84,7 +84,7 @@ public class EventService
                     .description(eventRequest.getDescription())
                     .entryDate(LocalDate.now())
                     .eventDate(eventRequest.getBillDate())
-                    .partyId(eventRequest.getPartyId())
+                    .partyId(eventRequest.getParty().getPartyId())
                     .storeId(storeService.findFirstByOwnerEmail(ownerId).getId())
                     .build();
 
