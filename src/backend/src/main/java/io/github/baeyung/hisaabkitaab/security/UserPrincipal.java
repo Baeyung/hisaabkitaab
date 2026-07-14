@@ -19,11 +19,14 @@ public class UserPrincipal implements UserDetails
 
     private final String password;
 
+    private final User user;
+
     public UserPrincipal(User user)
     {
         this.id = user.getId();
         this.username = user.getEmail();
         this.password = user.getPasswordHash();
+        this.user = user;
     }
 
     @Override
