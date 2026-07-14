@@ -1,8 +1,7 @@
 package io.github.baeyung.hisaabkitaab.controller;
 
 import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
-import io.github.baeyung.hisaabkitaab.dto.user.UserRequest;
-import io.github.baeyung.hisaabkitaab.dto.user.UserResponse;
+import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,15 +19,8 @@ public class AuthController
     private final UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponse> signup(@Valid @RequestBody SignupRequest request)
+    public ResponseEntity<User> signup(@Valid @RequestBody SignupRequest request)
     {
-        UserRequest userRequest = new UserRequest();
-        userRequest.setName(request.getName());
-        userRequest.setContactNumber(request.getContactNumber());
-        userRequest.setEmail(request.getEmail());
-        userRequest.setPassword(request.getPassword());
-
-        UserResponse response = userService.create(userRequest);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(userService.create(request));
     }
 }

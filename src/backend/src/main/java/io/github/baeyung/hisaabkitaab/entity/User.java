@@ -1,5 +1,6 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,6 +29,7 @@ public class User
     @Column(nullable = false, unique = true)
     private String contactNumber;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String passwordHash;
 
