@@ -1,7 +1,7 @@
 package io.github.baeyung.hisaabkitaab.service.impl;
 
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
-import io.github.baeyung.hisaabkitaab.dto.transaction.TransactionRequest;
+import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
@@ -10,11 +10,13 @@ import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.processors.targetkind.KindProcessor;
 import io.github.baeyung.hisaabkitaab.processors.transactionevent.EventProcessor;
+import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
 import io.github.baeyung.hisaabkitaab.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,6 +32,7 @@ public class EventService
     private final StoreService storeService;
     private final TransactionService transactionService;
     private final StoreItemService storeItemService;
+    private final PartyService partyService;
 
     @Autowired
     public EventService(
@@ -37,7 +40,8 @@ public class EventService
             List<KindProcessor> kindProcessors,
             StoreService storeService,
             TransactionService transactionService,
-            StoreItemService storeItemService
+            StoreItemService storeItemService,
+            PartyService partyService
     )
     {
         this.eventProcessorMap = eventProcessors
@@ -71,6 +75,7 @@ public class EventService
         this.storeService = storeService;
         this.transactionService = transactionService;
         this.storeItemService = storeItemService;
+        this.partyService = partyService;
     }
 
     public void publishEvent(EventRequest eventRequest, String ownerIdentifier)
@@ -86,18 +91,19 @@ public class EventService
                 throw ResourceNotFoundException.forEntity("Store for owner", ownerIdentifier);
             }
 
-            TransactionRequest transactionRequest = TransactionRequest
-                    .builder()
-                    .event(eventRequest.getTransactionEvent())
-                    .bill(eventRequest.getBillNumber())
-                    .description(eventRequest.getDescription())
-                    .entryDate(LocalDate.now())
-                    .eventDate(eventRequest.getBillDate())
-                    .partyId(resolvePartyId(eventRequest))
-                    .storeId(store.getId())
-                    .build();
+            Transaction transaction = transactionService.create(
+                    Transaction
+                            .builder()
+                            .store(store)
+                            .event(eventRequest.getTransactionEvent())
+                            .party(resolveParty(eventRequest))
+                            .bill(eventRequest.getBillNumber())
+                            .eventDate(eventRequest.getBillDate())
+                            .entryDate(LocalDate.now())
+                            .description(eventRequest.getDescription())
+                            .build()
+            );
 
-            Transaction transaction = transactionService.createEntity(transactionRequest);
             StoreItem item = resolveItem(eventRequest);
 
 
@@ -116,10 +122,15 @@ public class EventService
         }
     }
 
-    private String resolvePartyId(EventRequest eventRequest)
+    private Party resolveParty(EventRequest eventRequest)
     {
         EventRequest.Party party = eventRequest.getParty();
-        return (party != null) ? party.getPartyId() : null;
+        if (party == null || !StringUtils.hasText(party.getPartyId()))
+        {
+            return null;
+        }
+
+        return partyService.findEntity(party.getPartyId());
     }
 
     private StoreItem resolveItem(EventRequest eventRequest)
