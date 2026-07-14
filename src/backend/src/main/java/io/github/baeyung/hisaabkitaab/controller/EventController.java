@@ -25,7 +25,10 @@ public class EventController
     }
 
     @PostMapping
-    public ResponseEntity<?> publishEvent(@Valid @RequestBody EventRequest event, Principal principal)
+    public ResponseEntity<EventRequest> publishEvent(
+            @Valid @RequestBody EventRequest event,
+            Principal principal
+    )
     {
         this.eventService.publishEvent(event, principal.getName());
         return ResponseEntity.ok(event);
