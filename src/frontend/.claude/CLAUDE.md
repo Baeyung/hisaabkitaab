@@ -55,3 +55,6 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
 - Use the `inject()` function instead of constructor injection
+
+## Domain Knowledge (what this app is about?)
+- APPLICATION_DOMAIN.md contains the design domain that is what is almost required from the app
