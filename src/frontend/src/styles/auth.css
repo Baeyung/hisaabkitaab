@@ -241,6 +241,64 @@
   color: var(--kg-out);
 }
 
+/* generic vertical stack (forgot-password body, etc.) */
+.auth__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.auth__body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--kg-muted);
+}
+
+/* the reset-contact callout — the phone number as the hero of this screen */
+.auth__callout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 18px;
+  text-align: center;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 14px;
+}
+.auth__callout .lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kg-faint);
+}
+.auth__callout .tel {
+  font-size: 23px;
+  font-weight: 700;
+  color: var(--kg-ink);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  direction: ltr;
+}
+.auth__hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--kg-faint);
+  text-align: center;
+}
+
+/* small inline link (forgot-password on the login form) */
+.auth__link-sm {
+  align-self: flex-end;
+  margin-top: -6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-brand);
+  text-decoration: none;
+}
+.auth__link-sm:hover {
+  text-decoration: underline;
+}
+
 /* row-level error (invalid credentials / account exists) */
 .auth__alert {
   margin: 2px 0 0;
@@ -257,6 +315,10 @@
 .auth__cta {
   height: 54px;
   margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 0;
   border-radius: 14px;
   font-family: inherit;
@@ -264,6 +326,7 @@
   font-weight: 700;
   color: #fff;
   background: var(--kg-brand);
+  text-decoration: none;
   cursor: pointer;
   box-shadow: var(--kg-shadow-brand);
   transition: filter 0.15s ease, transform 0.05s ease;

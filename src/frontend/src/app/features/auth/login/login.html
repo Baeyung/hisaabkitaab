@@ -28,6 +28,8 @@
       />
     </div>
 
+    <a class="auth__link-sm" routerLink="/forgot-password">{{ locale.t('auth.login.forgot') }}</a>
+
     @if (errorKey(); as key) {
       <p role="alert" class="auth__alert">{{ locale.t(key) }}</p>
     }
