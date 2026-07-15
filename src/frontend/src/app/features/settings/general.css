@@ -2,7 +2,7 @@
    so it doesn't lean on the auth stylesheet. Namespaced set / plate / sec / up. */
 
 .set {
-  max-width: 980px;
+  max-width: 1180px;
   padding: clamp(20px, 3vw, 34px);
 }
 
