@@ -1,0 +1,179 @@
+<section class="set">
+  <header class="set__head">
+    <div class="set__titles">
+      <h1 class="set__title">{{ locale.t('nav.settings.general') }}</h1>
+      <p class="set__sub">{{ locale.t('settings.general.subtitle') }}</p>
+    </div>
+
+    @if (store()) {
+      <button
+        type="button"
+        class="set__add"
+        disabled
+        [attr.title]="locale.t('settings.general.addStoreSoon')"
+        [attr.aria-label]="locale.t('settings.general.addStore') + ' — ' + locale.t('settings.general.addStoreSoon')"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        {{ locale.t('settings.general.addStore') }}
+      </button>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="set__card set__skel" aria-hidden="true">
+      <div class="skel skel--plate"></div>
+      <div class="skel skel--line"></div>
+      <div class="skel skel--line"></div>
+      <div class="skel skel--line skel--short"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="set__card set__stateblock">
+      <p role="alert" class="set__alert">{{ locale.t('settings.general.loadError') }}</p>
+      <button type="button" class="btn btn--ghost" (click)="load()">
+        {{ locale.t('settings.general.retry') }}
+      </button>
+    </div>
+  } @else {
+    <form class="set__card" (submit)="$event.preventDefault(); submit()">
+      <!-- Nameplate: the store's mark (logo, else live initial) + identity -->
+      <div class="plate">
+        <div class="plate__mark" [class.plate__mark--img]="model().logoUri">
+          @if (model().logoUri) {
+            <img [src]="model().logoUri" alt="" />
+          } @else if (initial()) {
+            <span aria-hidden="true">{{ initial() }}</span>
+          } @else {
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <path d="M4 9l1-4h14l1 4M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M4 9h16M9 20v-6h6v6" />
+            </svg>
+          }
+        </div>
+        <div class="plate__meta">
+          <div class="plate__name">{{ model().name.trim() || locale.t('settings.general.newStore') }}</div>
+          <div class="plate__hint">{{ locale.t('settings.general.nameplateHint') }}</div>
+        </div>
+      </div>
+
+      @if (!store()) {
+        <div class="setup">
+          <h2 class="setup__title">{{ locale.t('settings.general.setup.title') }}</h2>
+          <p class="setup__help">{{ locale.t('settings.general.setup.help') }}</p>
+        </div>
+      }
+
+      <!-- Details -->
+      <fieldset class="sec">
+        <legend class="sec__legend">{{ locale.t('settings.general.section.details') }}</legend>
+
+        <div class="fld">
+          <label class="fld__label" for="store-name">{{ locale.t('settings.general.name') }}</label>
+          <input
+            id="store-name"
+            class="fld__input"
+            [formField]="storeForm.name"
+            type="text"
+            autocomplete="organization"
+          />
+          @if (storeForm.name().touched() && storeForm.name().invalid()) {
+            <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+          }
+        </div>
+
+        <div class="fld">
+          <label class="fld__label" for="store-address">{{ locale.t('settings.general.address') }}</label>
+          <input
+            id="store-address"
+            class="fld__input"
+            [formField]="storeForm.address"
+            type="text"
+            autocomplete="street-address"
+          />
+        </div>
+
+        <div class="fld">
+          <label class="fld__label" for="store-contact">{{ locale.t('settings.general.contact') }}</label>
+          <input
+            id="store-contact"
+            class="fld__input"
+            [formField]="storeForm.contact"
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel"
+          />
+        </div>
+      </fieldset>
+
+      <!-- Branding -->
+      <fieldset class="sec">
+        <legend class="sec__legend">{{ locale.t('settings.general.section.branding') }}</legend>
+        <p class="sec__help">{{ locale.t('settings.general.branding.help') }}</p>
+
+        <div class="media">
+          @for (m of mediaFields; track m.field) {
+            <div class="media__item">
+              <span class="fld__label" [id]="m.field + '-label'">{{ locale.t(m.label) }}</span>
+              <div class="up">
+                @if (model()[m.field]) {
+                  <img class="up__preview" [src]="model()[m.field]" alt="" />
+                  <div class="up__actions">
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="picker.click()">
+                      {{ locale.t('settings.general.replace') }}
+                    </button>
+                    <button type="button" class="btn btn--text btn--sm" (click)="removeImage(m.field)">
+                      {{ locale.t('settings.general.remove') }}
+                    </button>
+                  </div>
+                } @else {
+                  <button
+                    type="button"
+                    class="up__drop"
+                    [attr.aria-labelledby]="m.field + '-label'"
+                    (click)="picker.click()"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                      <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
+                    </svg>
+                    <span>{{ locale.t('settings.general.upload') }}</span>
+                  </button>
+                }
+                <input
+                  #picker
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  (change)="onFile($event, m.field)"
+                />
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (imageErrorKey(); as key) {
+          <span role="alert" class="fld__err">{{ locale.t(key) }}</span>
+        }
+      </fieldset>
+
+      @if (errorKey(); as key) {
+        <p role="alert" class="set__alert">{{ locale.t(key) }}</p>
+      }
+
+      <div class="set__foot">
+        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          {{ saving()
+            ? locale.t('settings.general.saving')
+            : (store() ? locale.t('settings.general.save') : locale.t('settings.general.create')) }}
+        </button>
+        <span class="set__status" role="status" aria-live="polite">
+          @if (savedKey(); as key) {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path d="M4 12l5 5L20 6" />
+            </svg>
+            {{ locale.t(key) }}
+          }
+        </span>
+      </div>
+    </form>
+  }
+</section>

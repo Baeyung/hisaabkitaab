@@ -44,7 +44,11 @@ public class Store
 
     private String contact;
 
+    // Stored as a base64 data URI for now (see docs/tickets/HK-store-media-object-storage.md);
+    // needs `text`, not the default varchar(255), to hold an inlined image.
+    @Column(columnDefinition = "text")
     private String logoUri;
 
+    @Column(columnDefinition = "text")
     private String watermarkUri;
 }
