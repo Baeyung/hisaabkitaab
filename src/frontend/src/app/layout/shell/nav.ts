@@ -46,7 +46,8 @@ export const NAV: NavItem[] = [
     icon: 'settings',
     children: [
       { key: 'nav.settings.general', path: '/settings/general' },
-      // ponytail: locked flag is visual-only until store-creation state exists
+      // `locked` = gated behind having a store; the shell resolves it live
+      // against StoreService.hasStore() (see Shell.isLocked).
       { key: 'nav.settings.items', path: '/settings/items', locked: true },
       { key: 'nav.settings.party', path: '/settings/party', locked: true },
     ],

@@ -2,8 +2,7 @@
    so it doesn't lean on the auth stylesheet. Namespaced set / plate / sec / up. */
 
 .set {
-  max-width: 680px;
-  margin-inline: auto;
+  max-width: 720px;
   padding: clamp(20px, 3vw, 34px);
 }
 
@@ -44,16 +43,11 @@
   cursor: not-allowed;
 }
 
-/* ── the card ──────────────────────────────────────────────────────── */
+/* ── body: content sits flat on the page (no box-in-box) ───────────── */
 .set__card {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  padding: clamp(20px, 3vw, 30px);
-  background: var(--kg-surface);
-  border: 1px solid var(--kg-line);
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(35, 32, 28, 0.07);
 }
 
 /* ── nameplate (signature): mark + identity ────────────────────────── */

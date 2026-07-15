@@ -62,7 +62,7 @@
           <div class="subnav" [class.expanded]="isGroupOpen(item.key)" [attr.aria-hidden]="!isGroupOpen(item.key)">
             <div class="subnav-inner">
               @for (child of item.children; track child.key) {
-                @if (child.locked) {
+                @if (isLocked(child)) {
                   <button
                     type="button"
                     class="nav-item nav-sub locked"
