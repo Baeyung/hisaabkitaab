@@ -64,53 +64,61 @@
       }
 
       <!-- Details -->
-      <fieldset class="sec">
-        <legend class="sec__legend">{{ locale.t('settings.general.section.details') }}</legend>
-
-        <div class="fld">
-          <label class="fld__label" for="store-name">{{ locale.t('settings.general.name') }}</label>
-          <input
-            id="store-name"
-            class="fld__input"
-            [formField]="storeForm.name"
-            type="text"
-            autocomplete="organization"
-          />
-          @if (storeForm.name().touched() && storeForm.name().invalid()) {
-            <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
-          }
+      <section class="sec" aria-labelledby="sec-details">
+        <div class="sec__intro">
+          <h2 class="sec__eyebrow" id="sec-details">{{ locale.t('settings.general.section.details') }}</h2>
+          <p class="sec__desc">{{ locale.t('settings.general.details.help') }}</p>
         </div>
 
-        <div class="fld">
-          <label class="fld__label" for="store-address">{{ locale.t('settings.general.address') }}</label>
-          <input
-            id="store-address"
-            class="fld__input"
-            [formField]="storeForm.address"
-            type="text"
-            autocomplete="street-address"
-          />
-        </div>
+        <div class="sec__fields">
+          <div class="fld">
+            <label class="fld__label" for="store-name">{{ locale.t('settings.general.name') }}</label>
+            <input
+              id="store-name"
+              class="fld__input"
+              [formField]="storeForm.name"
+              type="text"
+              autocomplete="organization"
+            />
+            @if (storeForm.name().touched() && storeForm.name().invalid()) {
+              <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+            }
+          </div>
 
-        <div class="fld">
-          <label class="fld__label" for="store-contact">{{ locale.t('settings.general.contact') }}</label>
-          <input
-            id="store-contact"
-            class="fld__input"
-            [formField]="storeForm.contact"
-            type="tel"
-            inputmode="tel"
-            autocomplete="tel"
-          />
+          <div class="fld">
+            <label class="fld__label" for="store-address">{{ locale.t('settings.general.address') }}</label>
+            <input
+              id="store-address"
+              class="fld__input"
+              [formField]="storeForm.address"
+              type="text"
+              autocomplete="street-address"
+            />
+          </div>
+
+          <div class="fld">
+            <label class="fld__label" for="store-contact">{{ locale.t('settings.general.contact') }}</label>
+            <input
+              id="store-contact"
+              class="fld__input"
+              [formField]="storeForm.contact"
+              type="tel"
+              inputmode="tel"
+              autocomplete="tel"
+            />
+          </div>
         </div>
-      </fieldset>
+      </section>
 
       <!-- Branding -->
-      <fieldset class="sec">
-        <legend class="sec__legend">{{ locale.t('settings.general.section.branding') }}</legend>
-        <p class="sec__help">{{ locale.t('settings.general.branding.help') }}</p>
+      <section class="sec" aria-labelledby="sec-branding">
+        <div class="sec__intro">
+          <h2 class="sec__eyebrow" id="sec-branding">{{ locale.t('settings.general.section.branding') }}</h2>
+          <p class="sec__desc">{{ locale.t('settings.general.branding.help') }}</p>
+        </div>
 
-        <div class="media">
+        <div class="sec__fields">
+          <div class="media">
           @for (m of mediaFields; track m.field) {
             <div class="media__item">
               <span class="fld__label" [id]="m.field + '-label'">{{ locale.t(m.label) }}</span>
@@ -150,10 +158,11 @@
           }
         </div>
 
-        @if (imageErrorKey(); as key) {
-          <span role="alert" class="fld__err">{{ locale.t(key) }}</span>
-        }
-      </fieldset>
+          @if (imageErrorKey(); as key) {
+            <span role="alert" class="fld__err">{{ locale.t(key) }}</span>
+          }
+        </div>
+      </section>
 
       @if (errorKey(); as key) {
         <p role="alert" class="set__alert">{{ locale.t(key) }}</p>

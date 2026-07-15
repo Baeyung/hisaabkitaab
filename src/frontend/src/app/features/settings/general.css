@@ -2,7 +2,7 @@
    so it doesn't lean on the auth stylesheet. Namespaced set / plate / sec / up. */
 
 .set {
-  max-width: 720px;
+  max-width: 980px;
   padding: clamp(20px, 3vw, 34px);
 }
 
@@ -47,7 +47,7 @@
 .set__card {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 0;
 }
 
 /* ── nameplate (signature): mark + identity ────────────────────────── */
@@ -55,8 +55,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--kg-line);
+  padding-bottom: 24px;
 }
 .plate__mark {
   width: 58px;
@@ -95,6 +94,9 @@
 }
 
 /* ── create-mode invitation ────────────────────────────────────────── */
+.setup {
+  padding-bottom: 24px;
+}
 .setup__title {
   margin: 0;
   font-size: 16px;
@@ -109,27 +111,34 @@
   max-width: 46ch;
 }
 
-/* ── sections + fields ─────────────────────────────────────────────── */
+/* ── sections: intro rail (left) + controls (right) ────────────────── */
 .sec {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 10px 48px;
+  padding: 28px 0;
+  border-top: 1px solid var(--kg-line);
 }
-.sec__legend {
-  padding: 0;
+.sec__eyebrow {
+  margin: 0;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--kg-faint);
 }
-.sec__help {
-  margin: -6px 0 0;
-  font-size: 12.5px;
+.sec__desc {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--kg-muted);
+  max-width: 30ch;
+}
+.sec__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 520px;
 }
 
 .fld {
@@ -282,11 +291,14 @@
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
 
-/* ── footer: save + confirmation ───────────────────────────────────── */
+/* ── footer: save + confirmation (aligned under the controls) ──────── */
 .set__foot {
   display: flex;
   align-items: center;
   gap: 14px;
+  padding-top: 26px;
+  border-top: 1px solid var(--kg-line);
+  padding-inline-start: 288px; /* 240 rail + 48 gap → sits under .sec__fields */
 }
 .set__status {
   display: inline-flex;
@@ -347,6 +359,19 @@
 }
 
 /* ── responsive ────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .sec {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 22px 0;
+  }
+  .sec__desc {
+    max-width: none;
+  }
+  .set__foot {
+    padding-inline-start: 0;
+  }
+}
 @media (max-width: 560px) {
   .set__head {
     flex-direction: column;
