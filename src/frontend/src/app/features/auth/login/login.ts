@@ -1,13 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { form, Control, required } from '@angular/forms/signals';
+import { form, FormField, required } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { LanguageToggle } from '../../../shared/language-toggle/language-toggle';
 
 @Component({
   selector: 'app-login',
-  imports: [Control, RouterLink, LanguageToggle],
+  imports: [FormField, RouterLink, LanguageToggle],
   templateUrl: './login.html',
 })
 export class Login {
