@@ -1,0 +1,244 @@
+:host {
+  display: block;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--kg-desk);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar {
+  width: 236px;
+  flex: none;
+  background: var(--kg-ink);
+  color: #e7e3d8;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--kg-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 17px 'IBM Plex Sans', system-ui;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand-text b {
+  font: 700 15px system-ui;
+  white-space: nowrap;
+}
+
+.brand-text small {
+  font: 400 11px system-ui;
+  color: #a29a8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav {
+  flex: 1;
+  padding: 12px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #c4bcae;
+  cursor: pointer;
+  font: 600 13.5px system-ui;
+  text-align: start;
+  text-decoration: none;
+}
+
+.nav-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e7e3d8;
+}
+
+.nav-item.active {
+  background: var(--kg-brand);
+  color: #fff;
+}
+
+.nav-icon {
+  width: 20px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-label {
+  flex: 1;
+}
+
+.chevron {
+  flex: none;
+  transition: transform 0.18s ease;
+}
+
+.chevron.up {
+  transform: rotate(180deg);
+}
+
+.subnav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* indent aligns children under the parent label, RTL-safe */
+  padding-inline-start: 20px;
+}
+
+.nav-sub {
+  padding-block: 7px;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.nav-sub.locked {
+  color: #7d766a;
+  cursor: not-allowed;
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 13px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.logout {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: transparent;
+  color: #e7e3d8;
+  cursor: pointer;
+  font: 600 13px system-ui;
+}
+
+.logout:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Content ─────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--kg-surface);
+}
+
+/* ── Mobile top bar (hidden on desktop) ──────────────────── */
+.topbar {
+  display: none;
+}
+
+.backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 56px;
+    flex: none;
+    padding-inline: 14px;
+    background: var(--kg-ink);
+    color: #e7e3d8;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .topbar-brand {
+    font: 700 16px system-ui;
+  }
+
+  .hamburger {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    color: inherit;
+    cursor: pointer;
+  }
+
+  /* off-canvas: slide in from the inline-start edge (flips for RTL) */
+  .sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+
+  :host-context([dir='rtl']) .sidebar {
+    transform: translateX(100%);
+  }
+
+  .sidebar.open {
+    transform: none;
+  }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  /* mobile lays out top bar above content */
+  .layout {
+    flex-direction: column;
+  }
+}

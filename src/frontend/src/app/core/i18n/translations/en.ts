@@ -37,6 +37,23 @@ export const en = {
   'home.welcome': 'Welcome, {{name}}',
   'home.logout': 'Log out',
   'lang.toggle': 'اردو',
+  'nav.menu': 'Menu',
+  'nav.locked': 'Create your store first',
+  'nav.dashboard': 'Dashboard',
+  'nav.cashbook': 'Cashbook',
+  'nav.ledger': 'Ledger',
+  'nav.newEntry': 'New Entry',
+  'nav.sale': 'Sale',
+  'nav.receipt': 'Receipt',
+  'nav.purchase': 'Purchase',
+  'nav.expense': 'Expense',
+  'nav.payment': 'Payment',
+  'nav.inventory': 'Inventory',
+  'nav.settings': 'Store Settings',
+  'nav.settings.general': 'General',
+  'nav.settings.items': 'Items',
+  'nav.settings.party': 'Parties',
+  'common.comingSoon': 'Coming soon',
 } as const;
 
 export type TranslationKey = keyof typeof en;
