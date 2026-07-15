@@ -1,13 +1,61 @@
 package io.github.baeyung.hisaabkitaab.controller;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.github.baeyung.hisaabkitaab.entity.Party;
+import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
+import io.github.baeyung.hisaabkitaab.service.PartyService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/parties")
 @RequiredArgsConstructor
 public class PartyController
 {
+    private final PartyService partyService;
 
+    @GetMapping
+    public ResponseEntity<List<Party>> list(@AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(partyService.findByOwner(principal.getId()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Party> get(@PathVariable String id, @AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(partyService.findByIdForOwner(id, principal.getId()));
+    }
+
+    @PostMapping
+    public ResponseEntity<Party> create(@Valid @RequestBody Party party,
+            @AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(partyService.create(party, principal.getId()));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Party> update(@PathVariable String id, @Valid @RequestBody Party party,
+            @AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(partyService.update(id, party, principal.getId()));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id, @AuthenticationPrincipal UserPrincipal principal)
+    {
+        partyService.delete(id, principal.getId());
+        return ResponseEntity.noContent().build();
+    }
 }
