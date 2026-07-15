@@ -5,7 +5,9 @@
 .layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  /* pin the frame to the viewport so only <main> scrolls — the topbar and
+     sidebar stay put instead of scrolling away with the content */
+  height: 100dvh;
   background: var(--kg-desk);
 }
 
