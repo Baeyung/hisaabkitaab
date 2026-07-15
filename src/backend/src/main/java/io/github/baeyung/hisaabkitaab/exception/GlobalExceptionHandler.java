@@ -3,6 +3,7 @@ package io.github.baeyung.hisaabkitaab.exception;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -40,6 +41,12 @@ public class GlobalExceptionHandler
     public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex, WebRequest request)
     {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDuplicate(DataIntegrityViolationException ex, WebRequest request)
+    {
+        return build(HttpStatus.CONFLICT, "Account already exists", request, null);
     }
 
     @ExceptionHandler(Exception.class)

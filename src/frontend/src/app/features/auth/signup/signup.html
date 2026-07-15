@@ -1,0 +1,72 @@
+<app-auth-shell>
+  <div class="auth__head">
+    <h1>{{ locale.t('auth.signup.title') }}</h1>
+    <p>{{ locale.t('auth.signup.subtitle') }}</p>
+  </div>
+
+  <form class="auth__form" (submit)="$event.preventDefault(); submit()">
+    <div class="fld">
+      <label class="fld__label" for="signup-name">{{ locale.t('auth.signup.name') }}</label>
+      <input id="signup-name" class="fld__input" [formField]="signupForm.name" type="text" autocomplete="name" />
+      @if (serverFieldErrors()['name']) {
+        <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+      }
+    </div>
+
+    <div class="fld">
+      <label class="fld__label" for="signup-contact">{{ locale.t('auth.signup.contact') }}</label>
+      <input
+        id="signup-contact"
+        class="fld__input"
+        [formField]="signupForm.contactNumber"
+        type="tel"
+        autocomplete="tel"
+        inputmode="tel"
+      />
+      @if (serverFieldErrors()['contactNumber']) {
+        <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+      }
+    </div>
+
+    <div class="fld">
+      <label class="fld__label" for="signup-email">{{ locale.t('auth.signup.email') }}</label>
+      <input
+        id="signup-email"
+        class="fld__input"
+        [formField]="signupForm.email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+      />
+      @if (serverFieldErrors()['email']) {
+        <span role="alert" class="fld__err">{{ locale.t('validation.email') }}</span>
+      }
+    </div>
+
+    <div class="fld">
+      <label class="fld__label" for="signup-password">{{ locale.t('auth.signup.password') }}</label>
+      <input
+        id="signup-password"
+        class="fld__input"
+        [formField]="signupForm.password"
+        type="password"
+        autocomplete="new-password"
+      />
+      @if (serverFieldErrors()['password']) {
+        <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+      }
+    </div>
+
+    @if (errorKey(); as key) {
+      <p role="alert" class="auth__alert">{{ locale.t(key) }}</p>
+    }
+
+    <button class="auth__cta" type="submit" [disabled]="submitting()">
+      {{ locale.t('auth.signup.submit') }}
+    </button>
+  </form>
+
+  <p class="auth__foot">
+    <a routerLink="/login">{{ locale.t('auth.signup.toLogin') }}</a>
+  </p>
+</app-auth-shell>

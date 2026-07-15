@@ -1,0 +1,45 @@
+<app-auth-shell>
+  <div class="auth__head">
+    <h1>{{ locale.t('auth.login.title') }}</h1>
+    <p>{{ locale.t('auth.login.subtitle') }}</p>
+  </div>
+
+  <form class="auth__form" (submit)="$event.preventDefault(); submit()">
+    <div class="fld">
+      <label class="fld__label" for="login-identifier">{{ locale.t('auth.login.identifier') }}</label>
+      <input
+        id="login-identifier"
+        class="fld__input"
+        [formField]="loginForm.identifier"
+        type="text"
+        autocomplete="username"
+        inputmode="email"
+      />
+    </div>
+
+    <div class="fld">
+      <label class="fld__label" for="login-password">{{ locale.t('auth.login.password') }}</label>
+      <input
+        id="login-password"
+        class="fld__input"
+        [formField]="loginForm.password"
+        type="password"
+        autocomplete="current-password"
+      />
+    </div>
+
+    <a class="auth__link-sm" routerLink="/forgot-password">{{ locale.t('auth.login.forgot') }}</a>
+
+    @if (errorKey(); as key) {
+      <p role="alert" class="auth__alert">{{ locale.t(key) }}</p>
+    }
+
+    <button class="auth__cta" type="submit" [disabled]="submitting()">
+      {{ locale.t('auth.login.submit') }}
+    </button>
+  </form>
+
+  <p class="auth__foot">
+    <a routerLink="/signup">{{ locale.t('auth.login.toSignup') }}</a>
+  </p>
+</app-auth-shell>

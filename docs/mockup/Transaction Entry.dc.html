@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e7e3d8;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#23201c}
+.dv-intro{padding:40px 46px 10px;max-width:1180px}
+.dv-turn{padding:24px 46px 46px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 18px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#23201c;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px system-ui;color:#23201c}
+.dv-opts{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(35,32,28,.10);color:#23201c;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12px system-ui;color:rgba(35,32,28,.62)}
+.dv-opt:target .dv-oid{background:#1f5c4d;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.6 system-ui;color:rgba(35,32,28,.55)}
+.dv-next a{color:#1f5c4d;text-decoration:none;font-weight:600}
+input:focus,button:focus{outline:2px solid rgba(31,92,77,.45);outline-offset:1px}
+@keyframes popIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes flashRow{0%{background:#dcefe2}100%{background:transparent}}
+</style>
+</helmet>
+<section class="dv-intro">
+  <div style="display:inline-flex;align-items:center;gap:8px;font:600 10.5px ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#1f5c4d;background:rgba(31,92,77,.10);padding:5px 10px;border-radius:6px">HOT PATH · TRANSACTION ENTRY</div>
+  <h1 style="font:600 27px/1.25 'IBM Plex Sans',sans-serif;margin:14px 0 8px;letter-spacing:-.01em">The screen the product is won or lost on</h1>
+  <p style="max-width:760px;margin:0 0 16px;font:400 14px/1.65 'IBM Plex Sans',sans-serif;color:#524c43">
+    One surface, event-type driven. The shopkeeper picks <em>what happened</em> and the form adapts — they enter one event, never accounting sides. Built for the two modes at once: <strong>batch</strong> (tab rhythm, type-ahead by design number, Save&nbsp;+&nbsp;Next) and <strong>live</strong> (quick, interruptible). Everything is real here — type a party, add cloth by design number, split the money, watch the consequence in plain Urdu.
+  </p>
+  <div style="display:flex;flex-wrap:wrap;gap:22px;margin:4px 0 20px">
+    <div style="font:400 12px/1.7 system-ui;color:#524c43"><b style="color:#23201c">Neutral base</b><br>warm ledger paper · one green accent</div>
+    <div style="font:400 12px/1.7 system-ui;color:#524c43"><b style="color:#23201c">Semantics</b><br><span style="color:#1f7a4d">▲ money in / they owe you</span> · <span style="color:#a8342a">▼ money out / you owe</span></div>
+    <div style="font:400 12px/1.7 system-ui;color:#524c43"><b style="color:#23201c">Type</b><br>IBM Plex Sans (tabular figures) · Noto Nastaliq Urdu</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font:600 11px system-ui;color:#6b655c">View:</span>
+    <button onClick="{{ toggleLang }}" style="{{ langBtnStyle }}">{{ langBtnLabel }}</button>
+    <button onClick="{{ toggleNum }}" style="{{ numBtnStyle }}">{{ numBtnLabel }}</button>
+    <span style="font:400 11px system-ui;color:#8a847a">— flips both options live</span>
+  </div>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Two directions for the entry surface</span></div>
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span><b style="color:#23201c">Ledger Grid</b> — mirrors the paper register. Event rail, line-item grid, live consequence panel. Optimised for keyboard batch rhythm.</span></div>
+      <div class="dv-card" dir="{{ dir }}" style="width:1180px;background:#f5f2ea;border:1px solid rgba(35,32,28,.13);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(35,32,28,.06)">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:#efeae0;border-bottom:1px solid rgba(35,32,28,.1)">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="width:9px;height:9px;border-radius:3px;background:#1f5c4d;display:inline-block"></span>
+            <span style="font:600 13px system-ui">{{ L.storeName }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <span style="font:600 12px system-ui;color:#6b655c">{{ L.newEntry }}</span>
+            <span style="font:600 13px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:#23201c">{{ dateStr }}</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:stretch">
+
+          <div style="width:186px;flex:none;padding:14px 13px;border-inline-end:1px solid rgba(35,32,28,.1);display:flex;flex-direction:column;gap:5px">
+            <div style="font:600 10.5px system-ui;letter-spacing:.05em;color:#8a847a;text-transform:uppercase;margin:0 4px 6px">{{ L.whatHappened }}</div>
+            <sc-for list="{{ events }}" as="ev" hint-placeholder-count="7">
+              <button onClick="{{ ev.onClick }}" style="{{ ev.wrapStyle }}">
+                <span style="width:4px;align-self:stretch;border-radius:3px;background:{{ ev.bar }}"></span>
+                <span style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0">
+                  <b style="font:600 13.5px system-ui">{{ ev.label }}</b>
+                  <small style="font:400 10.5px system-ui;color:#8a847a">{{ ev.sub }}</small>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+
+          <div style="flex:1;min-width:0;padding:16px 18px;display:flex;flex-direction:column;gap:13px">
+
+            <sc-if value="{{ showParty }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:5px;position:relative">
+                <label style="font:600 11px system-ui;color:#6b655c">{{ L.party }}</label>
+                <input id="a-party" value="{{ partyQuery }}" onInput="{{ onPartyInput }}" onFocus="{{ onPartyFocus }}" onBlur="{{ onPartyBlur }}" placeholder="{{ L.partyPh }}" style="height:42px;padding:0 12px;border:1px solid rgba(35,32,28,.2);border-radius:9px;background:#fff;font:500 15px 'IBM Plex Sans',sans-serif;color:#23201c" />
+                <sc-if value="{{ partyOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:72px;inset-inline:0;z-index:20;background:#fff;border:1px solid rgba(35,32,28,.16);border-radius:10px;box-shadow:0 8px 24px rgba(35,32,28,.14);overflow:hidden;max-height:236px;overflow-y:auto">
+                    <sc-for list="{{ partyResults }}" as="p" hint-placeholder-count="4">
+                      <button onMouseDown="{{ p.pick }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px;padding:10px 13px;border:0;border-bottom:1px solid rgba(35,32,28,.07);background:transparent;cursor:pointer;text-align:start;font-family:inherit">
+                        <span style="font:500 14px system-ui;color:#23201c">{{ p.name }}</span>
+                        <span style="font:600 12px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:{{ p.tone }}">{{ p.balStr }}</span>
+                      </button>
+                    </sc-for>
+                    <button onMouseDown="{{ pickCash }}" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 13px;border:0;background:#faf8f3;cursor:pointer;text-align:start;font-family:inherit;font:500 13px system-ui;color:#1f5c4d">{{ L.cashCustomer }}</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showLines }}" hint-placeholder-val="{{ true }}">
+              <div style="border:1px solid rgba(35,32,28,.13);border-radius:11px;overflow:hidden;background:#fff">
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f0ece3;border-bottom:1px solid rgba(35,32,28,.1);font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">
+                  <span style="flex:1">{{ L.designNo }}</span>
+                  <span style="width:70px;text-align:center">{{ L.qty }}</span>
+                  <span style="width:78px;text-align:center">{{ L.rate }}</span>
+                  <span style="width:96px;text-align:end">{{ L.amount }}</span>
+                  <span style="width:22px"></span>
+                </div>
+                <sc-for list="{{ lines }}" as="ln" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(35,32,28,.07)">
+                    <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+                      <b style="font:600 13.5px 'IBM Plex Sans';color:#23201c">{{ ln.code }}</b>
+                      <small style="font:400 11px system-ui;color:#8a847a">{{ ln.sub }}</small>
+                    </span>
+                    <input value="{{ ln.qtyVal }}" onInput="{{ ln.onQty }}" inputmode="decimal" style="width:70px;height:34px;text-align:center;border:1px solid rgba(35,32,28,.18);border-radius:7px;background:#fdfcf9;font:600 14px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:#23201c" />
+                    <input value="{{ ln.rateVal }}" onInput="{{ ln.onRate }}" inputmode="decimal" style="width:78px;height:34px;text-align:center;border:1px solid rgba(35,32,28,.18);border-radius:7px;background:#fdfcf9;font:500 14px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:#524c43" />
+                    <span style="width:96px;text-align:end;font:600 14.5px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:#23201c">{{ ln.amountStr }}</span>
+                    <button onClick="{{ ln.onRemove }}" style="width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:#a8342a;cursor:pointer;font-size:15px;line-height:1">×</button>
+                  </div>
+                </sc-for>
+                <div style="position:relative;padding:9px 12px">
+                  <input id="a-design" value="{{ draftQuery }}" onInput="{{ onDraftInput }}" onFocus="{{ onDraftFocus }}" onBlur="{{ onDraftBlur }}" placeholder="{{ L.addDesign }}" style="width:100%;height:36px;padding:0 12px;border:1px dashed rgba(35,32,28,.28);border-radius:8px;background:#faf8f3;font:500 14px 'IBM Plex Sans';color:#23201c;box-sizing:border-box" />
+                  <sc-if value="{{ draftOpen }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute;top:47px;inset-inline:12px;z-index:20;background:#fff;border:1px solid rgba(35,32,28,.16);border-radius:10px;box-shadow:0 8px 24px rgba(35,32,28,.14);overflow:hidden;max-height:230px;overflow-y:auto">
+                      <sc-for list="{{ draftResults }}" as="d" hint-placeholder-count="4">
+                        <button onMouseDown="{{ d.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:9px 13px;border:0;border-bottom:1px solid rgba(35,32,28,.07);background:transparent;cursor:pointer;text-align:start;font-family:inherit">
+                          <span style="display:flex;flex-direction:column;gap:1px"><b style="font:600 13.5px 'IBM Plex Sans'">{{ d.code }}</b><small style="font:400 11px system-ui;color:#8a847a">{{ d.sub }}</small></span>
+                          <span style="text-align:end"><b style="font:600 13px 'IBM Plex Sans';font-variant-numeric:tabular-nums;display:block">{{ d.rateStr }}</b><small style="font:400 10.5px system-ui;color:{{ d.stockTone }}">{{ d.stockStr }}</small></span>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;background:#f7f4ee;border-top:1px solid rgba(35,32,28,.09)">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <label style="font:500 12px system-ui;color:#6b655c">{{ L.kaat }}</label>
+                    <input value="{{ kaatVal }}" onInput="{{ onKaat }}" inputmode="decimal" style="width:88px;height:32px;text-align:center;border:1px solid rgba(35,32,28,.18);border-radius:7px;background:#fff;font:500 13px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:#a8342a" />
+                  </div>
+                  <div style="display:flex;align-items:baseline;gap:9px">
+                    <span style="font:600 11px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">{{ L.total }}</span>
+                    <span style="font:700 21px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:#23201c">{{ totalStr }}</span>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showAmount }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <label style="font:600 11px system-ui;color:#6b655c">{{ amountLabel }}</label>
+                <input id="a-amount" value="{{ amountVal }}" onInput="{{ onAmount }}" inputmode="decimal" placeholder="0" style="height:56px;padding:0 16px;border:1px solid rgba(35,32,28,.2);border-radius:10px;background:#fff;font:700 26px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:#23201c" />
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showSplit }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <div style="display:flex;gap:12px">
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+                    <label style="font:600 11px system-ui;color:#1f7a4d">{{ moneyALabel }}</label>
+                    <input value="{{ moneyAVal }}" onInput="{{ onMoneyA }}" inputmode="decimal" placeholder="0" style="height:46px;padding:0 13px;border:1px solid rgba(31,122,77,.4);border-radius:9px;background:#f2f9f4;font:600 18px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:#1f7a4d" />
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+                    <label style="font:600 11px system-ui;color:{{ moneyBColor }}">{{ moneyBLabel }}</label>
+                    <div style="height:46px;padding:0 13px;display:flex;align-items:center;border:1px solid rgba(35,32,28,.16);border-radius:9px;background:#f7f4ee;font:600 18px 'IBM Plex Sans';font-variant-numeric:tabular-nums;color:{{ moneyBColor }}">{{ moneyBStr }}</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="flex:1;height:8px;border-radius:5px;background:#e6ddcf;overflow:hidden;display:flex">
+                    <div style="height:100%;width:{{ cashPct }}%;background:#1f7a4d"></div>
+                    <div style="height:100%;flex:1;background:{{ moneyBBar }}"></div>
+                  </div>
+                  <span style="font:600 11px system-ui;color:#8a847a">{{ splitNote }}</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-top:2px">
+              <button onClick="{{ onSave }}" disabled="{{ saveDisabled }}" style="{{ saveBtnStyle }}">{{ L.saveNext }} ↵</button>
+              <button onClick="{{ loadExample }}" style="height:44px;padding:0 15px;border:1px solid rgba(35,32,28,.2);border-radius:10px;background:#fff;font:500 13px system-ui;color:#524c43;cursor:pointer">{{ L.example }}</button>
+              <button onClick="{{ clearForm }}" style="height:44px;padding:0 13px;border:0;border-radius:10px;background:transparent;font:500 13px system-ui;color:#8a847a;cursor:pointer">{{ L.clear }}</button>
+            </div>
+
+          </div>
+
+          <div style="width:320px;flex:none;padding:16px;background:#efeae0;border-inline-start:1px solid rgba(35,32,28,.1);display:flex;flex-direction:column;gap:13px">
+            <sc-if value="{{ justSaved }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:10px;background:#dcefe2;border:1px solid rgba(31,122,77,.3);animation:popIn .25s ease">
+                <span style="font-size:15px;color:#1f7a4d">✓</span>
+                <span style="font:600 13px system-ui;color:#1a5c3d">{{ justSaved }}</span>
+              </div>
+            </sc-if>
+
+            <div>
+              <div style="font:600 10.5px system-ui;letter-spacing:.05em;color:#8a847a;text-transform:uppercase;margin:0 0 9px">{{ L.effect }}</div>
+              <sc-if value="{{ hasEffect }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <sc-for list="{{ consequences }}" as="c" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:flex-start;gap:9px;padding:10px 11px;background:#fff;border:1px solid rgba(35,32,28,.1);border-radius:9px">
+                      <span style="font:700 14px 'IBM Plex Sans';color:{{ c.tone }};line-height:1.3">{{ c.sign }}</span>
+                      <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                        <small style="font:500 10.5px system-ui;color:#8a847a">{{ c.label }}</small>
+                        <b style="font:600 13.5px system-ui;color:#23201c">{{ c.text }}</b>
+                      </span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ true }}">
+                <div style="padding:16px 12px;text-align:center;border:1px dashed rgba(35,32,28,.2);border-radius:10px;color:#8a847a">
+                  <div style="font:600 13px system-ui;color:#6b655c;margin-bottom:3px">{{ L.emptyTitle }}</div>
+                  <div style="font:400 11.5px/1.5 system-ui">{{ L.emptyBody }}</div>
+                </div>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ hasRecent }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <div style="font:600 10.5px system-ui;letter-spacing:.05em;color:#8a847a;text-transform:uppercase;margin:6px 0 9px">{{ L.justEntered }}</div>
+                <div style="display:flex;flex-direction:column;gap:7px">
+                  <sc-for list="{{ recent }}" as="r" hint-placeholder-count="2">
+                    <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:#fff;border:1px solid rgba(35,32,28,.1);border-radius:9px">
+                      <span style="width:4px;align-self:stretch;border-radius:3px;background:{{ r.bar }}"></span>
+                      <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+                        <b style="font:600 13px system-ui;color:#23201c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.summary }}</b>
+                        <small style="font:400 11px system-ui;color:#8a847a">{{ r.sub }}</small>
+                      </span>
+                      <button onClick="{{ r.onEdit }}" style="width:26px;height:26px;border:1px solid rgba(35,32,28,.14);border-radius:7px;background:#faf8f3;color:#524c43;cursor:pointer;font-size:12px" title="{{ L.edit }}">✎</button>
+                      <button onClick="{{ r.onDelete }}" style="width:26px;height:26px;border:1px solid rgba(35,32,28,.14);border-radius:7px;background:#faf8f3;color:#a8342a;cursor:pointer;font-size:14px" title="{{ L.del }}">×</button>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><span><b style="color:#23201c">Conversational</b> — one event as a plain-language sentence you fill in. Coming in the next pass.</span></div>
+      <div class="dv-card" style="width:420px;height:520px;display:flex;align-items:center;justify-content:center;text-align:center;background:#f5f2ea;border:1px dashed rgba(35,32,28,.22);border-radius:14px;color:#8a847a;font:500 13px system-ui;padding:30px">
+        <span>1b — the conversational single-field direction lands next.</span>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "make <a href="#1a">1a</a> flow to nightly reconciliation" · "show <a href="#1a">1a</a> on mobile" · "build <a href="#1b">1b</a>" · "switch to English default"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    lang: 'ur', numerals: 'west',
+    A: { event:'sale', partyId:null, partyQuery:'', partyOpen:false, date:'01-07-2026',
+         lines:[], draft:'', draftOpen:false, kaat:0, amount:0, cash:0, recent:[], justSaved:null }
+  };
+
+  parties = [
+    {id:'rana', ur:'رانا کلاتھ ہاؤس', en:'Rana Cloth House', bal:38000},
+    {id:'crescent', ur:'کریسنٹ ٹیکسٹائل', en:'Crescent Textiles', bal:-72000},
+    {id:'bilal', ur:'بلال فیبرکس', en:'Bilal Fabrics', bal:12500},
+    {id:'shaheen', ur:'شاہین کلاتھ', en:'Shaheen Cloth', bal:-5400},
+    {id:'madina', ur:'المدینہ ٹریڈرز', en:'Al-Madina Traders', bal:0},
+  ];
+  designs = [
+    {code:'Chamki-440', ur:'چمکی', unit:'m', unitUr:'میٹر', rate:320, stock:640},
+    {code:'Lawn-2205', ur:'لان', unit:'m', unitUr:'میٹر', rate:480, stock:1200},
+    {code:'Khaddar-88', ur:'کھدر', unit:'m', unitUr:'میٹر', rate:260, stock:300},
+    {code:'Silk-Mixx-17', ur:'سلک مکس', unit:'than', unitUr:'تھان', rate:5400, stock:36},
+    {code:'Cambric-330', ur:'کیمبرک', unit:'m', unitUr:'میٹر', rate:210, stock:80},
+    {code:'Voile-51', ur:'وائل', unit:'m', unitUr:'میٹر', rate:175, stock:0},
+  ];
+
+  T = {
+    ur:{ storeName:'کپڑا گھر — حساب', newEntry:'نئی انٹری', whatHappened:'کیا ہوا؟',
+      party:'پارٹی', partyPh:'پارٹی کا نام لکھیں…', cashCustomer:'+ کیش کسٹمر (بغیر کھاتہ)',
+      designNo:'ڈیزائن نمبر', addDesign:'ڈیزائن نمبر ٹائپ کریں…', qty:'مقدار', rate:'ریٹ', amount:'رقم',
+      kaat:'کاٹ', total:'کل', saveNext:'محفوظ + اگلا', example:'مثال: ملی جلی سیل', clear:'صاف کریں',
+      effect:'اثر', justEntered:'ابھی درج ہوا', edit:'تبدیل', del:'حذف',
+      emptyTitle:'ابھی کچھ نہیں', emptyBody:'واقعہ چنیں اور لکھنا شروع کریں — اثر یہاں نظر آئے گا',
+      drawer:'گلہ (نقد)', bank:'بینک', baqaya:'بقایا', stock:'اسٹاک', profit:'منافع',
+      theyOwe:'آپ کے لینے', youOwe:'آپ کے دینے', settled:'برابر',
+      cashRecv:'نقد وصول', onUdhaar:'ادھار پر', paidCash:'نقد', paidBank:'بینک/چیک', spendAmt:'خرچ کی رقم', recvAmt:'وصولی کی رقم', payAmt:'ادائیگی کی رقم',
+      balanced:'برابر', short:'کم', over:'زیادہ',
+      ev:{sale:['سیل','بیچا'],receipt:['وصولی','پارٹی نے دیے'],payment:['ادائیگی','سپلائر کو دیے'],purchase:['خریداری','مال آیا'],ret:['واپسی','مال واپس'],expense:['خرچہ','دکان کا خرچ']},
+      savedSale:'سیل محفوظ', savedGen:'انٹری محفوظ' },
+    en:{ storeName:'Kapra Ghar — Ledger', newEntry:'New entry', whatHappened:'What happened?',
+      party:'Party', partyPh:'Type party name…', cashCustomer:'+ Cash customer (no khata)',
+      designNo:'Design no.', addDesign:'Type a design number…', qty:'Qty', rate:'Rate', amount:'Amount',
+      kaat:'Kaat', total:'Total', saveNext:'Save + Next', example:'Example: mixed sale', clear:'Clear',
+      effect:'Effect', justEntered:'Just entered', edit:'Edit', del:'Delete',
+      emptyTitle:'Nothing yet', emptyBody:'Pick an event and start writing — the effect shows here',
+      drawer:'Drawer (cash)', bank:'Bank', baqaya:'Baqaya', stock:'Stock', profit:'Profit',
+      theyOwe:'they owe you', youOwe:'you owe', settled:'settled',
+      cashRecv:'Cash received', onUdhaar:'On udhaar', paidCash:'Cash', paidBank:'Bank/cheque', spendAmt:'Expense amount', recvAmt:'Amount received', payAmt:'Amount paid',
+      balanced:'balanced', short:'short', over:'over',
+      ev:{sale:['Sale','sold'],receipt:['Receipt','party paid'],payment:['Payment','paid supplier'],purchase:['Purchase','stock in'],ret:['Return','goods back'],expense:['Expense','shop cost']},
+      savedSale:'Sale saved', savedGen:'Entry saved' }
+  };
+
+  toEast(s){ return String(s).replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[+d]); }
+  fmt(n){ if(n==null||isNaN(n)) n=0; n=Math.round(n); let s=Math.abs(n).toLocaleString('en-US'); if(this.state.numerals==='east') s=this.toEast(s); return (n<0?'−':'')+s; }
+  rs(n){ const neg=n<0; return (this.state.lang==='ur'? (neg?'−':'')+'Rs '+this.fmt(Math.abs(n)) : (neg?'−':'')+'Rs '+this.fmt(Math.abs(n))); }
+  setA(patch){ this.setState(s=>({A:{...s.A,...patch}})); }
+  party(id){ return this.parties.find(p=>p.id===id); }
+  design(code){ return this.designs.find(d=>d.code===code); }
+  hasLines(ev){ return ev==='sale'||ev==='purchase'||ev==='ret'; }
+  showAmountEv(ev){ return ev==='receipt'||ev==='payment'||ev==='expense'; }
+  total(A){ A=A||this.state.A; if(this.hasLines(A.event)){ let s=A.lines.reduce((t,l)=>t+(Number(l.qty)||0)*(Number(l.rate)||0),0); return Math.max(0,s-(Number(A.kaat)||0)); } return Number(A.amount)||0; }
+
+  focusFirst(){ const el=document.getElementById('a-party')||document.getElementById('a-amount'); if(el){ el.focus(); el.select&&el.select(); } }
+
+  onSave(){
+    const A=this.state.A; const total=this.total(A);
+    if(!this.canSave()) return;
+    const entry={ id:'e'+Date.now(), event:A.event, partyId:A.partyId, date:A.date,
+      lines:A.lines.map(l=>({...l})), kaat:Number(A.kaat)||0, amount:Number(A.amount)||0, cash:Number(A.cash)||0, total };
+    const L=this.T[this.state.lang];
+    const savedMsg = A.event==='sale'? L.savedSale : L.savedGen;
+    this.setState(s=>({A:{...s.A, lines:[], draft:'', draftOpen:false, kaat:0, amount:0, cash:0,
+      justSaved:savedMsg, recent:[entry, ...s.A.recent].slice(0,6)}}), ()=>this.focusFirst());
+  }
+  editEntry(entry){
+    this.setState(s=>({A:{...s.A, event:entry.event, partyId:entry.partyId,
+      partyQuery: entry.partyId? (this.party(entry.partyId)[this.state.lang]||'') : '',
+      date:entry.date, lines:entry.lines.map(l=>({...l})), kaat:entry.kaat, amount:entry.amount, cash:entry.cash,
+      justSaved:null, recent:s.A.recent.filter(e=>e.id!==entry.id)}}));
+  }
+  deleteEntry(id){ this.setState(s=>({A:{...s.A, recent:s.A.recent.filter(e=>e.id!==id), justSaved:null}})); }
+
+  loadExample(){
+    this.setState(s=>({A:{...s.A, event:'sale', partyId:'rana', partyQuery:this.party('rana')[this.state.lang],
+      lines:[{design:'Chamki-440',qty:100,rate:320},{design:'Cambric-330',qty:60,rate:210}],
+      draft:'', draftOpen:false, partyOpen:false, kaat:600, amount:0, cash:12000, justSaved:null}}));
+  }
+  clearForm(){ this.setA({partyId:null,partyQuery:'',lines:[],draft:'',draftOpen:false,kaat:0,amount:0,cash:0,justSaved:null,partyOpen:false,draftOpen:false}); }
+
+  canSave(){ const A=this.state.A; const t=this.total(A); if(t<=0) return false; if(this.showParty(A.event)&&!A.partyId&&A.event!=='sale') return false; return true; }
+  showParty(ev){ return ev!=='expense'; }
+
+  langLabel(o){ return this.state.lang==='ur'? o.ur : o.en; }
+
+  renderVals(){
+    const S=this.state, A=S.A, L=this.T[S.lang], ur=S.lang==='ur';
+    const dir = ur? 'rtl':'ltr';
+    const fmt=n=>this.fmt(n), rs=n=>this.rs(n);
+    const total=this.total(A);
+    const hasLines=this.hasLines(A.event), showAmount=this.showAmountEv(A.event);
+    const cash=Number(A.cash)||0, moneyB=Math.max(0, total-cash);
+
+    // event rail
+    const evMeta={ sale:{bar:'#1f5c4d'}, receipt:{bar:'#1f7a4d'}, payment:{bar:'#a8342a'}, purchase:{bar:'#a8342a'}, ret:{bar:'#1f5c4d'}, expense:{bar:'#a8342a'} };
+    const order=['sale','receipt','payment','purchase','ret','expense'];
+    const baseBtn='display:flex;align-items:center;gap:10px;width:100%;padding:8px 9px;border-radius:9px;cursor:pointer;font-family:inherit;color:#23201c;text-align:start;';
+    const events=order.map(k=>{
+      const active=A.event===k; const m=evMeta[k]; const lab=L.ev[k];
+      return { label:lab[0], sub:lab[1], bar:m.bar,
+        wrapStyle: baseBtn + (active? 'background:#fff;border:1px solid rgba(31,92,77,.35);box-shadow:0 1px 2px rgba(0,0,0,.06);' : 'background:transparent;border:1px solid transparent;'),
+        onClick:()=>this.setA({event:k, justSaved:null, partyOpen:false, draftOpen:false}) };
+    });
+
+    // party dropdown
+    const q=(A.partyQuery||'').trim().toLowerCase();
+    const pFiltered=this.parties.filter(p=> !q || p.ur.includes(A.partyQuery)||p.en.toLowerCase().includes(q));
+    const partyResults=pFiltered.map(p=>{
+      const dirTxt = p.bal>0? L.theyOwe : p.bal<0? L.youOwe : L.settled;
+      const tone = p.bal>0? '#1f7a4d' : p.bal<0? '#a8342a' : '#8a847a';
+      return { name:this.langLabel(p), tone, balStr: p.bal===0? dirTxt : rs(Math.abs(p.bal))+' '+dirTxt,
+        pick:(e)=>{ e&&e.preventDefault(); this.setA({partyId:p.id, partyQuery:this.langLabel(p), partyOpen:false}); } };
+    });
+    const selParty=this.party(A.partyId);
+    const partyName=selParty? this.langLabel(selParty):'';
+
+    // lines
+    const lines=A.lines.map((l,i)=>{
+      const d=this.design(l.design); const amt=(Number(l.qty)||0)*(Number(l.rate)||0);
+      return { code:l.design, sub:(d? (ur? d.ur+' · '+d.unitUr : d.ur+' · '+d.unit):''),
+        qtyVal:l.qty, rateVal:l.rate, amountStr:fmt(amt),
+        onQty:e=>this.updateLine(i,'qty',e.target.value),
+        onRate:e=>this.updateLine(i,'rate',e.target.value),
+        onRemove:()=>this.setState(s=>({A:{...s.A,lines:s.A.lines.filter((_,j)=>j!==i)}})) };
+    });
+    // draft design search
+    const dq=(A.draft||'').trim().toLowerCase();
+    const dFiltered=this.designs.filter(d=> !dq || d.code.toLowerCase().includes(dq)||d.ur.includes(A.draft));
+    const draftResults=dFiltered.map(d=>{
+      const stockTxt=(ur? d.unitUr:d.unit);
+      return { code:d.code, sub:d.ur, rateStr:'Rs '+fmt(d.rate),
+        stockStr: d.stock>0? (fmt(d.stock)+' '+stockTxt) : (ur?'ختم':'out'),
+        stockTone: d.stock>0? '#8a847a':'#a8342a',
+        pick:(e)=>{ e&&e.preventDefault(); this.setState(s=>({A:{...s.A, lines:[...s.A.lines,{design:d.code,qty:1,rate:d.rate}], draft:'', draftOpen:false}})); } };
+    });
+
+    // money split labels
+    let moneyALabel, moneyBLabel, amountLabel, showSplit=true;
+    if(A.event==='sale'||A.event==='ret'){ moneyALabel=L.cashRecv; moneyBLabel=L.onUdhaar; }
+    else if(A.event==='purchase'){ moneyALabel=L.paidCash; moneyBLabel=L.onUdhaar; }
+    else { moneyALabel=L.paidCash; moneyBLabel=L.paidBank; }
+    if(A.event==='sale'||A.event==='ret') amountLabel=L.amount;
+    else if(A.event==='receipt') amountLabel=L.recvAmt;
+    else if(A.event==='payment') amountLabel=L.payAmt;
+    else amountLabel=L.spendAmt;
+    // for receipt/payment/expense the total comes from amount; split is how it was received/paid (cash vs bank)
+    const moneyBColor = (A.event==='payment'||A.event==='purchase'||A.event==='expense')? '#a8342a' : (moneyBLabel===L.onUdhaar? '#a8342a':'#524c43');
+    const cashPct = total>0? Math.max(0,Math.min(100, cash/total*100)) : 0;
+    const diff = total-cash;
+    let splitNote;
+    if(moneyBLabel===L.onUdhaar){ splitNote = moneyB>0? (fmt(moneyB)+' '+L.onUdhaar) : L.balanced; }
+    else { splitNote = fmt(cash)+' + '+fmt(moneyB); }
+    const moneyBBar = moneyBLabel===L.onUdhaar? '#a8342a' : '#c9a24a';
+
+    // consequences
+    const consequences=[]; 
+    if(total>0){
+      if(A.event==='sale'){
+        if(selParty && moneyB>0){ const nb=selParty.bal+moneyB; consequences.push({sign:'▲',tone:'#1f7a4d',label:partyName+' · '+L.baqaya, text:this.balPhrase(nb)}); }
+        if(cash>0) consequences.push({sign:'▲',tone:'#1f7a4d',label:L.drawer,text:'+ '+rs(cash)});
+        A.lines.forEach(l=>{ if(l.qty){ const d=this.design(l.design); consequences.push({sign:'▼',tone:'#a8342a',label:L.stock+' · '+l.design, text:'− '+fmt(l.qty)+' '+(ur?(d?d.unitUr:''):(d?d.unit:''))}); }});
+      } else if(A.event==='purchase'){
+        if(selParty && moneyB>0){ const nb=selParty.bal-moneyB; consequences.push({sign:'▼',tone:'#a8342a',label:partyName+' · '+L.baqaya, text:this.balPhrase(nb)}); }
+        if(cash>0) consequences.push({sign:'▼',tone:'#a8342a',label:L.drawer,text:'− '+rs(cash)});
+        A.lines.forEach(l=>{ if(l.qty){ const d=this.design(l.design); consequences.push({sign:'▲',tone:'#1f7a4d',label:L.stock+' · '+l.design, text:'+ '+fmt(l.qty)+' '+(ur?(d?d.unitUr:''):(d?d.unit:''))}); }});
+      } else if(A.event==='receipt'){
+        if(selParty){ const nb=selParty.bal-total; consequences.push({sign:'▼',tone:'#a8342a',label:partyName+' · '+L.baqaya, text:this.balPhrase(nb)}); }
+        consequences.push({sign:'▲',tone:'#1f7a4d',label: cash>=total? L.drawer : L.bank, text:'+ '+rs(total)});
+      } else if(A.event==='payment'){
+        if(selParty){ const nb=selParty.bal+total; consequences.push({sign:'▲',tone:'#1f7a4d',label:partyName+' · '+L.baqaya, text:this.balPhrase(nb)}); }
+        consequences.push({sign:'▼',tone:'#a8342a',label: cash>=total? L.drawer : L.bank, text:'− '+rs(total)});
+      } else if(A.event==='expense'){
+        consequences.push({sign:'▼',tone:'#a8342a',label: cash>=total? L.drawer : L.bank, text:'− '+rs(total)});
+        consequences.push({sign:'▼',tone:'#a8342a',label:L.profit, text:'− '+rs(total)});
+      } else if(A.event==='ret'){
+        if(selParty){ const nb=selParty.bal-total; consequences.push({sign:'▼',tone:'#a8342a',label:partyName+' · '+L.baqaya, text:this.balPhrase(nb)}); }
+        A.lines.forEach(l=>{ if(l.qty){ const d=this.design(l.design); consequences.push({sign:'▲',tone:'#1f7a4d',label:L.stock+' · '+l.design, text:'+ '+fmt(l.qty)+' '+(ur?(d?d.unitUr:''):(d?d.unit:''))}); }});
+      }
+    }
+
+    // recent
+    const recent=A.recent.map(e=>({ ...this.summarize(e), onEdit:()=>this.editEntry(e), onDelete:()=>this.deleteEntry(e.id) }));
+
+    const canSave=this.canSave();
+    const saveBtnStyle='height:44px;padding:0 20px;border:0;border-radius:10px;font:600 14px system-ui;cursor:'+(canSave?'pointer':'not-allowed')+';color:#fff;background:'+(canSave?'#1f5c4d':'#b7c3bd')+';box-shadow:'+(canSave?'0 2px 6px rgba(31,92,77,.28)':'none');
+
+    return {
+      dir, L, dateStr: S.numerals==='east'? this.toEast(A.date):A.date,
+      toggleLang:()=>this.setState(s=>({lang:s.lang==='ur'?'en':'ur', A:{...s.A, partyQuery: s.A.partyId? (this.party(s.A.partyId)[s.lang==='ur'?'en':'ur']||''):s.A.partyQuery}})),
+      toggleNum:()=>this.setState(s=>({numerals:s.numerals==='west'?'east':'west'})),
+      langBtnLabel: ur? 'اردو · RTL' : 'English · LTR',
+      numBtnLabel: S.numerals==='west'? '123' : '۱۲۳',
+      langBtnStyle:'height:32px;padding:0 13px;border:1px solid rgba(31,92,77,.3);border-radius:8px;background:#fff;font:600 12px system-ui;color:#1f5c4d;cursor:pointer',
+      numBtnStyle:'height:32px;padding:0 13px;border:1px solid rgba(35,32,28,.2);border-radius:8px;background:#fff;font:600 13px "IBM Plex Sans";color:#524c43;cursor:pointer;min-width:44px',
+      events,
+      showParty:this.showParty(A.event), partyQuery:A.partyQuery, partyOpen:A.partyOpen, partyResults,
+      onPartyInput:e=>this.setA({partyQuery:e.target.value, partyId:null, partyOpen:true}),
+      onPartyFocus:()=>this.setA({partyOpen:true}),
+      onPartyBlur:()=>setTimeout(()=>this.setA({partyOpen:false}),160),
+      pickCash:(e)=>{ e&&e.preventDefault(); this.setA({partyId:null, partyQuery:'', partyOpen:false}); },
+      showLines:hasLines, lines,
+      draftQuery:A.draft, draftOpen:A.draftOpen, draftResults,
+      onDraftInput:e=>this.setA({draft:e.target.value, draftOpen:true}),
+      onDraftFocus:()=>this.setA({draftOpen:true}),
+      onDraftBlur:()=>setTimeout(()=>this.setA({draftOpen:false}),160),
+      kaatVal:A.kaat||'', onKaat:e=>this.setA({kaat:e.target.value.replace(/[^0-9.]/g,'')}),
+      totalStr:'Rs '+fmt(total),
+      showAmount, amountLabel, amountVal:A.amount||'', onAmount:e=>this.setA({amount:e.target.value.replace(/[^0-9.]/g,'')}),
+      showSplit, moneyALabel, moneyBLabel, moneyBColor,
+      moneyAVal:A.cash||'', onMoneyA:e=>this.setA({cash:e.target.value.replace(/[^0-9.]/g,'')}),
+      moneyBStr:fmt(moneyB), cashPct, moneyBBar, splitNote,
+      onSave:()=>this.onSave(), saveDisabled:!canSave, saveBtnStyle,
+      loadExample:()=>this.loadExample(), clearForm:()=>this.clearForm(),
+      justSaved:A.justSaved,
+      consequences, hasEffect:consequences.length>0, isEmpty:consequences.length===0 && A.recent.length===0,
+      recent, hasRecent:A.recent.length>0,
+    };
+  }
+
+  updateLine(i,field,val){ val=val.replace(/[^0-9.]/g,''); this.setState(s=>({A:{...s.A,lines:s.A.lines.map((l,j)=>j===i?{...l,[field]:val}:l)}})); }
+
+  balPhrase(nb){
+    const L=this.T[this.state.lang];
+    if(nb>0) return this.rs(nb)+' '+L.theyOwe;
+    if(nb<0) return this.rs(Math.abs(nb))+' '+L.youOwe;
+    return L.settled;
+  }
+  summarize(e){
+    const L=this.T[this.state.lang], ur=this.state.lang==='ur', fmt=n=>this.fmt(n);
+    const p=this.party(e.partyId); const pn=p? this.langLabel(p) : (ur?'کیش کسٹمر':'Cash customer');
+    const evMeta={ sale:'#1f5c4d', receipt:'#1f7a4d', payment:'#a8342a', purchase:'#a8342a', ret:'#1f5c4d', expense:'#a8342a' };
+    let summary, sub='';
+    const cash=e.cash||0, ud=Math.max(0,e.total-cash);
+    if(e.event==='sale'){ summary=(ur? pn+' — سیل' : pn+' — sale'); sub=(ur? 'Rs '+fmt(e.total)+(ud>0? ' · '+fmt(ud)+' ادھار':' · پوری نقد') : 'Rs '+fmt(e.total)+(ud>0?' · '+fmt(ud)+' udhaar':' · full cash')); }
+    else if(e.event==='receipt'){ summary=(ur? pn+' نے دیے':'Received from '+pn); sub='Rs '+fmt(e.total); }
+    else if(e.event==='payment'){ summary=(ur? pn+' کو دیے':'Paid '+pn); sub='Rs '+fmt(e.total); }
+    else if(e.event==='purchase'){ summary=(ur? pn+' — خریداری':pn+' — purchase'); sub='Rs '+fmt(e.total); }
+    else if(e.event==='ret'){ summary=(ur? pn+' — واپسی':pn+' — return'); sub='Rs '+fmt(e.total); }
+    else { summary=(ur? 'خرچہ':'Expense'); sub='Rs '+fmt(e.total); }
+    return { summary, sub, bar:evMeta[e.event]||'#8a847a' };
+  }
+}
+</script>
+</body>
+</html>
