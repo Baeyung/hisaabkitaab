@@ -1,0 +1,368 @@
+/* ══ HisaabKitaab — auth screens (login / signup) ══════════════════
+   A warm "well-kept ledger" system: pine brand, cream panels, tabular
+   rupee figures, generous touch targets. Consumed by AuthShell + the
+   login/signup forms. All classes are namespaced `auth`/`kh`/`fld`. */
+
+.auth {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0px, 3vw, 28px);
+  background: var(--kg-desk);
+}
+
+/* the app "card" holding both panes */
+.auth__stage {
+  width: 100%;
+  max-width: 1040px;
+  min-height: min(680px, 100dvh);
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  background: var(--kg-surface);
+  border: 1px solid var(--kg-line);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(35, 32, 28, 0.16);
+}
+
+/* ── left: the living-khata hero ─────────────────────────────────── */
+.auth__hero {
+  position: relative;
+  padding: 40px 40px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  color: var(--kg-cream);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.08), transparent 60%),
+    linear-gradient(160deg, var(--kg-brand), var(--kg-brand-deep));
+}
+
+.auth__brandline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth__mark {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1;
+  background: var(--kg-cream);
+  color: var(--kg-brand);
+  box-shadow: 0 6px 18px rgba(24, 67, 53, 0.4);
+}
+
+.auth__wordmark {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.auth__tagline {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: rgba(247, 244, 238, 0.72);
+}
+
+.auth__pitch {
+  margin-top: 4px;
+}
+.auth__pitch h2 {
+  margin: 0 0 8px;
+  font-size: clamp(22px, 2.4vw, 27px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.auth__pitch p {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: rgba(247, 244, 238, 0.74);
+}
+
+/* the khata vignette — real product artifact as the hero */
+.kh {
+  margin-top: auto;
+  background: var(--kg-cream);
+  color: var(--kg-ink);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 12px 30px rgba(24, 67, 53, 0.28);
+}
+.kh__cap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.kh__cap b {
+  font-size: 13px;
+  font-weight: 600;
+}
+.kh__cap span {
+  font-size: 11px;
+  color: var(--kg-faint);
+}
+.kh__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--kg-line);
+}
+.kh__party {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.kh__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kh__dir {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--kg-faint);
+}
+.kh__amt {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.kh__amt--in {
+  color: var(--kg-in);
+}
+.kh__amt--out {
+  color: var(--kg-out);
+}
+
+/* ── right: the form panel ───────────────────────────────────────── */
+.auth__panel {
+  position: relative;
+  padding: clamp(28px, 4vw, 44px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.auth__toggle {
+  position: absolute;
+  inset-block-start: 18px;
+  inset-inline-end: 18px;
+}
+
+/* compact brand — shown only when the hero is hidden (mobile) */
+.auth__brand--mobile {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.auth__brand--mobile .auth__mark {
+  background: var(--kg-brand);
+  color: var(--kg-cream);
+}
+.auth__brand--mobile .auth__wordmark {
+  color: var(--kg-ink);
+}
+.auth__brand--mobile .auth__tagline {
+  color: var(--kg-faint);
+}
+
+.auth__head {
+  margin-bottom: 18px;
+}
+.auth__head h1 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 700;
+}
+.auth__head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--kg-muted);
+}
+
+/* ── form fields ─────────────────────────────────────────────────── */
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fld__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+.fld__input {
+  height: 52px;
+  padding: 0 15px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 13px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.fld__input::placeholder {
+  color: #b6afa4;
+  font-weight: 400;
+}
+.fld__input:hover {
+  border-color: rgba(35, 32, 28, 0.32);
+}
+.fld__input:focus {
+  outline: none;
+  border-color: var(--kg-brand);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+.fld__err {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kg-out);
+}
+
+/* row-level error (invalid credentials / account exists) */
+.auth__alert {
+  margin: 2px 0 0;
+  padding: 10px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kg-out);
+  background: rgba(168, 52, 42, 0.08);
+  border: 1px solid rgba(168, 52, 42, 0.22);
+  border-radius: 11px;
+}
+
+/* ── buttons + footer ────────────────────────────────────────────── */
+.auth__cta {
+  height: 54px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--kg-brand);
+  cursor: pointer;
+  box-shadow: var(--kg-shadow-brand);
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.auth__cta:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.auth__cta:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.auth__cta:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.auth__cta:focus-visible {
+  outline: none;
+  box-shadow: var(--kg-shadow-brand), 0 0 0 3px var(--kg-focus);
+}
+
+.auth__foot {
+  margin: 18px 0 0;
+  font-size: 13.5px;
+  text-align: center;
+  color: var(--kg-muted);
+}
+.auth__foot a {
+  color: var(--kg-brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth__foot a:hover {
+  text-decoration: underline;
+}
+
+/* ── language toggle (shared button, restyled in this context) ─────
+   Higher specificity than the component-scoped `.lang-toggle` so this
+   context wins without !important. */
+.auth .auth__toggle .lang-toggle {
+  min-height: 36px;
+  padding-inline: 13px;
+  border-radius: 10px;
+  border: 1px solid var(--kg-line-strong);
+  background: var(--kg-card);
+  color: var(--kg-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth .auth__toggle .lang-toggle:hover {
+  border-color: rgba(35, 32, 28, 0.32);
+}
+.auth .auth__toggle .lang-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── entrance (respect reduced motion) ───────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .auth__stage {
+    animation: kgrise 0.4s ease both;
+  }
+  .auth__hero > *,
+  .auth__panel > * {
+    animation: kgfade 0.45s ease both;
+  }
+  .auth__panel > *:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  .auth__panel > *:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+}
+@keyframes kgrise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes kgfade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ── responsive: fold to a single centered column ────────────────── */
+@media (max-width: 860px) {
+  .auth__stage {
+    grid-template-columns: 1fr;
+    max-width: 460px;
+    min-height: 0;
+  }
+  .auth__hero {
+    display: none;
+  }
+  .auth__brand--mobile {
+    display: flex;
+  }
+  .auth__panel {
+    padding: 30px 24px 26px;
+  }
+}

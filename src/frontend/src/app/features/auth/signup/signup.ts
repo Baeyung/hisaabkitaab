@@ -4,11 +4,11 @@ import { form, FormField, required, email } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ApiError } from '../../../core/auth/auth.models';
 import { LocaleService } from '../../../core/i18n/locale.service';
-import { LanguageToggle } from '../../../shared/language-toggle/language-toggle';
+import { AuthShell } from '../auth-shell/auth-shell';
 
 @Component({
   selector: 'app-signup',
-  imports: [FormField, RouterLink, LanguageToggle],
+  imports: [FormField, RouterLink, AuthShell],
   templateUrl: './signup.html',
 })
 export class Signup {

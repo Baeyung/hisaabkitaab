@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ded9cc;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#23201c;padding:22px;box-sizing:border-box}
+*{box-sizing:border-box}
+.kg [dir="rtl"] .num,.num{font-variant-numeric:tabular-nums}
+.kg input:focus,.kg button:focus{outline:2px solid rgba(31,92,77,.4);outline-offset:1px}
+.kg ::-webkit-scrollbar{width:10px;height:10px}
+.kg ::-webkit-scrollbar-thumb{background:rgba(35,32,28,.16);border-radius:6px}
+@keyframes kgpop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes kgpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+</style>
+</helmet>
+<div class="kg" dir="{{ dir }}" style="max-width:1360px;margin:0 auto;height:864px;display:flex;background:#f5f2ea;border:1px solid rgba(35,32,28,.14);border-radius:16px;overflow:hidden;box-shadow:0 8px 34px rgba(35,32,28,.14)">
+
+  <aside style="width:236px;flex:none;background:#23201c;color:#e7e3d8;display:flex;flex-direction:column">
+    <div style="padding:18px 18px 15px;border-bottom:1px solid rgba(255,255,255,.09);display:flex;align-items:center;gap:11px">
+      <div style="width:38px;height:38px;border-radius:10px;background:#1f5c4d;display:flex;align-items:center;justify-content:center;font:700 17px 'IBM Plex Sans';color:#fff">ک</div>
+      <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+        <b style="font:700 15px system-ui;white-space:nowrap">{{ L.brand }}</b>
+        <small style="font:400 11px system-ui;color:#a29a8c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ L.brandSub }}</small>
+      </div>
+    </div>
+    <nav style="flex:1;padding:12px 11px;display:flex;flex-direction:column;gap:3px;overflow-y:auto">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="7">
+        <button onClick="{{ n.go }}" style="{{ n.style }}">
+          <span style="width:20px;flex:none;display:flex;align-items:center;justify-content:center" data-om-raster>{{ n.icon }}</span>
+          <span style="flex:1;text-align:start;font:600 13.5px system-ui">{{ n.label }}</span>
+          <sc-if value="{{ n.badge }}" hint-placeholder-val="{{ false }}"><span style="font:600 11px 'IBM Plex Sans';background:{{ n.badgeBg }};color:{{ n.badgeFg }};padding:1px 7px;border-radius:20px" class="num">{{ n.badge }}</span></sc-if>
+        </button>
+      </sc-for>
+    </nav>
+    <div style="padding:13px 14px;border-top:1px solid rgba(255,255,255,.09);display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:rgba(255,255,255,.06);border-radius:10px">
+        <span style="width:8px;height:8px;border-radius:50%;background:#5fbf8c;flex:none"></span>
+        <div style="display:flex;flex-direction:column;gap:1px;min-width:0"><small style="font:600 11.5px system-ui;color:#e7e3d8">{{ L.planName }}</small><small style="font:400 10px system-ui;color:#a29a8c">{{ L.planExp }}</small></div>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#f0ece3">
+    <header style="height:62px;flex:none;padding:0 22px;background:#f5f2ea;border-bottom:1px solid rgba(35,32,28,.11);display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0">
+        <sc-if value="{{ showBack }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goBack }}" style="width:34px;height:34px;border:1px solid rgba(35,32,28,.16);border-radius:9px;background:#fff;cursor:pointer;font-size:15px;color:#524c43">{{ backArrow }}</button></sc-if>
+        <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+          <h1 style="margin:0;font:700 19px system-ui;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ screenTitle }}</h1>
+          <small style="font:400 11.5px system-ui;color:#8a847a;white-space:nowrap">{{ screenSub }}</small>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <div style="display:flex;align-items:center;gap:7px;padding:6px 11px;background:#fff;border:1px solid rgba(35,32,28,.13);border-radius:9px">
+          <span style="font-size:12px">📅</span><span style="font:600 12.5px 'IBM Plex Sans'" class="num">{{ dateStr }}</span>
+        </div>
+        <button onClick="{{ toggleLang }}" style="height:34px;padding:0 12px;border:1px solid rgba(31,92,77,.3);border-radius:9px;background:#fff;font:600 12px system-ui;color:#1f5c4d;cursor:pointer">{{ langBtn }}</button>
+        <button onClick="{{ toggleNum }}" style="height:34px;padding:0 11px;min-width:44px;border:1px solid rgba(35,32,28,.18);border-radius:9px;background:#fff;font:600 13px 'IBM Plex Sans';color:#524c43;cursor:pointer">{{ numBtn }}</button>
+        <button onClick="{{ goEntry }}" style="height:34px;padding:0 15px;border:0;border-radius:9px;background:#1f5c4d;color:#fff;font:600 12.5px system-ui;cursor:pointer;box-shadow:0 2px 6px rgba(31,92,77,.28)">{{ L.newEntry }}</button>
+      </div>
+    </header>
+
+    <main style="flex:1;min-height:0;overflow-y:auto;padding:22px">
+
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:16px;animation:kgpop .25s ease">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="width:9px;height:9px;border-radius:3px;background:#1f5c4d"></span><span style="font:600 12px system-ui;color:#6b655c">{{ L.cashPos }}</span></div>
+              <div style="font:700 34px 'IBM Plex Sans';letter-spacing:-.01em" class="num">{{ dash.cashTotal }}</div>
+              <div style="display:flex;gap:18px;margin-top:11px">
+                <div><small style="font:500 11px system-ui;color:#8a847a">{{ L.galla }}</small><div style="font:600 15px 'IBM Plex Sans'" class="num">{{ dash.galla }}</div></div>
+                <div style="border-inline-start:1px solid rgba(35,32,28,.1);padding-inline-start:18px"><small style="font:500 11px system-ui;color:#8a847a">{{ L.bank }}</small><div style="font:600 15px 'IBM Plex Sans'" class="num">{{ dash.bank }}</div></div>
+              </div>
+              <div style="margin-top:12px;padding-top:11px;border-top:1px solid rgba(35,32,28,.08);display:flex;align-items:center;gap:7px">
+                <span style="font:700 13px 'IBM Plex Sans';color:{{ dash.cashDeltaTone }}">{{ dash.cashDeltaSign }}</span>
+                <span style="font:500 12px system-ui;color:#6b655c">{{ dash.cashDeltaText }}</span>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:18px 20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="width:9px;height:9px;border-radius:3px;background:#8a5a1c"></span><span style="font:600 12px system-ui;color:#6b655c">{{ L.profitToday }}</span></div>
+              <div style="font:700 34px 'IBM Plex Sans';letter-spacing:-.01em;color:#8a5a1c" class="num">{{ dash.profit }}</div>
+              <div style="display:flex;gap:18px;margin-top:11px">
+                <div><small style="font:500 11px system-ui;color:#8a847a">{{ L.salesToday }}</small><div style="font:600 15px 'IBM Plex Sans'" class="num">{{ dash.salesToday }}</div></div>
+                <div style="border-inline-start:1px solid rgba(35,32,28,.1);padding-inline-start:18px"><small style="font:500 11px system-ui;color:#8a847a">{{ L.marginPct }}</small><div style="font:600 15px 'IBM Plex Sans'" class="num">{{ dash.margin }}</div></div>
+              </div>
+              <div style="margin-top:12px;padding-top:11px;border-top:1px solid rgba(35,32,28,.08);display:flex;align-items:center;gap:6px">
+                <span style="font-size:13px">💡</span><span style="font:500 11.5px/1.4 system-ui;color:#8a847a">{{ L.profitHint }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:16px">
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:16px 18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                <span style="font:600 13px system-ui">{{ L.trend }}</span>
+                <div style="display:flex;gap:12px"><span style="display:flex;align-items:center;gap:5px;font:500 11px system-ui;color:#6b655c"><span style="width:9px;height:9px;border-radius:2px;background:#1f7a4d"></span>{{ L.moneyIn }}</span><span style="display:flex;align-items:center;gap:5px;font:500 11px system-ui;color:#6b655c"><span style="width:9px;height:9px;border-radius:2px;background:#c0796a"></span>{{ L.moneyOut }}</span></div>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:12px;height:150px;padding-top:6px">
+                <sc-for list="{{ dash.trend }}" as="d" hint-placeholder-count="7">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                    <div style="width:100%;display:flex;gap:3px;align-items:flex-end;height:100%">
+                      <div style="flex:1;height:{{ d.inH }}%;background:#1f7a4d;border-radius:4px 4px 0 0;min-height:3px"></div>
+                      <div style="flex:1;height:{{ d.outH }}%;background:#c0796a;border-radius:4px 4px 0 0;min-height:3px"></div>
+                    </div>
+                    <small style="font:500 10.5px system-ui;color:#8a847a">{{ d.label }}</small>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:16px 18px">
+              <div style="font:600 13px system-ui;margin-bottom:13px">{{ L.aging }}</div>
+              <div style="display:flex;flex-direction:column;gap:11px">
+                <sc-for list="{{ dash.aging }}" as="a" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;gap:4px">
+                    <div style="display:flex;justify-content:space-between;font:500 11.5px system-ui;color:#6b655c"><span>{{ a.label }}</span><span style="font-weight:600;color:#23201c" class="num">{{ a.amt }}</span></div>
+                    <div style="height:7px;background:#efeae0;border-radius:5px;overflow:hidden"><div style="height:100%;width:{{ a.pct }}%;background:{{ a.color }};border-radius:5px"></div></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:16px 18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font:600 12.5px system-ui;color:#1f7a4d">{{ L.topRecv }}</span><span style="font:500 10.5px system-ui;color:#8a847a">{{ L.theyOwe }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ dash.recv }}" as="p" hint-placeholder-count="3">
+                  <button onClick="{{ p.go }}" style="display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:0;cursor:pointer;text-align:start">
+                    <span style="width:30px;height:30px;border-radius:8px;background:#e6f0ea;color:#1f7a4d;display:flex;align-items:center;justify-content:center;font:700 12px system-ui;flex:none">{{ p.initial }}</span>
+                    <span style="flex:1;font:600 12.5px system-ui;color:#23201c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span>
+                    <span style="font:700 13px 'IBM Plex Sans';color:#1f7a4d" class="num">{{ p.amt }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:16px 18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font:600 12.5px system-ui;color:#a8342a">{{ L.topPay }}</span><span style="font:500 10.5px system-ui;color:#8a847a">{{ L.youOwe }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ dash.pay }}" as="p" hint-placeholder-count="3">
+                  <button onClick="{{ p.go }}" style="display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:0;cursor:pointer;text-align:start">
+                    <span style="width:30px;height:30px;border-radius:8px;background:#f5e5e2;color:#a8342a;display:flex;align-items:center;justify-content:center;font:700 12px system-ui;flex:none">{{ p.initial }}</span>
+                    <span style="flex:1;font:600 12.5px system-ui;color:#23201c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span>
+                    <span style="font:700 13px 'IBM Plex Sans';color:#a8342a" class="num">{{ p.amt }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:16px 18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font:600 12.5px system-ui">{{ L.topDesigns }}</span><span style="font:500 10.5px system-ui;color:#8a847a">{{ L.sold7 }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ dash.designs }}" as="d" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="width:30px;height:30px;border-radius:8px;background:#efeae0;display:flex;align-items:center;justify-content:center;font:700 11px 'IBM Plex Sans';color:#524c43;flex:none">{{ d.rank }}</span>
+                    <span style="flex:1;display:flex;flex-direction:column;gap:0"><b style="font:600 12.5px 'IBM Plex Sans'">{{ d.code }}</b><small style="font:400 10.5px system-ui;color:#8a847a">{{ d.qty }}</small></span>
+                    <span style="font:600 12.5px 'IBM Plex Sans';color:#23201c" class="num">{{ d.amt }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isKhata }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:16px;animation:kgpop .25s ease">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:15px 18px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:3px;background:#1f7a4d"></span><span style="font:600 12.5px system-ui;color:#6b655c">{{ kh.lbl.totalRecv }}</span></div><span style="font:700 24px 'IBM Plex Sans';color:#1f7a4d" class="num">{{ kh.totalRecv }}</span></div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:15px 18px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:3px;background:#a8342a"></span><span style="font:600 12.5px system-ui;color:#6b655c">{{ kh.lbl.totalPay }}</span></div><span style="font:700 24px 'IBM Plex Sans';color:#a8342a" class="num">{{ kh.totalPay }}</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;overflow:hidden">
+            <div style="padding:12px 18px;border-bottom:1px solid rgba(35,32,28,.09)"><input placeholder="{{ kh.lbl.search }}" style="width:100%;height:40px;padding:0 14px;border:1px solid rgba(35,32,28,.16);border-radius:10px;background:#faf8f3;font:500 14px system-ui;color:#23201c" /></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:8px 18px;background:#f7f4ee;border-bottom:1px solid rgba(35,32,28,.09);font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase"><span style="flex:1">{{ kh.lbl.party }}</span><span style="width:150px">{{ kh.lbl.contact }}</span><span style="width:80px;text-align:center">{{ kh.lbl.age }}</span><span style="width:170px;text-align:end">{{ kh.lbl.baqaya }}</span></div>
+            <sc-for list="{{ kh.rows }}" as="p" hint-placeholder-count="7">
+              <button onClick="{{ p.go }}" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 18px;border:0;border-bottom:1px solid rgba(35,32,28,.06);background:transparent;cursor:pointer;text-align:start;font-family:inherit" style-hover="background:#faf8f3">
+                <span style="width:36px;height:36px;border-radius:9px;background:#efeae0;display:flex;align-items:center;justify-content:center;font:700 14px system-ui;color:#524c43;flex:none">{{ p.initial }}</span>
+                <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0"><b style="font:600 14px system-ui;color:#23201c">{{ p.name }}</b><small style="font:400 11px system-ui;color:#8a847a">{{ p.city }}</small></span>
+                <span style="width:150px;font:500 12px 'IBM Plex Sans';color:#6b655c" class="num">{{ p.phone }}</span>
+                <span style="width:80px;text-align:center;font:600 11.5px 'IBM Plex Sans';color:{{ p.ageTone }}" class="num">{{ p.age }}</span>
+                <span style="width:170px;text-align:end;display:flex;flex-direction:column;gap:0"><b style="font:700 15px 'IBM Plex Sans';color:{{ p.tone }}" class="num">{{ p.sign }} {{ p.amt }}</b><small style="font:400 10.5px system-ui;color:#8a847a">{{ p.dirLabel }}</small></span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isKhataDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:16px;animation:kgpop .25s ease">
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+            <div style="display:flex;align-items:center;gap:14px"><span style="width:52px;height:52px;border-radius:13px;background:#efeae0;display:flex;align-items:center;justify-content:center;font:700 20px system-ui;color:#524c43">{{ khd.initial }}</span><div style="display:flex;flex-direction:column;gap:2px"><b style="font:700 19px system-ui">{{ khd.name }}</b><small style="font:400 12px 'IBM Plex Sans';color:#8a847a" class="num">{{ khd.phone }} · {{ khd.city }}</small></div></div>
+            <div style="display:flex;align-items:center;gap:20px"><div style="text-align:end"><small style="font:500 11px system-ui;color:#8a847a">{{ khd.lbl.curBal }}</small><div style="font:700 26px 'IBM Plex Sans';color:{{ khd.curTone }}" class="num">{{ khd.curAmt }}</div><small style="font:500 11px system-ui;color:{{ khd.curTone }}">{{ khd.curDir }}</small></div>
+              <div style="display:flex;flex-direction:column;gap:8px"><button onClick="{{ goEntry }}" style="height:40px;padding:0 16px;border:0;border-radius:10px;background:#1f5c4d;color:#fff;font:600 12.5px system-ui;cursor:pointer;white-space:nowrap">{{ khd.lbl.recordRecv }}</button><button style="height:36px;padding:0 16px;border:1px solid rgba(35,32,28,.18);border-radius:10px;background:#fff;color:#524c43;font:600 12px system-ui;cursor:pointer;white-space:nowrap">{{ khd.lbl.share }}</button></div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:12px;padding:9px 18px;background:#f7f4ee;border-bottom:1px solid rgba(35,32,28,.09);font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase"><span style="width:96px">{{ khd.lbl.date }}</span><span style="flex:1">{{ khd.lbl.desc }}</span><span style="width:120px;text-align:end">{{ khd.lbl.debit }}</span><span style="width:120px;text-align:end">{{ khd.lbl.credit }}</span><span style="width:140px;text-align:end">{{ khd.lbl.balance }}</span></div>
+            <sc-for list="{{ khd.rows }}" as="r" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(35,32,28,.06)"><span style="width:96px;font:500 12px 'IBM Plex Sans';color:#8a847a" class="num">{{ r.date }}</span><span style="flex:1;font:500 13.5px system-ui;color:#23201c">{{ r.desc }}</span><span style="width:120px;text-align:end;font:600 13.5px 'IBM Plex Sans';color:#1f7a4d" class="num">{{ r.debit }}</span><span style="width:120px;text-align:end;font:600 13.5px 'IBM Plex Sans';color:#a8342a" class="num">{{ r.credit }}</span><span style="width:140px;text-align:end;font:700 14px 'IBM Plex Sans';color:{{ r.balTone }}" class="num">{{ r.bal }} {{ r.balDir }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px;animation:kgpop .25s ease">
+          <div style="width:380px;background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:18px;padding:34px 30px;box-shadow:0 8px 30px rgba(35,32,28,.1);display:flex;flex-direction:column;gap:16px;align-items:stretch">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:4px"><div style="width:58px;height:58px;border-radius:15px;background:#1f5c4d;color:#fff;display:flex;align-items:center;justify-content:center;font:700 26px 'IBM Plex Sans'">ک</div><div style="text-align:center"><div style="font:700 22px system-ui">{{ lg.title }}</div><small style="font:400 12.5px system-ui;color:#8a847a">{{ lg.tag }}</small></div></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><label style="font:600 11px system-ui;color:#6b655c">{{ lg.phoneLabel }}</label><input placeholder="{{ lg.phonePh }}" style="height:48px;padding:0 14px;border:1px solid rgba(35,32,28,.2);border-radius:11px;background:#faf8f3;font:500 16px 'IBM Plex Sans';color:#23201c;text-align:center;letter-spacing:.04em" /></div>
+            <div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1;display:flex;flex-direction:column;gap:5px"><label style="font:600 11px system-ui;color:#6b655c">{{ lg.otpLabel }}</label><input placeholder="— — — —" style="height:48px;padding:0 14px;border:1px solid rgba(35,32,28,.2);border-radius:11px;background:#faf8f3;font:600 20px 'IBM Plex Sans';color:#23201c;text-align:center;letter-spacing:.3em" class="num" /></div><button style="height:48px;padding:0 15px;border:1px solid rgba(31,92,77,.3);border-radius:11px;background:#f2f9f4;font:600 12px system-ui;color:#1f5c4d;cursor:pointer;white-space:nowrap">{{ lg.sendOtp }}</button></div>
+            <div style="font:400 11px system-ui;color:#8a847a;text-align:center">{{ lg.note }}</div>
+            <button onClick="{{ goDash }}" style="height:50px;border:0;border-radius:12px;background:#1f5c4d;color:#fff;font:600 15px system-ui;cursor:pointer;box-shadow:0 2px 8px rgba(31,92,77,.3)">{{ lg.login }}</button>
+            <div style="display:flex;align-items:center;gap:10px;color:#c4bcae"><span style="flex:1;height:1px;background:rgba(35,32,28,.12)"></span><span style="font:500 11px system-ui;color:#8a847a">{{ lg.or }}</span><span style="flex:1;height:1px;background:rgba(35,32,28,.12)"></span></div>
+            <button style="height:44px;border:1px solid rgba(35,32,28,.18);border-radius:11px;background:#fff;font:600 13px system-ui;color:#524c43;cursor:pointer">{{ lg.pass }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOnboard }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px;animation:kgpop .25s ease">
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px"><div><div style="font:700 18px system-ui;margin-bottom:4px">{{ ob.title }}</div><div style="font:400 12.5px/1.5 system-ui;color:#8a847a">{{ ob.sub }}</div></div><div style="flex:none;text-align:center;padding:10px 14px;background:#f2f9f4;border-radius:11px"><div style="font:700 15px 'IBM Plex Sans';color:#1f5c4d">{{ ob.progress }}</div></div></div>
+          <sc-for list="{{ ob.steps }}" as="s" hint-placeholder-count="3">
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(35,32,28,.08)"><span style="width:34px;height:34px;border-radius:50%;background:{{ s.done }};display:flex;align-items:center;justify-content:center;font:700 14px 'IBM Plex Sans';color:#fff;flex:none">{{ s.badge }}</span><div style="flex:1"><div style="font:700 15px system-ui">{{ s.title }}</div><small style="font:400 11.5px system-ui;color:#8a847a">{{ s.sub }}</small></div><span style="font:600 11.5px system-ui;color:{{ s.countTone }};background:{{ s.countBg }};padding:4px 11px;border-radius:20px">{{ s.count }}</span></div>
+              <div style="padding:6px 18px 12px">
+                <sc-for list="{{ s.rows }}" as="r" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(35,32,28,.05)"><span style="display:flex;flex-direction:column;gap:0"><b style="font:600 13.5px system-ui;color:#23201c">{{ r.name }}</b></span><span style="display:flex;align-items:baseline;gap:8px"><small style="font:400 11px system-ui;color:#8a847a">{{ r.dir }}</small><b style="font:700 14px 'IBM Plex Sans';color:{{ r.tone }}" class="num">{{ r.amt }}</b></span></div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex;gap:10px;justify-content:flex-end"><button onClick="{{ goDash }}" style="height:46px;padding:0 16px;border:1px solid rgba(35,32,28,.18);border-radius:11px;background:#fff;font:600 13px system-ui;color:#8a847a;cursor:pointer">{{ ob.lbl.later }}</button><button onClick="{{ goDash }}" style="height:46px;padding:0 22px;border:0;border-radius:11px;background:#1f5c4d;color:#fff;font:600 14px system-ui;cursor:pointer;box-shadow:0 2px 8px rgba(31,92,77,.3)">{{ ob.lbl.finish }}</button></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isStock }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:16px;animation:kgpop .25s ease">
+          <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:16px">
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:15px 18px"><small style="font:500 11px system-ui;color:#8a847a">{{ st.lbl.totalVal }}</small><div style="font:700 24px 'IBM Plex Sans';color:#1f5c4d" class="num">{{ st.totalVal }}</div></div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:15px 18px"><small style="font:500 11px system-ui;color:#8a847a">{{ st.lbl.skus }}</small><div style="font:700 24px 'IBM Plex Sans'" class="num">{{ st.skus }}</div></div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:15px 18px"><small style="font:500 11px system-ui;color:#8a5a1c">{{ st.lbl.low }}</small><div style="font:700 24px 'IBM Plex Sans';color:#8a5a1c" class="num">{{ st.low }}</div></div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:15px 18px"><small style="font:500 11px system-ui;color:#a8342a">{{ st.lbl.out }}</small><div style="font:700 24px 'IBM Plex Sans';color:#a8342a" class="num">{{ st.out }}</div></div>
+          </div>
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;overflow:hidden">
+            <div style="padding:12px 18px;border-bottom:1px solid rgba(35,32,28,.09)"><input placeholder="{{ st.lbl.search }}" style="width:100%;height:40px;padding:0 14px;border:1px solid rgba(35,32,28,.16);border-radius:10px;background:#faf8f3;font:500 14px 'IBM Plex Sans';color:#23201c" /></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:8px 18px;background:#f7f4ee;border-bottom:1px solid rgba(35,32,28,.09);font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase"><span style="flex:1">{{ st.lbl.design }}</span><span style="width:120px;text-align:end">{{ st.lbl.onHand }}</span><span style="width:110px;text-align:end">{{ st.lbl.rate }}</span><span style="width:130px;text-align:end">{{ st.lbl.value }}</span><span style="width:90px;text-align:center">{{ st.lbl.status }}</span></div>
+            <sc-for list="{{ st.rows }}" as="d" hint-placeholder-count="6">
+              <button onClick="{{ d.go }}" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 18px;border:0;border-bottom:1px solid rgba(35,32,28,.06);background:transparent;cursor:pointer;text-align:start;font-family:inherit">
+                <span style="width:36px;height:36px;border-radius:9px;background:#efeae0;display:flex;align-items:center;justify-content:center;font:700 14px system-ui;color:#524c43;flex:none">{{ d.initial }}</span>
+                <span style="flex:1;display:flex;flex-direction:column;gap:1px"><b style="font:600 14px 'IBM Plex Sans';color:#23201c">{{ d.code }}</b><small style="font:400 11px system-ui;color:#8a847a">{{ d.name }} · {{ d.unit }}</small></span>
+                <span style="width:120px;text-align:end;font:700 15px 'IBM Plex Sans';color:#23201c" class="num">{{ d.qty }}</span>
+                <span style="width:110px;text-align:end;font:500 13px 'IBM Plex Sans';color:#6b655c" class="num">{{ d.rate }}</span>
+                <span style="width:130px;text-align:end;font:600 13.5px 'IBM Plex Sans';color:#524c43" class="num">{{ d.value }}</span>
+                <span style="width:90px;text-align:center"><span style="font:600 10.5px system-ui;padding:3px 10px;border-radius:20px;background:{{ d.statusBg }};color:{{ d.statusFg }}">{{ d.statusT }}</span></span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isItemDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;animation:kgpop .25s ease">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:18px 20px">
+              <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px"><b style="font:700 20px 'IBM Plex Sans'">{{ it.code }}</b><span style="font:500 13px system-ui;color:#8a847a">{{ it.name }}</span></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px">
+                <div><small style="font:500 11px system-ui;color:#8a847a">{{ it.lbl.onHand }}</small><div style="font:700 22px 'IBM Plex Sans';color:#1f5c4d" class="num">{{ it.qty }}</div></div>
+                <div><small style="font:500 11px system-ui;color:#8a847a">{{ it.lbl.value }}</small><div style="font:700 22px 'IBM Plex Sans'" class="num">{{ it.value }}</div></div>
+                <div><small style="font:500 11px system-ui;color:#8a847a">{{ it.lbl.sale }}</small><div style="font:700 22px 'IBM Plex Sans'" class="num">{{ it.rate }}</div></div>
+                <div><small style="font:500 11px system-ui;color:#8a847a">{{ it.lbl.cost }}</small><div style="font:700 22px 'IBM Plex Sans';color:#6b655c" class="num">{{ it.cost }}</div></div>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;overflow:hidden">
+              <div style="padding:12px 18px;border-bottom:1px solid rgba(35,32,28,.09);font:600 13px system-ui">{{ it.lbl.history }}</div>
+              <div style="display:flex;align-items:center;gap:12px;padding:8px 18px;background:#f7f4ee;border-bottom:1px solid rgba(35,32,28,.09);font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase"><span style="width:96px">{{ it.lbl.date }}</span><span style="flex:1">{{ it.lbl.desc }}</span><span style="width:130px;text-align:end">{{ it.lbl.qty }}</span><span style="width:120px;text-align:end">{{ it.lbl.running }}</span></div>
+              <sc-for list="{{ it.rows }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid rgba(35,32,28,.06)"><span style="width:96px;font:500 12px 'IBM Plex Sans';color:#8a847a" class="num">{{ r.date }}</span><span style="flex:1;font:500 13.5px system-ui;color:#23201c">{{ r.desc }}</span><span style="width:130px;text-align:end;font:600 13.5px 'IBM Plex Sans';color:{{ r.tone }}" class="num">{{ r.qty }}</span><span style="width:120px;text-align:end;font:600 13px 'IBM Plex Sans';color:#524c43" class="num">{{ r.bal }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:13px">
+            <div><div style="font:700 15px system-ui;margin-bottom:3px">{{ it.lbl.countTitle }}</div><div style="font:400 12px/1.5 system-ui;color:#8a847a">{{ it.lbl.countSub }}</div></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:14px;background:#faf8f3;border:1px solid rgba(35,32,28,.1);border-radius:11px"><div style="flex:1;text-align:center"><small style="font:500 11px system-ui;color:#8a847a">{{ it.lbl.onHand }}</small><div style="font:700 22px 'IBM Plex Sans'" class="num">{{ it.qty }}</div></div><span style="font-size:18px;color:#8a847a">=</span><div style="flex:1;text-align:center"><small style="font:500 11px system-ui;color:#8a847a">{{ it.lbl.qty }}</small><input placeholder="—" style="width:100%;height:40px;border:1px solid rgba(35,32,28,.18);border-radius:9px;background:#fff;font:700 20px 'IBM Plex Sans';text-align:center;color:#1f5c4d" class="num" /></div></div>
+            <button style="height:44px;border:0;border-radius:11px;background:#1f5c4d;color:#fff;font:600 13px system-ui;cursor:pointer">{{ it.lbl.countBtn }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isBilling }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr;gap:16px;max-width:760px;margin:0 auto;animation:kgpop .25s ease">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span style="font:600 12px system-ui;color:#6b655c">{{ bl.lbl.mode }}:</span>
+            <div style="display:flex;background:#efeae0;border-radius:10px;padding:3px"><button style="height:34px;padding:0 18px;border:0;border-radius:8px;background:#fff;font:600 12.5px system-ui;color:#1f5c4d;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)">{{ bl.lbl.cash }}</button><button style="height:34px;padding:0 18px;border:0;border-radius:8px;background:transparent;font:600 12.5px system-ui;color:#8a847a;cursor:pointer">{{ bl.lbl.credit }}</button></div>
+            <div style="flex:1"></div>
+            <button style="height:38px;padding:0 16px;border:1px solid rgba(35,32,28,.18);border-radius:10px;background:#fff;font:600 12.5px system-ui;color:#524c43;cursor:pointer">{{ bl.lbl.print }}</button>
+            <button onClick="{{ goEntry }}" style="height:38px;padding:0 16px;border:0;border-radius:10px;background:#1f5c4d;color:#fff;font:600 12.5px system-ui;cursor:pointer">{{ bl.lbl.saveBill }}</button>
+          </div>
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.14);border-radius:14px;padding:34px 36px;box-shadow:0 2px 12px rgba(35,32,28,.06)">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:18px;border-bottom:2px solid #23201c">
+              <div style="display:flex;align-items:center;gap:12px"><div style="width:46px;height:46px;border-radius:11px;background:#1f5c4d;color:#fff;display:flex;align-items:center;justify-content:center;font:700 20px 'IBM Plex Sans'">ک</div><div><div style="font:700 18px system-ui">{{ bl.storeName }}</div><small style="font:400 12px system-ui;color:#8a847a">{{ bl.storeSub }}</small></div></div>
+              <div style="text-align:end"><div style="font:700 13px 'IBM Plex Sans';color:#23201c" class="num">{{ bl.billNo }}</div><small style="font:400 12px 'IBM Plex Sans';color:#8a847a" class="num">{{ bl.date }}</small></div>
+            </div>
+            <div style="padding:16px 0;border-bottom:1px solid rgba(35,32,28,.12)"><small style="font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">{{ bl.lbl.billTo }}</small><div style="font:700 16px system-ui;margin-top:3px">{{ bl.party }}</div><small style="font:400 12px 'IBM Plex Sans';color:#8a847a" class="num">{{ bl.partySub }}</small></div>
+            <table style="width:100%;border-collapse:collapse;margin:6px 0"><thead><tr style="border-bottom:1px solid rgba(35,32,28,.14)"><th style="text-align:start;padding:9px 4px;font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">#</th><th style="text-align:start;padding:9px 4px;font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">{{ bl.lbl.design }}</th><th style="text-align:end;padding:9px 4px;font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">{{ bl.lbl.qty }}</th><th style="text-align:end;padding:9px 4px;font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">{{ bl.lbl.rate }}</th><th style="text-align:end;padding:9px 4px;font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">{{ bl.lbl.amount }}</th></tr></thead><tbody>
+              <sc-for list="{{ bl.lines }}" as="l" hint-placeholder-count="3"><tr style="border-bottom:1px solid rgba(35,32,28,.07)"><td style="padding:11px 4px;font:500 13px 'IBM Plex Sans';color:#8a847a" class="num">{{ l.n }}</td><td style="padding:11px 4px"><b style="font:600 13.5px 'IBM Plex Sans'">{{ l.code }}</b> <small style="font:400 12px system-ui;color:#8a847a">{{ l.name }}</small></td><td style="padding:11px 4px;text-align:end;font:500 13px 'IBM Plex Sans'" class="num">{{ l.qty }}</td><td style="padding:11px 4px;text-align:end;font:500 13px 'IBM Plex Sans'" class="num">{{ l.rate }}</td><td style="padding:11px 4px;text-align:end;font:600 13.5px 'IBM Plex Sans'" class="num">{{ l.amount }}</td></tr></sc-for>
+            </tbody></table>
+            <div style="display:flex;justify-content:flex-end;margin-top:12px"><div style="width:260px;display:flex;flex-direction:column;gap:7px"><div style="display:flex;justify-content:space-between;font:500 13px system-ui;color:#6b655c"><span>{{ bl.lbl.sub }}</span><span class="num">{{ bl.sub }}</span></div><div style="display:flex;justify-content:space-between;font:500 13px system-ui;color:#a8342a"><span>{{ bl.lbl.kaat }}</span><span class="num">{{ bl.kaat }}</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:2px solid #23201c;font:700 17px system-ui"><span>{{ bl.lbl.total }}</span><span style="font-family:'IBM Plex Sans'" class="num">{{ bl.total }}</span></div></div></div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px dashed rgba(35,32,28,.2)"><small style="font:500 11px system-ui;color:#8a847a">{{ bl.lbl.words }}: </small><span style="font:500 12.5px system-ui;color:#524c43">{{ bl.totalWords }}</span><div style="text-align:center;margin-top:14px;font:400 12px system-ui;color:#8a847a">{{ bl.lbl.thanks }}</div></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;animation:kgpop .25s ease">
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px">
+            <div style="font:700 14px system-ui">{{ se.lbl.storeSec }}</div>
+            <div style="display:flex;flex-direction:column;gap:5px"><label style="font:600 11px system-ui;color:#6b655c">{{ se.lbl.name }}</label><input value="{{ se.store.name }}" style="height:42px;padding:0 13px;border:1px solid rgba(35,32,28,.2);border-radius:10px;background:#faf8f3;font:500 14px system-ui;color:#23201c" /></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><label style="font:600 11px system-ui;color:#6b655c">{{ se.lbl.addr }}</label><input value="{{ se.store.addr }}" style="height:42px;padding:0 13px;border:1px solid rgba(35,32,28,.2);border-radius:10px;background:#faf8f3;font:500 14px system-ui;color:#23201c" /></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><label style="font:600 11px system-ui;color:#6b655c">{{ se.lbl.phone }}</label><input value="{{ se.store.phone }}" style="height:42px;padding:0 13px;border:1px solid rgba(35,32,28,.2);border-radius:10px;background:#faf8f3;font:500 14px 'IBM Plex Sans';color:#23201c" class="num" /></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><label style="font:600 11px system-ui;color:#6b655c">{{ se.lbl.logo }}</label><div style="height:70px;border:1.5px dashed rgba(35,32,28,.24);border-radius:11px;display:flex;align-items:center;justify-content:center;gap:10px;background:#faf8f3;cursor:pointer"><span style="width:34px;height:34px;border-radius:9px;background:#1f5c4d;color:#fff;display:flex;align-items:center;justify-content:center;font:700 16px 'IBM Plex Sans'">ک</span><span style="font:500 12px system-ui;color:#8a847a">{{ se.lbl.upload }}</span></div></div>
+            <button style="height:44px;border:0;border-radius:11px;background:#1f5c4d;color:#fff;font:600 13px system-ui;cursor:pointer;align-self:flex-start;padding:0 22px">{{ se.lbl.save }}</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:13px">
+              <div style="font:700 14px system-ui">{{ se.lbl.langSec }}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 13px system-ui;color:#524c43">{{ se.lbl.language }}</span><button onClick="{{ toggleLang }}" style="height:34px;padding:0 14px;border:1px solid rgba(31,92,77,.3);border-radius:9px;background:#f2f9f4;font:600 12px system-ui;color:#1f5c4d;cursor:pointer">{{ langBtn }}</button></div>
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 13px system-ui;color:#524c43">{{ se.lbl.numerals }}</span><button onClick="{{ toggleNum }}" style="height:34px;padding:0 14px;border:1px solid rgba(35,32,28,.18);border-radius:9px;background:#faf8f3;font:600 13px 'IBM Plex Sans';color:#524c43;cursor:pointer;min-width:60px">{{ numBtn }}</button></div>
+            </div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:11px">
+              <div style="font:700 14px system-ui">{{ se.lbl.usersSec }}</div>
+              <sc-for list="{{ se.users }}" as="u" hint-placeholder-count="2"><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:#faf8f3;border-radius:9px"><span style="font:600 13px system-ui;color:#23201c">{{ u.name }}</span><span style="font:500 11px system-ui;color:#8a847a">{{ u.role }}</span></div></sc-for>
+            </div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:11px"><div style="font:700 14px system-ui">{{ se.lbl.setupSec }}</div><div style="display:flex;gap:9px"><button onClick="{{ goOnboard }}" style="flex:1;height:42px;border:1px solid rgba(31,92,77,.3);border-radius:10px;background:#f2f9f4;font:600 12.5px system-ui;color:#1f5c4d;cursor:pointer">{{ se.lbl.openingBtn }}</button><button onClick="{{ goLogin }}" style="flex:1;height:42px;border:1px solid rgba(35,32,28,.18);border-radius:10px;background:#faf8f3;font:600 12.5px system-ui;color:#524c43;cursor:pointer">{{ se.lbl.loginBtn }}</button></div></div>
+            <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:20px;display:flex;align-items:center;justify-content:space-between"><div><div style="font:700 14px system-ui;margin-bottom:2px">{{ se.lbl.planName }}</div><small style="font:400 11.5px system-ui;color:#1f7a4d">{{ se.lbl.planStatus }}</small></div><button style="height:36px;padding:0 16px;border:1px solid rgba(35,32,28,.18);border-radius:9px;background:#fff;font:600 12px system-ui;color:#524c43;cursor:pointer">{{ se.lbl.manage }}</button></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCashbook }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 350px;gap:16px;align-items:start;animation:kgpop .25s ease">
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;overflow:hidden">
+            <div style="display:flex;gap:0;padding:14px 18px;background:#efeae0;border-bottom:1px solid rgba(35,32,28,.1)">
+              <div style="flex:1"><small style="font:500 11px system-ui;color:#8a847a">{{ cb.lbl.open }} · {{ cb.lbl.cashCol }}</small><div style="font:700 18px 'IBM Plex Sans'" class="num">{{ cb.openCash }}</div></div>
+              <div style="flex:1;border-inline-start:1px solid rgba(35,32,28,.12);padding-inline-start:16px"><small style="font:500 11px system-ui;color:#8a847a">{{ cb.lbl.open }} · {{ cb.lbl.bankCol }}</small><div style="font:700 18px 'IBM Plex Sans'" class="num">{{ cb.openBank }}</div></div>
+              <div style="flex:1;border-inline-start:1px solid rgba(35,32,28,.12);padding-inline-start:16px"><small style="font:500 11px system-ui;color:#1f7a4d">{{ cb.lbl.totalIn }}</small><div style="font:700 18px 'IBM Plex Sans';color:#1f7a4d" class="num">{{ cb.totalIn }}</div></div>
+              <div style="flex:1;border-inline-start:1px solid rgba(35,32,28,.12);padding-inline-start:16px"><small style="font:500 11px system-ui;color:#a8342a">{{ cb.lbl.totalOut }}</small><div style="font:700 18px 'IBM Plex Sans';color:#a8342a" class="num">{{ cb.totalOut }}</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:8px 18px;background:#f7f4ee;border-bottom:1px solid rgba(35,32,28,.09);font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase"><span style="width:44px">{{ cb.lbl.time }}</span><span style="flex:1">{{ cb.lbl.detail }}</span><span style="width:64px;text-align:center">{{ cb.lbl.channel }}</span><span style="width:120px;text-align:end">{{ cb.lbl.amount }}</span><span style="width:110px;text-align:end">{{ cb.lbl.running }}</span></div>
+            <div>
+              <sc-for list="{{ cb.rows }}" as="r" hint-placeholder-count="8">
+                <div style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid rgba(35,32,28,.06)"><span style="width:44px;font:500 12px 'IBM Plex Sans';color:#8a847a" class="num">{{ r.time }}</span><span style="flex:1;font:500 13.5px system-ui;color:#23201c">{{ r.who }}</span><span style="width:64px;text-align:center"><span style="font:600 10.5px system-ui;padding:2px 8px;border-radius:20px;background:{{ r.chanBg }};color:{{ r.chanFg }}">{{ r.chan }}</span></span><span style="width:120px;text-align:end;font:600 14px 'IBM Plex Sans';color:{{ r.tone }}" class="num">{{ r.amt }}</span><span style="width:110px;text-align:end;font:600 13px 'IBM Plex Sans';color:#524c43" class="num">{{ r.bal }}</span></div>
+              </sc-for>
+            </div>
+            <div style="display:flex;padding:13px 18px;background:#efeae0;border-top:1px solid rgba(35,32,28,.12)">
+              <div style="flex:1"><small style="font:600 11px system-ui;color:#6b655c">{{ cb.lbl.close }} · {{ cb.lbl.cashCol }}</small><div style="font:700 20px 'IBM Plex Sans';color:#1f5c4d" class="num">{{ cb.cashClose }}</div></div>
+              <div style="flex:1;border-inline-start:1px solid rgba(35,32,28,.12);padding-inline-start:16px"><small style="font:600 11px system-ui;color:#6b655c">{{ cb.lbl.close }} · {{ cb.lbl.bankCol }}</small><div style="font:700 20px 'IBM Plex Sans';color:#1d4e7a" class="num">{{ cb.bankClose }}</div></div>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div><div style="font:700 15px system-ui;margin-bottom:3px">{{ cb.lbl.reconTitle }}</div><div style="font:400 12px/1.5 system-ui;color:#8a847a">{{ cb.lbl.reconSub }}</div></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:14px;background:#faf8f3;border:1px solid rgba(35,32,28,.1);border-radius:11px">
+              <div style="flex:1;text-align:center"><small style="font:500 11px system-ui;color:#8a847a">{{ cb.lbl.systemCash }}</small><div style="font:700 22px 'IBM Plex Sans';color:#23201c" class="num">{{ cb.systemStr }}</div></div>
+              <span style="font-size:20px;color:#8a847a">=</span>
+              <div style="flex:1;text-align:center"><small style="font:500 11px system-ui;color:#8a847a">{{ cb.lbl.countedCash }}</small><div style="font:700 22px 'IBM Plex Sans';color:#1f5c4d" class="num">{{ cb.countedStr }}</div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px"><label style="font:600 11px system-ui;color:#6b655c">{{ cb.lbl.enterCount }}</label><input value="{{ cb.countedVal }}" onInput="{{ cb.onCounted }}" inputmode="numeric" placeholder="0" style="height:52px;padding:0 15px;border:1px solid rgba(35,32,28,.2);border-radius:11px;background:#fff;font:700 24px 'IBM Plex Sans';color:#23201c;text-align:center" class="num" />
+              <div style="display:flex;gap:8px"><button onClick="{{ cb.fill }}" style="flex:1;height:32px;border:1px solid rgba(31,92,77,.3);border-radius:8px;background:#f2f9f4;font:500 11px system-ui;color:#1f5c4d;cursor:pointer">{{ cb.lbl.useSystem }}</button><button onClick="{{ cb.fillShort }}" style="flex:1;height:32px;border:1px solid rgba(168,52,42,.3);border-radius:8px;background:#f9f2f1;font:500 11px system-ui;color:#a8342a;cursor:pointer">{{ cb.lbl.useShort }}</button></div>
+            </div>
+
+            <sc-if value="{{ cb.matched }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:16px;background:#dcefe2;border:1px solid rgba(31,122,77,.35);border-radius:12px;text-align:center;animation:kgpop .3s ease"><div style="width:44px;height:44px;margin:0 auto 8px;border-radius:50%;background:#1f7a4d;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;animation:kgpulse 1.2s ease 1">✓</div><div style="font:700 16px system-ui;color:#1a5c3d;margin-bottom:4px">{{ cb.lbl.matchT }}</div><div style="font:400 12px/1.5 system-ui;color:#2d6b4d">{{ cb.lbl.matchB }}</div><button style="margin-top:12px;height:42px;padding:0 20px;border:0;border-radius:10px;background:#1f5c4d;color:#fff;font:600 13px system-ui;cursor:pointer;width:100%">{{ cb.lbl.closeDay }}</button></div>
+            </sc-if>
+            <sc-if value="{{ cb.mismatch }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:16px;background:#fbf3e8;border:1px solid rgba(201,138,43,.4);border-radius:12px;animation:kgpop .3s ease"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:38px;height:38px;border-radius:50%;background:#c98a2b;color:#fff;display:flex;align-items:center;justify-content:center;font:700 18px 'IBM Plex Sans'">!</span><div><div style="font:700 15px system-ui;color:#8a5a1c" class="num">{{ cb.diffLabel }} · {{ cb.diffAbs }}</div><div style="font:400 11.5px system-ui;color:#a0752f">{{ cb.lbl.mismatchB }}</div></div></div><div style="display:flex;gap:8px;margin-top:6px"><button onClick="{{ goEntry }}" style="flex:1;height:40px;border:0;border-radius:9px;background:#c98a2b;color:#fff;font:600 12px system-ui;cursor:pointer">{{ cb.lbl.addMissing }}</button><button style="flex:none;width:44px;height:40px;border:1px solid rgba(201,138,43,.4);border-radius:9px;background:#fff;color:#8a5a1c;cursor:pointer;font-size:16px">🔍</button></div></div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isEntry }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;animation:kgpop .25s ease">
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:15px">
+            <div>
+              <div style="font:600 10.5px system-ui;letter-spacing:.05em;color:#8a847a;text-transform:uppercase;margin-bottom:9px">{{ entry.lbl.what }}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <sc-for list="{{ entry.events }}" as="ev" hint-placeholder-count="6">
+                  <button onClick="{{ ev.onClick }}" style="{{ ev.style }}"><span style="width:4px;height:22px;border-radius:3px;background:{{ ev.bar }}"></span><span style="display:flex;flex-direction:column;align-items:flex-start"><b style="font:600 13.5px system-ui">{{ ev.label }}</b><small style="font:400 10px system-ui;color:#8a847a">{{ ev.sub }}</small></span></button>
+                </sc-for>
+              </div>
+            </div>
+
+            <sc-if value="{{ entry.showParty }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:5px;position:relative">
+                <label style="font:600 11px system-ui;color:#6b655c">{{ entry.lbl.party }}</label>
+                <input id="e-party" value="{{ entry.partyQuery }}" onInput="{{ entry.onPartyInput }}" onFocus="{{ entry.onPartyFocus }}" onBlur="{{ entry.onPartyBlur }}" placeholder="{{ entry.lbl.partyPh }}" style="height:44px;padding:0 13px;border:1px solid rgba(35,32,28,.2);border-radius:10px;background:#fff;font:500 15px 'IBM Plex Sans';color:#23201c" />
+                <sc-if value="{{ entry.partyOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:74px;inset-inline:0;z-index:30;background:#fff;border:1px solid rgba(35,32,28,.16);border-radius:11px;box-shadow:0 10px 30px rgba(35,32,28,.18);overflow:hidden;max-height:250px;overflow-y:auto">
+                    <sc-for list="{{ entry.partyResults }}" as="p" hint-placeholder-count="4">
+                      <button onMouseDown="{{ p.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:11px 14px;border:0;border-bottom:1px solid rgba(35,32,28,.07);background:transparent;cursor:pointer;text-align:start;font-family:inherit"><span style="font:500 14px system-ui;color:#23201c">{{ p.name }}</span><span style="font:600 12px 'IBM Plex Sans';color:{{ p.tone }}" class="num">{{ p.balStr }}</span></button>
+                    </sc-for>
+                    <button onMouseDown="{{ entry.pickCash }}" style="width:100%;padding:11px 14px;border:0;background:#faf8f3;cursor:pointer;text-align:start;font:500 13px system-ui;color:#1f5c4d;font-family:inherit">{{ entry.cashLabel }}</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ entry.showLines }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid rgba(35,32,28,.13);border-radius:12px;overflow:hidden">
+                <div style="display:flex;align-items:center;gap:9px;padding:9px 13px;background:#f0ece3;border-bottom:1px solid rgba(35,32,28,.1);font:600 10.5px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase"><span style="flex:1">{{ entry.lbl.design }}</span><span style="width:74px;text-align:center">{{ entry.lbl.qty }}</span><span style="width:82px;text-align:center">{{ entry.lbl.rate }}</span><span style="width:100px;text-align:end">{{ entry.lbl.amount }}</span><span style="width:24px"></span></div>
+                <sc-for list="{{ entry.lines }}" as="ln" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:9px;padding:9px 13px;border-bottom:1px solid rgba(35,32,28,.07)"><span style="flex:1;display:flex;flex-direction:column"><b style="font:600 13.5px 'IBM Plex Sans'">{{ ln.code }}</b><small style="font:400 11px system-ui;color:#8a847a">{{ ln.sub }}</small></span><input value="{{ ln.qtyVal }}" onInput="{{ ln.onQty }}" inputmode="decimal" style="width:74px;height:36px;text-align:center;border:1px solid rgba(35,32,28,.18);border-radius:8px;background:#fdfcf9;font:600 14px 'IBM Plex Sans';color:#23201c" class="num" /><input value="{{ ln.rateVal }}" onInput="{{ ln.onRate }}" inputmode="decimal" style="width:82px;height:36px;text-align:center;border:1px solid rgba(35,32,28,.18);border-radius:8px;background:#fdfcf9;font:500 14px 'IBM Plex Sans';color:#524c43" class="num" /><span style="width:100px;text-align:end;font:600 15px 'IBM Plex Sans';color:#23201c" class="num">{{ ln.amountStr }}</span><button onClick="{{ ln.onRemove }}" style="width:24px;height:24px;border:0;border-radius:6px;background:transparent;color:#a8342a;cursor:pointer;font-size:16px">×</button></div>
+                </sc-for>
+                <div style="position:relative;padding:10px 13px"><input id="e-design" value="{{ entry.draftQuery }}" onInput="{{ entry.onDraftInput }}" onFocus="{{ entry.onDraftFocus }}" onBlur="{{ entry.onDraftBlur }}" placeholder="{{ entry.lbl.addDesign }}" style="width:100%;height:38px;padding:0 13px;border:1px dashed rgba(35,32,28,.28);border-radius:9px;background:#faf8f3;font:500 14px 'IBM Plex Sans';color:#23201c" />
+                  <sc-if value="{{ entry.draftOpen }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute;top:50px;inset-inline:13px;z-index:30;background:#fff;border:1px solid rgba(35,32,28,.16);border-radius:11px;box-shadow:0 10px 30px rgba(35,32,28,.18);overflow:hidden;max-height:240px;overflow-y:auto">
+                      <sc-for list="{{ entry.draftResults }}" as="d" hint-placeholder-count="4"><button onMouseDown="{{ d.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:10px 14px;border:0;border-bottom:1px solid rgba(35,32,28,.07);background:transparent;cursor:pointer;text-align:start;font-family:inherit"><span style="display:flex;flex-direction:column"><b style="font:600 13.5px 'IBM Plex Sans'">{{ d.code }}</b><small style="font:400 11px system-ui;color:#8a847a">{{ d.sub }}</small></span><span style="text-align:end"><b style="font:600 13px 'IBM Plex Sans';display:block" class="num">{{ d.rateStr }}</b><small style="font:400 10.5px system-ui;color:{{ d.stockTone }}" class="num">{{ d.stockStr }}</small></span></button></sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:#f7f4ee;border-top:1px solid rgba(35,32,28,.09)"><div style="display:flex;align-items:center;gap:8px"><label style="font:500 12px system-ui;color:#6b655c">{{ entry.lbl.kaat }}</label><input value="{{ entry.kaatVal }}" onInput="{{ entry.onKaat }}" inputmode="decimal" style="width:92px;height:34px;text-align:center;border:1px solid rgba(35,32,28,.18);border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';color:#a8342a" class="num" /></div><div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 11px system-ui;letter-spacing:.04em;color:#8a847a;text-transform:uppercase">{{ entry.lbl.total }}</span><span style="font:700 23px 'IBM Plex Sans';color:#23201c" class="num">{{ entry.totalStr }}</span></div></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ entry.showAmount }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:5px"><label style="font:600 11px system-ui;color:#6b655c">{{ entry.amountLabel }}</label><input id="e-amount" value="{{ entry.amountVal }}" onInput="{{ entry.onAmount }}" inputmode="decimal" placeholder="0" style="height:58px;padding:0 16px;border:1px solid rgba(35,32,28,.2);border-radius:11px;background:#fff;font:700 27px 'IBM Plex Sans';color:#23201c" class="num" /></div>
+            </sc-if>
+
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <div style="display:flex;gap:12px">
+                <div style="flex:1;display:flex;flex-direction:column;gap:5px"><label style="font:600 11px system-ui;color:#1f7a4d">{{ entry.mALabel }}</label><input value="{{ entry.mAVal }}" onInput="{{ entry.onMA }}" inputmode="decimal" placeholder="0" style="height:46px;padding:0 13px;border:1px solid rgba(31,122,77,.4);border-radius:10px;background:#f2f9f4;font:600 18px 'IBM Plex Sans';color:#1f7a4d" class="num" /></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:5px"><label style="font:600 11px system-ui;color:{{ entry.mBColor }}">{{ entry.mBLabel }}</label><div style="height:46px;padding:0 13px;display:flex;align-items:center;border:1px solid rgba(35,32,28,.16);border-radius:10px;background:#f7f4ee;font:600 18px 'IBM Plex Sans';color:{{ entry.mBColor }}" class="num">{{ entry.mBStr }}</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:8px;border-radius:5px;background:#e6ddcf;overflow:hidden;display:flex"><div style="height:100%;width:{{ entry.cashPct }}%;background:#1f7a4d"></div><div style="height:100%;flex:1;background:{{ entry.mBBar }}"></div></div><span style="font:600 11px system-ui;color:#8a847a" class="num">{{ entry.splitNote }}</span></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px"><button onClick="{{ entry.onSave }}" disabled="{{ entry.saveDisabled }}" style="{{ entry.saveStyle }}">{{ entry.lbl.save }} ↵</button><button onClick="{{ entry.onExample }}" style="height:46px;padding:0 16px;border:1px solid rgba(35,32,28,.2);border-radius:11px;background:#fff;font:500 13px system-ui;color:#524c43;cursor:pointer">{{ entry.lbl.example }}</button><button onClick="{{ entry.onClear }}" style="height:46px;padding:0 13px;border:0;background:transparent;font:500 13px system-ui;color:#8a847a;cursor:pointer">{{ entry.lbl.clear }}</button></div>
+          </div>
+
+          <div style="background:#fff;border:1px solid rgba(35,32,28,.12);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:13px;min-height:200px">
+            <sc-if value="{{ entry.justSaved }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:10px;background:#dcefe2;border:1px solid rgba(31,122,77,.3);animation:kgpop .25s ease"><span style="color:#1f7a4d;font-size:15px">✓</span><span style="font:600 13px system-ui;color:#1a5c3d">{{ entry.justSaved }}</span></div></sc-if>
+            <div><div style="font:600 10.5px system-ui;letter-spacing:.05em;color:#8a847a;text-transform:uppercase;margin-bottom:9px">{{ entry.lbl.effect }}</div>
+              <sc-if value="{{ entry.hasEffect }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ entry.cons }}" as="c" hint-placeholder-count="3"><div style="display:flex;align-items:flex-start;gap:9px;padding:10px 11px;background:#faf8f3;border:1px solid rgba(35,32,28,.09);border-radius:9px"><span style="font:700 14px 'IBM Plex Sans';color:{{ c.tone }}">{{ c.sign }}</span><span style="display:flex;flex-direction:column;gap:2px"><small style="font:500 10.5px system-ui;color:#8a847a">{{ c.label }}</small><b style="font:600 13.5px system-ui;color:#23201c" class="num">{{ c.text }}</b></span></div></sc-for></div></sc-if>
+              <sc-if value="{{ entry.isEmpty }}" hint-placeholder-val="{{ true }}"><div style="padding:18px 12px;text-align:center;border:1px dashed rgba(35,32,28,.2);border-radius:10px"><div style="font:600 13px system-ui;color:#6b655c;margin-bottom:3px">{{ entry.lbl.emptyT }}</div><div style="font:400 11.5px/1.5 system-ui;color:#8a847a">{{ entry.lbl.emptyB }}</div></div></sc-if>
+            </div>
+            <sc-if value="{{ entry.hasRecent }}" hint-placeholder-val="{{ false }}"><div><div style="font:600 10.5px system-ui;letter-spacing:.05em;color:#8a847a;text-transform:uppercase;margin:4px 0 9px">{{ entry.lbl.just }}</div><div style="display:flex;flex-direction:column;gap:7px"><sc-for list="{{ entry.recent }}" as="r" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:#faf8f3;border:1px solid rgba(35,32,28,.09);border-radius:9px"><span style="width:4px;align-self:stretch;border-radius:3px;background:{{ r.bar }}"></span><span style="flex:1;display:flex;flex-direction:column;min-width:0"><b style="font:600 12.5px system-ui;color:#23201c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.summary }}</b><small style="font:400 11px system-ui;color:#8a847a" class="num">{{ r.sub }}</small></span><button onClick="{{ r.onDelete }}" style="width:26px;height:26px;border:1px solid rgba(35,32,28,.14);border-radius:7px;background:#fff;color:#a8342a;cursor:pointer;font-size:14px">×</button></div></sc-for></div></div></sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <!--SCREENS-->
+
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen:'dashboard', prev:null, lang:'ur', numerals:'west',
+    // entry
+    E:{ event:'sale', partyId:null, partyQuery:'', lines:[], draft:'', kaat:0, amount:0, cash:0, recent:[], justSaved:null, partyOpen:false, draftOpen:false },
+    // reconciliation
+    counted:'', reconDone:false,
+    khataId:null, itemCode:null };
+
+  parties = [
+    {id:'rana', ur:'رانا کلاتھ ہاؤس', en:'Rana Cloth House', bal:38000, phone:'0301-6650012', age:22, city:'فیصل آباد'},
+    {id:'crescent', ur:'کریسنٹ ٹیکسٹائل', en:'Crescent Textiles', bal:-72000, phone:'041-2540980', age:48, city:'فیصل آباد'},
+    {id:'bilal', ur:'بلال فیبرکس', en:'Bilal Fabrics', bal:12500, phone:'0333-7712004', age:9, city:'سمندری'},
+    {id:'shaheen', ur:'شاہین کلاتھ', en:'Shaheen Cloth', bal:-5400, phone:'0300-9981220', age:5, city:'فیصل آباد'},
+    {id:'madina', ur:'المدینہ ٹریڈرز', en:'Al-Madina Traders', bal:0, phone:'0321-4460071', age:0, city:'جھنگ'},
+    {id:'noor', ur:'نور ٹیکسٹائل', en:'Noor Textile', bal:26300, phone:'0345-1122880', age:71, city:'فیصل آباد'},
+    {id:'iqbal', ur:'اقبال کلاتھ ہاؤس', en:'Iqbal Cloth House', bal:8900, phone:'0302-5567341', age:14, city:'چنیوٹ'},
+  ];
+  designs = [
+    {code:'Chamki-440', ur:'چمکی', unit:'m', unitUr:'میٹر', rate:320, cost:245, stock:640, sold7:410, amt7:131200},
+    {code:'Lawn-2205', ur:'لان', unit:'m', unitUr:'میٹر', rate:480, cost:360, stock:1200, sold7:320, amt7:153600},
+    {code:'Khaddar-88', ur:'کھدر', unit:'m', unitUr:'میٹر', rate:260, cost:198, stock:300, sold7:260, amt7:67600},
+    {code:'Silk-Mixx-17', ur:'سلک مکس', unit:'than', unitUr:'تھان', rate:5400, cost:4300, stock:36, sold7:14, amt7:75600},
+    {code:'Cambric-330', ur:'کیمبرک', unit:'m', unitUr:'میٹر', rate:210, cost:165, stock:80, sold7:180, amt7:37800},
+    {code:'Voile-51', ur:'وائل', unit:'m', unitUr:'میٹر', rate:175, cost:140, stock:0, sold7:0, amt7:0},
+  ];
+
+  T = {
+    ur:{ brand:'کپڑا گھر', brandSub:'رانا کلاتھ مارکیٹ', planName:'پرو پلان فعال', planExp:'میعاد: ۳۱ جولائی',
+      newEntry:'+ نئی انٹری', galla:'گلہ (نقد)', bank:'بینک', cashPos:'نقد پوزیشن', profitToday:'آج کا منافع',
+      salesToday:'آج کی سیل', marginPct:'مارجن', profitHint:'منافع نقد نہیں — سپلائر کو دینے سے نقد گھٹ سکتا ہے',
+      trend:'اِس ہفتے: آمد و خرچ', moneyIn:'آمدنی', moneyOut:'خرچ', aging:'وصولیوں کی عمر',
+      topRecv:'سب سے بڑی وصولیاں', topPay:'سب سے بڑی ادائیگیاں', theyOwe:'آپ کے لینے', youOwe:'آپ کے دینے',
+      topDesigns:'سب سے زیادہ بکنے والے', sold7:'۷ دن', 
+      nav:{dashboard:'ڈیش بورڈ', entry:'نئی انٹری', cashbook:'روزنامچہ', khata:'کھاتہ', stock:'اسٹاک', billing:'بلنگ', settings:'ترتیبات'},
+      titles:{dashboard:['ڈیش بورڈ','ایک نظر میں دکان'], entry:['نئی انٹری','واقعہ درج کریں'], cashbook:['روزنامچہ','آج کی نقد و بینک آمد و رفت'], khata:['کھاتہ','پارٹیوں کے حساب'], khataDetail:['کھاتہ بیان','چلتا حساب'], stock:['اسٹاک','مال کی موجودگی'], itemDetail:['آئٹم تفصیل','آمد و رفت'], billing:['بلنگ','بل بنائیں'], settings:['ترتیبات','دکان و سسٹم'], login:['',''], onboard:['آغاز','ابتدائی بیلنس']} },
+    en:{ brand:'Kapra Ghar', brandSub:'Rana Cloth Market', planName:'Pro plan active', planExp:'Renews 31 Jul',
+      newEntry:'+ New entry', galla:'Galla (cash)', bank:'Bank', cashPos:'Cash position', profitToday:'Profit today',
+      salesToday:'Sales today', marginPct:'Margin', profitHint:'Profit isn’t cash — paying a supplier can drop cash',
+      trend:'This week: in & out', moneyIn:'Money in', moneyOut:'Money out', aging:'Receivables aging',
+      topRecv:'Top receivables', topPay:'Top payables', theyOwe:'they owe you', youOwe:'you owe',
+      topDesigns:'Top-selling designs', sold7:'7 days',
+      nav:{dashboard:'Dashboard', entry:'New entry', cashbook:'Cashbook', khata:'Khata', stock:'Stock', billing:'Billing', settings:'Settings'},
+      titles:{dashboard:['Dashboard','Your shop at a glance'], entry:['New entry','Record what happened'], cashbook:['Cashbook','Today’s cash & bank movement'], khata:['Khata','Party ledgers'], khataDetail:['Khata statement','Running account'], stock:['Stock','What’s on hand'], itemDetail:['Item detail','Movement history'], billing:['Billing','Create a bill'], settings:['Settings','Store & system'], login:['',''], onboard:['Get started','Opening balances']} }
+  };
+
+  icons = {
+    dashboard:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+    entry:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>',
+    cashbook:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 4v16"/></svg>',
+    khata:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 3v18"/></svg>',
+    stock:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>',
+    billing:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l3 3v17l-2.5-1.5L13 22l-2.5-1.5L8 22l-2.5-1.5L6 22z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>',
+    settings:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>'
+  };
+
+  toEast(s){ return String(s).replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[+d]); }
+  fmt(n){ if(n==null||isNaN(n))n=0; n=Math.round(n); let s=Math.abs(n).toLocaleString('en-US'); if(this.state.numerals==='east')s=this.toEast(s); return (n<0?'−':'')+s; }
+  rs(n){ return 'Rs '+this.fmt(Math.abs(n)); }
+  L(){ return this.T[this.state.lang]; }
+  langName(p){ return this.state.lang==='ur'? p.ur : p.en; }
+  go(screen){ this.setState(s=>({prev:s.screen, screen})); }
+  party(id){ return this.parties.find(p=>p.id===id); }
+  design(c){ return this.designs.find(d=>d.code===c); }
+
+  navVals(){
+    const L=this.L(), cur=this.state.screen;
+    const order=['dashboard','entry','cashbook','khata','stock','billing','settings'];
+    const badges={ khata:'٤', cashbook:null };
+    return order.map(k=>{
+      const active = cur===k || (k==='khata'&&cur==='khataDetail') || (k==='stock'&&cur==='itemDetail');
+      return { label:L.nav[k], icon:React.createElement('span',{style:{display:'flex'},dangerouslySetInnerHTML:{__html:this.icons[k]}}), go:()=>this.go(k),
+        badge: this.state.lang==='ur'? (k==='khata'?'٤':null) : (k==='khata'?'4':null),
+        badgeBg: active?'rgba(255,255,255,.2)':'#c98a2b', badgeFg:'#fff',
+        style:'display:flex;align-items:center;gap:11px;width:100%;padding:9px 11px;border:0;border-radius:10px;cursor:pointer;font-family:inherit;'+(active?'background:#1f5c4d;color:#fff;':'background:transparent;color:#c4bcae;') };
+    });
+  }
+
+  dashVals(){
+    const L=this.L(), fmt=n=>this.fmt(n), rs=n=>this.rs(n);
+    const galla=84500, bank=240000;
+    const trendRaw=[ {l:'ہفتہ',le:'Sa',in:120,out:60},{l:'اتوار',le:'Su',in:40,out:30},{l:'پیر',le:'Mo',in:210,out:180},{l:'منگل',le:'Tu',in:150,out:90},{l:'بدھ',le:'We',in:180,out:220},{l:'جمعرات',le:'Th',in:95,out:70},{l:'جمعہ',le:'Fr',in:240,out:110} ];
+    const max=Math.max(...trendRaw.flatMap(d=>[d.in,d.out]));
+    const recvP=this.parties.filter(p=>p.bal>0).sort((a,b)=>b.bal-a.bal).slice(0,3);
+    const payP=this.parties.filter(p=>p.bal<0).sort((a,b)=>a.bal-b.bal).slice(0,3);
+    const agingRaw=[ {l:this.state.lang==='ur'?'۰–۳۰ دن':'0–30 d',v:59700,c:'#1f7a4d'},{l:this.state.lang==='ur'?'۳۱–۶۰ دن':'31–60 d',v:12500,c:'#c9a24a'},{l:this.state.lang==='ur'?'۶۱–۹۰ دن':'61–90 d',v:26300,c:'#c0796a'},{l:this.state.lang==='ur'?'۹۰+ دن':'90+ d',v:0,c:'#a8342a'} ];
+    const agMax=Math.max(...agingRaw.map(a=>a.v),1);
+    return { dash:{
+      cashTotal:rs(galla+bank), galla:rs(galla), bank:rs(bank),
+      cashDeltaTone:'#a8342a', cashDeltaSign:'▼', cashDeltaText:(this.state.lang==='ur'?'آج '+rs(60000)+' کریسنٹ کو دیے — نقد گھٹا':'Paid '+rs(60000)+' to Crescent today — cash fell'),
+      profit:rs(18600), salesToday:rs(96400), margin:(this.state.numerals==='east'?this.toEast('19%'):'19%'),
+      trend:trendRaw.map(d=>({ label:this.state.lang==='ur'?d.l:d.le, inH:Math.round(d.in/max*100), outH:Math.round(d.out/max*100) })),
+      aging:agingRaw.map(a=>({ label:a.l, amt:rs(a.v), pct:Math.round(a.v/agMax*100), color:a.c })),
+      recv:recvP.map(p=>({ name:this.langName(p), initial:this.langName(p).slice(0,1), amt:rs(p.bal), go:()=>this.openKhata(p.id) })),
+      pay:payP.map(p=>({ name:this.langName(p), initial:this.langName(p).slice(0,1), amt:rs(Math.abs(p.bal)), go:()=>this.openKhata(p.id) })),
+      designs:this.designs.filter(d=>d.sold7>0).sort((a,b)=>b.amt7-a.amt7).slice(0,3).map((d,i)=>({ rank:this.state.numerals==='east'?this.toEast(i+1):(i+1), code:d.code, qty:fmt(d.sold7)+' '+(this.state.lang==='ur'?d.unitUr:d.unit), amt:rs(d.amt7) })),
+    }};
+  }
+  openKhata(id){ this.setState(s=>({prev:this.state.screen, screen:'khataDetail', khataId:id})); }
+
+  setE(patch){ this.setState(s=>({E:{...s.E,...patch}})); }
+  eHasLines(ev){ return ev==='sale'||ev==='purchase'||ev==='ret'; }
+  eShowAmount(ev){ return ev==='receipt'||ev==='payment'||ev==='expense'; }
+  eTotal(E){ E=E||this.state.E; if(this.eHasLines(E.event)){ let s=E.lines.reduce((t,l)=>t+(Number(l.qty)||0)*(Number(l.rate)||0),0); return Math.max(0,s-(Number(E.kaat)||0)); } return Number(E.amount)||0; }
+  eCanSave(){ const E=this.state.E, t=this.eTotal(E); if(t<=0) return false; if(E.event!=='expense'&&E.event!=='sale'&&!E.partyId) return false; return true; }
+  eBal(nb){ const L=this.L(); if(nb>0) return this.rs(nb)+' '+L.theyOwe; if(nb<0) return this.rs(Math.abs(nb))+' '+L.youOwe; return this.state.lang==='ur'?'برابر':'settled'; }
+  eSave(){ if(!this.eCanSave()) return; const E=this.state.E, total=this.eTotal(E), ur=this.state.lang==='ur';
+    const p=this.party(E.partyId); const pn=p?this.langName(p):(ur?'کیش کسٹمر':'Cash customer');
+    const cash=Number(E.cash)||0, ud=Math.max(0,total-cash);
+    const labels={sale:ur?'سیل':'Sale',receipt:ur?'وصولی':'Receipt',payment:ur?'ادائیگی':'Payment',purchase:ur?'خریداری':'Purchase',ret:ur?'واپسی':'Return',expense:ur?'خرچہ':'Expense'};
+    const entry={ id:'e'+Date.now(), event:E.event, pn, total, ud, sub:this.rs(total)+(ud>0&&(E.event==='sale')?' · '+this.fmt(ud)+(ur?' ادھار':' udhaar'):''), label:labels[E.event] };
+    const savedMsg = (ur?'محفوظ ہوگیا':'Saved')+' — '+entry.label;
+    this.setState(s=>({E:{...s.E, lines:[], draft:'', kaat:0, amount:0, cash:0, partyOpen:false, draftOpen:false, justSaved:savedMsg, recent:[entry,...s.E.recent].slice(0,5)}}),()=>{ const el=document.getElementById('e-party')||document.getElementById('e-amount'); el&&el.focus(); }); }
+  eExample(){ this.setState(s=>({E:{...s.E, event:'sale', partyId:'rana', partyQuery:this.langName(this.party('rana')), lines:[{design:'Chamki-440',qty:100,rate:320},{design:'Cambric-330',qty:60,rate:210}], kaat:600, cash:20000, amount:0, justSaved:null, partyOpen:false, draftOpen:false }})); }
+  eClear(){ this.setE({partyId:null,partyQuery:'',lines:[],draft:'',kaat:0,amount:0,cash:0,justSaved:null,partyOpen:false,draftOpen:false}); }
+  eUpdateLine(i,f,v){ v=v.replace(/[^0-9.]/g,''); this.setState(s=>({E:{...s.E,lines:s.E.lines.map((l,j)=>j===i?{...l,[f]:v}:l)}})); }
+
+  openItem(code){ this.setState(s=>({prev:'stock', screen:'itemDetail', itemCode:code})); }
+  stockVals(){
+    const ur=this.state.lang==='ur', fmt=n=>this.fmt(n), rs=n=>this.rs(n);
+    const rows=this.designs.map(d=>{ const val=d.stock*d.cost; const low=d.stock>0&&d.stock<=100; const out=d.stock===0;
+      return { code:d.code, name:d.ur, unit:ur?d.unitUr:d.unit, initial:d.ur.slice(0,1),
+        qty:fmt(d.stock), rate:rs(d.rate), value:rs(val),
+        statusT: out?(ur?'ختم':'Out'):low?(ur?'کم':'Low'):(ur?'موجود':'In stock'),
+        statusBg: out?'#f5e5e2':low?'#fbf3e8':'#e6f0ea', statusFg: out?'#a8342a':low?'#8a5a1c':'#1f7a4d',
+        go:()=>this.openItem(d.code) }; });
+    const totalVal=this.designs.reduce((t,d)=>t+d.stock*d.cost,0);
+    const skus=this.designs.length, low=this.designs.filter(d=>d.stock>0&&d.stock<=100).length, out=this.designs.filter(d=>d.stock===0).length;
+    return { st:{ rows, totalVal:rs(totalVal), skus:fmt(skus), low:fmt(low), out:fmt(out),
+      lbl:{ search:ur?'ڈیزائن نمبر سے تلاش…':'Search by design number…', totalVal:ur?'اسٹاک کی مالیت':'Stock value', skus:ur?'ڈیزائن':'Designs', low:ur?'کم':'Low', out:ur?'ختم':'Out',
+        design:ur?'ڈیزائن':'Design', onHand:ur?'موجود':'On hand', rate:ur?'ریٹ':'Rate', value:ur?'مالیت':'Value', status:ur?'حالت':'Status', count:ur?'گنتی ملائیں':'Reconcile count' } }};
+  }
+  itemDetailVals(){
+    const ur=this.state.lang==='ur', fmt=n=>this.fmt(n), rs=n=>this.rs(n);
+    const d=this.design(this.state.itemCode)||this.designs[0]; const unit=ur?d.unitUr:d.unit;
+    const moves=[
+      {dt:'01-07-2026', ur:'سیل — رانا کلاتھ ہاؤس', en:'Sale — Rana Cloth House', q:-100},
+      {dt:'29-06-2026', ur:'خریداری — کریسنٹ ٹیکسٹائل', en:'Purchase — Crescent Textiles', q:400},
+      {dt:'27-06-2026', ur:'سیل — کیش کسٹمر', en:'Sale — cash customer', q:-80},
+      {dt:'24-06-2026', ur:'سیل — بلال فیبرکس', en:'Sale — Bilal Fabrics', q:-60},
+      {dt:'20-06-2026', ur:'ابتدائی اسٹاک', en:'Opening stock', q:480},
+    ];
+    let run=d.stock; const rows=moves.map(m=>{ const r={ date:this.state.numerals==='east'?this.toEast(m.dt):m.dt, desc:ur?m.ur:m.en, qty:(m.q>0?'+ ':'− ')+fmt(Math.abs(m.q))+' '+unit, tone:m.q>0?'#1f7a4d':'#a8342a', bal:fmt(run)+' '+unit }; run-=m.q; return r; });
+    return { it:{ code:d.code, name:d.ur, unit, qty:fmt(d.stock), value:rs(d.stock*d.cost), rate:rs(d.rate), cost:rs(d.cost), rows,
+      lbl:{ onHand:ur?'موجود اسٹاک':'On hand', value:ur?'مالیت (لاگت پر)':'Value (at cost)', sale:ur?'سیل ریٹ':'Sale rate', cost:ur?'لاگت':'Cost',
+        history:ur?'آمد و رفت':'Movement history', date:ur?'تاریخ':'Date', desc:ur?'تفصیل':'Detail', qty:ur?'مقدار':'Qty', running:ur?'چلتا اسٹاک':'Running',
+        countTitle:ur?'جسمانی گنتی ملائیں':'Physical count check', countSub:ur?'گودام میں گنا ہوا مال لکھیں':'Enter what you counted in the godown', countBtn:ur?'گنتی درج کریں':'Save count' } }};
+  }
+  billingVals(){
+    const ur=this.state.lang==='ur', fmt=n=>this.fmt(n), rs=n=>this.rs(n);
+    const lines=[ {code:'Chamki-440', ur:'چمکی', qty:100, unit:ur?'میٹر':'m', rate:320}, {code:'Cambric-330', ur:'کیمبرک', qty:60, unit:ur?'میٹر':'m', rate:210}, {code:'Lawn-2205', ur:'لان', qty:40, unit:ur?'میٹر':'m', rate:480} ];
+    const sub=lines.reduce((t,l)=>t+l.qty*l.rate,0); const kaat=1200; const total=sub-kaat;
+    return { bl:{ storeName:ur?'کپڑا گھر — رانا کلاتھ مارکیٹ':'Kapra Ghar — Rana Cloth Market', storeSub:ur?'دکان نمبر ۴۲، گھنٹہ گھر، فیصل آباد':'Shop 42, Ghanta Ghar, Faisalabad',
+      billNo:this.state.numerals==='east'?this.toEast('BL-1042'):'BL-1042', date:this.state.numerals==='east'?this.toEast('01-07-2026'):'01-07-2026',
+      party:ur?'رانا کلاتھ ہاؤس':'Rana Cloth House', partySub:this.state.numerals==='east'?this.toEast('0301-6650012'):'0301-6650012',
+      lines:lines.map((l,i)=>({ n:this.state.numerals==='east'?this.toEast(i+1):(i+1), code:l.code, name:l.ur, qty:fmt(l.qty)+' '+l.unit, rate:rs(l.rate), amount:rs(l.qty*l.rate) })),
+      sub:rs(sub), kaat:'− '+rs(kaat), total:rs(total), totalWords: ur?'صرف نوّے ہزار آٹھ سو روپے':'Rupees ninety thousand eight hundred only',
+      lbl:{ mode:ur?'بل کی قسم':'Bill type', cash:ur?'نقد':'Cash', credit:ur?'ادھار':'Credit', preview:ur?'بل کا نمونہ':'Bill preview', print:ur?'پرنٹ / بھیجیں':'Print / share', saveBill:ur?'بل محفوظ + انٹری':'Save bill + entry',
+        billTo:ur?'بنام':'Bill to', design:ur?'ڈیزائن':'Design', qty:ur?'مقدار':'Qty', rate:ur?'ریٹ':'Rate', amount:ur?'رقم':'Amount', sub:ur?'میزان':'Subtotal', kaat:ur?'کاٹ':'Kaat', total:ur?'کل واجب':'Total due', thanks:ur?'خریداری کا شکریہ':'Thank you for your business', words:ur?'الفاظ میں':'In words' } }};
+  }
+  loginVals(){
+    const ur=this.state.lang==='ur';
+    return { lg:{
+      title:ur?'کپڑا گھر':'Kapra Ghar', tag:ur?'آپ کے حساب کتاب کا بھروسہ':'Your ledger, trusted',
+      phoneLabel:ur?'موبائل نمبر':'Mobile number', phonePh:ur?'03xx-xxxxxxx':'03xx-xxxxxxx',
+      otpLabel:ur?'او ٹی پی کوڈ':'OTP code', sendOtp:ur?'کوڈ بھیجیں':'Send code', login:ur?'داخل ہوں':'Log in',
+      or:ur?'یا':'or', pass:ur?'پاس ورڈ سے داخل ہوں':'Log in with password', note:ur?'ایک منٹ میں آپ کے فون پر کوڈ آئے گا':'A code will reach your phone in a minute',
+      demo:ur?'ڈیمو: ایپ میں جائیں':'Demo: enter the app' }};
+  }
+  onboardVals(){
+    const ur=this.state.lang==='ur', rs=n=>this.rs(n);
+    const recv=this.parties.filter(p=>p.bal>0), pay=this.parties.filter(p=>p.bal<0);
+    return { ob:{
+      title:ur?'آغاز — پرانا حساب درج کریں':'Get started — enter your existing balances',
+      sub:ur?'پہلے دن ایپ کو حقیقت سے ملانے کے لیے تین چیزیں درج کریں۔ ایک وقت میں ایک — جلدی نہیں۔':'To make day one match reality, enter three things. One at a time — no rush.',
+      steps:[
+        { badge:'✓', done:'#1f7a4d', countTone:'#1f7a4d', countBg:'#e6f0ea', title:ur?'پارٹیوں کے بقایا':'Party balances', sub:ur?'کس کے کتنے لینے، کس کے کتنے دینے':'Who owes you, whom you owe',
+          rows:[ ...recv.map(p=>({name:this.langName(p),amt:rs(p.bal),tone:'#1f7a4d',dir:ur?'لینے':'owes you'})), ...pay.map(p=>({name:this.langName(p),amt:rs(Math.abs(p.bal)),tone:'#a8342a',dir:ur?'دینے':'you owe'})) ],
+          count:ur?'۷ پارٹیاں درج':'7 parties entered' },
+        { badge:'✓', done:'#1f7a4d', countTone:'#1f7a4d', countBg:'#e6f0ea', title:ur?'ابتدائی اسٹاک':'Opening stock', sub:ur?'ہر ڈیزائن کا موجودہ مال':'Current cloth per design',
+          rows:this.designs.slice(0,4).map(d=>({name:d.code,amt:this.fmt(d.stock)+' '+(ur?d.unitUr:d.unit),tone:'#524c43',dir:d.ur})),
+          count:ur?'۶ ڈیزائن درج':'6 designs entered' },
+        { badge:ur?'۳':'3', done:'#c98a2b', countTone:'#8a5a1c', countBg:'#fbf3e8', title:ur?'نقد و بینک':'Cash & bank', sub:ur?'آج گلہ اور بینک میں کتنا':'What’s in the drawer & bank today',
+          rows:[ {name:ur?'گلہ (نقد)':'Galla (cash)',amt:rs(6300),tone:'#1f5c4d',dir:''}, {name:ur?'بینک':'Bank',amt:rs(287500),tone:'#1d4e7a',dir:''} ],
+          count:ur?'آخری قدم':'Last step' }
+      ],
+      progress:ur?'۲ / ۳ مکمل':'2 of 3 done',
+      lbl:{ enterField:ur?'رقم لکھیں':'Enter amount', finish:ur?'مکمل کریں اور ایپ شروع کریں':'Finish & open the app', later:ur?'بعد میں':'Later', enterApp:ur?'ایپ میں جائیں':'Open the app' }
+    }};
+  }
+  settingsVals(){
+    const ur=this.state.lang==='ur';
+    return { se:{
+      store:{ name:ur?'کپڑا گھر — رانا کلاتھ مارکیٹ':'Kapra Ghar — Rana Cloth Market', addr:ur?'دکان نمبر ۴۲، گھنٹہ گھر، فیصل آباد':'Shop 42, Ghanta Ghar, Faisalabad', phone:this.state.numerals==='east'?this.toEast('041-2540980'):'041-2540980' },
+      lbl:{ storeSec:ur?'دکان کی معلومات':'Store details', name:ur?'دکان کا نام':'Store name', addr:ur?'پتہ':'Address', phone:ur?'فون':'Phone', logo:ur?'لوگو / واٹر مارک':'Logo / watermark', upload:ur?'اپ لوڈ کریں':'Upload',
+        langSec:ur?'زبان و نمبر':'Language & numerals', language:ur?'زبان':'Language', numerals:ur?'ہندسے':'Numerals', western:ur?'انگریزی ۱۲۳':'Western 123', eastern:ur?'اردو ۱۲۳':'Eastern ۱۲۳',
+        usersSec:ur?'صارفین':'Users', catSec:ur?'آئٹم کیٹلاگ':'Item catalog', catSub:ur?'نام، ڈیزائن نمبر، یونٹ، ڈیفالٹ ریٹ':'Name, design no., unit, default rate',
+        setupSec:ur?'سیٹ اپ و رسائی':'Setup & access', openingBtn:ur?'ابتدائی بیلنس دوبارہ':'Opening balances', loginBtn:ur?'لاگ ان اسکرین':'Login screen',
+        planSec:ur?'پلان و سبسکرپشن':'Plan & subscription', planName:ur?'پرو پلان':'Pro plan', planStatus:ur?'فعال — ۳۱ جولائی کو تجدید':'Active — renews 31 Jul', manage:ur?'انتظام':'Manage', save:ur?'محفوظ کریں':'Save changes' },
+      users:[ {name:ur?'محمد رانا (مالک)':'Muhammad Rana (Owner)',role:ur?'مکمل رسائی':'Full access'}, {name:ur?'کاشف (منشی)':'Kashif (Clerk)',role:ur?'صرف انٹری':'Entry only'} ]
+    }};
+  }
+  khataVals(){
+    const ur=this.state.lang==='ur', rs=n=>this.rs(n), L=this.L();
+    const rows=this.parties.map(p=>{ const dir=p.bal>0?'recv':p.bal<0?'pay':'settled';
+      return { id:p.id, name:this.langName(p), city:p.city, phone:p.phone, initial:this.langName(p).slice(0,1),
+        amt:p.bal===0?(ur?'برابر':'settled'):rs(Math.abs(p.bal)),
+        tone:dir==='recv'?'#1f7a4d':dir==='pay'?'#a8342a':'#8a847a',
+        dirLabel: dir==='recv'?L.theyOwe:dir==='pay'?L.youOwe:(ur?'کوئی بقایا نہیں':'nothing due'),
+        sign: dir==='recv'?'▲':dir==='pay'?'▼':'•',
+        age: p.age>0? (this.state.numerals==='east'?this.toEast(p.age):p.age)+(ur?' دن':' d') : '—',
+        ageTone: p.age>60?'#a8342a':p.age>30?'#c98a2b':'#8a847a',
+        go:()=>this.openKhata(p.id) }; });
+    const totalRecv=this.parties.filter(p=>p.bal>0).reduce((t,p)=>t+p.bal,0);
+    const totalPay=this.parties.filter(p=>p.bal<0).reduce((t,p)=>t-p.bal,0);
+    return { kh:{ rows, totalRecv:rs(totalRecv), totalPay:rs(totalPay),
+      lbl:{ search:ur?'پارٹی تلاش کریں…':'Search party…', totalRecv:ur?'کل لینے':'Total you’re owed', totalPay:ur?'کل دینے':'Total you owe',
+        party:ur?'پارٹی':'Party', contact:ur?'رابطہ':'Contact', age:ur?'پرانی':'Age', baqaya:ur?'بقایا':'Baqaya' } }};
+  }
+  khataDetailVals(){
+    const ur=this.state.lang==='ur', rs=n=>this.rs(n), fmt=n=>this.fmt(n), L=this.L();
+    const p=this.party(this.state.khataId)||this.parties[0];
+    // statement events (dated), with running balance (positive = they owe you)
+    const evs=[
+      {d:'12-06-2026', ur:'ابتدائی بقایا', en:'Opening balance', ud:20000, rec:0},
+      {d:'16-06-2026', ur:'سیل — چمکی ۱۰۰م، کیمبرک ۶۰م', en:'Sale — Chamki 100m, Cambric 60m', ud:44000, rec:0},
+      {d:'20-06-2026', ur:'وصولی — نقد', en:'Receipt — cash', ud:0, rec:30000},
+      {d:'25-06-2026', ur:'سیل — لان ۸۰م', en:'Sale — Lawn 80m', ud:38400, rec:0},
+      {d:'28-06-2026', ur:'وصولی — بینک ٹرانسفر', en:'Receipt — bank transfer', ud:0, rec:34400},
+      {d:'01-07-2026', ur:'سیل — سلک مکس ۲ تھان', en:'Sale — Silk-Mixx 2 than', ud:10800, rec:0},
+    ];
+    let bal=0; const rows=evs.map(e=>{ bal+=e.ud-e.rec;
+      return { date: this.state.numerals==='east'?this.toEast(e.d):e.d, desc:ur?e.ur:e.en,
+        debit: e.ud>0? rs(e.ud):'—', credit: e.rec>0? rs(e.rec):'—',
+        bal: rs(Math.abs(bal)), balDir: bal>0?(ur?'لینے':'Dr'):bal<0?(ur?'دینے':'Cr'):'', balTone: bal>0?'#1f7a4d':bal<0?'#a8342a':'#8a847a' }; });
+    const cur=p.bal; 
+    return { khd:{ name:this.langName(p), phone:p.phone, city:p.city, initial:this.langName(p).slice(0,1),
+      curAmt: cur===0?(ur?'برابر':'settled'):rs(Math.abs(cur)), curTone: cur>0?'#1f7a4d':cur<0?'#a8342a':'#8a847a',
+      curDir: cur>0?L.theyOwe:cur<0?L.youOwe:(ur?'کوئی بقایا نہیں':'nothing due'), rows,
+      lbl:{ date:ur?'تاریخ':'Date', desc:ur?'تفصیل':'Detail', debit:ur?'اُدھار (لیا)':'Sold to them', credit:ur?'جمع (دیا)':'They paid', balance:ur?'بقایا':'Balance',
+        curBal:ur?'موجودہ بقایا':'Current balance', share:ur?'بھیجیں / پرنٹ':'Share / print', recordRecv:ur?'وصولی درج کریں':'Record receipt', call:ur?'کال':'Call' } }};
+  }
+  cashbookRows(){
+    const ur=this.state.lang==='ur';
+    // time, kind(in/out), channel(cash/bank), who, note-ur/en, amount
+    return [
+      {t:'09:40', k:'in', ch:'cash', ur:'رانا کلاتھ ہاؤس نے دیے', en:'Received from Rana Cloth House', amt:50000},
+      {t:'10:15', k:'in', ch:'cash', ur:'کیش سیل — چمکی ۸۰م', en:'Cash sale — Chamki 80m', amt:25600},
+      {t:'11:05', k:'out', ch:'cash', ur:'چائے و ناشتہ (خرچہ)', en:'Tea & breakfast (expense)', amt:900},
+      {t:'12:30', k:'in', ch:'bank', ur:'بلال فیبرکس — بینک ٹرانسفر', en:'Bilal Fabrics — bank transfer', amt:12500},
+      {t:'14:20', k:'out', ch:'bank', ur:'کریسنٹ ٹیکسٹائل کو ادائیگی', en:'Paid Crescent Textiles', amt:60000},
+      {t:'15:10', k:'in', ch:'cash', ur:'کیش سیل — لان ۴۰م', en:'Cash sale — Lawn 40m', amt:19200},
+      {t:'16:45', k:'out', ch:'cash', ur:'مزدوری (خرچہ)', en:'Labour wages (expense)', amt:1500},
+      {t:'17:30', k:'in', ch:'cash', ur:'شاہین کلاتھ نے دیے', en:'Received from Shaheen Cloth', amt:8000},
+    ];
+  }
+  cashbookVals(){
+    const S=this.state, ur=S.lang==='ur', fmt=n=>this.fmt(n), rs=n=>this.rs(n);
+    const openCash=6300, openBank=287500;
+    const rows=this.cashbookRows();
+    let cash=openCash, bank=openBank;
+    const list=rows.map(r=>{ const amt=r.k==='in'?r.amt:-r.amt; if(r.ch==='cash')cash+=amt; else bank+=amt;
+      return { time:r.t, who:ur?r.ur:r.en, chan: r.ch==='cash'?(ur?'نقد':'Cash'):(ur?'بینک':'Bank'), chanBg:r.ch==='cash'?'#efeae0':'#e6eef2', chanFg:r.ch==='cash'?'#6b655c':'#1d4e7a',
+        sign:r.k==='in'?'▲':'▼', tone:r.k==='in'?'#1f7a4d':'#a8342a', amt:(r.k==='in'?'+ ':'− ')+rs(r.amt), bal:rs(r.ch==='cash'?cash:bank) }; });
+    const cashClose=cash, bankClose=bank;
+    const counted=Number(S.counted)||0;
+    const hasCount = S.counted!=='' && !isNaN(Number(S.counted));
+    const diff = counted-cashClose;
+    const matched = hasCount && diff===0;
+    return { cb:{
+      openCash:rs(openCash), openBank:rs(openBank), cashClose:rs(cashClose), bankClose:rs(bankClose), rawCashClose:cashClose,
+      rows:list,
+      totalIn:rs(rows.filter(r=>r.k==='in').reduce((t,r)=>t+r.amt,0)), totalOut:rs(rows.filter(r=>r.k==='out').reduce((t,r)=>t+r.amt,0)),
+      countedVal:S.counted, onCounted:e=>this.setState({counted:e.target.value.replace(/[^0-9]/g,'')}),
+      fill:()=>this.setState({counted:String(cashClose)}), fillShort:()=>this.setState({counted:String(cashClose-2000)}),
+      hasCount, matched, mismatch: hasCount && diff!==0, diff, diffAbs:rs(Math.abs(diff)), over:diff>0,
+      diffLabel: diff>0? (ur?'زیادہ':'Over') : (ur?'کم':'Short'),
+      systemStr:rs(cashClose), countedStr:hasCount?rs(counted):'—',
+      lbl:{ open:ur?'ابتدائی':'Opening', close:ur?'اختتامی':'Closing', time:ur?'وقت':'Time', detail:ur?'تفصیل':'Detail', channel:ur?'ذریعہ':'Channel', amount:ur?'رقم':'Amount', running:ur?'چلتا حساب':'Running',
+        cashCol:ur?'نقد (گلہ)':'Cash (Galla)', bankCol:ur?'بینک':'Bank', totalIn:ur?'کل آمد':'Total in', totalOut:ur?'کل خرچ':'Total out',
+        reconTitle:ur?'رات کی ملان — گلہ گنیں':'Nightly check — count the galla', reconSub:ur?'سسٹم کے مطابق گلہ میں اتنے ہونے چاہئیں':'System says the drawer should hold',
+        systemCash:ur?'سسٹم کا نقد':'System cash', countedCash:ur?'گنی ہوئی نقد':'Counted cash', enterCount:ur?'گلہ میں گنے ہوئے نوٹ لکھیں':'Enter the notes you counted',
+        matchT:ur?'ملان ہوگیا ✓':'It matches ✓', matchB:ur?'گلہ سسٹم سے پورا برابر ہے۔ آج کا حساب بند کر دیں۔':'The drawer matches the system exactly. You can close the day.',
+        shortT:ur?'کم ہے':'Short', overT:ur?'زیادہ ہے':'Over', mismatchB:ur?'گھبرائیں نہیں — فرق تلاش کریں یا ایک انٹری شامل کریں':'No worry — find the gap or add a missing entry',
+        closeDay:ur?'دن بند کریں':'Close the day', addMissing:ur?'چھوٹی انٹری شامل کریں':'Add missing entry',
+        useSystem:ur?'برابر بھریں (مثال)':'Fill matched (demo)', useShort:ur?'کم بھریں (مثال)':'Fill short (demo)' }
+    }};
+  }
+
+  entryVals(){
+    const S=this.state, E=S.E, L=this.L(), ur=S.lang==='ur', fmt=n=>this.fmt(n), rs=n=>this.rs(n);
+    const total=this.eTotal(E), hasLines=this.eHasLines(E.event), showAmount=this.eShowAmount(E.event);
+    const cash=Number(E.cash)||0, moneyB=Math.max(0,total-cash);
+    const evT={ sale:[ur?'سیل':'Sale',ur?'بیچا':'sold','#1f5c4d'], receipt:[ur?'وصولی':'Receipt',ur?'پارٹی نے دیے':'party paid','#1f7a4d'], payment:[ur?'ادائیگی':'Payment',ur?'سپلائر کو':'to supplier','#a8342a'], purchase:[ur?'خریداری':'Purchase',ur?'مال آیا':'stock in','#a8342a'], ret:[ur?'واپسی':'Return',ur?'مال واپس':'goods back','#1f5c4d'], expense:[ur?'خرچہ':'Expense',ur?'دکان کا خرچ':'shop cost','#a8342a'] };
+    const order=['sale','receipt','payment','purchase','ret','expense'];
+    const events=order.map(k=>{ const a=E.event===k, m=evT[k]; return { label:m[0], sub:m[1], bar:m[2], onClick:()=>this.setE({event:k,justSaved:null,partyOpen:false,draftOpen:false}),
+      style:'display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:10px;cursor:pointer;font-family:inherit;white-space:nowrap;'+(a?'background:#fff;border:1px solid rgba(31,92,77,.4);box-shadow:0 1px 3px rgba(0,0,0,.06);':'background:#efeae0;border:1px solid transparent;') }; });
+    // party
+    const q=(E.partyQuery||'').trim().toLowerCase();
+    const pRes=this.parties.filter(p=>!q||p.en.toLowerCase().includes(q)||p.ur.includes(E.partyQuery)).map(p=>{
+      const tone=p.bal>0?'#1f7a4d':p.bal<0?'#a8342a':'#8a847a'; const dirT=p.bal>0?L.theyOwe:p.bal<0?L.youOwe:(ur?'برابر':'settled');
+      return { name:this.langName(p), tone, balStr:p.bal===0?dirT:rs(Math.abs(p.bal))+' '+dirT, pick:e=>{e&&e.preventDefault();this.setE({partyId:p.id,partyQuery:this.langName(p),partyOpen:false});} }; });
+    // lines
+    const lines=E.lines.map((l,i)=>{ const d=this.design(l.design), amt=(Number(l.qty)||0)*(Number(l.rate)||0); return { code:l.design, sub:d?(ur?d.ur+' · '+d.unitUr:d.ur+' · '+d.unit):'', qtyVal:l.qty, rateVal:l.rate, amountStr:fmt(amt), onQty:e=>this.eUpdateLine(i,'qty',e.target.value), onRate:e=>this.eUpdateLine(i,'rate',e.target.value), onRemove:()=>this.setState(s=>({E:{...s.E,lines:s.E.lines.filter((_,j)=>j!==i)}})) }; });
+    const dq=(E.draft||'').trim().toLowerCase();
+    const dRes=this.designs.filter(d=>!dq||d.code.toLowerCase().includes(dq)||d.ur.includes(E.draft)).map(d=>({ code:d.code, sub:d.ur, rateStr:'Rs '+fmt(d.rate), stockStr:d.stock>0?fmt(d.stock)+' '+(ur?d.unitUr:d.unit):(ur?'ختم':'out'), stockTone:d.stock>0?'#8a847a':'#a8342a', pick:e=>{e&&e.preventDefault();this.setState(s=>({E:{...s.E,lines:[...s.E.lines,{design:d.code,qty:1,rate:d.rate}],draft:'',draftOpen:false}}));} }));
+    // money labels
+    let mALabel,mBLabel,amountLabel; const onUd=(E.event==='sale'||E.event==='ret'||E.event==='purchase');
+    if(E.event==='sale'||E.event==='ret'){mALabel=ur?'نقد وصول':'Cash received';mBLabel=ur?'ادھار پر':'On udhaar';}
+    else if(E.event==='purchase'){mALabel=ur?'نقد':'Cash';mBLabel=ur?'ادھار پر':'On udhaar';}
+    else {mALabel=ur?'نقد':'Cash';mBLabel=ur?'بینک/چیک':'Bank/cheque';}
+    amountLabel = E.event==='receipt'?(ur?'وصولی کی رقم':'Amount received'):E.event==='payment'?(ur?'ادائیگی کی رقم':'Amount paid'):E.event==='expense'?(ur?'خرچ کی رقم':'Expense amount'):(ur?'رقم':'Amount');
+    const mBColor = onUd? '#a8342a':'#524c43';
+    const cashPct = total>0?Math.max(0,Math.min(100,cash/total*100)):0;
+    const splitNote = onUd? (moneyB>0?fmt(moneyB)+' '+mBLabel:(ur?'پوری نقد':'full cash')) : fmt(cash)+' + '+fmt(moneyB);
+    // consequences
+    const p=this.party(E.partyId), pn=p?this.langName(p):'';
+    const cons=[]; const baq=ur?'بقایا':'Baqaya', drawer=ur?'گلہ':'Galla', stockW=ur?'اسٹاک':'Stock', bankW=ur?'بینک':'Bank', profitW=ur?'منافع':'Profit';
+    if(total>0){
+      if(E.event==='sale'){ if(p&&moneyB>0)cons.push({sign:'▲',tone:'#1f7a4d',label:pn+' · '+baq,text:this.eBal(p.bal+moneyB)}); if(cash>0)cons.push({sign:'▲',tone:'#1f7a4d',label:drawer,text:'+ '+rs(cash)}); E.lines.forEach(l=>{if(l.qty){const d=this.design(l.design);cons.push({sign:'▼',tone:'#a8342a',label:stockW+' · '+l.design,text:'− '+fmt(l.qty)+' '+(ur?(d?d.unitUr:''):(d?d.unit:''))});}}); }
+      else if(E.event==='purchase'){ if(p&&moneyB>0)cons.push({sign:'▼',tone:'#a8342a',label:pn+' · '+baq,text:this.eBal(p.bal-moneyB)}); if(cash>0)cons.push({sign:'▼',tone:'#a8342a',label:drawer,text:'− '+rs(cash)}); E.lines.forEach(l=>{if(l.qty){const d=this.design(l.design);cons.push({sign:'▲',tone:'#1f7a4d',label:stockW+' · '+l.design,text:'+ '+fmt(l.qty)+' '+(ur?(d?d.unitUr:''):(d?d.unit:''))});}}); }
+      else if(E.event==='receipt'){ if(p)cons.push({sign:'▼',tone:'#a8342a',label:pn+' · '+baq,text:this.eBal(p.bal-total)}); cons.push({sign:'▲',tone:'#1f7a4d',label:cash>=total?drawer:bankW,text:'+ '+rs(total)}); }
+      else if(E.event==='payment'){ if(p)cons.push({sign:'▲',tone:'#1f7a4d',label:pn+' · '+baq,text:this.eBal(p.bal+total)}); cons.push({sign:'▼',tone:'#a8342a',label:cash>=total?drawer:bankW,text:'− '+rs(total)}); }
+      else if(E.event==='expense'){ cons.push({sign:'▼',tone:'#a8342a',label:cash>=total?drawer:bankW,text:'− '+rs(total)}); cons.push({sign:'▼',tone:'#a8342a',label:profitW,text:'− '+rs(total)}); }
+      else if(E.event==='ret'){ if(p)cons.push({sign:'▼',tone:'#a8342a',label:pn+' · '+baq,text:this.eBal(p.bal-total)}); E.lines.forEach(l=>{if(l.qty){const d=this.design(l.design);cons.push({sign:'▲',tone:'#1f7a4d',label:stockW+' · '+l.design,text:'+ '+fmt(l.qty)+' '+(ur?(d?d.unitUr:''):(d?d.unit:''))});}}); }
+    }
+    const recent=E.recent.map(e=>({ summary:e.pn+' — '+e.label, sub:e.sub, bar:evT[e.event][2], onEdit:()=>{}, onDelete:()=>this.setState(s=>({E:{...s.E,recent:s.E.recent.filter(x=>x.id!==e.id)}})) }));
+    const canSave=this.eCanSave();
+    return { E, entry:{
+      events, showParty:E.event!=='expense', partyQuery:E.partyQuery, partyOpen:E.partyOpen, partyResults:pRes,
+      onPartyInput:e=>this.setE({partyQuery:e.target.value,partyId:null,partyOpen:true}), onPartyFocus:()=>this.setE({partyOpen:true}), onPartyBlur:()=>setTimeout(()=>this.setE({partyOpen:false}),160),
+      pickCash:e=>{e&&e.preventDefault();this.setE({partyId:null,partyQuery:'',partyOpen:false});}, cashLabel:ur?'+ کیش کسٹمر (بغیر کھاتہ)':'+ Cash customer (no khata)',
+      showLines:hasLines, lines, draftQuery:E.draft, draftOpen:E.draftOpen, draftResults:dRes,
+      onDraftInput:e=>this.setE({draft:e.target.value,draftOpen:true}), onDraftFocus:()=>this.setE({draftOpen:true}), onDraftBlur:()=>setTimeout(()=>this.setE({draftOpen:false}),160),
+      kaatVal:E.kaat||'', onKaat:e=>this.setE({kaat:e.target.value.replace(/[^0-9.]/g,'')}), totalStr:'Rs '+fmt(total),
+      showAmount, amountLabel, amountVal:E.amount||'', onAmount:e=>this.setE({amount:e.target.value.replace(/[^0-9.]/g,'')}),
+      mALabel, mBLabel, mBColor, mAVal:E.cash||'', onMA:e=>this.setE({cash:e.target.value.replace(/[^0-9.]/g,'')}), mBStr:fmt(moneyB), cashPct, mBBar:onUd?'#a8342a':'#c9a24a', splitNote,
+      onSave:()=>this.eSave(), saveDisabled:!canSave, saveStyle:'height:46px;padding:0 22px;border:0;border-radius:11px;font:600 15px system-ui;cursor:'+(canSave?'pointer':'not-allowed')+';color:#fff;background:'+(canSave?'#1f5c4d':'#b7c3bd')+';box-shadow:'+(canSave?'0 2px 8px rgba(31,92,77,.3)':'none'),
+      onExample:()=>this.eExample(), onClear:()=>this.eClear(),
+      justSaved:E.justSaved, cons, hasEffect:cons.length>0, isEmpty:cons.length===0&&E.recent.length===0,
+      recent, hasRecent:E.recent.length>0,
+      lbl:{ what:ur?'کیا ہوا؟':'What happened?', party:ur?'پارٹی':'Party', partyPh:ur?'پارٹی کا نام لکھیں…':'Type party name…', design:ur?'ڈیزائن نمبر':'Design no.', qty:ur?'مقدار':'Qty', rate:ur?'ریٹ':'Rate', amount:ur?'رقم':'Amount', addDesign:ur?'ڈیزائن نمبر ٹائپ کریں…':'Type a design number…', kaat:ur?'کاٹ':'Kaat', total:ur?'کل':'Total', save:ur?'محفوظ + اگلا':'Save + Next', example:ur?'مثال: ملی جلی سیل':'Example: mixed sale', clear:ur?'صاف':'Clear', effect:ur?'اثر':'Effect', just:ur?'ابھی درج ہوا':'Just entered', emptyT:ur?'ابھی کچھ نہیں':'Nothing yet', emptyB:ur?'واقعہ چنیں اور لکھنا شروع کریں':'Pick an event and start writing' }
+    }};
+  }
+
+  renderVals(){
+    const S=this.state, L=this.L(), ur=S.lang==='ur';
+    const sc=S.screen;
+    let extra={};
+    if(sc==='dashboard') extra=this.dashVals();
+    else if(sc==='entry') extra=this.entryVals();
+    else if(sc==='cashbook') extra=this.cashbookVals();
+    else if(sc==='khata') extra=this.khataVals();
+    else if(sc==='khataDetail') extra=this.khataDetailVals();
+    else if(sc==='stock') extra=this.stockVals();
+    else if(sc==='itemDetail') extra=this.itemDetailVals();
+    else if(sc==='billing') extra=this.billingVals();
+    else if(sc==='settings') extra=this.settingsVals();
+    else if(sc==='login') extra=this.loginVals();
+    else if(sc==='onboard') extra=this.onboardVals();
+    const titles=L.titles[sc]||['',''];
+    const base={
+      dir: ur?'rtl':'ltr', L,
+      nav:this.navVals(),
+      dateStr: (S.numerals==='east'? this.toEast('01-07-2026'):'01-07-2026'),
+      langBtn: ur?'اردو':'EN', numBtn: S.numerals==='west'?'123':'۱۲۳',
+      toggleLang:()=>this.setState(s=>({lang:s.lang==='ur'?'en':'ur'})),
+      toggleNum:()=>this.setState(s=>({numerals:s.numerals==='west'?'east':'west'})),
+      goEntry:()=>this.go('entry'),
+      screenTitle:titles[0], screenSub:titles[1],
+      showBack: sc==='khataDetail'||sc==='itemDetail', backArrow: ur?'→':'←',
+      goBack:()=>this.setState(s=>({screen:s.prev||'dashboard'})),
+      isDashboard: sc==='dashboard',
+      isEntry: sc==='entry', isCashbook: sc==='cashbook', isKhata: sc==='khata',
+      isKhataDetail: sc==='khataDetail', isStock: sc==='stock', isItemDetail: sc==='itemDetail',
+      isBilling: sc==='billing', isSettings: sc==='settings',
+      isLogin: sc==='login', isOnboard: sc==='onboard',
+      goDash:()=>this.go('dashboard'), goOnboard:()=>this.go('onboard'), goLogin:()=>this.go('login'),
+    };
+    return {...base, ...extra};
+  }
+}
+</script>
+</body>
+</html>
