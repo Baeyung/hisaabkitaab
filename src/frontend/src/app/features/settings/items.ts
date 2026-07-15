@@ -152,6 +152,26 @@ export class SettingsItems {
     return 'Rs ' + (this.locale.locale() === 'ur' ? grouped.replace(/\d/g, (c) => easternDigits[Number(c)]) : grouped);
   }
 
+  /**
+   * Per-unit profit (sale − cost) for the margin column, as signed amount, percent,
+   * and a tone for colour. Null when either price is missing — nothing to compute.
+   */
+  protected marginView(sale: number | null, cost: number | null): { amount: string; pct: string; tone: 'pos' | 'neg' | 'zero' } | null {
+    if (sale == null || cost == null) {
+      return null;
+    }
+    const m = sale - cost;
+    const tone = m > 0 ? 'pos' : m < 0 ? 'neg' : 'zero';
+    const sign = m > 0 ? '+' : m < 0 ? '−' : '';
+    const pct = cost !== 0 ? this.percent(Math.round((m / cost) * 100)) : '';
+    return { amount: sign + this.money(Math.abs(m)), pct, tone };
+  }
+
+  private percent(n: number): string {
+    const s = String(n);
+    return (this.locale.locale() === 'ur' ? s.replace(/\d/g, (c) => easternDigits[Number(c)]) : s) + '%';
+  }
+
   private resetRowState(): void {
     this.adding.set(false);
     this.editingId.set(null);

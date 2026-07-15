@@ -90,6 +90,7 @@ export const en = {
   'settings.items.col.unit': 'Unit',
   'settings.items.col.sale': 'Sale price',
   'settings.items.col.cost': 'Cost price',
+  'settings.items.col.margin': 'Margin',
   'settings.items.col.actions': 'Actions',
   'settings.items.edit': 'Edit',
   'settings.items.deleteAction': 'Delete',

@@ -47,6 +47,7 @@
             <th scope="col">{{ locale.t('settings.items.col.unit') }}</th>
             <th scope="col" class="num">{{ locale.t('settings.items.col.sale') }}</th>
             <th scope="col" class="num">{{ locale.t('settings.items.col.cost') }}</th>
+            <th scope="col" class="num">{{ locale.t('settings.items.col.margin') }}</th>
             <th scope="col" class="actions"><span class="sr-only">{{ locale.t('settings.items.col.actions') }}</span></th>
           </tr>
         </thead>
@@ -64,6 +65,13 @@
                 <td>{{ item.unit || '—' }}</td>
                 <td class="num">{{ money(item.salePrice) }}</td>
                 <td class="num">{{ money(item.costPrice) }}</td>
+                <td class="num">
+                  @if (marginView(item.salePrice, item.costPrice); as m) {
+                    <span class="mgn mgn--{{ m.tone }}">{{ m.amount }}@if (m.pct) {<small class="mgn__pct">{{ m.pct }}</small>}</span>
+                  } @else {
+                    <span class="mgn__none">—</span>
+                  }
+                </td>
                 <td class="actions">
                   <div class="rowicons">
                     <button
@@ -92,7 +100,7 @@
 
               @if (confirmingId() === item.id) {
                 <tr class="tbl__confirm">
-                  <td colspan="5">
+                  <td colspan="6">
                     <div class="confirm">
                       <span class="confirm__msg">{{ locale.t('settings.items.delete.confirm', { name: item.name }) }}</span>
                       <span class="confirm__actions">
@@ -155,6 +163,13 @@
         [attr.aria-label]="locale.t('settings.items.col.cost')"
       />
     </td>
+    <td class="num">
+      @if (marginView(draft().salePrice, draft().costPrice); as m) {
+        <span class="mgn mgn--{{ m.tone }}">{{ m.amount }}@if (m.pct) {<small class="mgn__pct">{{ m.pct }}</small>}</span>
+      } @else {
+        <span class="mgn__none">—</span>
+      }
+    </td>
     <td class="actions">
       <div class="rowicons">
         <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEdit()">
@@ -169,12 +184,12 @@
 
   @if (itemForm.name().touched() && itemForm.name().invalid()) {
     <tr class="tbl__rowmsg">
-      <td colspan="5"><span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span></td>
+      <td colspan="6"><span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span></td>
     </tr>
   }
   @if (rowErrorKey(); as key) {
     <tr class="tbl__rowmsg">
-      <td colspan="5"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
+      <td colspan="6"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
     </tr>
   }
 </ng-template>

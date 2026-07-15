@@ -92,6 +92,7 @@ export const ur: Record<TranslationKey, string> = {
   'settings.items.col.unit': 'یونٹ',
   'settings.items.col.sale': 'فروخت قیمت',
   'settings.items.col.cost': 'لاگت قیمت',
+  'settings.items.col.margin': 'منافع',
   'settings.items.col.actions': 'اعمال',
   'settings.items.edit': 'ترمیم',
   'settings.items.deleteAction': 'حذف کریں',
