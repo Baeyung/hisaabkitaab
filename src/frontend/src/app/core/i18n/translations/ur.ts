@@ -1,0 +1,25 @@
+import { TranslationKey } from './en';
+
+export const ur: Record<TranslationKey, string> = {
+  'app.name': 'حساب کتاب',
+  'auth.login.title': 'لاگ اِن کریں',
+  'auth.login.identifier': 'ای میل یا فون نمبر',
+  'auth.login.password': 'پاس ورڈ',
+  'auth.login.submit': 'لاگ اِن',
+  'auth.login.toSignup': 'نیا اکاؤنٹ بنائیں',
+  'auth.login.invalid': 'غلط تفصیلات',
+  'auth.signup.title': 'اکاؤنٹ بنائیں',
+  'auth.signup.name': 'نام',
+  'auth.signup.contact': 'فون نمبر',
+  'auth.signup.email': 'ای میل',
+  'auth.signup.password': 'پاس ورڈ',
+  'auth.signup.submit': 'رجسٹر کریں',
+  'auth.signup.toLogin': 'میرا اکاؤنٹ پہلے سے موجود ہے',
+  'auth.signup.exists': 'ان تفصیلات کے ساتھ اکاؤنٹ پہلے سے موجود ہے',
+  'validation.required': 'یہ خانہ ضروری ہے',
+  'validation.email': 'درست ای میل درج کریں',
+  'error.generic': 'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
+  'home.welcome': 'خوش آمدید، {{name}}',
+  'home.logout': 'لاگ آؤٹ',
+  'lang.toggle': 'English',
+};

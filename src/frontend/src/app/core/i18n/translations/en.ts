@@ -1,0 +1,25 @@
+export const en = {
+  'app.name': 'HisaabKitaab',
+  'auth.login.title': 'Log in',
+  'auth.login.identifier': 'Email or phone number',
+  'auth.login.password': 'Password',
+  'auth.login.submit': 'Log in',
+  'auth.login.toSignup': 'Create an account',
+  'auth.login.invalid': 'Invalid credentials',
+  'auth.signup.title': 'Create account',
+  'auth.signup.name': 'Name',
+  'auth.signup.contact': 'Phone number',
+  'auth.signup.email': 'Email',
+  'auth.signup.password': 'Password',
+  'auth.signup.submit': 'Sign up',
+  'auth.signup.toLogin': 'I already have an account',
+  'auth.signup.exists': 'An account with these details already exists',
+  'validation.required': 'This field is required',
+  'validation.email': 'Enter a valid email',
+  'error.generic': 'Something went wrong. Please try again.',
+  'home.welcome': 'Welcome, {{name}}',
+  'home.logout': 'Log out',
+  'lang.toggle': 'اردو',
+} as const;
+
+export type TranslationKey = keyof typeof en;
