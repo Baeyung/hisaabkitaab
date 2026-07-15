@@ -49,6 +49,7 @@ export const en = {
   'nav.expense': 'Expense',
   'nav.payment': 'Payment',
   'nav.inventory': 'Inventory',
+  'nav.billManagement': 'Bill Management',
   'nav.settings': 'Store Settings',
   'nav.settings.general': 'General',
   'nav.settings.items': 'Items',

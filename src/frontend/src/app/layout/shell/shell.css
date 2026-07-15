@@ -138,7 +138,19 @@
   transform: rotate(180deg);
 }
 
+/* grid-rows 0fr→1fr animates height without a fixed max-height guess */
 .subnav {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.22s ease;
+}
+
+.subnav.expanded {
+  grid-template-rows: 1fr;
+}
+
+.subnav-inner {
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -198,10 +210,21 @@ main {
   display: none;
 }
 
-/* ── Wide: sidebar sits in flow, toggle collapses it ─────── */
+/* ── Wide: sidebar sits in flow, toggle slides it out ────── */
 @media (min-width: 760px) {
+  /* clip the sidebar as it slides off so it doesn't peek past the edge */
+  .body {
+    overflow: hidden;
+  }
+
+  .sidebar {
+    transition: margin-inline-start 0.25s ease;
+  }
+
+  /* negative margin pulls it out of flow (content grows to fill) without
+     display:none, so the collapse can animate */
   .sidebar:not(.open) {
-    display: none;
+    margin-inline-start: -236px;
   }
 }
 
@@ -230,5 +253,14 @@ main {
     inset: 0;
     z-index: 40;
     background: rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ── Respect users who opt out of motion ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .subnav,
+  .chevron {
+    transition: none;
   }
 }

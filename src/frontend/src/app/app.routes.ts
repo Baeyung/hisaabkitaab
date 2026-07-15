@@ -61,6 +61,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/inventory/inventory').then((m) => m.Inventory),
       },
       {
+        path: 'bill-management',
+        loadComponent: () =>
+          import('./features/bill-management/bill-management').then((m) => m.BillManagement),
+      },
+      {
         path: 'settings/general',
         loadComponent: () => import('./features/settings/general').then((m) => m.SettingsGeneral),
       },

@@ -51,6 +51,7 @@ export const ur: Record<TranslationKey, string> = {
   'nav.expense': 'خرچ',
   'nav.payment': 'ادائیگی',
   'nav.inventory': 'اسٹاک',
+  'nav.billManagement': 'بل مینجمنٹ',
   'nav.settings': 'ترتیبات',
   'nav.settings.general': 'عام',
   'nav.settings.items': 'آئٹمز',

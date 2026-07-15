@@ -1,6 +1,6 @@
 import { TranslationKey } from '../../core/i18n/translations/en';
 
-export type NavIcon = 'dashboard' | 'cashbook' | 'ledger' | 'entry' | 'stock' | 'settings';
+export type NavIcon = 'dashboard' | 'cashbook' | 'ledger' | 'entry' | 'stock' | 'bill' | 'settings';
 
 export interface NavLeaf {
   key: TranslationKey;
@@ -26,6 +26,8 @@ export const NAV: NavItem[] = [
   { kind: 'link', key: 'nav.dashboard', path: '/dashboard', icon: 'dashboard' },
   { kind: 'link', key: 'nav.cashbook', path: '/cashbook', icon: 'cashbook' },
   { kind: 'link', key: 'nav.ledger', path: '/ledger', icon: 'ledger' },
+  { kind: 'link', key: 'nav.inventory', path: '/inventory', icon: 'stock' },
+  { kind: 'link', key: 'nav.billManagement', path: '/bill-management', icon: 'bill' },
   {
     kind: 'group',
     key: 'nav.newEntry',
@@ -38,7 +40,6 @@ export const NAV: NavItem[] = [
       { key: 'nav.payment', path: '/new-entry/payment' },
     ],
   },
-  { kind: 'link', key: 'nav.inventory', path: '/inventory', icon: 'stock' },
   {
     kind: 'group',
     key: 'nav.settings',

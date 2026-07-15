@@ -22,8 +22,8 @@ export class Shell {
   protected readonly nav = NAV;
   // open by default on wide screens, collapsed below the 760px breakpoint
   protected readonly open = signal(this.matches('(min-width: 760px)'));
-  // groups start expanded so children are reachable without a first tap
-  private readonly openGroups = signal(new Set<string>(NAV.filter((i) => i.kind === 'group').map((i) => i.key)));
+  // groups start collapsed on load; user expands what they need
+  private readonly openGroups = signal(new Set<string>());
 
   toggle(): void {
     this.open.update((v) => !v);
