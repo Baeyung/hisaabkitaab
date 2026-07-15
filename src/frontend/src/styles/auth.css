@@ -383,7 +383,14 @@
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
 
-/* ── entrance (respect reduced motion) ───────────────────────────── */
+/* ── entrance + cross-screen transition (respect reduced motion) ────
+   The card owns a view-transition-name so router navigations between
+   login / signup / forgot-password morph it in place (see
+   withViewTransitions) instead of hard-cutting; the desk behind it stays
+   put. Panel children keep a staggered settle on top of the swap. */
+.auth__stage {
+  view-transition-name: auth-card;
+}
 @media (prefers-reduced-motion: no-preference) {
   .auth__stage {
     animation: kgrise 0.4s ease both;
@@ -398,6 +405,20 @@
   .auth__panel > *:nth-child(3) {
     animation-delay: 0.1s;
   }
+  ::view-transition-old(auth-card) {
+    animation: kgvt-out 0.28s ease both;
+  }
+  ::view-transition-new(auth-card) {
+    animation: kgvt-in 0.34s ease both;
+  }
+}
+/* reduced motion: snap, no crossfade */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(auth-card),
+  ::view-transition-old(auth-card),
+  ::view-transition-new(auth-card) {
+    animation: none;
+  }
 }
 @keyframes kgrise {
   from {
@@ -409,6 +430,18 @@
   from {
     opacity: 0;
     transform: translateY(6px);
+  }
+}
+@keyframes kgvt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes kgvt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
 }
 
