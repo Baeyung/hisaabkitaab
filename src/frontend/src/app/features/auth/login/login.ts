@@ -3,11 +3,11 @@ import { Router, RouterLink } from '@angular/router';
 import { form, FormField, required } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LocaleService } from '../../../core/i18n/locale.service';
-import { LanguageToggle } from '../../../shared/language-toggle/language-toggle';
+import { AuthShell } from '../auth-shell/auth-shell';
 
 @Component({
   selector: 'app-login',
-  imports: [FormField, RouterLink, LanguageToggle],
+  imports: [FormField, RouterLink, AuthShell],
   templateUrl: './login.html',
 })
 export class Login {

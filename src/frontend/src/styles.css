@@ -1,13 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
 @import 'tailwindcss';
+
+/* ── HisaabKitaab ledger design tokens ───────────────────────────── */
+:root {
+  --kg-desk: #ded9cc; /* backdrop behind the app */
+  --kg-surface: #f0ece3; /* form panel */
+  --kg-card: #ffffff; /* inputs, ledger card */
+  --kg-cream: #f7f4ee; /* raised cream on dark hero */
+  --kg-ink: #23201c; /* primary text */
+  --kg-muted: #6b655c; /* labels */
+  --kg-faint: #8a847a; /* hints, captions */
+  --kg-line: rgba(35, 32, 28, 0.14); /* hairlines */
+  --kg-line-strong: rgba(35, 32, 28, 0.2); /* input borders */
+
+  --kg-brand: #1f5c4d; /* deep pine — logo, primary action */
+  --kg-brand-deep: #184335; /* gradient foot */
+  --kg-in: #1f7a4d; /* they owe you (receivable) */
+  --kg-out: #a8342a; /* you owe them (payable) */
+  --kg-amber: #c98a2b;
+  --kg-blue: #1d4e7a;
+
+  --kg-focus: rgba(31, 92, 77, 0.45);
+  --kg-shadow-brand: 0 4px 16px rgba(31, 92, 77, 0.34);
+}
 
 html {
   font-size: 16px;
 }
 
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  color: var(--kg-ink);
+}
+
 html[dir='rtl'] {
-  font-family: 'Noto Nastaliq Urdu', system-ui, sans-serif;
-  line-height: 2.2;
+  font-family: 'Noto Nastaliq Urdu', 'IBM Plex Sans', system-ui, sans-serif;
+  line-height: 2.1;
+}
+
+/* tabular figures so rupee columns align in both scripts */
+.num,
+html[dir='rtl'] .num {
+  font-variant-numeric: tabular-nums;
 }
 
 /* You can add global styles to this file, and also import other style files */
