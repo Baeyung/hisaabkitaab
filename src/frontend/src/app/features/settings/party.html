@@ -60,8 +60,8 @@
             } @else {
               <tr class="tbl__row">
                 <td class="tbl__name">{{ party.name }}</td>
-                <td>{{ party.contact || '—' }}</td>
-                <td>{{ party.address || '—' }}</td>
+                <td [attr.data-label]="locale.t('settings.party.col.contact')">{{ party.contact || '—' }}</td>
+                <td [attr.data-label]="locale.t('settings.party.col.address')">{{ party.address || '—' }}</td>
                 <td class="actions">
                   <div class="rowicons">
                     <button

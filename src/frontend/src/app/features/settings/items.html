@@ -62,10 +62,10 @@
             } @else {
               <tr class="tbl__row">
                 <td class="tbl__name">{{ item.name }}</td>
-                <td>{{ item.unit || '—' }}</td>
-                <td class="num">{{ money(item.salePrice) }}</td>
-                <td class="num">{{ money(item.costPrice) }}</td>
-                <td class="num">
+                <td [attr.data-label]="locale.t('settings.items.col.unit')">{{ item.unit || '—' }}</td>
+                <td class="num" [attr.data-label]="locale.t('settings.items.col.sale')">{{ money(item.salePrice) }}</td>
+                <td class="num" [attr.data-label]="locale.t('settings.items.col.cost')">{{ money(item.costPrice) }}</td>
+                <td class="num" [attr.data-label]="locale.t('settings.items.col.margin')">
                   @if (marginView(item.salePrice, item.costPrice); as m) {
                     <span class="mgn mgn--{{ m.tone }}">{{ m.amount }}@if (m.pct) {<small class="mgn__pct">{{ m.pct }}</small>}</span>
                   } @else {
@@ -151,6 +151,7 @@
         [formField]="itemForm.salePrice"
         type="number"
         inputmode="decimal"
+        [attr.placeholder]="locale.t('settings.items.col.sale')"
         [attr.aria-label]="locale.t('settings.items.col.sale')"
       />
     </td>
@@ -160,10 +161,11 @@
         [formField]="itemForm.costPrice"
         type="number"
         inputmode="decimal"
+        [attr.placeholder]="locale.t('settings.items.col.cost')"
         [attr.aria-label]="locale.t('settings.items.col.cost')"
       />
     </td>
-    <td class="num">
+    <td class="num" [attr.data-label]="locale.t('settings.items.col.margin')">
       @if (marginView(draft().salePrice, draft().costPrice); as m) {
         <span class="mgn mgn--{{ m.tone }}">{{ m.amount }}@if (m.pct) {<small class="mgn__pct">{{ m.pct }}</small>}</span>
       } @else {

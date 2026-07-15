@@ -312,9 +312,114 @@
   border: 0;
 }
 
-/* ── responsive ────────────────────────────────────────────────────── */
-@media (max-width: 560px) {
+/* ── responsive: below the table's min-width, rows become stacked cards ─
+   A horizontally-scrolling table hides the action buttons off-screen on a
+   phone, so each row reflows into a card: name as the heading, contact/address
+   as labelled lines (the hidden column headers move into ::before chips), and
+   the actions on their own row. */
+@media (max-width: 640px) {
+  .set {
+    padding: 16px;
+  }
   .set__head {
     flex-direction: column;
+  }
+
+  .tablewrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .tbl {
+    display: block;
+    min-width: 0;
+    table-layout: auto;
+  }
+  .tbl thead {
+    display: none;
+  }
+  .tbl tbody,
+  .tbl tr {
+    display: block;
+  }
+
+  /* each display row, edit row, and confirm strip is its own card */
+  .tbl__row,
+  .tbl__edit,
+  .tbl__confirm {
+    border: 1px solid var(--kg-line);
+    border-radius: 12px;
+    background: var(--kg-card);
+    margin-bottom: 12px;
+    padding: 4px 2px;
+  }
+  .tbl__edit {
+    background: rgba(31, 92, 77, 0.05);
+    border-color: rgba(31, 92, 77, 0.16);
+  }
+  .tbl__confirm {
+    background: rgba(168, 52, 42, 0.06);
+    border-color: rgba(168, 52, 42, 0.2);
+  }
+
+  .tbl td {
+    display: block;
+    padding: 6px 12px;
+    border: 0;
+    background: transparent;
+  }
+  .tbl__row:hover td {
+    background: transparent;
+  }
+
+  /* name = card heading */
+  .tbl__name {
+    font-size: 16px;
+    font-weight: 700;
+    padding-top: 10px;
+  }
+  /* the hidden column header, reprinted above each value */
+  .tbl td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 1px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--kg-faint);
+  }
+
+  /* display-row actions: divider above, icons to the end */
+  .tbl__row .actions {
+    width: auto;
+    margin-top: 4px;
+    padding-top: 10px;
+    text-align: end;
+    border-top: 1px solid var(--kg-line);
+  }
+
+  /* edit-row: inputs go full width, Cancel/Save split the row */
+  .tbl__edit td {
+    width: auto;
+  }
+  .tbl__edit .fld__input--sm {
+    min-width: 0;
+  }
+  .tbl__edit .actions {
+    width: auto;
+    padding-top: 8px;
+    text-align: start;
+  }
+  .tbl__edit .rowicons {
+    display: flex;
+  }
+  .tbl__edit .rowicons .btn {
+    flex: 1;
+  }
+
+  .tbl__rowmsg td {
+    padding: 0 12px 6px;
   }
 }
