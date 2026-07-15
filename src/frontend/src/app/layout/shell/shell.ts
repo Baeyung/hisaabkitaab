@@ -12,7 +12,7 @@ import { NAV } from './nav';
   imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, LanguageToggle],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
-  host: { '(document:keydown.escape)': 'closeMobile()' },
+  host: { '(document:keydown.escape)': 'closeOverlay()' },
 })
 export class Shell {
   protected readonly locale = inject(LocaleService);
@@ -20,16 +20,27 @@ export class Shell {
   private readonly router = inject(Router);
 
   protected readonly nav = NAV;
-  protected readonly mobileOpen = signal(false);
+  // open by default on wide screens, collapsed below the 760px breakpoint
+  protected readonly open = signal(this.matches('(min-width: 760px)'));
   // groups start expanded so children are reachable without a first tap
   private readonly openGroups = signal(new Set<string>(NAV.filter((i) => i.kind === 'group').map((i) => i.key)));
 
-  toggleMobile(): void {
-    this.mobileOpen.update((v) => !v);
+  toggle(): void {
+    this.open.update((v) => !v);
   }
 
-  closeMobile(): void {
-    this.mobileOpen.set(false);
+  close(): void {
+    this.open.set(false);
+  }
+
+  // only collapse on navigation/escape when the panel is an overlay (mobile);
+  // on wide screens it stays put so it doesn't close on every click
+  closeOverlay(): void {
+    if (this.matches('(max-width: 759px)')) this.open.set(false);
+  }
+
+  private matches(query: string): boolean {
+    return typeof window !== 'undefined' && window.matchMedia(query).matches;
   }
 
   toggleGroup(key: TranslationKey): void {

@@ -1,43 +1,39 @@
 <div class="layout">
-  <!-- Mobile top bar -->
+  <!-- Top bar (always visible; holds the persistent menu toggle) -->
   <header class="topbar">
     <button
       type="button"
       class="hamburger"
       [attr.aria-label]="locale.t('nav.menu')"
-      [attr.aria-expanded]="mobileOpen()"
+      [attr.aria-expanded]="open()"
       aria-controls="app-sidebar"
-      (click)="toggleMobile()"
+      (click)="toggle()"
     >
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
-    <b class="topbar-brand">{{ locale.t('app.name') }}</b>
+    <div class="topbar-brand">
+      <div class="brand-logo" aria-hidden="true">ک</div>
+      <b>{{ locale.t('app.name') }}</b>
+    </div>
   </header>
 
-  @if (mobileOpen()) {
-    <div class="backdrop" (click)="closeMobile()"></div>
-  }
+  <div class="body">
+    @if (open()) {
+      <div class="backdrop" (click)="close()"></div>
+    }
 
-  <!-- Sidebar -->
-  <aside id="app-sidebar" class="sidebar" [class.open]="mobileOpen()">
-    <div class="brand">
-      <div class="brand-logo" aria-hidden="true">ک</div>
-      <div class="brand-text">
-        <b>{{ locale.t('app.name') }}</b>
-        <small>{{ locale.t('auth.brand.tagline') }}</small>
-      </div>
-    </div>
-
-    <nav class="nav" [attr.aria-label]="locale.t('nav.menu')">
+    <!-- Sidebar -->
+    <aside id="app-sidebar" class="sidebar" [class.open]="open()">
+      <nav class="nav" [attr.aria-label]="locale.t('nav.menu')">
       @for (item of nav; track item.key) {
         @if (item.kind === 'link') {
           <a
             class="nav-item"
             [routerLink]="item.path"
             routerLinkActive="active"
-            (click)="closeMobile()"
+            (click)="closeOverlay()"
           >
             <span class="nav-icon">
               <ng-container [ngTemplateOutlet]="icon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
@@ -85,7 +81,7 @@
                     class="nav-item nav-sub"
                     [routerLink]="child.path"
                     routerLinkActive="active"
-                    (click)="closeMobile()"
+                    (click)="closeOverlay()"
                   >
                     <span class="nav-label">{{ locale.t(child.key) }}</span>
                   </a>
@@ -103,13 +99,14 @@
         {{ locale.t('home.logout') }}
       </button>
     </div>
-  </aside>
+    </aside>
 
-  <!-- Content -->
-  <div class="content">
-    <main>
-      <router-outlet />
-    </main>
+    <!-- Content -->
+    <div class="content">
+      <main>
+        <router-outlet />
+      </main>
+    </div>
   </div>
 </div>
 

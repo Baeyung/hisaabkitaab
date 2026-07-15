@@ -4,11 +4,75 @@
 
 .layout {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background: var(--kg-desk);
 }
 
-/* ── Sidebar ─────────────────────────────────────────────── */
+/* ── Top bar (always visible) ────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  flex: none;
+  padding-inline: 14px;
+  background: var(--kg-ink);
+  color: #e7e3d8;
+  z-index: 30;
+}
+
+.hamburger {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  cursor: pointer;
+}
+
+.hamburger:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.topbar-brand b {
+  font: 700 16px system-ui;
+  white-space: nowrap;
+}
+
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 9px;
+  background: var(--kg-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 15px 'IBM Plex Sans', system-ui;
+}
+
+/* ── Body: sidebar + content ─────────────────────────────── */
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
 .sidebar {
   width: 236px;
   flex: none;
@@ -16,46 +80,6 @@
   color: #e7e3d8;
   display: flex;
   flex-direction: column;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-}
-
-.brand-logo {
-  width: 38px;
-  height: 38px;
-  flex: none;
-  border-radius: 10px;
-  background: var(--kg-brand);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font: 700 17px 'IBM Plex Sans', system-ui;
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.brand-text b {
-  font: 700 15px system-ui;
-  white-space: nowrap;
-}
-
-.brand-text small {
-  font: 400 11px system-ui;
-  color: #a29a8c;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .nav {
@@ -170,48 +194,19 @@ main {
   background: var(--kg-surface);
 }
 
-/* ── Mobile top bar (hidden on desktop) ──────────────────── */
-.topbar {
-  display: none;
-}
-
 .backdrop {
   display: none;
 }
 
-@media (max-width: 768px) {
-  .topbar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 56px;
-    flex: none;
-    padding-inline: 14px;
-    background: var(--kg-ink);
-    color: #e7e3d8;
-    position: sticky;
-    top: 0;
-    z-index: 30;
+/* ── Wide: sidebar sits in flow, toggle collapses it ─────── */
+@media (min-width: 760px) {
+  .sidebar:not(.open) {
+    display: none;
   }
+}
 
-  .topbar-brand {
-    font: 700 16px system-ui;
-  }
-
-  .hamburger {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    border-radius: 9px;
-    background: rgba(255, 255, 255, 0.1);
-    color: inherit;
-    cursor: pointer;
-  }
-
-  /* off-canvas: slide in from the inline-start edge (flips for RTL) */
+/* ── Narrow: sidebar is an off-canvas overlay ────────────── */
+@media (max-width: 759px) {
   .sidebar {
     position: fixed;
     inset-block: 0;
@@ -235,10 +230,5 @@ main {
     inset: 0;
     z-index: 40;
     background: rgba(0, 0, 0, 0.45);
-  }
-
-  /* mobile lays out top bar above content */
-  .layout {
-    flex-direction: column;
   }
 }
