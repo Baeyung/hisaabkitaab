@@ -8,7 +8,7 @@
     <label style="display:block; margin-block-end:1rem;">
       <span style="display:block; margin-block-end:0.25rem;">{{ locale.t('auth.login.identifier') }}</span>
       <input
-        [control]="loginForm.identifier"
+        [formField]="loginForm.identifier"
         type="text"
         autocomplete="username"
         style="width:100%; min-height:44px; font-size:1rem; padding-inline:0.75rem;"
@@ -18,7 +18,7 @@
     <label style="display:block; margin-block-end:1rem;">
       <span style="display:block; margin-block-end:0.25rem;">{{ locale.t('auth.login.password') }}</span>
       <input
-        [control]="loginForm.password"
+        [formField]="loginForm.password"
         type="password"
         autocomplete="current-password"
         style="width:100%; min-height:44px; font-size:1rem; padding-inline:0.75rem;"
