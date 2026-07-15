@@ -106,6 +106,27 @@ export const en = {
   'settings.items.noStore.body': 'Items belong to a store. Add your store, then come back to build your catalog.',
   'settings.items.noStore.cta': 'Go to store settings',
   'settings.items.loadError': "Couldn't load your items. Please try again.",
+
+  'settings.party.subtitle': 'The customers and suppliers you keep an account with.',
+  'settings.party.add': 'Add party',
+  'settings.party.col.name': 'Name',
+  'settings.party.col.contact': 'Contact',
+  'settings.party.col.address': 'Address',
+  'settings.party.col.actions': 'Actions',
+  'settings.party.edit': 'Edit',
+  'settings.party.deleteAction': 'Delete',
+  'settings.party.editRow.save': 'Save',
+  'settings.party.editRow.cancel': 'Cancel',
+  'settings.party.delete.confirm': "Delete '{{name}}'? This also deletes any transactions with them.",
+  'settings.party.delete.cancel': 'Cancel',
+  'settings.party.delete.confirmBtn': 'Delete',
+  'settings.party.empty.title': 'No parties yet',
+  'settings.party.empty.body': 'Add the customers and suppliers you deal with — their name, contact, and address.',
+  'settings.party.empty.cta': 'Add your first party',
+  'settings.party.noStore.title': 'Set up your store first',
+  'settings.party.noStore.body': 'Parties belong to a store. Add your store, then come back to add them.',
+  'settings.party.noStore.cta': 'Go to store settings',
+  'settings.party.loadError': "Couldn't load your parties. Please try again.",
 } as const;
 
 export type TranslationKey = keyof typeof en;

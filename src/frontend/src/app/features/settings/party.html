@@ -1,0 +1,168 @@
+<section class="set">
+  <header class="set__head">
+    <div class="set__titles">
+      <h1 class="set__title">{{ locale.t('nav.settings.party') }}</h1>
+      <p class="set__sub">{{ locale.t('settings.party.subtitle') }}</p>
+    </div>
+
+    @if (!loading() && !noStore() && !loadError() && (parties()?.length ?? 0) > 0) {
+      <button type="button" class="btn btn--primary" (click)="startAdd()" [disabled]="adding()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        {{ locale.t('settings.party.add') }}
+      </button>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="tablewrap" aria-hidden="true">
+      <div class="skel skel--row"></div>
+      <div class="skel skel--row"></div>
+      <div class="skel skel--row skel--short"></div>
+    </div>
+  } @else if (noStore()) {
+    <div class="state">
+      <h2 class="state__title">{{ locale.t('settings.party.noStore.title') }}</h2>
+      <p class="state__body">{{ locale.t('settings.party.noStore.body') }}</p>
+      <a class="btn btn--primary" routerLink="/settings/general">{{ locale.t('settings.party.noStore.cta') }}</a>
+    </div>
+  } @else if (loadError()) {
+    <div class="state">
+      <p role="alert" class="alert">{{ locale.t('settings.party.loadError') }}</p>
+      <button type="button" class="btn btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
+    </div>
+  } @else if ((parties()?.length ?? 0) === 0 && !adding()) {
+    <div class="state">
+      <h2 class="state__title">{{ locale.t('settings.party.empty.title') }}</h2>
+      <p class="state__body">{{ locale.t('settings.party.empty.body') }}</p>
+      <button type="button" class="btn btn--primary" (click)="startAdd()">{{ locale.t('settings.party.empty.cta') }}</button>
+    </div>
+  } @else {
+    <div class="tablewrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th scope="col">{{ locale.t('settings.party.col.name') }}</th>
+            <th scope="col">{{ locale.t('settings.party.col.contact') }}</th>
+            <th scope="col">{{ locale.t('settings.party.col.address') }}</th>
+            <th scope="col" class="actions"><span class="sr-only">{{ locale.t('settings.party.col.actions') }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (adding()) {
+            <ng-container [ngTemplateOutlet]="editRow" />
+          }
+
+          @for (party of parties(); track party.id) {
+            @if (editingId() === party.id) {
+              <ng-container [ngTemplateOutlet]="editRow" />
+            } @else {
+              <tr class="tbl__row">
+                <td class="tbl__name">{{ party.name }}</td>
+                <td>{{ party.contact || '—' }}</td>
+                <td>{{ party.address || '—' }}</td>
+                <td class="actions">
+                  <div class="rowicons">
+                    <button
+                      type="button"
+                      class="iconbtn"
+                      (click)="startEdit(party)"
+                      [attr.aria-label]="locale.t('settings.party.edit') + ' — ' + party.name"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="iconbtn iconbtn--danger"
+                      (click)="askDelete(party.id)"
+                      [attr.aria-label]="locale.t('settings.party.deleteAction') + ' — ' + party.name"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              @if (confirmingId() === party.id) {
+                <tr class="tbl__confirm">
+                  <td colspan="4">
+                    <div class="confirm">
+                      <span class="confirm__msg">{{ locale.t('settings.party.delete.confirm', { name: party.name }) }}</span>
+                      <span class="confirm__actions">
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="cancelDelete()">
+                          {{ locale.t('settings.party.delete.cancel') }}
+                        </button>
+                        <button type="button" class="btn btn--danger btn--sm" (click)="confirmDelete(party.id)" [disabled]="saving()">
+                          {{ locale.t('settings.party.delete.confirmBtn') }}
+                        </button>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<!-- Reused for both the "add" row and an in-place edit; binds the single draft form. -->
+<ng-template #editRow>
+  <tr class="tbl__edit">
+    <td>
+      <input
+        class="fld__input fld__input--sm"
+        [formField]="partyForm.name"
+        type="text"
+        [attr.placeholder]="locale.t('settings.party.col.name')"
+        [attr.aria-label]="locale.t('settings.party.col.name')"
+      />
+    </td>
+    <td>
+      <input
+        class="fld__input fld__input--sm"
+        [formField]="partyForm.contact"
+        type="tel"
+        [attr.placeholder]="locale.t('settings.party.col.contact')"
+        [attr.aria-label]="locale.t('settings.party.col.contact')"
+      />
+    </td>
+    <td>
+      <input
+        class="fld__input fld__input--sm"
+        [formField]="partyForm.address"
+        type="text"
+        [attr.placeholder]="locale.t('settings.party.col.address')"
+        [attr.aria-label]="locale.t('settings.party.col.address')"
+      />
+    </td>
+    <td class="actions">
+      <div class="rowicons">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEdit()">
+          {{ locale.t('settings.party.editRow.cancel') }}
+        </button>
+        <button type="button" class="btn btn--primary btn--sm" (click)="save()" [disabled]="saving() || partyForm().invalid()">
+          {{ locale.t('settings.party.editRow.save') }}
+        </button>
+      </div>
+    </td>
+  </tr>
+
+  @if (partyForm.name().touched() && partyForm.name().invalid()) {
+    <tr class="tbl__rowmsg">
+      <td colspan="4"><span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span></td>
+    </tr>
+  }
+  @if (rowErrorKey(); as key) {
+    <tr class="tbl__rowmsg">
+      <td colspan="4"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
+    </tr>
+  }
+</ng-template>
