@@ -69,6 +69,10 @@
   font-weight: 600;
   color: var(--kg-muted);
 }
+.fld__hint {
+  font-size: 11.5px;
+  color: var(--kg-faint);
+}
 .fld__input {
   height: 44px;
   padding: 0 13px;
@@ -459,5 +463,34 @@
   }
   .meta {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ── transient toast (self-rolled; PrimeNG Toast is license-gated) ─────────── */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 340px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  animation: toast-in 160ms ease-out;
+}
+.toast--error {
+  background: var(--kg-out);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

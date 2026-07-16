@@ -1,0 +1,132 @@
+<section class="sale">
+  <!-- ── entry form ─────────────────────────────────────────────────────── -->
+  <div class="sale__form">
+    <header class="sale__head">
+      <div>
+        <p class="sale__eyebrow">{{ locale.t('receipt.newEntry') }}</p>
+        <h1 class="sale__title">{{ locale.t('nav.receipt') }}</h1>
+      </div>
+      <input
+        class="fld__input fld__input--date"
+        type="date"
+        [value]="billDate()"
+        (input)="billDate.set($any($event.target).value)"
+        [attr.aria-label]="locale.t('sale.billDate')"
+      />
+    </header>
+
+    <!-- party (existing only) -->
+    <div class="fld">
+      <label class="fld__label" for="receipt-party">{{ locale.t('receipt.party') }}</label>
+      <input
+        id="receipt-party"
+        class="fld__input"
+        type="text"
+        list="receipt-parties"
+        [value]="partyName()"
+        (input)="partyName.set($any($event.target).value)"
+        [attr.placeholder]="locale.t('receipt.party.ph')"
+      />
+      <small class="fld__hint">{{ locale.t('receipt.party.hint') }}</small>
+    </div>
+
+    <!-- amount -->
+    <div class="totals">
+      <div class="fld fld--inline">
+        <label class="fld__label" for="receipt-amount">{{ locale.t('receipt.amount') }}</label>
+        <input
+          id="receipt-amount"
+          class="fld__input num"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          [value]="amount()"
+          (input)="setAmount($any($event.target).value)"
+          [attr.placeholder]="'0'"
+        />
+      </div>
+    </div>
+
+    <!-- reference + note -->
+    <div class="meta">
+      <div class="fld">
+        <label class="fld__label" for="receipt-bill">{{ locale.t('receipt.billNumber') }}</label>
+        <input
+          id="receipt-bill"
+          class="fld__input"
+          type="text"
+          [value]="billNumber()"
+          (input)="billNumber.set($any($event.target).value)"
+          [attr.placeholder]="locale.t('receipt.billNumber.ph')"
+        />
+      </div>
+      <div class="fld">
+        <label class="fld__label" for="receipt-desc">{{ locale.t('receipt.description') }}</label>
+        <input
+          id="receipt-desc"
+          class="fld__input"
+          type="text"
+          [value]="description()"
+          (input)="description.set($any($event.target).value)"
+          [attr.placeholder]="locale.t('receipt.description.ph')"
+        />
+      </div>
+    </div>
+
+    <div class="sale__actions">
+      <button type="button" class="btn btn--ghost" (click)="reset()">{{ locale.t('receipt.clear') }}</button>
+      <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
+        {{ locale.t('receipt.saveNext') }} ↵
+      </button>
+    </div>
+  </div>
+
+  <!-- ── live effect + recent ───────────────────────────────────────────── -->
+  <aside class="rail">
+    <div class="panel">
+      <h2 class="panel__title">{{ locale.t('receipt.effect') }}</h2>
+      @if (total() > 0) {
+        <ul class="fx">
+          <li class="fx__row fx__row--in">
+            <span class="fx__sign">▲</span>
+            <span class="fx__label">{{ locale.t('receipt.effect.drawer') }}</span>
+            <span class="fx__amt num">{{ money(total()) }}</span>
+          </li>
+          <li class="fx__row fx__row--out">
+            <span class="fx__sign">▼</span>
+            <span class="fx__label">
+              {{ partyName().trim() || locale.t('receipt.party') }}<small class="fx__sub">{{ locale.t('receipt.effect.baqaya') }}</small>
+            </span>
+            <span class="fx__amt num">{{ money(total()) }}</span>
+          </li>
+        </ul>
+      } @else {
+        <p class="panel__empty">{{ locale.t('receipt.effect.empty') }}</p>
+      }
+    </div>
+
+    @if (recent().length > 0) {
+      <div class="panel">
+        <h2 class="panel__title">{{ locale.t('receipt.recent') }}</h2>
+        <ul class="recent">
+          @for (r of recent(); track r.key) {
+            <li class="recent__row">
+              <span class="recent__summary">{{ r.summary }}</span>
+              <span class="recent__sub">{{ r.sub }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </aside>
+</section>
+
+@if (toast(); as msg) {
+  <div class="toast toast--error" role="alert">{{ msg }}</div>
+}
+
+<datalist id="receipt-parties">
+  @for (p of parties(); track p.id) {
+    <option [value]="p.name"></option>
+  }
+</datalist>
