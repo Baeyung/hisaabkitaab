@@ -3,6 +3,11 @@
 
 /* ── HisaabKitaab ledger design tokens ───────────────────────────── */
 :root {
+  /* Light-only "ledger paper" design — pin native controls (datalist dropdowns,
+     date pickers, autofill, scrollbars) to the light UA theme so a viewer's dark
+     OS setting doesn't repaint them. */
+  color-scheme: light;
+
   --kg-desk: #ded9cc; /* backdrop behind the app */
   --kg-surface: #f0ece3; /* form panel */
   --kg-card: #ffffff; /* inputs, ledger card */

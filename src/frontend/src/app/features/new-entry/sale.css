@@ -145,12 +145,16 @@
   align-items: center;
 }
 .grid__head {
-  padding: 0 2px 4px;
+  padding: 0 0 4px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--kg-faint);
+}
+/* Align the Amount heading with its right-aligned values below. */
+.grid__head-amount {
+  text-align: end;
 }
 .grid__amount {
   font-size: 14px;
@@ -158,6 +162,30 @@
   color: var(--kg-ink);
   text-align: end;
   overflow-wrap: anywhere;
+}
+
+/* Qty cell carries the catalog unit as a trailing hint inside the field, so a
+   number like 100 reads as "100 Gaz". */
+.grid__qty {
+  position: relative;
+  display: flex;
+}
+.fld__input--unit {
+  padding-inline-end: 48px;
+}
+.grid__unit {
+  position: absolute;
+  inset-inline-end: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--kg-faint);
+  pointer-events: none;
 }
 
 /* ── totals + money ──────────────────────────────────────────────────────── */
@@ -322,11 +350,30 @@
   font-weight: 700;
 }
 .fx__label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   color: var(--kg-muted);
+}
+.fx__sub {
+  font-size: 11.5px;
+  color: var(--kg-faint);
 }
 .fx__amt {
   font-weight: 700;
   color: var(--kg-ink);
+}
+/* "Stock out" heading above the per-item reduction rows */
+.fx__group {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.fx__row--indent {
+  padding-inline-start: 8px;
 }
 .fx__row--in .fx__sign {
   color: var(--kg-in);

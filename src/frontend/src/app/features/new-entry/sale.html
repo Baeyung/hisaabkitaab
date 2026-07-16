@@ -39,7 +39,7 @@
         <span>{{ locale.t('sale.col.design') }}</span>
         <span class="num">{{ locale.t('sale.col.qty') }}</span>
         <span class="num">{{ locale.t('sale.col.rate') }}</span>
-        <span class="num">{{ locale.t('sale.col.amount') }}</span>
+        <span class="num grid__head-amount">{{ locale.t('sale.col.amount') }}</span>
         <span></span>
       </div>
 
@@ -54,16 +54,22 @@
             [attr.placeholder]="locale.t('sale.col.design.ph')"
             [attr.aria-label]="locale.t('sale.col.design')"
           />
-          <input
-            class="fld__input fld__input--sm num"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            [value]="line.qty"
-            (input)="setQty(line.key, $any($event.target).value)"
-            [attr.placeholder]="locale.t('sale.col.qty')"
-            [attr.aria-label]="locale.t('sale.col.qty')"
-          />
+          <div class="grid__qty">
+            <input
+              class="fld__input fld__input--sm num"
+              [class.fld__input--unit]="lineUnit(line.design)"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              [value]="line.qty"
+              (input)="setQty(line.key, $any($event.target).value)"
+              [attr.placeholder]="locale.t('sale.col.qty')"
+              [attr.aria-label]="locale.t('sale.col.qty') + (lineUnit(line.design) ? ' — ' + lineUnit(line.design) : '')"
+            />
+            @if (lineUnit(line.design); as u) {
+              <span class="grid__unit" aria-hidden="true">{{ u }}</span>
+            }
+          </div>
           <input
             class="fld__input fld__input--sm num"
             type="number"
@@ -106,8 +112,9 @@
           type="number"
           inputmode="decimal"
           min="0"
-          [value]="received()"
+          [value]="cashCustomer() ? total() : received()"
           (input)="setReceived($any($event.target).value)"
+          [disabled]="cashCustomer()"
           [attr.placeholder]="'0'"
         />
       </div>
@@ -160,17 +167,20 @@
           <li class="fx__row fx__row--in">
             <span class="fx__sign">▲</span>
             <span class="fx__label">{{ locale.t('sale.effect.drawer') }}</span>
-            <span class="fx__amt num">{{ money(received() ?? 0) }}</span>
+            <span class="fx__amt num">{{ money(effectiveReceived()) }}</span>
           </li>
-          <li class="fx__row fx__row--out">
-            <span class="fx__sign">▼</span>
-            <span class="fx__label">{{ locale.t('sale.effect.stock') }}</span>
-            <span class="fx__amt num">{{ money(total()) }}</span>
-          </li>
+          <li class="fx__group">{{ locale.t('sale.effect.stock') }}</li>
+          @for (s of stockView(); track s.key) {
+            <li class="fx__row fx__row--out fx__row--indent">
+              <span class="fx__sign">▼</span>
+              <span class="fx__label">{{ s.name }}</span>
+              <span class="fx__amt num">{{ s.qty }}</span>
+            </li>
+          }
           @if (balanceView(); as b) {
             <li class="fx__row fx__row--{{ b.tone }}">
               <span class="fx__sign">{{ b.tone === 'in' ? '▲' : '▼' }}</span>
-              <span class="fx__label">{{ b.label }}</span>
+              <span class="fx__label">{{ b.party }}<small class="fx__sub">{{ b.direction }}</small></span>
               <span class="fx__amt num">{{ b.amount }}</span>
             </li>
           } @else {

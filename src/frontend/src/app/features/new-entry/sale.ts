@@ -84,8 +84,14 @@ export class Sale {
     this.validLines().reduce((sum, l) => sum + (l.qty as number) * (l.rate as number), 0),
   );
 
+  /** Cash received. A cash customer pays in full by definition, so it tracks the
+   *  total (and the input is locked); otherwise it's what was actually handed over. */
+  protected readonly effectiveReceived = computed(() =>
+    this.cashCustomer() ? this.total() : (this.received() ?? 0),
+  );
+
   /** Positive → the party owes you; negative → you owe them (overpaid). */
-  protected readonly balance = computed(() => this.total() - (this.received() ?? 0));
+  protected readonly balance = computed(() => this.total() - this.effectiveReceived());
 
   protected readonly canSave = computed(() => this.validLines().length > 0 && !this.saving());
 
@@ -147,6 +153,12 @@ export class Sale {
     return (l.qty ?? 0) * (l.rate ?? 0);
   }
 
+  /** The catalog unit for a design (e.g. "Gaz", "Meter"), so a qty of 100 reads as
+   *  100 of that unit. Empty for a new/unmatched design — no unit is known yet. */
+  lineUnit(design: string): string {
+    return this.matchItem(design)?.unit ?? '';
+  }
+
   // ── save ───────────────────────────────────────────────────────────────
   async save(): Promise<void> {
     if (!this.canSave()) {
@@ -162,7 +174,7 @@ export class Sale {
     const request: EventRequest = {
       transactionEvent: 'SALE',
       billAmount: total,
-      cashAmount: this.received() ?? 0,
+      cashAmount: this.effectiveReceived(),
       billNumber: this.billNumber().trim() || null,
       billDate: this.billDate() || null,
       description: this.description().trim() || null,
@@ -207,15 +219,28 @@ export class Sale {
   }
 
   // ── effect panel view ───────────────────────────────────────────────────
-  /** Baqaya line for the Effect panel: tone + label + signed amount; null = settled. */
-  protected balanceView(): { tone: 'in' | 'out'; label: string; amount: string } | null {
+  /** Per-item stock reduction: the quantity (with unit, when the item is known)
+   *  leaving stock for each valid line — what the STOCK-out actually moves. */
+  protected stockView(): { key: number; name: string; qty: string }[] {
+    return this.validLines().map((l) => {
+      const unit = this.matchItem(l.design)?.unit ?? '';
+      const qty = this.locale.formatNumber(l.qty as number);
+      return { key: l.key, name: l.design.trim(), qty: unit ? `${qty} ${unit}` : qty };
+    });
+  }
+
+  /** Baqaya line for the Effect panel: the party, which way it moves, and how much;
+   *  null = settled. Names the party so "they owe you" isn't anonymous. */
+  protected balanceView(): { tone: 'in' | 'out'; party: string; direction: string; amount: string } | null {
     const b = this.balance();
     if (Math.abs(b) < 0.005) {
       return null;
     }
+    const name = this.partyName().trim();
+    const party = this.cashCustomer() || !name ? this.locale.t('sale.party.cash') : name;
     return b > 0
-      ? { tone: 'in', label: this.locale.t('sale.effect.theyOwe'), amount: this.money(b) }
-      : { tone: 'out', label: this.locale.t('sale.effect.youOwe'), amount: this.money(-b) };
+      ? { tone: 'in', party, direction: this.locale.t('sale.effect.theyOwe'), amount: this.money(b) }
+      : { tone: 'out', party, direction: this.locale.t('sale.effect.youOwe'), amount: this.money(-b) };
   }
 
   // ── helpers ─────────────────────────────────────────────────────────────
