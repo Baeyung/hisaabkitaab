@@ -1,7 +1,6 @@
 package io.github.baeyung.hisaabkitaab.processors.targetkind;
 
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
-import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
@@ -33,8 +32,7 @@ public class CashProcessor implements KindProcessor
             EventRequest payload,
             InOut inOut,
             TransactionEvent transactionEvent,
-            Transaction transaction,
-            StoreItem storeItem
+            Transaction transaction
     )
     {
         if (payload.getCashAmount().compareTo(0.0d) < 0)
@@ -44,9 +42,7 @@ public class CashProcessor implements KindProcessor
         }
 
         TransactionLine transactionLine = getTransactionLine(
-                payload,
                 transaction,
-                storeItem,
                 payload.getCashAmount(),
                 inOut
         );

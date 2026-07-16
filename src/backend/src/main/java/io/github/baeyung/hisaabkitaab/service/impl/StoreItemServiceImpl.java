@@ -68,6 +68,12 @@ public class StoreItemServiceImpl implements StoreItemService
     }
 
     @Override
+    public StoreItem create(StoreItem input)
+    {
+        return storeItemRepository.save(input);
+    }
+
+    @Override
     public StoreItem update(String id, StoreItem changes, String ownerId)
     {
         StoreItem item = findByIdForOwner(id, ownerId);

@@ -15,6 +15,7 @@ public interface StoreItemService
     StoreItem findByIdForOwner(String id, String ownerId);
 
     StoreItem create(StoreItem item, String ownerId);
+    StoreItem create(StoreItem item);
 
     StoreItem update(String id, StoreItem changes, String ownerId);
 

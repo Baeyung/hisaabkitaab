@@ -1,7 +1,6 @@
 package io.github.baeyung.hisaabkitaab.processors.targetkind;
 
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
-import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
@@ -36,16 +35,13 @@ public class PartyProcessor implements KindProcessor
             EventRequest payload,
             InOut inOut,
             TransactionEvent transactionEvent,
-            Transaction transaction,
-            StoreItem storeItem
+            Transaction transaction
     )
     {
         PartyAmountCalculations partyAmountCalculations = getPartyAmountCalculations(payload, transactionEvent, inOut);
 
         TransactionLine transactionLine = getTransactionLine(
-                payload,
                 transaction,
-                storeItem,
                 partyAmountCalculations.getAmount(),
                 partyAmountCalculations.getInOut()
         );

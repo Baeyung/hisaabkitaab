@@ -3,7 +3,6 @@ package io.github.baeyung.hisaabkitaab.service.impl;
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
 import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
-import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
@@ -104,15 +103,17 @@ public class EventService
                             .build()
             );
 
-            StoreItem item = resolveItem(eventRequest);
-
-
             // post to kind processors
             processor.getTargetKinds().forEach((kind, inout) -> {
                 KindProcessor kindProcessor = this.kindProcessorMap.get(kind);
                 if (kindProcessor != null)
                 {
-                    kindProcessor.process(eventRequest, inout, processor.getTransactionEvent(), transaction, item);
+                    kindProcessor.process(
+                            eventRequest,
+                            inout,
+                            processor.getTransactionEvent(),
+                            transaction
+                    );
                 }
                 else
                 {
@@ -127,19 +128,10 @@ public class EventService
         EventRequest.Party party = eventRequest.getParty();
         if (party == null || !StringUtils.hasText(party.getPartyId()))
         {
+            // create party, if it doesnt exist, with defaults, and user can modify it later
             return null;
         }
 
         return partyService.findEntity(party.getPartyId());
-    }
-
-    private StoreItem resolveItem(EventRequest eventRequest)
-    {
-        EventRequest.Item item = eventRequest.getItem();
-        if (item == null || item.getItemId() == null)
-        {
-            return null;
-        }
-        return storeItemService.findEntity(item.getItemId());
     }
 }
