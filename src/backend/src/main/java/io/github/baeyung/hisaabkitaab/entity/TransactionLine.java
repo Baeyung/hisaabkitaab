@@ -60,4 +60,6 @@ public class TransactionLine
     private BigDecimal quantity;
 
     private String unit;
+
+    private Double itemSoldAt;
 }

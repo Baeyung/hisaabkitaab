@@ -40,5 +40,6 @@ public class EventRequest
         private String itemId;
         private String name;
         private BigDecimal quantity;
+        private Double itemSoldAt;
     }
 }

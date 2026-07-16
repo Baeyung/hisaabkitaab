@@ -40,24 +40,26 @@ public class StockProcessor implements KindProcessor
             Transaction transaction
     )
     {
-        Map<String, BigDecimal> itemQuantityMap = payload
+        Map<String, EventRequest.Item> itemQuantityMap = payload
                 .getItems()
                 .stream()
                 .collect(Collectors.toMap(
                         EventRequest.Item::getItemId,
-                        EventRequest.Item::getQuantity
+                        item -> item
                 ));
 
         List<TransactionLine> items = resolveItems(payload, transaction)
                 .stream()
                 .map(item -> {
+                    EventRequest.Item requestItem = itemQuantityMap.get(item.getId());
                     TransactionLine transactionLine = getTransactionLine(
                             transaction,
                             payload.getCashAmount(),
                             inOut
                     );
                     transactionLine.setItem(item);
-                    transactionLine.setQuantity(itemQuantityMap.get(item.getId()));
+                    transactionLine.setQuantity(requestItem.getQuantity());
+                    transactionLine.setItemSoldAt(requestItem.getItemSoldAt());
                     return transactionLine;
                 })
                 .toList();
