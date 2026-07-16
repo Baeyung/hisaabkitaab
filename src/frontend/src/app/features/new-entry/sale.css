@@ -1,0 +1,416 @@
+/* New Entry › Sale — the Ledger Grid. Form on the left, live Effect + recent on
+   the right; stacks on narrow screens. Uses the ledger tokens (--kg-*). Field and
+   button primitives are duplicated from the settings screens to stay isolated.
+   ponytail: these .btn/.fld/.iconbtn primitives now live in four screens — a shared
+   stylesheet is overdue (see docs/tickets), deferred to keep this change isolated. */
+
+.sale {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+  max-width: 1180px;
+  padding: clamp(20px, 3vw, 34px);
+}
+
+/* ── form column ─────────────────────────────────────────────────────────── */
+.sale__form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(16px, 2.4vw, 26px);
+  background: var(--kg-surface);
+  border: 1px solid var(--kg-line);
+  border-radius: 16px;
+}
+.sale__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.sale__eyebrow {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.sale__title {
+  margin: 2px 0 0;
+  font-size: clamp(21px, 2.4vw, 26px);
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.sale__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ── fields ──────────────────────────────────────────────────────────────── */
+.fld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fld--inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fld--inline .fld__input {
+  max-width: 180px;
+}
+.fld__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+.fld__input {
+  height: 44px;
+  padding: 0 13px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.fld__input--sm {
+  height: 40px;
+  min-width: 0;
+}
+.fld__input--date {
+  width: auto;
+  max-width: 170px;
+}
+.fld__input:focus {
+  outline: none;
+  border-color: var(--kg-brand);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+.fld__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.fld__input::placeholder {
+  color: #b6afa4;
+  font-weight: 400;
+}
+
+.linkbtn {
+  align-self: flex-start;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-brand);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.linkbtn:hover {
+  text-decoration: underline;
+}
+.linkbtn--on {
+  color: var(--kg-out);
+}
+.linkbtn:focus-visible {
+  outline: 2px solid var(--kg-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── line grid ───────────────────────────────────────────────────────────── */
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 12px;
+}
+.grid__head,
+.grid__row {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(70px, 1.2fr) 40px;
+  gap: 8px;
+  align-items: center;
+}
+.grid__head {
+  padding: 0 2px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.grid__amount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+/* ── totals + money ──────────────────────────────────────────────────────── */
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--kg-cream);
+  border: 1px solid var(--kg-line);
+  border-radius: 12px;
+}
+.totals__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.totals__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+.totals__val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ── buttons (duplicated primitives — see header note) ───────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  padding-inline: 18px;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn--primary {
+  color: #fff;
+  background: var(--kg-brand);
+  box-shadow: var(--kg-shadow-brand);
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.btn--primary:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.btn--primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn--primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn--ghost {
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+}
+.btn--ghost:hover {
+  border-color: rgba(35, 32, 28, 0.32);
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+.iconbtn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 9px;
+  background: var(--kg-card);
+  color: var(--kg-muted);
+  cursor: pointer;
+}
+.iconbtn--danger:hover:not(:disabled) {
+  border-color: rgba(168, 52, 42, 0.4);
+  color: var(--kg-out);
+}
+.iconbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.iconbtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+.alert {
+  margin: 0;
+  padding: 10px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kg-out);
+  background: rgba(168, 52, 42, 0.08);
+  border: 1px solid rgba(168, 52, 42, 0.22);
+  border-radius: 11px;
+}
+
+/* ── right rail: effect + recent ─────────────────────────────────────────── */
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 20px;
+}
+.panel {
+  padding: 16px;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+}
+.panel__title {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.panel__empty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--kg-muted);
+}
+
+.fx {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fx__row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 14px;
+}
+.fx__sign {
+  font-size: 12px;
+  font-weight: 700;
+}
+.fx__label {
+  color: var(--kg-muted);
+}
+.fx__amt {
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.fx__row--in .fx__sign {
+  color: var(--kg-in);
+}
+.fx__row--out .fx__sign {
+  color: var(--kg-out);
+}
+.fx__row--settled .fx__sign {
+  color: var(--kg-faint);
+}
+
+.recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.recent__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--kg-line);
+}
+.recent__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.recent__summary {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kg-ink);
+}
+.recent__sub {
+  font-size: 12px;
+  color: var(--kg-faint);
+}
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .sale {
+    grid-template-columns: 1fr;
+  }
+  .rail {
+    position: static;
+  }
+}
+@media (max-width: 560px) {
+  .sale {
+    padding: 14px;
+  }
+  .grid__head {
+    display: none;
+  }
+  .grid__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+    grid-template-areas:
+      'design design remove'
+      'qty rate amount';
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--kg-line);
+    border-radius: 10px;
+  }
+  .grid__row > :nth-child(1) {
+    grid-area: design;
+  }
+  .grid__row > :nth-child(2) {
+    grid-area: qty;
+  }
+  .grid__row > :nth-child(3) {
+    grid-area: rate;
+  }
+  .grid__amount {
+    grid-area: amount;
+    align-self: center;
+  }
+  .grid__row > .iconbtn {
+    grid-area: remove;
+    justify-self: end;
+  }
+  .meta {
+    grid-template-columns: 1fr;
+  }
+}

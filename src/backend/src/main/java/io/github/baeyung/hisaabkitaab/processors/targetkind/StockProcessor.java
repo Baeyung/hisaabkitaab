@@ -14,10 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -40,18 +37,16 @@ public class StockProcessor implements KindProcessor
             Transaction transaction
     )
     {
-        Map<String, EventRequest.Item> itemQuantityMap = payload
-                .getItems()
-                .stream()
-                .collect(Collectors.toMap(
-                        EventRequest.Item::getItemId,
-                        item -> item
-                ));
+        List<EventRequest.Item> requestItems = payload.getItems();
+        if (CollectionUtils.isEmpty(requestItems))
+        {
+            return;
+        }
 
-        List<TransactionLine> items = resolveItems(payload, transaction)
+        List<TransactionLine> lines = requestItems
                 .stream()
-                .map(item -> {
-                    EventRequest.Item requestItem = itemQuantityMap.get(item.getId());
+                .map(requestItem -> {
+                    StoreItem item = resolveItem(requestItem, transaction);
                     TransactionLine transactionLine = getTransactionLine(
                             transaction,
                             payload.getCashAmount(),
@@ -64,36 +59,25 @@ public class StockProcessor implements KindProcessor
                 })
                 .toList();
 
-        transactionLineService.upsertAll(items);
+        transactionLineService.upsertAll(lines);
     }
 
-    private List<StoreItem> resolveItems(EventRequest eventRequest, Transaction transaction)
+    private StoreItem resolveItem(EventRequest.Item item, Transaction transaction)
     {
-        List<EventRequest.Item> items = eventRequest.getItems();
-        if (CollectionUtils.isEmpty(items))
+        if (item.getItemId() != null)
         {
-            return Collections.emptyList();
+            return storeItemService.findEntity(item.getItemId());
         }
 
-        return items
-                .stream()
-                .map(item -> {
-                    if (item.getItemId() != null)
-                    {
-                        return storeItemService.findEntity(item.getItemId());
-                    }
-
-                    return storeItemService.create(
-                            StoreItem
-                                    .builder()
-                                    .store(transaction.getStore())
-                                    .unit("gz")
-                                    .salePrice(BigDecimal.ZERO)
-                                    .costPrice(BigDecimal.ZERO)
-                                    .name(item.getName())
-                                    .build()
-                    );
-                })
-                .toList();
+        return storeItemService.create(
+                StoreItem
+                        .builder()
+                        .store(transaction.getStore())
+                        .unit("gz")
+                        .salePrice(BigDecimal.ZERO)
+                        .costPrice(BigDecimal.ZERO)
+                        .name(item.getName())
+                        .build()
+        );
     }
 }

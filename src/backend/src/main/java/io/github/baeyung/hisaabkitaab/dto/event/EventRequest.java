@@ -4,6 +4,7 @@ import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -27,6 +28,7 @@ public class EventRequest
 
     @Getter
     @Setter
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class Party {
         private String partyId;
@@ -35,6 +37,7 @@ public class EventRequest
 
     @Getter
     @Setter
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class Item {
         private String itemId;
