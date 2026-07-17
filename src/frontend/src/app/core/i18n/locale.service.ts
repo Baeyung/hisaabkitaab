@@ -6,7 +6,6 @@ import { ur } from './translations/ur';
 type Locale = 'en' | 'ur';
 const LOCALE_KEY = 'hk.locale';
 const dictionaries: Record<Locale, Record<TranslationKey, string>> = { en, ur };
-const easternDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
 
 @Injectable({ providedIn: 'root' })
 export class LocaleService {
@@ -46,18 +45,15 @@ export class LocaleService {
   }
 
   formatNumber(n: number): string {
-    const s = String(n);
-    return this._locale() === 'ur' ? s.replace(/\d/g, (d) => easternDigits[Number(d)]) : s;
+    return String(n);
   }
 
   /**
-   * A rupee figure for display: thousands-grouped and script-localized, e.g.
-   * `Rs 4,500` / `Rs ۴,۵۰۰`. Grouping is what separates this from
-   * {@link formatNumber} — amounts are the star of every ledger screen and read
-   * wrong without it (APPLICATION_DOMAIN §4).
+   * A rupee figure for display: thousands-grouped, e.g. `Rs 4,500`. Grouping is
+   * what separates this from {@link formatNumber} — amounts are the star of
+   * every ledger screen and read wrong without it (APPLICATION_DOMAIN §4).
    */
   money(n: number): string {
-    const grouped = n.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    return 'Rs ' + (this._locale() === 'ur' ? grouped.replace(/\d/g, (d) => easternDigits[Number(d)]) : grouped);
+    return 'Rs ' + n.toLocaleString('en-US', { maximumFractionDigits: 2 });
   }
 }

@@ -58,7 +58,7 @@
                   <td class="num">{{ row.date }}</td>
                   <td>{{ row.description || '—' }}</td>
                   <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
-                    {{ row.inOut === 'IN' ? '+' : '−' }} {{ locale.money(row.amount) }}
+                    {{ locale.money(row.amount) }}
                   </td>
                   <td class="end">
                     <span class="num rm-tbl__name" [class]="directionClass(row.runningBalance.direction)">

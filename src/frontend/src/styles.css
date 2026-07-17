@@ -167,6 +167,18 @@ html[dir='rtl'] .num {
 .amt--settled {
   color: var(--kg-muted);
 }
+/* Table cells set color via `.rm-tbl td` (specificity 0,1,1), which beats a
+   bare `.amt--*` class on the same cell — scope these higher so green/red wins
+   for amount and quantity columns. */
+.rm-tbl td.amt--in {
+  color: var(--kg-in);
+}
+.rm-tbl td.amt--out {
+  color: var(--kg-out);
+}
+.rm-tbl td.amt--settled {
+  color: var(--kg-muted);
+}
 
 /* card + table shell */
 .rm-card {

@@ -89,10 +89,8 @@ export class AuthShell {
     { en: 'Bilal & Sons', ur: 'بلال اینڈ سنز', amount: 23400, dir: 'in' },
   ];
 
-  /** Grouped rupee figure, digits localized to the active script. */
+  /** Grouped rupee figure. */
   protected money(n: number): string {
-    const grouped = n.toLocaleString('en-US');
-    const figure = this.locale.locale() === 'ur' ? grouped.replace(/\d/g, (c) => '۰۱۲۳۴۵۶۷۸۹'[Number(c)]) : grouped;
-    return 'Rs ' + figure;
+    return 'Rs ' + n.toLocaleString('en-US');
   }
 }

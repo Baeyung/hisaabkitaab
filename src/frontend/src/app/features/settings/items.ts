@@ -157,9 +157,8 @@ export class SettingsItems {
     }
     const m = sale - cost;
     const tone = m > 0 ? 'pos' : m < 0 ? 'neg' : 'zero';
-    const sign = m > 0 ? '+' : m < 0 ? '−' : '';
     const pct = cost !== 0 ? this.percent(Math.round((m / cost) * 100)) : '';
-    return { amount: sign + this.money(Math.abs(m)), pct, tone };
+    return { amount: this.money(Math.abs(m)), pct, tone };
   }
 
   private percent(n: number): string {
