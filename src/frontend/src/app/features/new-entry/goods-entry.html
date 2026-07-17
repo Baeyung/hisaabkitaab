@@ -3,8 +3,8 @@
   <div class="sale__form">
     <header class="sale__head">
       <div>
-        <p class="sale__eyebrow">{{ locale.t('sale.newEntry') }}</p>
-        <h1 class="sale__title">{{ locale.t('nav.sale') }}</h1>
+        <p class="sale__eyebrow">{{ locale.t(config().labels.newEntry) }}</p>
+        <h1 class="sale__title">{{ locale.t(config().labels.title) }}</h1>
       </div>
       <input
         class="fld__input fld__input--date"
@@ -17,29 +17,31 @@
 
     <!-- party -->
     <div class="fld">
-      <label class="fld__label" for="sale-party">{{ locale.t('sale.party') }}</label>
+      <label class="fld__label" [attr.for]="config().idPrefix + '-party'">
+        {{ locale.t(config().labels.party) }}
+      </label>
       <input
-        id="sale-party"
         class="fld__input"
         type="text"
-        list="sale-parties"
+        [attr.id]="config().idPrefix + '-party'"
+        [attr.list]="config().idPrefix + '-parties'"
         [value]="partyName()"
         (input)="partyName.set($any($event.target).value)"
-        [disabled]="cashCustomer()"
-        [attr.placeholder]="locale.t('sale.party.ph')"
+        [disabled]="cashParty()"
+        [attr.placeholder]="locale.t(config().labels.partyPh)"
       />
-      <button type="button" class="linkbtn" [class.linkbtn--on]="cashCustomer()" (click)="toggleCashCustomer()">
-        {{ locale.t('sale.party.cashToggle') }}
+      <button type="button" class="linkbtn" [class.linkbtn--on]="cashParty()" (click)="toggleCashParty()">
+        {{ locale.t(config().labels.partyCashToggle) }}
       </button>
     </div>
 
     <!-- line-item grid -->
-    <div class="grid" role="group" [attr.aria-label]="locale.t('sale.lines')">
+    <div class="grid" role="group" [attr.aria-label]="locale.t(config().labels.lines)">
       <div class="grid__head" aria-hidden="true">
-        <span>{{ locale.t('sale.col.design') }}</span>
-        <span class="num">{{ locale.t('sale.col.qty') }}</span>
-        <span class="num">{{ locale.t('sale.col.rate') }}</span>
-        <span class="num grid__head-amount">{{ locale.t('sale.col.amount') }}</span>
+        <span>{{ locale.t(config().labels.colDesign) }}</span>
+        <span class="num">{{ locale.t(config().labels.colQty) }}</span>
+        <span class="num">{{ locale.t(config().labels.colRate) }}</span>
+        <span class="num grid__head-amount">{{ locale.t(config().labels.colAmount) }}</span>
         <span></span>
       </div>
 
@@ -48,11 +50,11 @@
           <input
             class="fld__input fld__input--sm"
             type="text"
-            list="sale-items"
+            [attr.list]="config().idPrefix + '-items'"
             [value]="line.design"
             (input)="setDesign(line.key, $any($event.target).value)"
-            [attr.placeholder]="locale.t('sale.col.design.ph')"
-            [attr.aria-label]="locale.t('sale.col.design')"
+            [attr.placeholder]="locale.t(config().labels.colDesignPh)"
+            [attr.aria-label]="locale.t(config().labels.colDesign)"
           />
           <div class="grid__qty">
             <input
@@ -63,8 +65,8 @@
               min="0"
               [value]="line.qty"
               (input)="setQty(line.key, $any($event.target).value)"
-              [attr.placeholder]="locale.t('sale.col.qty')"
-              [attr.aria-label]="locale.t('sale.col.qty') + (lineUnit(line.design) ? ' — ' + lineUnit(line.design) : '')"
+              [attr.placeholder]="locale.t(config().labels.colQty)"
+              [attr.aria-label]="locale.t(config().labels.colQty) + (lineUnit(line.design) ? ' — ' + lineUnit(line.design) : '')"
             />
             @if (lineUnit(line.design); as u) {
               <span class="grid__unit" aria-hidden="true">{{ u }}</span>
@@ -77,8 +79,8 @@
             min="0"
             [value]="line.rate"
             (input)="setRate(line.key, $any($event.target).value)"
-            [attr.placeholder]="locale.t('sale.col.rate')"
-            [attr.aria-label]="locale.t('sale.col.rate')"
+            [attr.placeholder]="locale.t(config().labels.colRate)"
+            [attr.aria-label]="locale.t(config().labels.colRate)"
           />
           <span class="grid__amount num">{{ money(lineAmount(line)) }}</span>
           <button
@@ -86,7 +88,7 @@
             class="iconbtn iconbtn--danger"
             (click)="removeLine(line.key)"
             [disabled]="lines().length === 1"
-            [attr.aria-label]="locale.t('sale.line.remove')"
+            [attr.aria-label]="locale.t(config().labels.lineRemove)"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
               <path d="M5 12h14" />
@@ -95,26 +97,28 @@
         </div>
       }
 
-      <button type="button" class="linkbtn" (click)="addLine()">+ {{ locale.t('sale.line.add') }}</button>
+      <button type="button" class="linkbtn" (click)="addLine()">+ {{ locale.t(config().labels.lineAdd) }}</button>
     </div>
 
     <!-- totals + money -->
     <div class="totals">
       <div class="totals__row">
-        <span class="totals__label">{{ locale.t('sale.total') }}</span>
+        <span class="totals__label">{{ locale.t(config().labels.total) }}</span>
         <span class="totals__val num">{{ money(total()) }}</span>
       </div>
       <div class="fld fld--inline">
-        <label class="fld__label" for="sale-received">{{ locale.t('sale.received') }}</label>
+        <label class="fld__label" [attr.for]="config().idPrefix + '-cash'">
+          {{ locale.t(config().labels.cash) }}
+        </label>
         <input
-          id="sale-received"
           class="fld__input num"
           type="number"
           inputmode="decimal"
           min="0"
-          [value]="cashCustomer() ? total() : received()"
-          (input)="setReceived($any($event.target).value)"
-          [disabled]="cashCustomer()"
+          [attr.id]="config().idPrefix + '-cash'"
+          [value]="cashParty() ? total() : cash()"
+          (input)="setCash($any($event.target).value)"
+          [disabled]="cashParty()"
           [attr.placeholder]="'0'"
         />
       </div>
@@ -123,25 +127,29 @@
     <!-- description + bill number -->
     <div class="meta">
       <div class="fld">
-        <label class="fld__label" for="sale-bill">{{ locale.t('sale.billNumber') }}</label>
+        <label class="fld__label" [attr.for]="config().idPrefix + '-bill'">
+          {{ locale.t(config().labels.billNumber) }}
+        </label>
         <input
-          id="sale-bill"
           class="fld__input"
           type="text"
+          [attr.id]="config().idPrefix + '-bill'"
           [value]="billNumber()"
           (input)="billNumber.set($any($event.target).value)"
-          [attr.placeholder]="locale.t('sale.billNumber.ph')"
+          [attr.placeholder]="locale.t(config().labels.billNumberPh)"
         />
       </div>
       <div class="fld">
-        <label class="fld__label" for="sale-desc">{{ locale.t('sale.description') }}</label>
+        <label class="fld__label" [attr.for]="config().idPrefix + '-desc'">
+          {{ locale.t(config().labels.description) }}
+        </label>
         <input
-          id="sale-desc"
           class="fld__input"
           type="text"
+          [attr.id]="config().idPrefix + '-desc'"
           [value]="description()"
           (input)="description.set($any($event.target).value)"
-          [attr.placeholder]="locale.t('sale.description.ph')"
+          [attr.placeholder]="locale.t(config().labels.descriptionPh)"
         />
       </div>
     </div>
@@ -151,9 +159,11 @@
     }
 
     <div class="sale__actions">
-      <button type="button" class="btn btn--ghost" (click)="reset()">{{ locale.t('sale.clear') }}</button>
+      <button type="button" class="btn btn--ghost" (click)="reset()">
+        {{ locale.t(config().labels.clear) }}
+      </button>
       <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
-        {{ locale.t('sale.saveNext') }} ↵
+        {{ locale.t(config().labels.saveNext) }} ↵
       </button>
     </div>
   </div>
@@ -161,18 +171,28 @@
   <!-- ── live effect + recent ───────────────────────────────────────────── -->
   <aside class="rail">
     <div class="panel">
-      <h2 class="panel__title">{{ locale.t('sale.effect') }}</h2>
+      <h2 class="panel__title">{{ locale.t(config().labels.effect) }}</h2>
       @if (total() > 0) {
         <ul class="fx">
-          <li class="fx__row fx__row--in">
-            <span class="fx__sign">▲</span>
-            <span class="fx__label">{{ locale.t('sale.effect.drawer') }}</span>
-            <span class="fx__amt num">{{ money(effectiveReceived()) }}</span>
+          <!-- drawer: fills on a sale, empties on a purchase -->
+          <li
+            class="fx__row"
+            [class.fx__row--in]="config().drawerFlow === 'in'"
+            [class.fx__row--out]="config().drawerFlow === 'out'"
+          >
+            <span class="fx__sign">{{ config().drawerFlow === 'in' ? '▲' : '▼' }}</span>
+            <span class="fx__label">{{ locale.t(config().labels.effectDrawer) }}</span>
+            <span class="fx__amt num">{{ money(effectiveCash()) }}</span>
           </li>
-          <li class="fx__group">{{ locale.t('sale.effect.stock') }}</li>
+          <!-- stock: leaves on a sale, arrives on a purchase -->
+          <li class="fx__group">{{ locale.t(config().labels.effectStock) }}</li>
           @for (s of stockView(); track s.key) {
-            <li class="fx__row fx__row--out fx__row--indent">
-              <span class="fx__sign">▼</span>
+            <li
+              class="fx__row fx__row--indent"
+              [class.fx__row--in]="stockFlow() === 'in'"
+              [class.fx__row--out]="stockFlow() === 'out'"
+            >
+              <span class="fx__sign">{{ stockFlow() === 'in' ? '▲' : '▼' }}</span>
               <span class="fx__label">{{ s.name }}</span>
               <span class="fx__amt num">{{ s.qty }}</span>
             </li>
@@ -186,18 +206,18 @@
           } @else {
             <li class="fx__row fx__row--settled">
               <span class="fx__sign">=</span>
-              <span class="fx__label">{{ locale.t('sale.effect.settled') }}</span>
+              <span class="fx__label">{{ locale.t(config().labels.effectSettled) }}</span>
             </li>
           }
         </ul>
       } @else {
-        <p class="panel__empty">{{ locale.t('sale.effect.empty') }}</p>
+        <p class="panel__empty">{{ locale.t(config().labels.effectEmpty) }}</p>
       }
     </div>
 
     @if (recent().length > 0) {
       <div class="panel">
-        <h2 class="panel__title">{{ locale.t('sale.recent') }}</h2>
+        <h2 class="panel__title">{{ locale.t(config().labels.recent) }}</h2>
         <ul class="recent">
           @for (r of recent(); track r.key) {
             <li class="recent__row">
@@ -211,12 +231,12 @@
   </aside>
 </section>
 
-<datalist id="sale-parties">
+<datalist [attr.id]="config().idPrefix + '-parties'">
   @for (p of parties(); track p.id) {
     <option [value]="p.name"></option>
   }
 </datalist>
-<datalist id="sale-items">
+<datalist [attr.id]="config().idPrefix + '-items'">
   @for (i of items(); track i.id) {
     <option [value]="i.name"></option>
   }

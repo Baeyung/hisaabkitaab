@@ -1,2 +1,5 @@
 /mvnw text eol=lf
+# Shell scripts must keep LF: with core.autocrlf=true a CRLF checkout makes bash
+# fail on the stray \r ("syntax error near unexpected token $'{\r'").
+*.sh text eol=lf
 *.cmd text eol=crlf
