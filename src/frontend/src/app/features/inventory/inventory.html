@@ -1,0 +1,78 @@
+<section class="rm-page">
+  <header class="rm-head">
+    <div>
+      <h1 class="rm-title">{{ locale.t('nav.inventory') }}</h1>
+      <p class="rm-sub">{{ locale.t('inventory.subtitle') }}</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (noStore()) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('inventory.noStore.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('inventory.noStore.body') }}</p>
+      <a class="rm-btn rm-btn--primary" routerLink="/settings/general">{{ locale.t('inventory.noStore.cta') }}</a>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state">
+      <p role="alert" class="rm-alert">{{ locale.t('inventory.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
+    </div>
+  } @else if ((items()?.length ?? 0) === 0) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('inventory.empty.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('inventory.empty.body') }}</p>
+      <a class="rm-btn rm-btn--primary" routerLink="/settings/items">{{ locale.t('inventory.empty.cta') }}</a>
+    </div>
+  } @else {
+    <div class="rm-card">
+      <div class="rm-toolbar">
+        <input
+          class="rm-input"
+          type="search"
+          [value]="query()"
+          (input)="query.set(searchInput.value)"
+          #searchInput
+          [attr.placeholder]="locale.t('inventory.search.ph')"
+          [attr.aria-label]="locale.t('inventory.search.ph')"
+        />
+      </div>
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('inventory.col.item') }}</th>
+              <th scope="col" class="end">{{ locale.t('inventory.col.stock') }}</th>
+              <th scope="col" class="end">{{ locale.t('inventory.col.sale') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filtered(); track item.itemId) {
+              <tr class="rm-rowlink" (click)="open(item.itemId)">
+                <td>
+                  <a [routerLink]="['/inventory', item.itemId]" class="rm-tbl__name">{{ item.name }}</a>
+                  @if (item.unit) {
+                    <span class="rm-tbl__meta">{{ item.unit }}</span>
+                  }
+                </td>
+                <td class="end num rm-tbl__name" [class.amt--out]="item.currentStock < 0">
+                  {{ locale.formatNumber(item.currentStock) }} {{ item.unit || '' }}
+                </td>
+                <td class="end num">{{ item.salePrice != null ? locale.money(item.salePrice) : '—' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3">{{ locale.t('inventory.search.none') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</section>

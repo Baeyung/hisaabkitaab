@@ -1,0 +1,78 @@
+<section class="rm-page">
+  <header class="rm-head">
+    <div>
+      <h1 class="rm-title">{{ locale.t('nav.ledger') }}</h1>
+      <p class="rm-sub">{{ locale.t('ledger.subtitle') }}</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (noStore()) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('ledger.noStore.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('ledger.noStore.body') }}</p>
+      <a class="rm-btn rm-btn--primary" routerLink="/settings/general">{{ locale.t('ledger.noStore.cta') }}</a>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state">
+      <p role="alert" class="rm-alert">{{ locale.t('ledger.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
+    </div>
+  } @else if ((parties()?.length ?? 0) === 0) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('ledger.empty.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('ledger.empty.body') }}</p>
+      <a class="rm-btn rm-btn--primary" routerLink="/settings/party">{{ locale.t('ledger.empty.cta') }}</a>
+    </div>
+  } @else {
+    <div class="rm-card">
+      <div class="rm-toolbar">
+        <input
+          class="rm-input"
+          type="search"
+          [value]="query()"
+          (input)="query.set(searchInput.value)"
+          #searchInput
+          [attr.placeholder]="locale.t('ledger.search.ph')"
+          [attr.aria-label]="locale.t('ledger.search.ph')"
+        />
+      </div>
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('ledger.col.party') }}</th>
+              <th scope="col">{{ locale.t('ledger.col.contact') }}</th>
+              <th scope="col" class="end">{{ locale.t('ledger.col.balance') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (party of filtered(); track party.partyId) {
+              <tr class="rm-rowlink" (click)="open(party.partyId)">
+                <td>
+                  <a [routerLink]="['/ledger', party.partyId]" class="rm-tbl__name">{{ party.name }}</a>
+                </td>
+                <td class="num">{{ party.contact || '—' }}</td>
+                <td class="end">
+                  <span class="num rm-tbl__name" [class]="directionClass(party.balance.direction)">
+                    {{ locale.money(party.balance.amount) }}
+                  </span>
+                  <span class="rm-tbl__meta">{{ locale.t(directionKey(party.balance.direction)) }}</span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3">{{ locale.t('ledger.search.none') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</section>

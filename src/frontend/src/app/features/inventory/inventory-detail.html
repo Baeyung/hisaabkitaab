@@ -1,0 +1,69 @@
+<section class="rm-page">
+  <a class="rm-back" routerLink="/inventory">← {{ locale.t('common.back') }}</a>
+
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (notFound()) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('inventory.detail.notFound') }}</h2>
+      <a class="rm-btn rm-btn--ghost" routerLink="/inventory">{{ locale.t('common.back') }}</a>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state">
+      <p role="alert" class="rm-alert">{{ locale.t('inventory.detail.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load(itemId())">{{ locale.t('settings.general.retry') }}</button>
+    </div>
+  } @else if (movement(); as mv) {
+    <header class="rm-head">
+      <div>
+        <h1 class="rm-title">{{ mv.name }}</h1>
+        @if (mv.unit) {
+          <p class="rm-sub">{{ mv.unit }}</p>
+        }
+      </div>
+      <div class="rm-stat">
+        <span class="rm-stat__label">{{ locale.t('inventory.detail.onHand') }}</span>
+        <span class="rm-stat__value num" [class.amt--out]="mv.currentStock < 0">
+          {{ locale.formatNumber(mv.currentStock) }} {{ mv.unit || '' }}
+        </span>
+      </div>
+    </header>
+
+    @if (mv.rows.length === 0) {
+      <div class="rm-state">
+        <p class="rm-state__body">{{ locale.t('inventory.detail.empty') }}</p>
+      </div>
+    } @else {
+      <div class="rm-card">
+        <div class="rm-tablewrap">
+          <table class="rm-tbl">
+            <thead>
+              <tr>
+                <th scope="col">{{ locale.t('inventory.detail.col.date') }}</th>
+                <th scope="col">{{ locale.t('inventory.detail.col.detail') }}</th>
+                <th scope="col" class="end">{{ locale.t('inventory.detail.col.qty') }}</th>
+                <th scope="col" class="end">{{ locale.t('inventory.detail.col.running') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of mv.rows; track row.transactionId + row.occurredAt) {
+                <tr>
+                  <td class="num">{{ row.date }}</td>
+                  <td>{{ row.description || '—' }}</td>
+                  <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
+                    {{ row.inOut === 'IN' ? '+' : '−' }} {{ locale.formatNumber(row.quantity) }}
+                  </td>
+                  <td class="end num">{{ locale.formatNumber(row.runningStock) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+</section>
