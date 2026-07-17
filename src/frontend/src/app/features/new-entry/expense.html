@@ -1,0 +1,115 @@
+<section class="sale">
+  <!-- ── entry form ─────────────────────────────────────────────────────── -->
+  <div class="sale__form">
+    <header class="sale__head">
+      <div>
+        <p class="sale__eyebrow">{{ locale.t('expense.newEntry') }}</p>
+        <h1 class="sale__title">{{ locale.t('nav.expense') }}</h1>
+      </div>
+      <input
+        class="fld__input fld__input--date"
+        type="date"
+        [value]="billDate()"
+        (input)="billDate.set($any($event.target).value)"
+        [attr.aria-label]="locale.t('sale.billDate')"
+      />
+    </header>
+
+    <!-- amount -->
+    <div class="totals">
+      <div class="fld fld--inline">
+        <label class="fld__label" for="expense-amount">{{ locale.t('expense.amount') }}</label>
+        <input
+          class="fld__input num"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          id="expense-amount"
+          [value]="amount()"
+          (input)="setAmount($any($event.target).value)"
+          placeholder="0"
+        />
+      </div>
+    </div>
+
+    <!-- details (required) + reference -->
+    <div class="fld">
+      <label class="fld__label" for="expense-details">{{ locale.t('expense.details') }}</label>
+      <input
+        class="fld__input"
+        type="text"
+        id="expense-details"
+        [value]="details()"
+        (input)="details.set($any($event.target).value)"
+        [attr.placeholder]="locale.t('expense.details.ph')"
+        required
+      />
+      <small class="fld__hint">{{ locale.t('expense.details.hint') }}</small>
+    </div>
+
+    <div class="meta">
+      <div class="fld">
+        <label class="fld__label" for="expense-bill">{{ locale.t('expense.billNumber') }}</label>
+        <input
+          class="fld__input"
+          type="text"
+          id="expense-bill"
+          [value]="billNumber()"
+          (input)="billNumber.set($any($event.target).value)"
+          [attr.placeholder]="locale.t('expense.billNumber.ph')"
+        />
+      </div>
+    </div>
+
+    <div class="sale__actions">
+      <button type="button" class="btn btn--ghost" (click)="reset()">
+        {{ locale.t('expense.clear') }}
+      </button>
+      <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
+        {{ locale.t('expense.saveNext') }} ↵
+      </button>
+    </div>
+  </div>
+
+  <!-- ── live effect + recent ───────────────────────────────────────────── -->
+  <aside class="rail">
+    <div class="panel">
+      <h2 class="panel__title">{{ locale.t('expense.effect') }}</h2>
+      @if (total() > 0) {
+        <ul class="fx">
+          <!-- an expense only ever moves cash, so the drawer is the whole story -->
+          <li class="fx__row fx__row--out">
+            <span class="fx__sign">▼</span>
+            <span class="fx__label">
+              {{ locale.t('expense.effect.drawer')
+              }}@if (details().trim(); as d) {
+                <small class="fx__sub">{{ d }}</small>
+              }
+            </span>
+            <span class="fx__amt num">{{ locale.money(total()) }}</span>
+          </li>
+        </ul>
+      } @else {
+        <p class="panel__empty">{{ locale.t('expense.effect.empty') }}</p>
+      }
+    </div>
+
+    @if (recent.entries().length > 0) {
+      <div class="panel">
+        <h2 class="panel__title">{{ locale.t('expense.recent') }}</h2>
+        <ul class="recent">
+          @for (r of recent.entries(); track r.key) {
+            <li class="recent__row">
+              <span class="recent__summary">{{ r.summary }}</span>
+              <span class="recent__sub">{{ r.sub }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </aside>
+</section>
+
+@if (toast.message(); as msg) {
+  <div class="toast toast--error" role="alert">{{ msg }}</div>
+}

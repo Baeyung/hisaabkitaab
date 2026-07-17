@@ -228,6 +228,20 @@ export const en = {
   'payment.recent': 'Just entered',
   'payment.recent.label': 'Payment',
   'payment.recent.counterparty': 'To {{party}}',
+  'expense.newEntry': 'New entry',
+  'expense.amount': 'Amount',
+  'expense.details': 'Details',
+  'expense.details.ph': 'What was it for? e.g. bijli bill',
+  'expense.details.hint': "Every expense needs details — it's what you'll read in the cashbook later.",
+  'expense.billNumber': 'Reference no.',
+  'expense.billNumber.ph': 'Optional',
+  'expense.clear': 'Clear',
+  'expense.saveNext': 'Save + Next',
+  'expense.effect': 'Effect',
+  'expense.effect.drawer': 'Drawer (cash)',
+  'expense.effect.empty': 'Enter an amount and the effect shows here.',
+  'expense.recent': 'Just entered',
+  'expense.recent.label': 'Expense',
 } as const;
 
 export type TranslationKey = keyof typeof en;
