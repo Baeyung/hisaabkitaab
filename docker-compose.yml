@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: hisaabkitaab-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hkadmin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: hisaabkitaab
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data-hk:/var/lib/postgresql
+      - ./src/backend/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hkadmin -d hisaabkitaab"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./src/backend
+    container_name: hisaabkitaab-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hisaabkitaab
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./src/frontend
+    container_name: hisaabkitaab-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres-data-hk:
