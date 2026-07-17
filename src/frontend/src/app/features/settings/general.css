@@ -1,9 +1,12 @@
 /* Store Settings › General. Reuses the ledger tokens (--kg-*); self-contained
    so it doesn't lean on the auth stylesheet. Namespaced set / plate / sec / up. */
 
+/* A form: --kg-page-max, not --kg-page-wide. The label rail + field measures
+   are tuned for reading, so extra width is spent on centring, not stretching. */
 .set {
-  max-width: 1180px;
-  padding: clamp(20px, 3vw, 34px);
+  max-width: var(--kg-page-max);
+  margin-inline: auto;
+  padding: var(--kg-page-pad);
 }
 
 .set__head {

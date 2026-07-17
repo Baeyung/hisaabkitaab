@@ -4,13 +4,19 @@
    ponytail: these .btn/.fld/.iconbtn primitives now live in four screens — a shared
    stylesheet is overdue (see docs/tickets), deferred to keep this change isolated. */
 
+/* The form column caps at --kg-entry-form and the rail grows with the viewport,
+   so extra width goes to the ledger rail rather than stretching the inputs.
+   justify-content centres the pair once both columns hit their caps — on a
+   narrow screen 1fr absorbs the slack and it has no effect. */
 .sale {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, var(--kg-entry-form)) var(--kg-rail);
   gap: 20px;
   align-items: start;
-  max-width: 1180px;
-  padding: clamp(20px, 3vw, 34px);
+  justify-content: center;
+  max-width: var(--kg-entry-max);
+  margin-inline: auto;
+  padding: var(--kg-page-pad);
 }
 
 /* ── form column ─────────────────────────────────────────────────────────── */

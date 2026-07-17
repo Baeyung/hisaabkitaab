@@ -4,9 +4,12 @@
    (General, Items, Parties) — extracting .btn/.fld/.tbl into a shared settings
    stylesheet is now worth doing; deferred to keep this change isolated. */
 
+/* Capped at the shared measure: past it the name column absorbs the surplus and
+   pushes contact/type out of eyeshot. Centred so the leftover splits evenly. */
 .set {
-  max-width: 1180px;
-  padding: clamp(20px, 3vw, 34px);
+  max-width: var(--kg-page-max);
+  margin-inline: auto;
+  padding: var(--kg-page-pad);
 }
 
 .set__head {

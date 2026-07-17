@@ -27,6 +27,29 @@
 
   --kg-focus: rgba(31, 92, 77, 0.45);
   --kg-shadow-brand: 0 4px 16px rgba(31, 92, 77, 0.34);
+
+  /* ── Page measure ──────────────────────────────────────────────────
+     Every screen caps its width and centres inside the content column.
+     The centring is not cosmetic: without it the leftover pools entirely
+     on the inline-end side, which in Urdu (RTL) is the left of a wide
+     monitor.
+
+     --kg-page-max is the default for forms AND tables. Tables look like
+     they want the extra width, but ours are a wide name column plus four
+     short numeric ones: stretched past this, the name column eats the
+     surplus and drags the figures out of eyeshot. Width has to be earned
+     per screen, not handed out by default. */
+  --kg-page-pad: clamp(20px, 3vw, 34px);
+  --kg-page-max: 1180px;
+
+  /* The entry screens are the one place that earns more: a form beside a
+     ledger rail. The form column stops at --kg-entry-form so a wide monitor
+     feeds the rail instead — the Effect and recent log grow into a companion
+     panel you can read while running Save + Next, rather than a 320px sliver.
+     --kg-entry-max is those two caps plus the gap and padding. */
+  --kg-entry-form: 940px;
+  --kg-rail: clamp(320px, 24vw, 460px);
+  --kg-entry-max: 1520px;
 }
 
 html {
