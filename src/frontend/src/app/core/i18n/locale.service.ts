@@ -45,7 +45,14 @@ export class LocaleService {
   }
 
   formatNumber(n: number): string {
-    return String(n);
+    // Wrap in a Unicode LTR isolate (U+2066…U+2069) so a negative sign isn't
+    // flipped to the wrong side ("-15" → "15-") inside the RTL/Urdu layout.
+    return '⁦' + n + '⁩';
+  }
+
+  /** A quantity with its unit, kept as one LTR run ("-30 kg", never "kg -30"). */
+  qtyUnit(n: number, unit?: string | null): string {
+    return '⁦' + n + (unit ? ' ' + unit : '') + '⁩';
   }
 
   /**

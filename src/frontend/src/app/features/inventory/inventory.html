@@ -61,7 +61,7 @@
                   }
                 </td>
                 <td class="end num rm-tbl__name" [class.amt--out]="item.currentStock < 0" [attr.data-label]="locale.t('inventory.col.stock')">
-                  {{ locale.formatNumber(item.currentStock) }} {{ item.unit || '' }}
+                  {{ locale.qtyUnit(item.currentStock, item.unit) }}
                 </td>
                 <td class="end num" [attr.data-label]="locale.t('inventory.col.sale')">{{ item.salePrice != null ? locale.money(item.salePrice) : '—' }}</td>
               </tr>

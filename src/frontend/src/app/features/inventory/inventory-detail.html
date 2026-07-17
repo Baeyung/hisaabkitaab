@@ -28,7 +28,7 @@
       <div class="rm-stat">
         <span class="rm-stat__label">{{ locale.t('inventory.detail.onHand') }}</span>
         <span class="rm-stat__value num" [class.amt--out]="mv.currentStock < 0">
-          {{ locale.formatNumber(mv.currentStock) }} {{ mv.unit || '' }}
+          {{ locale.qtyUnit(mv.currentStock, mv.unit) }}
         </span>
       </div>
     </header>
