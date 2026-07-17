@@ -166,9 +166,24 @@
   font-size: 13px;
 }
 
-.nav-sub.locked {
+/* Store-gated items read as inert: muted, no hover (see .nav-item:hover:not(:disabled)),
+   not-allowed cursor, and a trailing padlock. `disabled` also drops them from the
+   tab order, so the state is conveyed without relying on colour alone.
+   The label keeps its full #7d766a (3.6:1 on --kg-ink) — dimming it further makes
+   it unreadable, and the point is for the user to see what's waiting to unlock. */
+.nav-item.locked {
   color: #7d766a;
   cursor: not-allowed;
+}
+
+/* Only the glyphs recede; the label stays legible. */
+.nav-item.locked .nav-icon,
+.lock-mark {
+  opacity: 0.75;
+}
+
+.lock-mark {
+  flex: none;
 }
 
 .foot {

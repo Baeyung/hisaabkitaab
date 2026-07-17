@@ -6,7 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { LanguageToggle } from '../../shared/language-toggle/language-toggle';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
-import { NAV, NavLeaf } from './nav';
+import { NAV, NavGroup, NavLeaf } from './nav';
 
 @Component({
   selector: 'app-shell',
@@ -27,9 +27,18 @@ export class Shell {
   // groups start collapsed on load; user expands what they need
   private readonly openGroups = signal(new Set<string>());
 
-  /** Store-gated leaves (Items, Parties) stay locked until a store exists. */
+  /** Store-gated leaves stay locked until a store exists. */
   isLocked(child: NavLeaf): boolean {
     return !!child.locked && !this.stores.hasStore();
+  }
+
+  /**
+   * A group is locked only when it has nothing left to offer — i.e. every child
+   * is locked. Derived rather than flagged so it can't drift from the children:
+   * Settings stays open because General is always reachable.
+   */
+  isGroupLocked(group: NavGroup): boolean {
+    return group.children.every((child) => this.isLocked(child));
   }
 
   toggle(): void {

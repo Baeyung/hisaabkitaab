@@ -22,22 +22,33 @@ export interface NavGroup {
 
 export type NavItem = NavLink | NavGroup;
 
+// `locked` marks the leaves that storeGuard gates (app.routes.ts) — everything
+// but Settings › General. The shell resolves it live against
+// StoreService.hasStore() (see Shell.isLocked), so the menu shows what the
+// router would actually allow instead of bouncing the user to the store page.
+// Keep these two in step: a route behind storeGuard should be `locked` here.
 export const NAV: NavItem[] = [
-  { kind: 'link', key: 'nav.dashboard', path: '/dashboard', icon: 'dashboard' },
-  { kind: 'link', key: 'nav.cashbook', path: '/cashbook', icon: 'cashbook' },
-  { kind: 'link', key: 'nav.ledger', path: '/ledger', icon: 'ledger' },
-  { kind: 'link', key: 'nav.inventory', path: '/inventory', icon: 'stock' },
-  { kind: 'link', key: 'nav.billManagement', path: '/bill-management', icon: 'bill' },
+  { kind: 'link', key: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', locked: true },
+  { kind: 'link', key: 'nav.cashbook', path: '/cashbook', icon: 'cashbook', locked: true },
+  { kind: 'link', key: 'nav.ledger', path: '/ledger', icon: 'ledger', locked: true },
+  { kind: 'link', key: 'nav.inventory', path: '/inventory', icon: 'stock', locked: true },
+  {
+    kind: 'link',
+    key: 'nav.billManagement',
+    path: '/bill-management',
+    icon: 'bill',
+    locked: true,
+  },
   {
     kind: 'group',
     key: 'nav.newEntry',
     icon: 'entry',
     children: [
-      { key: 'nav.sale', path: '/new-entry/sale' },
-      { key: 'nav.receipt', path: '/new-entry/receipt' },
-      { key: 'nav.purchase', path: '/new-entry/purchase' },
-      { key: 'nav.expense', path: '/new-entry/expense' },
-      { key: 'nav.payment', path: '/new-entry/payment' },
+      { key: 'nav.sale', path: '/new-entry/sale', locked: true },
+      { key: 'nav.receipt', path: '/new-entry/receipt', locked: true },
+      { key: 'nav.purchase', path: '/new-entry/purchase', locked: true },
+      { key: 'nav.expense', path: '/new-entry/expense', locked: true },
+      { key: 'nav.payment', path: '/new-entry/payment', locked: true },
     ],
   },
   {
@@ -46,8 +57,6 @@ export const NAV: NavItem[] = [
     icon: 'settings',
     children: [
       { key: 'nav.settings.general', path: '/settings/general' },
-      // `locked` = gated behind having a store; the shell resolves it live
-      // against StoreService.hasStore() (see Shell.isLocked).
       { key: 'nav.settings.items', path: '/settings/items', locked: true },
       { key: 'nav.settings.party', path: '/settings/party', locked: true },
     ],
