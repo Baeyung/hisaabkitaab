@@ -1,0 +1,78 @@
+<section class="rm-page">
+  <header class="rm-head">
+    <div>
+      <h1 class="rm-title">{{ locale.t('nav.billManagement') }}</h1>
+      <p class="rm-sub">{{ locale.t('bill.subtitle') }}</p>
+    </div>
+    <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('bill.new') }}</a>
+  </header>
+
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (noStore()) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('bill.noStore.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('bill.noStore.body') }}</p>
+      <a class="rm-btn rm-btn--primary" routerLink="/settings/general">{{ locale.t('bill.noStore.cta') }}</a>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state">
+      <p role="alert" class="rm-alert">{{ locale.t('bill.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
+    </div>
+  } @else if ((bills()?.length ?? 0) === 0) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('bill.empty.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('bill.empty.body') }}</p>
+      <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('bill.empty.cta') }}</a>
+    </div>
+  } @else {
+    <div class="rm-card">
+      <div class="rm-toolbar">
+        <input
+          class="rm-input"
+          type="search"
+          [value]="query()"
+          (input)="query.set(searchInput.value)"
+          #searchInput
+          [attr.placeholder]="locale.t('bill.search.ph')"
+          [attr.aria-label]="locale.t('bill.search.ph')"
+        />
+      </div>
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('bill.col.number') }}</th>
+              <th scope="col">{{ locale.t('bill.col.date') }}</th>
+              <th scope="col">{{ locale.t('bill.col.party') }}</th>
+              <th scope="col" class="end">{{ locale.t('bill.col.amount') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (bill of filtered(); track bill.id) {
+              <tr class="rm-rowlink" (click)="open(bill.id)">
+                <td>
+                  <a [routerLink]="['/bill-management', bill.id]" class="rm-tbl__name num">
+                    {{ bill.billNumber || '—' }}
+                  </a>
+                </td>
+                <td class="num">{{ bill.date }}</td>
+                <td>{{ bill.partyName || locale.t('bill.cashSale') }}</td>
+                <td class="end num rm-tbl__name">{{ locale.money(bill.amount) }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4">{{ locale.t('bill.search.none') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</section>
