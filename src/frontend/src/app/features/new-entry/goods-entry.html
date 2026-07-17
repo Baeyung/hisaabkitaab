@@ -82,7 +82,7 @@
             [attr.placeholder]="locale.t(config().labels.colRate)"
             [attr.aria-label]="locale.t(config().labels.colRate)"
           />
-          <span class="grid__amount num">{{ money(lineAmount(line)) }}</span>
+          <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
           <button
             type="button"
             class="iconbtn iconbtn--danger"
@@ -104,7 +104,7 @@
     <div class="totals">
       <div class="totals__row">
         <span class="totals__label">{{ locale.t(config().labels.total) }}</span>
-        <span class="totals__val num">{{ money(total()) }}</span>
+        <span class="totals__val num">{{ locale.money(total()) }}</span>
       </div>
       <div class="fld fld--inline">
         <label class="fld__label" [attr.for]="config().idPrefix + '-cash'">
@@ -182,7 +182,7 @@
           >
             <span class="fx__sign">{{ config().drawerFlow === 'in' ? '▲' : '▼' }}</span>
             <span class="fx__label">{{ locale.t(config().labels.effectDrawer) }}</span>
-            <span class="fx__amt num">{{ money(effectiveCash()) }}</span>
+            <span class="fx__amt num">{{ locale.money(effectiveCash()) }}</span>
           </li>
           <!-- stock: leaves on a sale, arrives on a purchase -->
           <li class="fx__group">{{ locale.t(config().labels.effectStock) }}</li>
@@ -215,11 +215,11 @@
       }
     </div>
 
-    @if (recent().length > 0) {
+    @if (recent.entries().length > 0) {
       <div class="panel">
         <h2 class="panel__title">{{ locale.t(config().labels.recent) }}</h2>
         <ul class="recent">
-          @for (r of recent(); track r.key) {
+          @for (r of recent.entries(); track r.key) {
             <li class="recent__row">
               <span class="recent__summary">{{ r.summary }}</span>
               <span class="recent__sub">{{ r.sub }}</span>

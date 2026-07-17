@@ -7,6 +7,8 @@ import { EventService } from '../../core/store/event.service';
 import { Party } from '../../core/store/party.models';
 import { StoreItem } from '../../core/store/store-item.models';
 import { EventRequest } from '../../core/store/event.models';
+import { todayIso } from '../../shared/date.util';
+import { RecentLog } from '../../shared/recent-log';
 
 /** One line of cloth on the bill. `key` is a stable id for @for tracking. */
 interface Line {
@@ -14,13 +16,6 @@ interface Line {
   design: string;
   qty: number | null;
   rate: number | null;
-}
-
-/** A just-saved entry, kept in-session for the "Just entered" rail. */
-interface RecentEntry {
-  key: number;
-  summary: string;
-  sub: string;
 }
 
 /**
@@ -82,12 +77,6 @@ export interface GoodsEntryConfig {
   labels: GoodsEntryLabels;
 }
 
-const easternDigits = '۰۱۲۳۴۵۶۷۸۹';
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 /**
  * Shared entry surface for the two goods-and-money events — SALE (فروخت) and
  * PURCHASE (خرید). The "Ledger Grid": a party (autocomplete), a grid of cloth
@@ -125,9 +114,9 @@ export class GoodsEntry {
   private readonly itemApi = inject(StoreItemService);
   private readonly events = inject(EventService);
 
-  // Declared before any field that calls blankLine()/keySeq++ in its initializer —
-  // class fields init top-to-bottom, so `lines` below must see a real number, not
-  // undefined (undefined++ → NaN, and NaN keys break @for tracking + patchLine).
+  // Declared before `lines` below, whose initializer calls blankLine() → keySeq++.
+  // Class fields init top-to-bottom, so it must already be a real number here
+  // (undefined++ → NaN, and NaN keys break @for tracking + patchLine).
   private keySeq = 1;
 
   /** Autocomplete sources; empty when there's no store yet (list 404s). */
@@ -142,7 +131,7 @@ export class GoodsEntry {
   protected readonly cash = signal<number | null>(null);
 
   protected readonly lines = signal<Line[]>([this.blankLine()]);
-  protected readonly recent = signal<RecentEntry[]>([]);
+  protected readonly recent = new RecentLog();
 
   protected readonly saving = signal(false);
   protected readonly errorKey = signal<'error.generic' | null>(null);
@@ -271,15 +260,9 @@ export class GoodsEntry {
 
     try {
       await this.events.publishEvent(request);
-      this.recent.update((rs) =>
-        [
-          {
-            key: this.keySeq++,
-            summary: `${this.locale.t(labels.recentLabel)} · ${partyLabel} · ${this.money(total)}`,
-            sub: this.locale.t(labels.recentCash, { amount: this.money(request.cashAmount ?? 0) }),
-          },
-          ...rs,
-        ].slice(0, 6),
+      this.recent.push(
+        `${this.locale.t(labels.recentLabel)} · ${partyLabel} · ${this.locale.money(total)}`,
+        this.locale.t(labels.recentCash, { amount: this.locale.money(request.cashAmount ?? 0) }),
       );
       this.reset();
     } catch {
@@ -327,18 +310,11 @@ export class GoodsEntry {
     const name = this.partyName().trim();
     const party = this.cashParty() || !name ? this.locale.t(labels.partyCash) : name;
     return b > 0
-      ? { tone: flow, party, direction: this.locale.t(labels.effectOutstanding), amount: this.money(b) }
-      : { tone: opposite, party, direction: this.locale.t(labels.effectOverpaid), amount: this.money(-b) };
+      ? { tone: flow, party, direction: this.locale.t(labels.effectOutstanding), amount: this.locale.money(b) }
+      : { tone: opposite, party, direction: this.locale.t(labels.effectOverpaid), amount: this.locale.money(-b) };
   }
 
   // ── helpers ─────────────────────────────────────────────────────────────
-  /** Rs figure with thousands grouping and script-localized digits. */
-  protected money(n: number): string {
-    const grouped = n.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    const digits = this.locale.locale() === 'ur' ? grouped.replace(/\d/g, (c) => easternDigits[Number(c)]) : grouped;
-    return 'Rs ' + digits;
-  }
-
   private matchParty(name: string): Party | undefined {
     const q = name.trim().toLowerCase();
     return this.parties().find((p) => p.name.trim().toLowerCase() === q);

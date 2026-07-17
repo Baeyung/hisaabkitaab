@@ -49,4 +49,15 @@ export class LocaleService {
     const s = String(n);
     return this._locale() === 'ur' ? s.replace(/\d/g, (d) => easternDigits[Number(d)]) : s;
   }
+
+  /**
+   * A rupee figure for display: thousands-grouped and script-localized, e.g.
+   * `Rs 4,500` / `Rs ۴,۵۰۰`. Grouping is what separates this from
+   * {@link formatNumber} — amounts are the star of every ledger screen and read
+   * wrong without it (APPLICATION_DOMAIN §4).
+   */
+  money(n: number): string {
+    const grouped = n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    return 'Rs ' + (this._locale() === 'ur' ? grouped.replace(/\d/g, (d) => easternDigits[Number(d)]) : grouped);
+  }
 }

@@ -1,17 +1,13 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { PartyService } from '../../core/store/party.service';
 import { EventService } from '../../core/store/event.service';
 import { Party } from '../../core/store/party.models';
 import { EventRequest } from '../../core/store/event.models';
-
-/** A just-saved entry, kept in-session for the "Just entered" rail. */
-interface RecentEntry {
-  key: number;
-  summary: string;
-  sub: string;
-}
+import { todayIso } from '../../shared/date.util';
+import { RecentLog } from '../../shared/recent-log';
+import { ToastState } from '../../shared/toast-state';
 
 /**
  * The screen's copy. Keys are passed in as literals rather than built from a
@@ -49,12 +45,6 @@ export interface PartyCashEntryConfig {
   labels: PartyCashEntryLabels;
 }
 
-const easternDigits = '۰۱۲۳۴۵۶۷۸۹';
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 /**
  * Shared entry surface for the two party↔cash events — RECEIPT (وصولی) and
  * PAYMENT (ادائیگی). A leaner cousin of SALE: an existing party (autocomplete)
@@ -85,12 +75,7 @@ export class PartyCashEntry {
   private readonly partyApi = inject(PartyService);
   private readonly events = inject(EventService);
 
-  private keySeq = 1;
-
-  /** Transient error banner text; auto-clears. PrimeNG's Toast is license-gated
-   *  (silently drops messages without a valid PrimeUI license), so we roll our own. */
-  protected readonly toast = signal<string | null>(null);
-  private toastTimer?: ReturnType<typeof setTimeout>;
+  protected readonly toast = new ToastState();
 
   /** Autocomplete source; empty when there's no store yet (list 404s). */
   protected readonly parties = signal<Party[]>([]);
@@ -101,7 +86,7 @@ export class PartyCashEntry {
   protected readonly description = signal('');
   protected readonly amount = signal<number | null>(null);
 
-  protected readonly recent = signal<RecentEntry[]>([]);
+  protected readonly recent = new RecentLog();
   protected readonly saving = signal(false);
 
   protected readonly total = computed(() => this.amount() ?? 0);
@@ -110,6 +95,7 @@ export class PartyCashEntry {
   );
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.toast.dispose());
     this.loadParties();
   }
 
@@ -134,7 +120,7 @@ export class PartyCashEntry {
     const party = this.matchParty(name);
     if (!party) {
       // Recorded against existing parties only — no API call for an unknown name.
-      this.showToast(this.locale.t(labels.partyUnknown, { name }));
+      this.toast.show(this.locale.t(labels.partyUnknown, { name }));
       return;
     }
 
@@ -153,29 +139,16 @@ export class PartyCashEntry {
 
     try {
       await this.events.publishEvent(request);
-      this.recent.update((rs) =>
-        [
-          {
-            key: this.keySeq++,
-            summary: `${this.locale.t(labels.recentLabel)} · ${party.name} · ${this.money(amount)}`,
-            sub: this.locale.t(labels.recentCounterparty, { party: party.name }),
-          },
-          ...rs,
-        ].slice(0, 6),
+      this.recent.push(
+        `${this.locale.t(labels.recentLabel)} · ${party.name} · ${this.locale.money(amount)}`,
+        this.locale.t(labels.recentCounterparty, { party: party.name }),
       );
       this.reset();
     } catch {
-      this.showToast(this.locale.t('error.generic'));
+      this.toast.show(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
-  }
-
-  /** Show a transient error banner, replacing any current one; clears after 4s. */
-  private showToast(message: string): void {
-    this.toast.set(message);
-    clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => this.toast.set(null), 4000);
   }
 
   reset(): void {
@@ -183,14 +156,6 @@ export class PartyCashEntry {
     this.billNumber.set('');
     this.description.set('');
     this.amount.set(null);
-  }
-
-  /** Rs figure with thousands grouping and script-localized digits. */
-  protected money(n: number): string {
-    const grouped = n.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    const digits =
-      this.locale.locale() === 'ur' ? grouped.replace(/\d/g, (c) => easternDigits[Number(c)]) : grouped;
-    return 'Rs ' + digits;
   }
 
   private matchParty(name: string): Party | undefined {

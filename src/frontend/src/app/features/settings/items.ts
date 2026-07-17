@@ -16,7 +16,6 @@ interface ItemForm {
 }
 
 const EMPTY_FORM: ItemForm = { name: '', unit: '', salePrice: null, costPrice: null };
-const easternDigits = '۰۱۲۳۴۵۶۷۸۹';
 
 /**
  * Store catalog CRUD. Rows edit in place: "Add item" opens a blank editable row,
@@ -143,13 +142,9 @@ export class SettingsItems {
     }
   }
 
-  /** Rupee figure with thousands grouping and script-localized digits; null → dash. */
+  /** A price for the table; null → dash, since "no price set" is not "Rs 0". */
   protected money(n: number | null): string {
-    if (n == null) {
-      return '—';
-    }
-    const grouped = n.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    return 'Rs ' + (this.locale.locale() === 'ur' ? grouped.replace(/\d/g, (c) => easternDigits[Number(c)]) : grouped);
+    return n == null ? '—' : this.locale.money(n);
   }
 
   /**
@@ -168,8 +163,7 @@ export class SettingsItems {
   }
 
   private percent(n: number): string {
-    const s = String(n);
-    return (this.locale.locale() === 'ur' ? s.replace(/\d/g, (c) => easternDigits[Number(c)]) : s) + '%';
+    return this.locale.formatNumber(n) + '%';
   }
 
   private resetRowState(): void {
