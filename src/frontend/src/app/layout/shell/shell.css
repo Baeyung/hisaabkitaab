@@ -221,6 +221,11 @@ main {
   min-height: 0;
   overflow-y: auto;
   background: var(--kg-surface);
+  /* Pages size to THIS column, not the viewport: with the sidebar in flow the
+     content is ~236px narrower than the window, so viewport media queries fire
+     at the wrong moment and crush mid-size layouts. A size container lets every
+     screen's @container breakpoints key off the space they actually get. */
+  container: appmain / inline-size;
 }
 
 .backdrop {
@@ -260,7 +265,11 @@ main {
     transform: translateX(100%);
   }
 
-  .sidebar.open {
+  .sidebar.open,
+  /* In RTL the closed rule above is a :host-context selector, which outranks a
+     plain .sidebar.open — so the open state needs the matching host-context to
+     win and actually slide the panel in. */
+  :host-context([dir='rtl']) .sidebar.open {
     transform: none;
   }
 

@@ -320,7 +320,7 @@
    phone, so each row reflows into a card: name as the heading, contact/address
    as labelled lines (the hidden column headers move into ::before chips), and
    the actions on their own row. */
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .set {
     padding: 16px;
   }

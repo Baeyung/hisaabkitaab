@@ -2,8 +2,6 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
-import { providePrimeNG } from 'primeng/config';
-import Aura from '@primeuix/themes/aura';
 import { authInterceptor } from './core/auth/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -13,9 +11,8 @@ export const appConfig: ApplicationConfig = {
     // straight into input.required<string>() — no ActivatedRoute plumbing.
     provideRouter(routes, withViewTransitions(), withComponentInputBinding()),
     provideHttpClient(withInterceptors([authInterceptor])),
-    providePrimeNG({
-      theme: { preset: Aura },
-      license: '',
-    }),
+    // No providePrimeNG: no component uses PrimeNG, and an empty license key
+    // paints an "Invalid PrimeUI License" watermark on every screen. Add it
+    // back (with a real key) when a PrimeNG component is actually introduced.
   ],
 };

@@ -362,7 +362,7 @@
 }
 
 /* ── responsive ────────────────────────────────────────────────────── */
-@media (max-width: 760px) {
+@container (max-width: 760px) {
   .sec {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -375,7 +375,7 @@
     padding-inline-start: 0;
   }
 }
-@media (max-width: 560px) {
+@container (max-width: 560px) {
   .set__head {
     flex-direction: column;
   }

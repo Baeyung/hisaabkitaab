@@ -54,11 +54,11 @@
           <tbody>
             @for (party of filtered(); track party.partyId) {
               <tr class="rm-rowlink" (click)="open(party.partyId)">
-                <td>
+                <td class="rm-cell-head">
                   <a [routerLink]="['/ledger', party.partyId]" class="rm-tbl__name">{{ party.name }}</a>
                 </td>
-                <td class="num">{{ party.contact || '—' }}</td>
-                <td class="end">
+                <td class="num" [attr.data-label]="locale.t('ledger.col.contact')">{{ party.contact || '—' }}</td>
+                <td class="end" [attr.data-label]="locale.t('ledger.col.balance')">
                   <span class="num rm-tbl__name" [class]="directionClass(party.balance.direction)">
                     {{ locale.money(party.balance.amount) }}
                   </span>

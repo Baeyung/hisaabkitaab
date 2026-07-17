@@ -56,14 +56,14 @@
           <tbody>
             @for (bill of filtered(); track bill.id) {
               <tr class="rm-rowlink" (click)="open(bill.id)">
-                <td>
+                <td class="rm-cell-head">
                   <a [routerLink]="['/bill-management', bill.id]" class="rm-tbl__name num">
                     {{ bill.billNumber || '—' }}
                   </a>
                 </td>
-                <td class="num">{{ bill.date }}</td>
-                <td>{{ bill.partyName || locale.t('bill.cashSale') }}</td>
-                <td class="end num rm-tbl__name">{{ locale.money(bill.amount) }}</td>
+                <td class="num" [attr.data-label]="locale.t('bill.col.date')">{{ bill.date }}</td>
+                <td [attr.data-label]="locale.t('bill.col.party')">{{ bill.partyName || locale.t('bill.cashSale') }}</td>
+                <td class="end num rm-tbl__name" [attr.data-label]="locale.t('bill.col.amount')">{{ locale.money(bill.amount) }}</td>
               </tr>
             } @empty {
               <tr>

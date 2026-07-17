@@ -52,12 +52,12 @@
             <tbody>
               @for (row of mv.rows; track row.transactionId + row.occurredAt) {
                 <tr>
-                  <td class="num">{{ row.date }}</td>
-                  <td>{{ row.description || '—' }}</td>
-                  <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
+                  <td class="num" [attr.data-label]="locale.t('inventory.detail.col.date')">{{ row.date }}</td>
+                  <td class="rm-cell-head">{{ row.description || '—' }}</td>
+                  <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'" [attr.data-label]="locale.t('inventory.detail.col.qty')">
                     {{ row.inOut === 'IN' ? '+' : '−' }} {{ locale.formatNumber(row.quantity) }}
                   </td>
-                  <td class="end num">{{ locale.formatNumber(row.runningStock) }}</td>
+                  <td class="end num" [attr.data-label]="locale.t('inventory.detail.col.running')">{{ locale.formatNumber(row.runningStock) }}</td>
                 </tr>
               }
             </tbody>

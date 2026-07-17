@@ -48,15 +48,15 @@
             <tbody>
               @for (line of b.lines; track $index) {
                 <tr>
-                  <td>
+                  <td class="rm-cell-head">
                     <span class="rm-tbl__name">{{ line.itemName || '—' }}</span>
                     @if (line.unit) {
                       <span class="rm-tbl__meta">{{ line.unit }}</span>
                     }
                   </td>
-                  <td class="end num">{{ line.quantity != null ? locale.formatNumber(line.quantity) : '—' }}</td>
-                  <td class="end num">{{ locale.money(line.rate) }}</td>
-                  <td class="end num rm-tbl__name">{{ locale.money(line.amount) }}</td>
+                  <td class="end num" [attr.data-label]="locale.t('bill.detail.col.qty')">{{ line.quantity != null ? locale.formatNumber(line.quantity) : '—' }}</td>
+                  <td class="end num" [attr.data-label]="locale.t('bill.detail.col.rate')">{{ locale.money(line.rate) }}</td>
+                  <td class="end num rm-tbl__name" [attr.data-label]="locale.t('bill.detail.col.amount')">{{ locale.money(line.amount) }}</td>
                 </tr>
               }
             </tbody>

@@ -71,14 +71,14 @@
             <tbody>
               @for (row of cb.rows; track row.transactionId + row.occurredAt) {
                 <tr>
-                  <td class="num">{{ time(row.occurredAt) }}</td>
-                  <td>
+                  <td class="num" [attr.data-label]="locale.t('cashbook.col.time')">{{ time(row.occurredAt) }}</td>
+                  <td class="rm-cell-head">
                     <span class="rm-tbl__name">{{ row.description || row.partyName || '—' }}</span>
                   </td>
-                  <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
+                  <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'" [attr.data-label]="locale.t('cashbook.col.amount')">
                     {{ row.inOut === 'IN' ? '+' : '−' }} {{ locale.money(row.amount) }}
                   </td>
-                  <td class="end num">{{ locale.money(row.runningBalance) }}</td>
+                  <td class="end num" [attr.data-label]="locale.t('cashbook.col.running')">{{ locale.money(row.runningBalance) }}</td>
                 </tr>
               }
             </tbody>

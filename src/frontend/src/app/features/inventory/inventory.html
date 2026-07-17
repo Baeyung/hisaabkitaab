@@ -54,16 +54,16 @@
           <tbody>
             @for (item of filtered(); track item.itemId) {
               <tr class="rm-rowlink" (click)="open(item.itemId)">
-                <td>
+                <td class="rm-cell-head">
                   <a [routerLink]="['/inventory', item.itemId]" class="rm-tbl__name">{{ item.name }}</a>
                   @if (item.unit) {
                     <span class="rm-tbl__meta">{{ item.unit }}</span>
                   }
                 </td>
-                <td class="end num rm-tbl__name" [class.amt--out]="item.currentStock < 0">
+                <td class="end num rm-tbl__name" [class.amt--out]="item.currentStock < 0" [attr.data-label]="locale.t('inventory.col.stock')">
                   {{ locale.formatNumber(item.currentStock) }} {{ item.unit || '' }}
                 </td>
-                <td class="end num">{{ item.salePrice != null ? locale.money(item.salePrice) : '—' }}</td>
+                <td class="end num" [attr.data-label]="locale.t('inventory.col.sale')">{{ item.salePrice != null ? locale.money(item.salePrice) : '—' }}</td>
               </tr>
             } @empty {
               <tr>

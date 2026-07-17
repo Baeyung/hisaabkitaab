@@ -356,7 +356,7 @@ th.num {
    phone, so each row reflows into a card: name as the heading, the other
    columns as labelled lines (the hidden headers move into ::before chips),
    and the actions on their own row. Mirrors the Parties screen. */
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .set {
     padding: 16px;
   }
