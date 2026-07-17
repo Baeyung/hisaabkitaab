@@ -3,8 +3,8 @@
   <div class="sale__form">
     <header class="sale__head">
       <div>
-        <p class="sale__eyebrow">{{ locale.t('receipt.newEntry') }}</p>
-        <h1 class="sale__title">{{ locale.t('nav.receipt') }}</h1>
+        <p class="sale__eyebrow">{{ locale.t(config().labels.newEntry) }}</p>
+        <h1 class="sale__title">{{ locale.t(config().labels.title) }}</h1>
       </div>
       <input
         class="fld__input fld__input--date"
@@ -17,29 +17,33 @@
 
     <!-- party (existing only) -->
     <div class="fld">
-      <label class="fld__label" for="receipt-party">{{ locale.t('receipt.party') }}</label>
+      <label class="fld__label" [attr.for]="config().idPrefix + '-party'">
+        {{ locale.t(config().labels.party) }}
+      </label>
       <input
-        id="receipt-party"
         class="fld__input"
         type="text"
-        list="receipt-parties"
+        [attr.id]="config().idPrefix + '-party'"
+        [attr.list]="config().idPrefix + '-parties'"
         [value]="partyName()"
         (input)="partyName.set($any($event.target).value)"
-        [attr.placeholder]="locale.t('receipt.party.ph')"
+        [attr.placeholder]="locale.t(config().labels.partyPh)"
       />
-      <small class="fld__hint">{{ locale.t('receipt.party.hint') }}</small>
+      <small class="fld__hint">{{ locale.t(config().labels.partyHint) }}</small>
     </div>
 
     <!-- amount -->
     <div class="totals">
       <div class="fld fld--inline">
-        <label class="fld__label" for="receipt-amount">{{ locale.t('receipt.amount') }}</label>
+        <label class="fld__label" [attr.for]="config().idPrefix + '-amount'">
+          {{ locale.t(config().labels.amount) }}
+        </label>
         <input
-          id="receipt-amount"
           class="fld__input num"
           type="number"
           inputmode="decimal"
           min="0"
+          [attr.id]="config().idPrefix + '-amount'"
           [value]="amount()"
           (input)="setAmount($any($event.target).value)"
           [attr.placeholder]="'0'"
@@ -50,33 +54,39 @@
     <!-- reference + note -->
     <div class="meta">
       <div class="fld">
-        <label class="fld__label" for="receipt-bill">{{ locale.t('receipt.billNumber') }}</label>
+        <label class="fld__label" [attr.for]="config().idPrefix + '-bill'">
+          {{ locale.t(config().labels.billNumber) }}
+        </label>
         <input
-          id="receipt-bill"
           class="fld__input"
           type="text"
+          [attr.id]="config().idPrefix + '-bill'"
           [value]="billNumber()"
           (input)="billNumber.set($any($event.target).value)"
-          [attr.placeholder]="locale.t('receipt.billNumber.ph')"
+          [attr.placeholder]="locale.t(config().labels.billNumberPh)"
         />
       </div>
       <div class="fld">
-        <label class="fld__label" for="receipt-desc">{{ locale.t('receipt.description') }}</label>
+        <label class="fld__label" [attr.for]="config().idPrefix + '-desc'">
+          {{ locale.t(config().labels.description) }}
+        </label>
         <input
-          id="receipt-desc"
           class="fld__input"
           type="text"
+          [attr.id]="config().idPrefix + '-desc'"
           [value]="description()"
           (input)="description.set($any($event.target).value)"
-          [attr.placeholder]="locale.t('receipt.description.ph')"
+          [attr.placeholder]="locale.t(config().labels.descriptionPh)"
         />
       </div>
     </div>
 
     <div class="sale__actions">
-      <button type="button" class="btn btn--ghost" (click)="reset()">{{ locale.t('receipt.clear') }}</button>
+      <button type="button" class="btn btn--ghost" (click)="reset()">
+        {{ locale.t(config().labels.clear) }}
+      </button>
       <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
-        {{ locale.t('receipt.saveNext') }} ↵
+        {{ locale.t(config().labels.saveNext) }} ↵
       </button>
     </div>
   </div>
@@ -84,30 +94,37 @@
   <!-- ── live effect + recent ───────────────────────────────────────────── -->
   <aside class="rail">
     <div class="panel">
-      <h2 class="panel__title">{{ locale.t('receipt.effect') }}</h2>
+      <h2 class="panel__title">{{ locale.t(config().labels.effect) }}</h2>
       @if (total() > 0) {
         <ul class="fx">
-          <li class="fx__row fx__row--in">
-            <span class="fx__sign">▲</span>
-            <span class="fx__label">{{ locale.t('receipt.effect.drawer') }}</span>
+          <!-- drawer: fills on a receipt, empties on a payment -->
+          <li
+            class="fx__row"
+            [class.fx__row--in]="config().drawerFlow === 'in'"
+            [class.fx__row--out]="config().drawerFlow === 'out'"
+          >
+            <span class="fx__sign">{{ config().drawerFlow === 'in' ? '▲' : '▼' }}</span>
+            <span class="fx__label">{{ locale.t(config().labels.effectDrawer) }}</span>
             <span class="fx__amt num">{{ money(total()) }}</span>
           </li>
+          <!-- party: baqaya goes down either way -->
           <li class="fx__row fx__row--out">
             <span class="fx__sign">▼</span>
             <span class="fx__label">
-              {{ partyName().trim() || locale.t('receipt.party') }}<small class="fx__sub">{{ locale.t('receipt.effect.baqaya') }}</small>
+              {{ partyName().trim() || locale.t(config().labels.party)
+              }}<small class="fx__sub">{{ locale.t(config().labels.effectBaqaya) }}</small>
             </span>
             <span class="fx__amt num">{{ money(total()) }}</span>
           </li>
         </ul>
       } @else {
-        <p class="panel__empty">{{ locale.t('receipt.effect.empty') }}</p>
+        <p class="panel__empty">{{ locale.t(config().labels.effectEmpty) }}</p>
       }
     </div>
 
     @if (recent().length > 0) {
       <div class="panel">
-        <h2 class="panel__title">{{ locale.t('receipt.recent') }}</h2>
+        <h2 class="panel__title">{{ locale.t(config().labels.recent) }}</h2>
         <ul class="recent">
           @for (r of recent(); track r.key) {
             <li class="recent__row">
@@ -125,7 +142,7 @@
   <div class="toast toast--error" role="alert">{{ msg }}</div>
 }
 
-<datalist id="receipt-parties">
+<datalist [attr.id]="config().idPrefix + '-parties'">
   @for (p of parties(); track p.id) {
     <option [value]="p.name"></option>
   }
