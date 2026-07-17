@@ -1,0 +1,138 @@
+package io.github.baeyung.hisaabkitaab.service.query;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
+import io.github.baeyung.hisaabkitaab.dto.transaction.BillDetailResponse;
+import io.github.baeyung.hisaabkitaab.dto.transaction.BillLineResponse;
+import io.github.baeyung.hisaabkitaab.dto.transaction.BillSummaryResponse;
+import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.entity.Transaction;
+import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
+import io.github.baeyung.hisaabkitaab.enums.TargetKind;
+import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
+import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
+import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
+import io.github.baeyung.hisaabkitaab.service.StoreService;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * Bills, which are simply SALE transactions read back as invoices. Bill amounts
+ * are recomputed as Σ(quantity × rate) over the STOCK lines — the same number
+ * the entry screen showed — because a STOCK line's {@code value} only repeats
+ * the transaction's cash amount.
+ */
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class TransactionQueryService
+{
+    private final StoreService storeService;
+    private final TransactionRepository transactionRepository;
+
+    public List<BillSummaryResponse> listBills(String ownerId)
+    {
+        Store store = storeService.getPrimaryStoreForOwner(ownerId);
+
+        return transactionRepository
+                .findByStoreIdAndEventNewestFirst(store.getId(), TransactionEvent.SALE)
+                .stream()
+                .map(transaction -> new BillSummaryResponse(
+                        transaction.getId(),
+                        transaction.getBill(),
+                        dateOf(transaction),
+                        transaction.getParty() != null ? transaction.getParty().getName() : null,
+                        goodsTotal(transaction)
+                ))
+                .toList();
+    }
+
+    public BillDetailResponse getBillDetail(String ownerId, String transactionId)
+    {
+        Store store = storeService.getPrimaryStoreForOwner(ownerId);
+
+        // Scoped by store id, and a non-SALE id is "not found" — bills are only ever sales.
+        Transaction transaction = transactionRepository.findByIdAndStoreId(transactionId, store.getId())
+                .filter(t -> t.getEvent() == TransactionEvent.SALE)
+                .orElseThrow(() -> ResourceNotFoundException.forEntity("Bill", transactionId));
+
+        List<BillLineResponse> lines = transaction.getLines()
+                .stream()
+                .filter(line -> line.getTargetKind() == TargetKind.STOCK)
+                .map(this::toBillLine)
+                .toList();
+
+        double goodsTotal = lines.stream().mapToDouble(BillLineResponse::amount).sum();
+
+        double cashReceived = transaction.getLines()
+                .stream()
+                .filter(line -> line.getTargetKind() == TargetKind.CASH)
+                .mapToDouble(this::value)
+                .sum();
+
+        double partyNet = transaction.getLines()
+                .stream()
+                .filter(line -> line.getTargetKind() == TargetKind.PARTY)
+                .mapToDouble(line -> switch (line.getInOut())
+                {
+                    case IN -> value(line);
+                    case OUT -> -value(line);
+                    default -> 0;
+                })
+                .sum();
+
+        return new BillDetailResponse(
+                transaction.getId(),
+                transaction.getBill(),
+                dateOf(transaction),
+                transaction.getDescription(),
+                transaction.getParty() != null ? transaction.getParty().getName() : null,
+                lines,
+                goodsTotal,
+                cashReceived,
+                PartyBalance.of(partyNet)
+        );
+    }
+
+    /** Same line math as the detail view, so the list amount can never disagree with the detail total. */
+    private double goodsTotal(Transaction transaction)
+    {
+        return transaction.getLines()
+                .stream()
+                .filter(line -> line.getTargetKind() == TargetKind.STOCK)
+                .map(this::toBillLine)
+                .mapToDouble(BillLineResponse::amount)
+                .sum();
+    }
+
+    private BillLineResponse toBillLine(TransactionLine line)
+    {
+        double rate = line.getItemSoldAt() != null ? line.getItemSoldAt() : 0;
+        double quantity = line.getQuantity() != null ? line.getQuantity().doubleValue() : 0;
+        boolean hasItem = line.getItem() != null;
+        String unit = hasItem && line.getItem().getUnit() != null ? line.getItem().getUnit() : line.getUnit();
+
+        return new BillLineResponse(
+                hasItem ? line.getItem().getId() : null,
+                hasItem ? line.getItem().getName() : null,
+                line.getQuantity(),
+                unit,
+                rate,
+                quantity * rate
+        );
+    }
+
+    private double value(TransactionLine line)
+    {
+        return line.getValue() != null ? line.getValue() : 0;
+    }
+
+    private LocalDate dateOf(Transaction transaction)
+    {
+        return transaction.getEventDate() != null ? transaction.getEventDate() : transaction.getEntryDate();
+    }
+}

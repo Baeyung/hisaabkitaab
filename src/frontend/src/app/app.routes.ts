@@ -48,6 +48,10 @@ export const routes: Routes = [
             loadComponent: () => import('./features/ledger/ledger').then((m) => m.Ledger),
           },
           {
+            path: 'ledger/:partyId',
+            loadComponent: () => import('./features/ledger/ledger-detail').then((m) => m.LedgerDetail),
+          },
+          {
             path: 'new-entry/sale',
             loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
           },
@@ -72,9 +76,19 @@ export const routes: Routes = [
             loadComponent: () => import('./features/inventory/inventory').then((m) => m.Inventory),
           },
           {
+            path: 'inventory/:itemId',
+            loadComponent: () =>
+              import('./features/inventory/inventory-detail').then((m) => m.InventoryDetail),
+          },
+          {
             path: 'bill-management',
             loadComponent: () =>
               import('./features/bill-management/bill-management').then((m) => m.BillManagement),
+          },
+          {
+            path: 'bill-management/:billId',
+            loadComponent: () =>
+              import('./features/bill-management/bill-detail').then((m) => m.BillDetail),
           },
           {
             path: 'settings/items',

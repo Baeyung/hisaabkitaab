@@ -12,6 +12,7 @@ import io.github.baeyung.hisaabkitaab.processors.transactionevent.EventProcessor
 import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
+import io.github.baeyung.hisaabkitaab.service.TransactionDescriptionGenerator;
 import io.github.baeyung.hisaabkitaab.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class EventService
     private final TransactionService transactionService;
     private final StoreItemService storeItemService;
     private final PartyService partyService;
+    private final TransactionDescriptionGenerator descriptionGenerator;
 
     @Autowired
     public EventService(
@@ -40,7 +42,8 @@ public class EventService
             StoreService storeService,
             TransactionService transactionService,
             StoreItemService storeItemService,
-            PartyService partyService
+            PartyService partyService,
+            TransactionDescriptionGenerator descriptionGenerator
     )
     {
         this.eventProcessorMap = eventProcessors
@@ -75,6 +78,7 @@ public class EventService
         this.transactionService = transactionService;
         this.storeItemService = storeItemService;
         this.partyService = partyService;
+        this.descriptionGenerator = descriptionGenerator;
     }
 
     public void publishEvent(EventRequest eventRequest, String ownerIdentifier)
@@ -90,16 +94,22 @@ public class EventService
                 throw ResourceNotFoundException.forEntity("Store for owner", ownerIdentifier);
             }
 
+            Party party = resolveParty(eventRequest);
+
+            String description = StringUtils.hasText(eventRequest.getDescription())
+                    ? eventRequest.getDescription()
+                    : descriptionGenerator.generate(eventRequest, party);
+
             Transaction transaction = transactionService.create(
                     Transaction
                             .builder()
                             .store(store)
                             .event(eventRequest.getTransactionEvent())
-                            .party(resolveParty(eventRequest))
+                            .party(party)
                             .bill(eventRequest.getBillNumber())
                             .eventDate(eventRequest.getBillDate())
                             .entryDate(LocalDate.now())
-                            .description(eventRequest.getDescription())
+                            .description(description)
                             .build()
             );
 
