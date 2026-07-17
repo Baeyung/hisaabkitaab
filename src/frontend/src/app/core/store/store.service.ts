@@ -1,7 +1,8 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthStore } from '../auth/auth.store';
 import { Store, StoreDraft } from './store.models';
 
 /**
@@ -14,11 +15,23 @@ import { Store, StoreDraft } from './store.models';
 @Injectable({ providedIn: 'root' })
 export class StoreService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthStore);
   private readonly url = `${environment.apiUrl}/stores`;
 
   private readonly _stores = signal<Store[] | null>(null);
   readonly stores = this._stores.asReadonly();
   readonly hasStore = computed(() => (this._stores()?.length ?? 0) > 0);
+
+  constructor() {
+    // This cache belongs to one session. Drop it when credentials go away
+    // (logout or a 401) — otherwise the next user to sign in on this tab gets
+    // gated against the previous user's stores.
+    effect(() => {
+      if (this.auth.credentials() === null) {
+        this._stores.set(null);
+      }
+    });
+  }
 
   async list(): Promise<Store[]> {
     const stores = await firstValueFrom(this.http.get<Store[]>(this.url));

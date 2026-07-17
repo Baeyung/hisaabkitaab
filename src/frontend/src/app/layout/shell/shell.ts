@@ -27,12 +27,6 @@ export class Shell {
   // groups start collapsed on load; user expands what they need
   private readonly openGroups = signal(new Set<string>());
 
-  constructor() {
-    // Populate shared store state so store-gated nav items resolve; a failure
-    // leaves hasStore() false, which keeps them locked — the safe default.
-    this.stores.list().catch(() => {});
-  }
-
   /** Store-gated leaves (Items, Parties) stay locked until a store exists. */
   isLocked(child: NavLeaf): boolean {
     return !!child.locked && !this.stores.hasStore();
