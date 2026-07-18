@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { CashbookService } from '../../core/store/cashbook.service';
 import { CashbookDay } from '../../core/store/cashbook.models';
@@ -18,6 +18,7 @@ import { todayIso } from '../../shared/date.util';
 export class Cashbook {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(CashbookService);
+  private readonly router = inject(Router);
 
   protected readonly day = signal(todayIso());
   protected readonly data = signal<CashbookDay | null>(null);
@@ -44,6 +45,11 @@ export class Cashbook {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** A sale row's transactionId is the bill's id — open its detail. */
+  openBill(transactionId: string): void {
+    void this.router.navigate(['/bill-management', transactionId]);
   }
 
   setDay(value: string): void {
