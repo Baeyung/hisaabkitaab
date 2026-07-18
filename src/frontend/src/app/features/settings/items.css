@@ -120,6 +120,48 @@ th.num {
   white-space: nowrap;
   text-align: end;
 }
+
+/* ── opening-stock column ──────────────────────────────────────────── */
+.openbtn {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  max-width: 100%;
+  padding: 5px 10px;
+  font: inherit;
+  text-align: start;
+  background: transparent;
+  border: 1px dashed var(--kg-line-strong);
+  border-radius: 9px;
+  cursor: pointer;
+}
+.openbtn:hover {
+  border-color: var(--kg-brand);
+  background: rgba(31, 92, 77, 0.04);
+}
+.openbtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+.openbtn--set {
+  border-style: solid;
+  border-color: var(--kg-line);
+}
+.openbtn__amt {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.openbtn__dir {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--kg-muted);
+}
+.openbtn__set {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-brand);
+}
 .rowicons {
   display: inline-flex;
   align-items: center;

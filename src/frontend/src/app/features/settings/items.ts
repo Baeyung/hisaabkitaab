@@ -123,7 +123,8 @@ export class SettingsItems {
 
   startOpening(item: StoreItem): void {
     this.resetRowState();
-    this.openingQty.set(null);
+    // Prefill from the current opening so re-opening shows what was entered.
+    this.openingQty.set(item.openingStock ?? null);
     this.openingId.set(item.id);
   }
 
@@ -139,7 +140,9 @@ export class SettingsItems {
     this.saving.set(true);
     this.rowErrorKey.set(null);
     try {
-      await this.api.setOpeningStock(id, qty);
+      const stored = await this.api.setOpeningStock(id, qty);
+      const openingStock = stored > 0 ? stored : null;
+      this.items.update((list) => (list ?? []).map((it) => (it.id === id ? { ...it, openingStock } : it)));
       this.resetRowState();
     } catch {
       this.rowErrorKey.set('error.generic');

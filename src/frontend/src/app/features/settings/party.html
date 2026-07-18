@@ -46,6 +46,7 @@
             <th scope="col">{{ locale.t('settings.party.col.name') }}</th>
             <th scope="col">{{ locale.t('settings.party.col.contact') }}</th>
             <th scope="col">{{ locale.t('settings.party.col.address') }}</th>
+            <th scope="col">{{ locale.t('settings.party.col.opening') }}</th>
             <th scope="col" class="actions"><span class="sr-only">{{ locale.t('settings.party.col.actions') }}</span></th>
           </tr>
         </thead>
@@ -62,19 +63,24 @@
                 <td class="tbl__name">{{ party.name }}</td>
                 <td [attr.data-label]="locale.t('settings.party.col.contact')">{{ party.contact || '—' }}</td>
                 <td [attr.data-label]="locale.t('settings.party.col.address')">{{ party.address || '—' }}</td>
+                <td class="opening-cell" [attr.data-label]="locale.t('settings.party.col.opening')">
+                  <button
+                    type="button"
+                    class="openbtn"
+                    [class.openbtn--set]="!!party.openingBalance"
+                    (click)="startOpening(party)"
+                    [attr.aria-label]="locale.t('settings.party.openingAction') + ' — ' + party.name"
+                  >
+                    @if (party.openingBalance; as ob) {
+                      <span class="openbtn__amt">{{ locale.money(ob.amount) }}</span>
+                      <span class="openbtn__dir">{{ locale.t(ob.direction === 'YOU_OWE_THEM' ? 'settings.party.opening.youOwe' : 'settings.party.opening.theyOwe') }}</span>
+                    } @else {
+                      <span class="openbtn__set">{{ locale.t('settings.party.opening.set') }}</span>
+                    }
+                  </button>
+                </td>
                 <td class="actions">
                   <div class="rowicons">
-                    <button
-                      type="button"
-                      class="iconbtn"
-                      (click)="startOpening(party)"
-                      [attr.aria-label]="locale.t('settings.party.openingAction') + ' — ' + party.name"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <circle cx="8" cy="8" r="6" />
-                        <path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M9.5 12H10a1 1 0 0 0 0-2H8" />
-                      </svg>
-                    </button>
                     <button
                       type="button"
                       class="iconbtn"
@@ -101,7 +107,7 @@
 
               @if (confirmingId() === party.id) {
                 <tr class="tbl__confirm">
-                  <td colspan="4">
+                  <td colspan="5">
                     <div class="confirm">
                       <span class="confirm__msg">{{ locale.t('settings.party.delete.confirm', { name: party.name }) }}</span>
                       <span class="confirm__actions">
@@ -119,7 +125,7 @@
 
               @if (openingId() === party.id) {
                 <tr class="tbl__opening">
-                  <td colspan="4">
+                  <td colspan="5">
                     <div class="opening">
                       <label class="opening__label" [attr.for]="'opening-amt-' + party.id">
                         {{ locale.t('settings.party.opening.label', { name: party.name }) }}
@@ -212,6 +218,7 @@
         [attr.aria-label]="locale.t('settings.party.col.address')"
       />
     </td>
+    <td aria-hidden="true"></td>
     <td class="actions">
       <div class="rowicons">
         <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEdit()">
@@ -226,12 +233,12 @@
 
   @if (partyForm.name().touched() && partyForm.name().invalid()) {
     <tr class="tbl__rowmsg">
-      <td colspan="4"><span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span></td>
+      <td colspan="5"><span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span></td>
     </tr>
   }
   @if (rowErrorKey(); as key) {
     <tr class="tbl__rowmsg">
-      <td colspan="4"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
+      <td colspan="5"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
     </tr>
   }
 </ng-template>

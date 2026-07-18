@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
+import io.github.baeyung.hisaabkitaab.enums.InOut;
 
 @Repository
 public interface TransactionLineRepository extends JpaRepository<TransactionLine, String>
@@ -98,11 +99,47 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<TransactionLine> findItemMovementLines(@Param("itemId") String itemId);
 
+    /** The opening-balance PARTY line per party (at most one each) — for prefill + the settings column. */
+    @Query("""
+            select tl.party.id as partyId, tl.inOut as inOut, tl.value as value
+            from TransactionLine tl
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.PARTY
+              and tl.transaction.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_BALANCE
+              and tl.transaction.store.id = :storeId
+            """)
+    List<PartyOpeningRow> findOpeningBalancesByStore(@Param("storeId") String storeId);
+
+    /** The opening-stock STOCK line per item (at most one each) — for prefill + the settings column. */
+    @Query("""
+            select tl.item.id as itemId, tl.quantity as quantity
+            from TransactionLine tl
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.STOCK
+              and tl.transaction.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_STOCK
+              and tl.transaction.store.id = :storeId
+            """)
+    List<ItemOpeningRow> findOpeningStockByStore(@Param("storeId") String storeId);
+
     interface PartyBalanceRow
     {
         String getPartyId();
 
         Double getBalance();
+    }
+
+    interface PartyOpeningRow
+    {
+        String getPartyId();
+
+        InOut getInOut();
+
+        Double getValue();
+    }
+
+    interface ItemOpeningRow
+    {
+        String getItemId();
+
+        BigDecimal getQuantity();
     }
 
     interface ItemStockRow

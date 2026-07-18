@@ -48,6 +48,7 @@
             <th scope="col" class="num">{{ locale.t('settings.items.col.sale') }}</th>
             <th scope="col" class="num">{{ locale.t('settings.items.col.cost') }}</th>
             <th scope="col" class="num">{{ locale.t('settings.items.col.margin') }}</th>
+            <th scope="col">{{ locale.t('settings.items.col.opening') }}</th>
             <th scope="col" class="actions"><span class="sr-only">{{ locale.t('settings.items.col.actions') }}</span></th>
           </tr>
         </thead>
@@ -72,19 +73,23 @@
                     <span class="mgn__none">—</span>
                   }
                 </td>
+                <td class="opening-cell" [attr.data-label]="locale.t('settings.items.col.opening')">
+                  <button
+                    type="button"
+                    class="openbtn"
+                    [class.openbtn--set]="item.openingStock != null"
+                    (click)="startOpening(item)"
+                    [attr.aria-label]="locale.t('settings.items.openingAction') + ' — ' + item.name"
+                  >
+                    @if (item.openingStock != null) {
+                      <span class="openbtn__amt">{{ item.openingStock }}@if (item.unit) {<span class="openbtn__dir"> {{ item.unit }}</span>}</span>
+                    } @else {
+                      <span class="openbtn__set">{{ locale.t('settings.items.opening.set') }}</span>
+                    }
+                  </button>
+                </td>
                 <td class="actions">
                   <div class="rowicons">
-                    <button
-                      type="button"
-                      class="iconbtn"
-                      (click)="startOpening(item)"
-                      [attr.aria-label]="locale.t('settings.items.openingAction') + ' — ' + item.name"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <circle cx="8" cy="8" r="6" />
-                        <path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M9.5 12H10a1 1 0 0 0 0-2H8" />
-                      </svg>
-                    </button>
                     <button
                       type="button"
                       class="iconbtn"
@@ -111,7 +116,7 @@
 
               @if (confirmingId() === item.id) {
                 <tr class="tbl__confirm">
-                  <td colspan="6">
+                  <td colspan="7">
                     <div class="confirm">
                       <span class="confirm__msg">{{ locale.t('settings.items.delete.confirm', { name: item.name }) }}</span>
                       <span class="confirm__actions">
@@ -129,7 +134,7 @@
 
               @if (openingId() === item.id) {
                 <tr class="tbl__opening">
-                  <td colspan="6">
+                  <td colspan="7">
                     <div class="opening">
                       <label class="opening__label" [attr.for]="'opening-qty-' + item.id">
                         {{ locale.t('settings.items.opening.label', { name: item.name }) }}
@@ -224,6 +229,7 @@
         <span class="mgn__none">—</span>
       }
     </td>
+    <td aria-hidden="true"></td>
     <td class="actions">
       <div class="rowicons">
         <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEdit()">
@@ -238,12 +244,12 @@
 
   @if (itemForm.name().touched() && itemForm.name().invalid()) {
     <tr class="tbl__rowmsg">
-      <td colspan="6"><span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span></td>
+      <td colspan="7"><span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span></td>
     </tr>
   }
   @if (rowErrorKey(); as key) {
     <tr class="tbl__rowmsg">
-      <td colspan="6"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
+      <td colspan="7"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
     </tr>
   }
 </ng-template>

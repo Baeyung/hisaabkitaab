@@ -2,7 +2,9 @@ package io.github.baeyung.hisaabkitaab.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
+import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +39,32 @@ public class OpeningEntryService
     private final PartyService partyService;
     private final StoreItemService storeItemService;
     private final TransactionRepository transactionRepository;
+    private final TransactionLineRepository transactionLineRepository;
+
+    /** Current opening balance per party for the owner's store — keyed by party id, absent when none set. */
+    @Transactional(readOnly = true)
+    public Map<String, PartyBalance> openingBalancesByOwner(String ownerId)
+    {
+        Store store = storeService.getPrimaryStoreForOwner(ownerId);
+        return transactionLineRepository.findOpeningBalancesByStore(store.getId()).stream()
+                .collect(Collectors.toMap(
+                        TransactionLineRepository.PartyOpeningRow::getPartyId,
+                        row -> {
+                            double value = row.getValue() != null ? row.getValue() : 0;
+                            return PartyBalance.of(row.getInOut() == InOut.IN ? value : -value);
+                        }));
+    }
+
+    /** Current opening stock per item for the owner's store — keyed by item id, absent when none set. */
+    @Transactional(readOnly = true)
+    public Map<String, BigDecimal> openingStockByOwner(String ownerId)
+    {
+        Store store = storeService.getPrimaryStoreForOwner(ownerId);
+        return transactionLineRepository.findOpeningStockByStore(store.getId()).stream()
+                .collect(Collectors.toMap(
+                        TransactionLineRepository.ItemOpeningRow::getItemId,
+                        TransactionLineRepository.ItemOpeningRow::getQuantity));
+    }
 
     public PartyBalance setOpeningBalance(String partyId, String ownerId, double amount, BalanceDirection direction)
     {

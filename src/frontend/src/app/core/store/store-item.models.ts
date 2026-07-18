@@ -9,7 +9,9 @@ export interface StoreItem {
   unit: string | null;
   salePrice: number | null;
   costPrice: number | null;
+  /** Opening stock on hand at onboarding; `null` when none is set (list only). */
+  openingStock?: number | null;
 }
 
-/** The editable shape sent on create/update — everything but the server `id`. */
-export type StoreItemDraft = Omit<StoreItem, 'id'>;
+/** The editable shape sent on create/update — the catalog fields only. */
+export type StoreItemDraft = Omit<StoreItem, 'id' | 'openingStock'>;

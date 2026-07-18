@@ -13,8 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
 import io.github.baeyung.hisaabkitaab.dto.opening.OpeningBalanceRequest;
+import io.github.baeyung.hisaabkitaab.dto.party.PartyResponse;
 import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
@@ -31,9 +34,13 @@ public class PartyController
     private final OpeningEntryService openingEntryService;
 
     @GetMapping
-    public ResponseEntity<List<Party>> list(@AuthenticationPrincipal UserPrincipal principal)
+    public ResponseEntity<List<PartyResponse>> list(@AuthenticationPrincipal UserPrincipal principal)
     {
-        return ResponseEntity.ok(partyService.findByOwner(principal.getId()));
+        List<Party> parties = partyService.findByOwner(principal.getId());
+        Map<String, PartyBalance> openings = openingEntryService.openingBalancesByOwner(principal.getId());
+        return ResponseEntity.ok(parties.stream()
+                .map(p -> PartyResponse.of(p, openings.get(p.getId())))
+                .toList());
     }
 
     @GetMapping("/{id}")

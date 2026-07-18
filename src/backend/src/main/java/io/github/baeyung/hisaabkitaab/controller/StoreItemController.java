@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 import io.github.baeyung.hisaabkitaab.dto.opening.OpeningStockRequest;
+import io.github.baeyung.hisaabkitaab.dto.storeitem.StoreItemResponse;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
@@ -37,9 +39,13 @@ public class StoreItemController
     private final OpeningEntryService openingEntryService;
 
     @GetMapping
-    public ResponseEntity<List<StoreItem>> list(@AuthenticationPrincipal UserPrincipal principal)
+    public ResponseEntity<List<StoreItemResponse>> list(@AuthenticationPrincipal UserPrincipal principal)
     {
-        return ResponseEntity.ok(storeItemService.findByOwner(principal.getId()));
+        List<StoreItem> items = storeItemService.findByOwner(principal.getId());
+        Map<String, BigDecimal> openings = openingEntryService.openingStockByOwner(principal.getId());
+        return ResponseEntity.ok(items.stream()
+                .map(it -> StoreItemResponse.of(it, openings.get(it.getId())))
+                .toList());
     }
 
     @GetMapping("/{id}")
