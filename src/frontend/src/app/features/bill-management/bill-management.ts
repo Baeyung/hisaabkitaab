@@ -3,12 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
 import { BillSummary } from '../../core/store/bill.models';
-
-/** Local calendar day as `YYYY-MM-DD` — matches the backend's ISO LocalDate strings. */
-function todayStr(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
+import { todayIso } from '../../shared/date.util';
 
 /**
  * Bill list — every SALE, newest first, searchable by bill number or party and
@@ -30,8 +25,8 @@ export class BillManagement {
   protected readonly loadError = signal(false);
   protected readonly noStore = signal(false);
   protected readonly query = signal('');
-  protected readonly fromDate = signal(todayStr());
-  protected readonly toDate = signal(todayStr());
+  protected readonly fromDate = signal(todayIso());
+  protected readonly toDate = signal(todayIso());
 
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly deleting = signal(false);

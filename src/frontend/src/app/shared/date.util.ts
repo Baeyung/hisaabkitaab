@@ -7,5 +7,8 @@
  * (APPLICATION_DOMAIN §7).
  */
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  // Local calendar day, NOT UTC — toISOString() would roll to yesterday for
+  // the early-morning hours east of UTC (e.g. 04:06 in Pakistan = 23:06 UTC).
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
