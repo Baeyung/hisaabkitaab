@@ -457,10 +457,12 @@ th.num {
     display: block;
   }
 
-  /* each display row, edit row, and confirm strip is its own card */
+  /* each display row and edit row is its own card; the confirm and opening
+     strips continue the card of the row they belong to (rules below) */
   .tbl__row,
   .tbl__edit,
-  .tbl__confirm {
+  .tbl__confirm,
+  .tbl__opening {
     border: 1px solid var(--kg-line);
     border-radius: 12px;
     background: var(--kg-card);
@@ -474,6 +476,42 @@ th.num {
   .tbl__confirm {
     background: rgba(168, 52, 42, 0.06);
     border-color: rgba(168, 52, 42, 0.2);
+  }
+  .tbl__opening {
+    background: rgba(31, 92, 77, 0.05);
+    border-color: rgba(31, 92, 77, 0.16);
+  }
+
+  /* a display row with a strip after it drops its bottom seam, and the strip
+     drops its top seam, so the pair reads as one continuous card */
+  .tbl__row:has(+ .tbl__confirm),
+  .tbl__row:has(+ .tbl__opening) {
+    margin-bottom: 0;
+    border-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .tbl__confirm,
+  .tbl__opening {
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  /* opening editor: controls stack full-width like the edit row */
+  .tbl__opening .opening {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .tbl__opening .opening__amt {
+    max-width: none;
+  }
+  .tbl__opening .opening__actions {
+    margin-inline-start: 0;
+  }
+  .tbl__opening .opening__actions .btn {
+    flex: 1;
   }
 
   .tbl td {
