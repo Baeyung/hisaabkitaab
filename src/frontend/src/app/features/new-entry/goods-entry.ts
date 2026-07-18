@@ -150,11 +150,16 @@ export class GoodsEntry {
     this.validLines().reduce((sum, l) => sum + (l.qty as number) * (l.rate as number), 0),
   );
 
-  /** Cash moved. A cash party settles in full by definition, so it tracks the
-   *  total (and the input is locked); otherwise it's what actually changed hands. */
-  protected readonly effectiveCash = computed(() =>
-    this.cashParty() ? this.total() : (this.cash() ?? 0),
-  );
+  /** Cash moved. Once the box is touched it's exactly what changed hands; when
+   *  untouched a cash party prefills to the full total (paying less is a forced
+   *  discount), while a credit party defaults to nothing paid. */
+  protected readonly effectiveCash = computed(() => {
+    const typed = this.cash();
+    if (typed != null) {
+      return typed;
+    }
+    return this.cashParty() ? this.total() : 0;
+  });
 
   /** What's left unsettled on this bill. Positive → outstanding (sale: they owe
    *  you; purchase: you owe them); negative → overpaid, which reads the other way. */
@@ -180,6 +185,9 @@ export class GoodsEntry {
   toggleCashParty(): void {
     const next = !this.cashParty();
     this.cashParty.set(next);
+    // Drop any typed cash so the box re-prefills cleanly (total for a cash party,
+    // empty for a credit one) instead of carrying a stale override across.
+    this.cash.set(null);
     if (next) {
       this.partyName.set('');
     }
@@ -300,6 +308,11 @@ export class GoodsEntry {
    *  balance is money owed *to* you (tone 'in', like the drawer filling), a
    *  purchase's is money you owe *out*. Overpaying flips it. */
   protected balanceView(): { tone: 'in' | 'out'; party: string; direction: string; amount: string } | null {
+    // A cash party has no khata, so any shortfall is a forced discount, not
+    // baqaya — it walks away settled, never owing.
+    if (this.cashParty()) {
+      return null;
+    }
     const b = this.balance();
     if (Math.abs(b) < 0.005) {
       return null;

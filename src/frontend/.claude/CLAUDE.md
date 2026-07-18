@@ -59,10 +59,8 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 ## Domain Knowledge (what this app is about?)
 - APPLICATION_DOMAIN.md contains the design domain that is what is almost required from the app
 
-## Use Primeng for completing designs of the frontend
-- where possible prefer primeng over implementing the component.
-- if primeng is not a good fit, then implement the custom component.
+## Servers
+- The servers are already running on port 8080 for BE, and 4200 for FE, so use them before spinning your own!
 
 ## Versions
 - Angular v22
-- PrimeNG v22
