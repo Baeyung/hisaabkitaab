@@ -104,6 +104,30 @@ html[dir='rtl'] .num {
   color: var(--kg-muted);
 }
 
+/* "Bill to <party>" chip under the bill header title */
+.rm-billto {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+.rm-billto__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.rm-billto__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  padding: 4px 12px;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 999px;
+}
+
 .rm-back {
   display: inline-flex;
   align-items: center;

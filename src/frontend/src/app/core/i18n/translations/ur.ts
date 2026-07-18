@@ -354,6 +354,7 @@ export const ur: Record<TranslationKey, string> = {
   'bill.detail.goodsTotal': 'کل رقم',
   'bill.detail.cashReceived': 'نقد وصول',
   'bill.detail.outstanding': 'کھاتے میں',
+  'bill.detail.discount': 'رعایت',
   'bill.detail.empty': 'اس بل میں کوئی آئٹم نہیں۔',
   'bill.detail.loadError': 'یہ بل لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔',
   'bill.detail.notFound': 'یہ بل نہیں ملا۔',

@@ -22,10 +22,10 @@
       <div>
         <h1 class="rm-title num">{{ b.billNumber || locale.t('nav.billManagement') }}</h1>
         <p class="rm-sub num">{{ b.date }}</p>
-      </div>
-      <div class="rm-stat">
-        <span class="rm-stat__label">{{ locale.t('bill.detail.billTo') }}</span>
-        <span class="rm-stat__value">{{ b.partyName || locale.t('bill.cashSale') }}</span>
+        <p class="rm-billto">
+          <span class="rm-billto__label">{{ locale.t('bill.detail.billTo') }}</span>
+          <span class="rm-billto__name">{{ b.partyName || locale.t('bill.cashSale') }}</span>
+        </p>
       </div>
       <button type="button" class="rm-btn rm-btn--danger" (click)="askDelete()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -98,13 +98,20 @@
           <strong class="num amt--in">{{ locale.money(b.cashReceived) }}</strong>
         </span>
         @if (b.outstanding.direction !== 'SETTLED') {
-          <span>
-            {{ locale.t('bill.detail.outstanding') }}
-            <strong class="num" [class]="directionClass(b.outstanding.direction)">
-              {{ locale.money(b.outstanding.amount) }}
-            </strong>
-            <span class="rm-tbl__meta">{{ locale.t(directionKey(b.outstanding.direction)) }}</span>
-          </span>
+          @if (!b.partyName) {
+            <span>
+              {{ locale.t('bill.detail.discount') }}
+              <strong class="num">{{ locale.money(b.outstanding.amount) }}</strong>
+            </span>
+          } @else {
+            <span>
+              {{ locale.t('bill.detail.outstanding') }}
+              <strong class="num" [class]="directionClass(b.outstanding.direction)">
+                {{ locale.money(b.outstanding.amount) }}
+              </strong>
+              <span class="rm-tbl__meta">{{ locale.t(directionKey(b.outstanding.direction)) }}</span>
+            </span>
+          }
         }
       </div>
     </div>

@@ -352,6 +352,7 @@ export const en = {
   'bill.detail.goodsTotal': 'Total',
   'bill.detail.cashReceived': 'Cash received',
   'bill.detail.outstanding': 'On khata',
+  'bill.detail.discount': 'Discount',
   'bill.detail.empty': 'No items on this bill.',
   'bill.detail.loadError': "Couldn't load this bill. Please try again.",
   'bill.detail.notFound': 'This bill was not found.',
