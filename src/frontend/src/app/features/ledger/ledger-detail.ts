@@ -1,5 +1,5 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
 import { PartyStatement } from '../../core/store/ledger.models';
@@ -20,6 +20,7 @@ export class LedgerDetail {
 
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(LedgerService);
+  private readonly router = inject(Router);
 
   protected readonly statement = signal<PartyStatement | null>(null);
   protected readonly loading = signal(true);
@@ -33,6 +34,11 @@ export class LedgerDetail {
     effect(() => {
       void this.load(this.partyId());
     });
+  }
+
+  /** A sale row's transactionId is the bill's id — open its detail. */
+  openBill(transactionId: string): void {
+    void this.router.navigate(['/bill-management', transactionId]);
   }
 
   async load(partyId: string): Promise<void> {

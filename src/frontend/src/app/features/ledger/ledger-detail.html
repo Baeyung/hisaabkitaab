@@ -54,9 +54,15 @@
             </thead>
             <tbody>
               @for (row of st.rows; track row.transactionId + row.occurredAt) {
-                <tr>
+                <tr [class.rm-rowlink]="row.event === 'SALE'" (click)="row.event === 'SALE' && openBill(row.transactionId)">
                   <td class="num">{{ row.date }}</td>
-                  <td>{{ row.description || '—' }}</td>
+                  <td>
+                    @if (row.event === 'SALE') {
+                      <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()">{{ row.description || '—' }}</a>
+                    } @else {
+                      {{ row.description || '—' }}
+                    }
+                  </td>
                   <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
                     {{ locale.money(row.amount) }}
                   </td>
