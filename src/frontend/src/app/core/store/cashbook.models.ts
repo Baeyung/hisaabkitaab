@@ -1,5 +1,13 @@
 /** Mirrors the backend `dto/cashbook` records (GET /api/cashbook). */
-export type TransactionEventKind = 'SALE' | 'PURCHASE' | 'RECEIPT' | 'PAYMENT' | 'EXPENSE' | 'ADJUSTMENT';
+export type TransactionEventKind =
+  | 'SALE'
+  | 'PURCHASE'
+  | 'RECEIPT'
+  | 'PAYMENT'
+  | 'EXPENSE'
+  | 'ADJUSTMENT'
+  | 'OPENING_BALANCE'
+  | 'OPENING_STOCK';
 
 export interface CashbookRow {
   transactionId: string;

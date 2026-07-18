@@ -30,6 +30,8 @@ public class TransactionDescriptionGenerator
             case PAYMENT -> withParty("Paid " + money(request.getCashAmount()), "to", partyName);
             case EXPENSE -> "Expense of " + money(request.getCashAmount());
             case ADJUSTMENT -> "Adjustment of " + money(request.getCashAmount());
+            case OPENING_BALANCE -> withParty("Opening balance", "for", partyName);
+            case OPENING_STOCK -> "Opening stock " + itemSummary(request);
         };
     }
 

@@ -44,6 +44,8 @@ export class SettingsItems {
   protected readonly editingId = signal<string | null>(null);
   protected readonly adding = signal(false);
   protected readonly confirmingId = signal<string | null>(null);
+  protected readonly openingId = signal<string | null>(null);
+  protected readonly openingQty = signal<number | null>(null);
   protected readonly saving = signal(false);
   protected readonly rowErrorKey = signal<TranslationKey | null>(null);
 
@@ -119,6 +121,33 @@ export class SettingsItems {
     }
   }
 
+  startOpening(item: StoreItem): void {
+    this.resetRowState();
+    this.openingQty.set(null);
+    this.openingId.set(item.id);
+  }
+
+  cancelOpening(): void {
+    this.resetRowState();
+  }
+
+  async saveOpening(id: string): Promise<void> {
+    const qty = this.openingQty();
+    if (qty == null || qty < 0) {
+      return;
+    }
+    this.saving.set(true);
+    this.rowErrorKey.set(null);
+    try {
+      await this.api.setOpeningStock(id, qty);
+      this.resetRowState();
+    } catch {
+      this.rowErrorKey.set('error.generic');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
   askDelete(id: string): void {
     this.resetRowState();
     this.confirmingId.set(id);
@@ -169,6 +198,7 @@ export class SettingsItems {
     this.adding.set(false);
     this.editingId.set(null);
     this.confirmingId.set(null);
+    this.openingId.set(null);
     this.rowErrorKey.set(null);
   }
 

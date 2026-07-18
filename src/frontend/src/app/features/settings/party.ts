@@ -5,7 +5,7 @@ import { form, FormField, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { PartyService } from '../../core/store/party.service';
-import { Party, PartyDraft } from '../../core/store/party.models';
+import { BalanceDirection, Party, PartyDraft } from '../../core/store/party.models';
 
 /** Form-facing shape: contact/address are non-null strings for the inputs (blank → null on send). */
 interface PartyForm {
@@ -43,6 +43,9 @@ export class SettingsParty {
   protected readonly editingId = signal<string | null>(null);
   protected readonly adding = signal(false);
   protected readonly confirmingId = signal<string | null>(null);
+  protected readonly openingId = signal<string | null>(null);
+  protected readonly openingAmount = signal<number | null>(null);
+  protected readonly openingDir = signal<BalanceDirection>('THEY_OWE_YOU');
   protected readonly saving = signal(false);
   protected readonly rowErrorKey = signal<TranslationKey | null>(null);
 
@@ -114,6 +117,34 @@ export class SettingsParty {
     }
   }
 
+  startOpening(party: Party): void {
+    this.resetRowState();
+    this.openingAmount.set(null);
+    this.openingDir.set('THEY_OWE_YOU');
+    this.openingId.set(party.id);
+  }
+
+  cancelOpening(): void {
+    this.resetRowState();
+  }
+
+  async saveOpening(id: string): Promise<void> {
+    const amount = this.openingAmount();
+    if (amount == null || amount < 0) {
+      return;
+    }
+    this.saving.set(true);
+    this.rowErrorKey.set(null);
+    try {
+      await this.api.setOpeningBalance(id, { amount, direction: this.openingDir() });
+      this.resetRowState();
+    } catch {
+      this.rowErrorKey.set('error.generic');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
   askDelete(id: string): void {
     this.resetRowState();
     this.confirmingId.set(id);
@@ -141,6 +172,7 @@ export class SettingsParty {
     this.adding.set(false);
     this.editingId.set(null);
     this.confirmingId.set(null);
+    this.openingId.set(null);
     this.rowErrorKey.set(null);
   }
 

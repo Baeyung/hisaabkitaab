@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Party, PartyDraft } from './party.models';
+import { OpeningBalanceDraft, Party, PartyDraft } from './party.models';
 
 /**
  * CRUD for the parties in the signed-in user's store. The store is derived from
@@ -28,5 +28,10 @@ export class PartyService {
 
   delete(id: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`${this.url}/${id}`));
+  }
+
+  /** Upsert the party's opening balance (amount 0 clears it). Single-sided — no cash counterpart. */
+  setOpeningBalance(id: string, draft: OpeningBalanceDraft): Promise<void> {
+    return firstValueFrom(this.http.put<void>(`${this.url}/${id}/opening-balance`, draft));
   }
 }

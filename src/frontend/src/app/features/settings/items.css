@@ -181,6 +181,39 @@ th.num {
   flex: none;
 }
 
+/* ── opening-stock strip ───────────────────────────────────────────── */
+.tbl__opening td {
+  background: rgba(31, 92, 77, 0.04);
+}
+.opening {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.opening__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-ink);
+}
+.opening__amt {
+  max-width: 150px;
+}
+.opening__unit {
+  font-size: 13px;
+  color: var(--kg-muted);
+}
+.opening__actions {
+  display: inline-flex;
+  gap: 8px;
+  flex: none;
+  margin-inline-start: auto;
+}
+.opening__err {
+  display: block;
+  margin-top: 8px;
+}
+
 /* ── fields (duplicated primitives — see header note) ──────────────── */
 .fld__input {
   height: 44px;

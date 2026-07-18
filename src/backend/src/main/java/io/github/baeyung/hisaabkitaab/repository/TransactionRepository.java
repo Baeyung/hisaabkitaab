@@ -36,4 +36,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
 
     @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
     Optional<Transaction> findByIdAndStoreId(String id, String storeId);
+
+    /** The single opening-balance transaction for a party, if one has been set (see OpeningEntryService). */
+    @EntityGraph(attributePaths = {"lines"})
+    Optional<Transaction> findFirstByStoreIdAndEventAndPartyId(String storeId, TransactionEvent event, String partyId);
+
+    /** The single opening-stock transaction holding an item's opening line, if one has been set. */
+    @EntityGraph(attributePaths = {"lines"})
+    Optional<Transaction> findFirstByStoreIdAndEventAndLinesItemId(String storeId, TransactionEvent event, String itemId);
 }

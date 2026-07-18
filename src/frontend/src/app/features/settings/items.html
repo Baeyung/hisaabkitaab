@@ -77,6 +77,17 @@
                     <button
                       type="button"
                       class="iconbtn"
+                      (click)="startOpening(item)"
+                      [attr.aria-label]="locale.t('settings.items.openingAction') + ' — ' + item.name"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="8" cy="8" r="6" />
+                        <path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M9.5 12H10a1 1 0 0 0 0-2H8" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="iconbtn"
                       (click)="startEdit(item)"
                       [attr.aria-label]="locale.t('settings.items.edit') + ' — ' + item.name"
                     >
@@ -112,6 +123,47 @@
                         </button>
                       </span>
                     </div>
+                  </td>
+                </tr>
+              }
+
+              @if (openingId() === item.id) {
+                <tr class="tbl__opening">
+                  <td colspan="6">
+                    <div class="opening">
+                      <label class="opening__label" [attr.for]="'opening-qty-' + item.id">
+                        {{ locale.t('settings.items.opening.label', { name: item.name }) }}
+                      </label>
+                      <input
+                        class="fld__input fld__input--sm opening__amt"
+                        [id]="'opening-qty-' + item.id"
+                        type="number"
+                        inputmode="decimal"
+                        min="0"
+                        [value]="openingQty() ?? ''"
+                        (input)="openingQty.set($any($event.target).valueAsNumber || null)"
+                        [attr.placeholder]="locale.t('settings.items.opening.qtyPh')"
+                      />
+                      @if (item.unit) {
+                        <span class="opening__unit">{{ item.unit }}</span>
+                      }
+                      <span class="opening__actions">
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="cancelOpening()">
+                          {{ locale.t('settings.items.opening.cancel') }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn--primary btn--sm"
+                          (click)="saveOpening(item.id)"
+                          [disabled]="saving() || openingQty() == null || (openingQty() ?? 0) < 0"
+                        >
+                          {{ locale.t('settings.items.opening.save') }}
+                        </button>
+                      </span>
+                    </div>
+                    @if (rowErrorKey(); as key) {
+                      <span role="alert" class="fld__err opening__err">{{ locale.t(key) }}</span>
+                    }
                   </td>
                 </tr>
               }

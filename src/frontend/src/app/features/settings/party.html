@@ -67,6 +67,17 @@
                     <button
                       type="button"
                       class="iconbtn"
+                      (click)="startOpening(party)"
+                      [attr.aria-label]="locale.t('settings.party.openingAction') + ' — ' + party.name"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="8" cy="8" r="6" />
+                        <path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M9.5 12H10a1 1 0 0 0 0-2H8" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="iconbtn"
                       (click)="startEdit(party)"
                       [attr.aria-label]="locale.t('settings.party.edit') + ' — ' + party.name"
                     >
@@ -102,6 +113,64 @@
                         </button>
                       </span>
                     </div>
+                  </td>
+                </tr>
+              }
+
+              @if (openingId() === party.id) {
+                <tr class="tbl__opening">
+                  <td colspan="4">
+                    <div class="opening">
+                      <label class="opening__label" [attr.for]="'opening-amt-' + party.id">
+                        {{ locale.t('settings.party.opening.label', { name: party.name }) }}
+                      </label>
+                      <input
+                        class="fld__input fld__input--sm opening__amt"
+                        [id]="'opening-amt-' + party.id"
+                        type="number"
+                        inputmode="decimal"
+                        min="0"
+                        [value]="openingAmount() ?? ''"
+                        (input)="openingAmount.set($any($event.target).valueAsNumber || null)"
+                        [attr.placeholder]="locale.t('settings.party.opening.amountPh')"
+                      />
+                      <div class="dirtoggle" role="group" [attr.aria-label]="locale.t('settings.party.opening.direction')">
+                        <button
+                          type="button"
+                          class="dirtoggle__btn"
+                          [class.dirtoggle__btn--on]="openingDir() === 'THEY_OWE_YOU'"
+                          [attr.aria-pressed]="openingDir() === 'THEY_OWE_YOU'"
+                          (click)="openingDir.set('THEY_OWE_YOU')"
+                        >
+                          {{ locale.t('settings.party.opening.theyOwe') }}
+                        </button>
+                        <button
+                          type="button"
+                          class="dirtoggle__btn"
+                          [class.dirtoggle__btn--on]="openingDir() === 'YOU_OWE_THEM'"
+                          [attr.aria-pressed]="openingDir() === 'YOU_OWE_THEM'"
+                          (click)="openingDir.set('YOU_OWE_THEM')"
+                        >
+                          {{ locale.t('settings.party.opening.youOwe') }}
+                        </button>
+                      </div>
+                      <span class="opening__actions">
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="cancelOpening()">
+                          {{ locale.t('settings.party.opening.cancel') }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn--primary btn--sm"
+                          (click)="saveOpening(party.id)"
+                          [disabled]="saving() || openingAmount() == null || (openingAmount() ?? 0) < 0"
+                        >
+                          {{ locale.t('settings.party.opening.save') }}
+                        </button>
+                      </span>
+                    </div>
+                    @if (rowErrorKey(); as key) {
+                      <span role="alert" class="fld__err opening__err">{{ locale.t(key) }}</span>
+                    }
                   </td>
                 </tr>
               }

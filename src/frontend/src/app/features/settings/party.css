@@ -145,6 +145,62 @@
   flex: none;
 }
 
+/* ── opening-balance strip ─────────────────────────────────────────── */
+.tbl__opening td {
+  background: rgba(31, 92, 77, 0.04);
+}
+.opening {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.opening__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-ink);
+}
+.opening__amt {
+  max-width: 150px;
+}
+.opening__actions {
+  display: inline-flex;
+  gap: 8px;
+  flex: none;
+  margin-inline-start: auto;
+}
+.opening__err {
+  display: block;
+  margin-top: 8px;
+}
+.dirtoggle {
+  display: inline-flex;
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.dirtoggle__btn {
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  background: var(--kg-card);
+  border: 0;
+  cursor: pointer;
+}
+.dirtoggle__btn + .dirtoggle__btn {
+  border-inline-start: 1px solid var(--kg-line-strong);
+}
+.dirtoggle__btn--on {
+  color: #fff;
+  background: var(--kg-brand);
+}
+.dirtoggle__btn:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--kg-focus);
+}
+
 /* ── fields (duplicated primitives — see header note) ──────────────── */
 .fld__input {
   height: 44px;

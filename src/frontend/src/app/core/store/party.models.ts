@@ -12,3 +12,12 @@ export interface Party {
 
 /** The editable shape sent on create/update — everything but the server `id`. */
 export type PartyDraft = Omit<Party, 'id'>;
+
+/** Which way a party's opening balance points, in the shopkeeper's language. */
+export type BalanceDirection = 'THEY_OWE_YOU' | 'YOU_OWE_THEM';
+
+/** Set a party's opening balance: the amount carried in and its direction. */
+export interface OpeningBalanceDraft {
+  amount: number;
+  direction: BalanceDirection;
+}

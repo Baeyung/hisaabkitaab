@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
+import io.github.baeyung.hisaabkitaab.dto.opening.OpeningStockRequest;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
+import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class StoreItemController
 {
     private final StoreItemService storeItemService;
+    private final OpeningEntryService openingEntryService;
 
     @GetMapping
     public ResponseEntity<List<StoreItem>> list(@AuthenticationPrincipal UserPrincipal principal)
@@ -62,5 +67,13 @@ public class StoreItemController
     {
         storeItemService.delete(id, principal.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/opening-stock")
+    public ResponseEntity<BigDecimal> setOpeningStock(@PathVariable String id,
+            @Valid @RequestBody OpeningStockRequest request,
+            @AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(openingEntryService.setOpeningStock(id, principal.getId(), request.quantity()));
     }
 }

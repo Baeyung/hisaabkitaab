@@ -29,4 +29,9 @@ export class StoreItemService {
   delete(id: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`${this.url}/${id}`));
   }
+
+  /** Upsert the item's opening stock quantity (0 clears it). Single-sided IN stock line. */
+  setOpeningStock(id: string, quantity: number): Promise<void> {
+    return firstValueFrom(this.http.put<void>(`${this.url}/${id}/opening-stock`, { quantity }));
+  }
 }

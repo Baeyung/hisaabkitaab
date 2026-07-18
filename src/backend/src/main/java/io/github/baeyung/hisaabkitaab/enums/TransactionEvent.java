@@ -11,5 +11,7 @@ public enum TransactionEvent
     RECEIPT,
     PAYMENT,
     EXPENSE,
-    ADJUSTMENT
+    ADJUSTMENT,
+    OPENING_BALANCE,
+    OPENING_STOCK
 }

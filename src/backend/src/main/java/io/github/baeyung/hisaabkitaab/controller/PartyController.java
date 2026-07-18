@@ -13,8 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
+import io.github.baeyung.hisaabkitaab.dto.opening.OpeningBalanceRequest;
 import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
+import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class PartyController
 {
     private final PartyService partyService;
+    private final OpeningEntryService openingEntryService;
 
     @GetMapping
     public ResponseEntity<List<Party>> list(@AuthenticationPrincipal UserPrincipal principal)
@@ -57,5 +61,14 @@ public class PartyController
     {
         partyService.delete(id, principal.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/opening-balance")
+    public ResponseEntity<PartyBalance> setOpeningBalance(@PathVariable String id,
+            @Valid @RequestBody OpeningBalanceRequest request,
+            @AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(
+                openingEntryService.setOpeningBalance(id, principal.getId(), request.amount(), request.direction()));
     }
 }
