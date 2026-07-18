@@ -27,7 +27,32 @@
         <span class="rm-stat__label">{{ locale.t('bill.detail.billTo') }}</span>
         <span class="rm-stat__value">{{ b.partyName || locale.t('bill.cashSale') }}</span>
       </div>
+      <button type="button" class="rm-btn rm-btn--danger" (click)="askDelete()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+        </svg>
+        {{ locale.t('bill.deleteAction') }}
+      </button>
     </header>
+
+    @if (confirming()) {
+      <div class="rm-confirm rm-confirm--card">
+        <span class="rm-confirm__msg">
+          {{ locale.t('bill.delete.confirm', { name: b.billNumber || locale.t('bill.cashSale') }) }}
+        </span>
+        <span class="rm-confirm__actions">
+          <button type="button" class="rm-btn rm-btn--ghost rm-btn--sm" (click)="cancelDelete()">
+            {{ locale.t('bill.delete.cancel') }}
+          </button>
+          <button type="button" class="rm-btn rm-btn--danger rm-btn--sm" (click)="confirmDelete()" [disabled]="deleting()">
+            {{ locale.t('bill.delete.confirmBtn') }}
+          </button>
+        </span>
+      </div>
+    }
+    @if (deleteError()) {
+      <p role="alert" class="rm-alert" style="margin-bottom: 12px">{{ locale.t('bill.delete.error') }}</p>
+    }
 
     <div class="rm-card">
       @if (b.lines.length === 0) {

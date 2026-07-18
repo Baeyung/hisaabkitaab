@@ -17,4 +17,9 @@ export class BillService {
   getDetail(id: string): Promise<BillDetail> {
     return firstValueFrom(this.http.get<BillDetail>(`${this.url}/${id}`));
   }
+
+  /** Delete a bill (SALE); the backend cascades its transaction lines away. */
+  delete(id: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`${this.url}/${id}`));
+  }
 }

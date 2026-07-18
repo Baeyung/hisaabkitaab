@@ -32,7 +32,7 @@
     </div>
   } @else {
     <div class="rm-card">
-      <div class="rm-toolbar">
+      <div class="rm-toolbar rm-toolbar--filters">
         <input
           class="rm-input"
           type="search"
@@ -42,7 +42,32 @@
           [attr.placeholder]="locale.t('bill.search.ph')"
           [attr.aria-label]="locale.t('bill.search.ph')"
         />
+        <label class="rm-field">
+          <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
+          <input
+            class="rm-input rm-input--date"
+            type="date"
+            [value]="fromDate()"
+            (input)="fromDate.set(fromInput.value)"
+            #fromInput
+            [attr.aria-label]="locale.t('bill.filter.from')"
+          />
+        </label>
+        <label class="rm-field">
+          <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
+          <input
+            class="rm-input rm-input--date"
+            type="date"
+            [value]="toDate()"
+            (input)="toDate.set(toInput.value)"
+            #toInput
+            [attr.aria-label]="locale.t('bill.filter.to')"
+          />
+        </label>
       </div>
+      @if (deleteError()) {
+        <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t('bill.delete.error') }}</p>
+      }
       <div class="rm-tablewrap">
         <table class="rm-tbl">
           <thead>
@@ -51,6 +76,7 @@
               <th scope="col">{{ locale.t('bill.col.date') }}</th>
               <th scope="col">{{ locale.t('bill.col.party') }}</th>
               <th scope="col" class="end">{{ locale.t('bill.col.amount') }}</th>
+              <th scope="col" class="end"><span class="sr-only">{{ locale.t('bill.col.actions') }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -64,10 +90,42 @@
                 <td class="num" [attr.data-label]="locale.t('bill.col.date')">{{ bill.date }}</td>
                 <td [attr.data-label]="locale.t('bill.col.party')">{{ bill.partyName || locale.t('bill.cashSale') }}</td>
                 <td class="end num rm-tbl__name" [attr.data-label]="locale.t('bill.col.amount')">{{ locale.money(bill.amount) }}</td>
+                <td class="end">
+                  <button
+                    type="button"
+                    class="rm-iconbtn rm-iconbtn--danger"
+                    (click)="$event.stopPropagation(); askDelete(bill.id)"
+                    [attr.aria-label]="locale.t('bill.deleteAction') + ' — ' + (bill.billNumber || locale.t('bill.cashSale'))"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                    </svg>
+                  </button>
+                </td>
               </tr>
+
+              @if (confirmingId() === bill.id) {
+                <tr class="rm-confirm-row" (click)="$event.stopPropagation()">
+                  <td colspan="5">
+                    <div class="rm-confirm">
+                      <span class="rm-confirm__msg">
+                        {{ locale.t('bill.delete.confirm', { name: bill.billNumber || locale.t('bill.cashSale') }) }}
+                      </span>
+                      <span class="rm-confirm__actions">
+                        <button type="button" class="rm-btn rm-btn--ghost rm-btn--sm" (click)="cancelDelete()">
+                          {{ locale.t('bill.delete.cancel') }}
+                        </button>
+                        <button type="button" class="rm-btn rm-btn--danger rm-btn--sm" (click)="confirmDelete(bill.id)" [disabled]="deleting()">
+                          {{ locale.t('bill.delete.confirmBtn') }}
+                        </button>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              }
             } @empty {
               <tr>
-                <td colspan="4">{{ locale.t('bill.search.none') }}</td>
+                <td colspan="5">{{ locale.t('bill.search.none') }}</td>
               </tr>
             }
           </tbody>

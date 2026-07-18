@@ -1,5 +1,5 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
 import { BillDetail as BillDetailModel } from '../../core/store/bill.models';
@@ -20,11 +20,16 @@ export class BillDetail {
 
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(BillService);
+  private readonly router = inject(Router);
 
   protected readonly bill = signal<BillDetailModel | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly notFound = signal(false);
+
+  protected readonly confirming = signal(false);
+  protected readonly deleting = signal(false);
+  protected readonly deleteError = signal(false);
 
   protected readonly directionKey = directionKey;
   protected readonly directionClass = directionClass;
@@ -49,6 +54,27 @@ export class BillDetail {
       }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  askDelete(): void {
+    this.deleteError.set(false);
+    this.confirming.set(true);
+  }
+
+  cancelDelete(): void {
+    this.confirming.set(false);
+  }
+
+  async confirmDelete(): Promise<void> {
+    this.deleting.set(true);
+    this.deleteError.set(false);
+    try {
+      await this.api.delete(this.billId());
+      void this.router.navigate(['/bill-management']);
+    } catch {
+      this.deleteError.set(true);
+      this.deleting.set(false);
     }
   }
 }
