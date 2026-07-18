@@ -116,7 +116,7 @@
           inputmode="decimal"
           min="0"
           [attr.id]="config().idPrefix + '-cash'"
-          [value]="cash() ?? (cashParty() ? total() : null)"
+          [value]="cashTouched() ? cash() : (cashParty() ? total() : null)"
           (input)="setCash($any($event.target).value)"
           [attr.placeholder]="'0'"
         />

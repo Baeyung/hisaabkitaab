@@ -130,6 +130,11 @@ export class GoodsEntry {
   protected readonly description = signal('');
   protected readonly cash = signal<number | null>(null);
 
+  /** Whether the cash box has been edited. Until it is, a cash party shows the
+   *  total as a prefill; once touched, whatever's in the box wins — including
+   *  empty, so clearing it doesn't snap back to the total. */
+  protected readonly cashTouched = signal(false);
+
   protected readonly lines = signal<Line[]>([this.blankLine()]);
   protected readonly recent = new RecentLog();
 
@@ -154,9 +159,8 @@ export class GoodsEntry {
    *  untouched a cash party prefills to the full total (paying less is a forced
    *  discount), while a credit party defaults to nothing paid. */
   protected readonly effectiveCash = computed(() => {
-    const typed = this.cash();
-    if (typed != null) {
-      return typed;
+    if (this.cashTouched()) {
+      return this.cash() ?? 0;
     }
     return this.cashParty() ? this.total() : 0;
   });
@@ -188,6 +192,7 @@ export class GoodsEntry {
     // Drop any typed cash so the box re-prefills cleanly (total for a cash party,
     // empty for a credit one) instead of carrying a stale override across.
     this.cash.set(null);
+    this.cashTouched.set(false);
     if (next) {
       this.partyName.set('');
     }
@@ -221,6 +226,7 @@ export class GoodsEntry {
   }
 
   setCash(value: string): void {
+    this.cashTouched.set(true);
     this.cash.set(this.toNum(value));
   }
 
@@ -286,6 +292,7 @@ export class GoodsEntry {
     this.billNumber.set('');
     this.description.set('');
     this.cash.set(null);
+    this.cashTouched.set(false);
     this.lines.set([this.blankLine()]);
     this.errorKey.set(null);
   }
