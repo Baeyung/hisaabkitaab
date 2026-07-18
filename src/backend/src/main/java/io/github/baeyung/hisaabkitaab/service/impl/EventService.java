@@ -94,7 +94,7 @@ public class EventService
                 throw ResourceNotFoundException.forEntity("Store for owner", ownerIdentifier);
             }
 
-            Party party = resolveParty(eventRequest);
+            Party party = resolveParty(eventRequest, ownerIdentifier);
 
             String description = StringUtils.hasText(eventRequest.getDescription())
                     ? eventRequest.getDescription()
@@ -133,13 +133,25 @@ public class EventService
         }
     }
 
-    private Party resolveParty(EventRequest eventRequest)
+    private Party resolveParty(EventRequest eventRequest, String ownerIdentifier)
     {
         EventRequest.Party party = eventRequest.getParty();
-        if (party == null || !StringUtils.hasText(party.getPartyId()))
+        if (party == null)
         {
-            // create party, if it doesnt exist, with defaults, and user can modify it later
             return null;
+        }
+
+        if (!StringUtils.hasText(party.getPartyId()))
+        {
+            return partyService.create(
+                    Party
+                            .builder()
+                            .name(party.getName())
+                            .contact("090078601")
+                            .address("address@HisaabKitaab")
+                            .build(),
+                    ownerIdentifier
+            );
         }
 
         return partyService.findEntity(party.getPartyId());

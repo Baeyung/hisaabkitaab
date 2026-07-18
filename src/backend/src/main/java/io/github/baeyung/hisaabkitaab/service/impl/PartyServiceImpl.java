@@ -58,7 +58,7 @@ public class PartyServiceImpl implements PartyService
     public Party create(Party input, String ownerId)
     {
         Party party = Party.builder()
-                .store(storeService.getPrimaryStoreForOwner(ownerId))
+                .store(storeService.findFirstByOwnerIdentifier(ownerId))
                 .name(input.getName())
                 .contact(input.getContact())
                 .address(input.getAddress())
