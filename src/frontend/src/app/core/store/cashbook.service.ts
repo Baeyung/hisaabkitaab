@@ -14,7 +14,7 @@ export class CashbookService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/cashbook`;
 
-  getDay(day: string): Promise<CashbookDay> {
-    return firstValueFrom(this.http.get<CashbookDay>(this.url, { params: { day } }));
+  getRange(from: string, to: string): Promise<CashbookDay> {
+    return firstValueFrom(this.http.get<CashbookDay>(this.url, { params: { from, to } }));
   }
 }

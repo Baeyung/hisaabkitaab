@@ -4,7 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record CashbookDayResponse(
-        LocalDate day,
+        LocalDate from,
+        LocalDate to,
         double openingBalance,
         List<CashbookRowResponse> rows,
         double totalIn,

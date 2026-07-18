@@ -41,17 +41,17 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     double sumCashBefore(@Param("storeId") String storeId, @Param("day") LocalDate day);
 
-    /** Every CASH line of {@code day}, chronological, with transaction and party fetched for row display. */
+    /** Every CASH line from {@code from} to {@code to} inclusive, chronological, with transaction and party fetched for row display. */
     @Query("""
             select tl from TransactionLine tl
             join fetch tl.transaction t
             left join fetch t.party
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
               and t.store.id = :storeId
-              and coalesce(t.eventDate, t.entryDate) = :day
-            order by t.createdAt asc, tl.id asc
+              and coalesce(t.eventDate, t.entryDate) between :from and :to
+            order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
-    List<TransactionLine> findCashLinesForDay(@Param("storeId") String storeId, @Param("day") LocalDate day);
+    List<TransactionLine> findCashLinesInRange(@Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
     /** One net balance per party over its full PARTY-line history (positive = they owe the store). */
     @Query("""

@@ -29,12 +29,12 @@ public class CashbookQueryService
     private final StoreService storeService;
     private final TransactionLineRepository transactionLineRepository;
 
-    public CashbookDayResponse getDay(String ownerId, LocalDate day)
+    public CashbookDayResponse getRange(String ownerId, LocalDate from, LocalDate to)
     {
         Store store = storeService.getPrimaryStoreForOwner(ownerId);
 
-        double opening = transactionLineRepository.sumCashBefore(store.getId(), day);
-        List<TransactionLine> lines = transactionLineRepository.findCashLinesForDay(store.getId(), day);
+        double opening = transactionLineRepository.sumCashBefore(store.getId(), from);
+        List<TransactionLine> lines = transactionLineRepository.findCashLinesInRange(store.getId(), from, to);
 
         List<CashbookRowResponse> rows = RunningBalanceFolder.fold(
                 lines,
@@ -59,7 +59,7 @@ public class CashbookQueryService
         double totalOut = sumWhere(lines, InOut.OUT);
         double closing = rows.isEmpty() ? opening : rows.getLast().runningBalance();
 
-        return new CashbookDayResponse(day, opening, rows, totalIn, totalOut, closing);
+        return new CashbookDayResponse(from, to, opening, rows, totalIn, totalOut, closing);
     }
 
     private double sumWhere(List<TransactionLine> lines, InOut inOut)

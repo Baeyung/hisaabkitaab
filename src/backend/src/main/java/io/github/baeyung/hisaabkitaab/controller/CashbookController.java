@@ -23,14 +23,14 @@ public class CashbookController
     private final CashbookQueryService cashbookQueryService;
 
     @GetMapping
-    public ResponseEntity<CashbookDayResponse> getDay(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day,
+    public ResponseEntity<CashbookDayResponse> getRange(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @AuthenticationPrincipal UserPrincipal principal
     )
     {
-        return ResponseEntity.ok(cashbookQueryService.getDay(
-                principal.getId(),
-                day != null ? day : LocalDate.now()
-        ));
+        LocalDate start = from != null ? from : LocalDate.now();
+        LocalDate end = to != null ? to : start;
+        return ResponseEntity.ok(cashbookQueryService.getRange(principal.getId(), start, end));
     }
 }

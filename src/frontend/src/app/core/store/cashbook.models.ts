@@ -21,7 +21,8 @@ export interface CashbookRow {
 }
 
 export interface CashbookDay {
-  day: string;
+  from: string;
+  to: string;
   openingBalance: number;
   rows: CashbookRow[];
   totalIn: number;

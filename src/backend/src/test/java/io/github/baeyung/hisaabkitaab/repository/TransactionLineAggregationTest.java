@@ -113,7 +113,7 @@ class TransactionLineAggregationTest
     @Test
     void cashLinesForDayFetchesOnlyThatDay()
     {
-        List<TransactionLine> lines = transactionLineRepository.findCashLinesForDay(store.getId(), TODAY);
+        List<TransactionLine> lines = transactionLineRepository.findCashLinesInRange(store.getId(), TODAY, TODAY);
 
         assertEquals(1, lines.size());
         assertEquals(1500.0, lines.getFirst().getValue());

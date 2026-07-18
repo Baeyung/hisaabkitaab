@@ -20,7 +20,8 @@ export class Cashbook {
   private readonly api = inject(CashbookService);
   private readonly router = inject(Router);
 
-  protected readonly day = signal(todayIso());
+  protected readonly fromDate = signal(todayIso());
+  protected readonly toDate = signal(todayIso());
   protected readonly data = signal<CashbookDay | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
@@ -35,7 +36,7 @@ export class Cashbook {
     this.loadError.set(false);
     this.noStore.set(false);
     try {
-      this.data.set(await this.api.getDay(this.day()));
+      this.data.set(await this.api.getRange(this.fromDate(), this.toDate()));
     } catch (err) {
       if ((err as { status?: number }).status === 404) {
         this.noStore.set(true);
@@ -52,11 +53,19 @@ export class Cashbook {
     void this.router.navigate(['/bill-management', transactionId]);
   }
 
-  setDay(value: string): void {
-    if (!value || value === this.day()) {
+  setFrom(value: string): void {
+    if (!value || value === this.fromDate()) {
       return;
     }
-    this.day.set(value);
+    this.fromDate.set(value);
+    void this.load();
+  }
+
+  setTo(value: string): void {
+    if (!value || value === this.toDate()) {
+      return;
+    }
+    this.toDate.set(value);
     void this.load();
   }
 
