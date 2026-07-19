@@ -164,6 +164,41 @@ html[dir='rtl'] .num {
   border-radius: 14px;
   padding: 14px 17px;
 }
+/* The party statement's headline baqaya, sat under the name as a tinted pill.
+   Tone (green receivable / red payable / muted settled) comes from the
+   directionClass on the root as `color`; the pill's fill and border are mixed
+   off that same currentColor so all three states stay in sync. Label always
+   rides with the colour, never colour alone (APPLICATION_DOMAIN §4). */
+.rm-baqaya {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-top: 13px;
+  padding: 7px 15px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 26%, transparent);
+}
+.rm-baqaya__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.rm-baqaya__amt {
+  font-size: 17px;
+  font-weight: 700;
+}
+.rm-baqaya__dir {
+  font-size: 12px;
+  font-weight: 500;
+}
+.rm-baqaya__dir::before {
+  content: '·';
+  margin-inline-end: 7px;
+  color: var(--kg-faint);
+}
 .rm-stat__label {
   display: block;
   font-size: 11px;

@@ -25,17 +25,18 @@
         @if (st.contact) {
           <p class="rm-sub num">{{ st.contact }}</p>
         }
+        <div class="rm-baqaya" [class]="directionClass(st.currentBalance.direction)">
+          <span class="rm-baqaya__label">{{ locale.t('ledger.detail.balance') }}</span>
+          <span class="rm-baqaya__amt num">{{ locale.money(st.currentBalance.amount) }}</span>
+          <span class="rm-baqaya__dir">{{ locale.t(directionKey(st.currentBalance.direction)) }}</span>
+        </div>
       </div>
-      <div class="rm-stat">
-        <span class="rm-stat__label">{{ locale.t('ledger.detail.balance') }}</span>
-        <span class="rm-stat__value num" [class]="directionClass(st.currentBalance.direction)">
-          {{ locale.money(st.currentBalance.amount) }}
-        </span>
-        <span class="rm-stat__hint" [class]="directionClass(st.currentBalance.direction)">
-          {{ locale.t(directionKey(st.currentBalance.direction)) }}
-        </span>
-      </div>
-      <button type="button" class="rm-btn rm-btn--ghost rm-noprint" (click)="print()">{{ locale.t('common.print') }}</button>
+      <button type="button" class="rm-btn rm-btn--ghost rm-noprint" (click)="print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
+        </svg>
+        {{ locale.t('common.print') }}
+      </button>
     </header>
 
     @if (st.rows.length === 0) {
