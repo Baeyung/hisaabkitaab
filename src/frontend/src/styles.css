@@ -595,15 +595,21 @@ html[dir='rtl'] .num {
   .rm-noprint {
     display: none !important;
   }
+  /* !important beats the component-scoped shell styles (.layout height:100dvh,
+     main overflow-y:auto) — those have attribute-selector specificity a plain
+     global rule can't. Without this the pinned-viewport frame clips print to
+     one page. */
   .layout,
   .body,
   .content,
   .content main {
-    display: block;
-    height: auto;
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
     margin: 0;
     padding: 0;
-    overflow: visible;
+    overflow: visible !important;
+    container-type: normal !important;
   }
   .rm-page {
     max-width: none;
