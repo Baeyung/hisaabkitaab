@@ -110,6 +110,31 @@
                   </td>
                   <td class="end num" [attr.data-label]="locale.t('cashbook.col.running')">{{ locale.money(row.runningBalance) }}</td>
                 </tr>
+                @if (printer.bills().get(row.transactionId); as bill) {
+                  @for (line of bill.lines; track $index) {
+                    <tr class="rm-subrow">
+                      <td></td>
+                      <td>
+                        <span class="rm-tbl__name">{{ line.itemName || '—' }}</span>
+                        @if (line.quantity != null) {
+                          <span class="rm-tbl__meta num">{{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }}</span>
+                        }
+                      </td>
+                      <td class="end num">{{ locale.money(line.amount) }}</td>
+                      <td></td>
+                    </tr>
+                  }
+                  <tr class="rm-subrow rm-subrow--tot">
+                    <td></td>
+                    <td colspan="3" class="rm-subrow__tot">
+                      <span>{{ locale.t('bill.detail.goodsTotal') }} <b class="num">{{ locale.money(bill.goodsTotal) }}</b></span>
+                      <span>{{ locale.t('bill.detail.cashReceived') }} <b class="num amt--in">{{ locale.money(bill.cashReceived) }}</b></span>
+                      @if (bill.outstanding.direction !== 'SETTLED') {
+                        <span>{{ locale.t(bill.partyName ? 'bill.detail.outstanding' : 'bill.detail.discount') }} <b class="num">{{ locale.money(bill.outstanding.amount) }}</b></span>
+                      }
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>

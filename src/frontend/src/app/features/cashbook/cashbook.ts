@@ -5,6 +5,7 @@ import { CashbookService } from '../../core/store/cashbook.service';
 import { CashbookDay } from '../../core/store/cashbook.models';
 import { todayIso } from '../../shared/date.util';
 import { PrintHeader } from '../../shared/print-header';
+import { PrintDetailsService } from '../../shared/print-details.service';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -20,6 +21,7 @@ export class Cashbook {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(CashbookService);
   private readonly router = inject(Router);
+  protected readonly printer = inject(PrintDetailsService);
 
   protected readonly fromDate = signal(todayIso());
   protected readonly toDate = signal(todayIso());
@@ -50,7 +52,10 @@ export class Cashbook {
   }
 
   print(): void {
-    window.print();
+    const saleIds = (this.data()?.rows ?? [])
+      .filter((r) => r.event === 'SALE')
+      .map((r) => r.transactionId);
+    void this.printer.printWithDetails(saleIds);
   }
 
   /** A sale row's transactionId is the bill's id — open its detail. */

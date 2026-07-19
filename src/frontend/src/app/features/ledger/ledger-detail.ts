@@ -5,6 +5,7 @@ import { LedgerService } from '../../core/store/ledger.service';
 import { PartyStatement } from '../../core/store/ledger.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
+import { PrintDetailsService } from '../../shared/print-details.service';
 
 /**
  * One party's khata statement: every entry with the running baqaya, clean
@@ -22,6 +23,7 @@ export class LedgerDetail {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(LedgerService);
   private readonly router = inject(Router);
+  protected readonly printer = inject(PrintDetailsService);
 
   protected readonly statement = signal<PartyStatement | null>(null);
   protected readonly loading = signal(true);
@@ -38,7 +40,10 @@ export class LedgerDetail {
   }
 
   print(): void {
-    window.print();
+    const saleIds = (this.statement()?.rows ?? [])
+      .filter((r) => r.event === 'SALE')
+      .map((r) => r.transactionId);
+    void this.printer.printWithDetails(saleIds);
   }
 
   /** A sale row's transactionId is the bill's id — open its detail. */
