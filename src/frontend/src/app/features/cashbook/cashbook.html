@@ -1,10 +1,11 @@
 <section class="rm-page">
+  <app-print-header />
   <header class="rm-head">
     <div>
       <h1 class="rm-title">{{ locale.t('nav.cashbook') }}</h1>
       <p class="rm-sub">{{ locale.t('cashbook.subtitle') }}</p>
     </div>
-    <div class="rm-toolbar rm-toolbar--filters">
+    <div class="rm-toolbar rm-toolbar--filters rm-noprint">
       <label class="rm-field">
         <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
         <input
@@ -27,6 +28,9 @@
           [attr.aria-label]="locale.t('bill.filter.to')"
         />
       </label>
+      @if (data()) {
+        <button type="button" class="rm-btn rm-btn--ghost" (click)="print()">{{ locale.t('common.print') }}</button>
+      }
     </div>
   </header>
 
@@ -48,6 +52,7 @@
       <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
     </div>
   } @else if (data(); as cb) {
+    <p class="rm-sub rm-printonly">{{ locale.t('cashbook.print.period', { from: fromDate(), to: toDate() }) }}</p>
     <div class="rm-stats">
       <div class="rm-stat">
         <span class="rm-stat__label">{{ locale.t('cashbook.opening') }}</span>

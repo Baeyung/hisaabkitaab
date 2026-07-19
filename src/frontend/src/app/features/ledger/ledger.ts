@@ -4,6 +4,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
 import { PartyBalanceRow } from '../../core/store/ledger.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
+import { PrintHeader } from '../../shared/print-header';
 
 /**
  * The khata list: every party with their baqaya and which way it points.
@@ -12,7 +13,7 @@ import { directionClass, directionKey } from '../../shared/balance.util';
  */
 @Component({
   selector: 'app-ledger',
-  imports: [RouterLink],
+  imports: [RouterLink, PrintHeader],
   templateUrl: './ledger.html',
 })
 export class Ledger {
@@ -58,5 +59,9 @@ export class Ledger {
 
   open(partyId: string): void {
     void this.router.navigate(['/ledger', partyId]);
+  }
+
+  print(): void {
+    window.print();
   }
 }

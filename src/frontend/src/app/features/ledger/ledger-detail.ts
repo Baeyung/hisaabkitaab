@@ -4,6 +4,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
 import { PartyStatement } from '../../core/store/ledger.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
+import { PrintHeader } from '../../shared/print-header';
 
 /**
  * One party's khata statement: every entry with the running baqaya, clean
@@ -12,7 +13,7 @@ import { directionClass, directionKey } from '../../shared/balance.util';
  */
 @Component({
   selector: 'app-ledger-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, PrintHeader],
   templateUrl: './ledger-detail.html',
 })
 export class LedgerDetail {
@@ -34,6 +35,10 @@ export class LedgerDetail {
     effect(() => {
       void this.load(this.partyId());
     });
+  }
+
+  print(): void {
+    window.print();
   }
 
   /** A sale row's transactionId is the bill's id — open its detail. */

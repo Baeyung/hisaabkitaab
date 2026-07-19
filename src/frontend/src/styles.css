@@ -506,6 +506,58 @@ html[dir='rtl'] .num {
   }
 }
 
+/* Print-only content (shop letterhead lines, filter period) hides on screen. */
+.rm-printonly {
+  display: none;
+}
+
+/*
+ * Printing the cashbook / ledger / statement: drop the app chrome and any
+ * interactive controls (filters, search, buttons, back links marked
+ * .rm-noprint), then let the on-screen page — which already reflects the
+ * applied filters — flow onto paper under the shop letterhead.
+ */
+@media print {
+  .topbar,
+  .sidebar,
+  .backdrop,
+  .rm-noprint {
+    display: none !important;
+  }
+  .layout,
+  .body,
+  .content,
+  .content main {
+    display: block;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .rm-page {
+    max-width: none;
+    padding: 0;
+  }
+  .rm-printonly {
+    display: block;
+  }
+  .rm-card {
+    border: 0;
+    box-shadow: none;
+  }
+  .rm-tbl tr,
+  .rm-stat {
+    break-inside: avoid;
+  }
+  .rm-tbl a {
+    color: inherit;
+    text-decoration: none;
+  }
+  @page {
+    margin: 14mm;
+  }
+}
+
 @container (max-width: 640px) {
   .rm-page {
     padding: 16px;

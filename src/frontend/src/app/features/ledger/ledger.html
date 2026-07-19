@@ -1,9 +1,13 @@
 <section class="rm-page">
+  <app-print-header />
   <header class="rm-head">
     <div>
       <h1 class="rm-title">{{ locale.t('nav.ledger') }}</h1>
       <p class="rm-sub">{{ locale.t('ledger.subtitle') }}</p>
     </div>
+    @if ((parties()?.length ?? 0) > 0) {
+      <button type="button" class="rm-btn rm-btn--ghost rm-noprint" (click)="print()">{{ locale.t('common.print') }}</button>
+    }
   </header>
 
   @if (loading()) {
@@ -30,8 +34,11 @@
       <a class="rm-btn rm-btn--primary" routerLink="/settings/party">{{ locale.t('ledger.empty.cta') }}</a>
     </div>
   } @else {
+    @if (query().trim()) {
+      <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.filter', { query: query().trim() }) }}</p>
+    }
     <div class="rm-card">
-      <div class="rm-toolbar">
+      <div class="rm-toolbar rm-noprint">
         <input
           class="rm-input"
           type="search"

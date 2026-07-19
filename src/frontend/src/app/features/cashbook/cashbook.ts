@@ -4,6 +4,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { CashbookService } from '../../core/store/cashbook.service';
 import { CashbookDay } from '../../core/store/cashbook.models';
 import { todayIso } from '../../shared/date.util';
+import { PrintHeader } from '../../shared/print-header';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -12,7 +13,7 @@ import { todayIso } from '../../shared/date.util';
  */
 @Component({
   selector: 'app-cashbook',
-  imports: [RouterLink],
+  imports: [RouterLink, PrintHeader],
   templateUrl: './cashbook.html',
 })
 export class Cashbook {
@@ -46,6 +47,10 @@ export class Cashbook {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  print(): void {
+    window.print();
   }
 
   /** A sale row's transactionId is the bill's id — open its detail. */
