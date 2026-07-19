@@ -1,6 +1,7 @@
 package io.github.baeyung.hisaabkitaab.service.query;
 
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
+import io.github.baeyung.hisaabkitaab.dto.ledger.DerivedGroupResponse;
+import io.github.baeyung.hisaabkitaab.dto.ledger.DerivedStatementRowResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyBalanceResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyStatementResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyStatementRowResponse;
@@ -60,6 +63,60 @@ public class LedgerQueryService
                         PartyBalance.of(balances.getOrDefault(party.getId(), 0.0))
                 ))
                 .toList();
+    }
+
+    /**
+     * Same-description expenses collapsed into "derived" khata rows. Expenses
+     * carry no party, so they never surface in the party list; grouping them by
+     * their note (trimmed, case-insensitive) puts recurring outgoings — bijli,
+     * mazdoori, transport — where the shopkeeper reads their balances. Only
+     * groups of two or more show: a one-off expense is cashbook noise, not a
+     * standing head. The display name is the first entry's original text.
+     */
+    public List<DerivedGroupResponse> listDerivedGroups(String ownerId)
+    {
+        Store store = storeService.getPrimaryStoreForOwner(ownerId);
+
+        // ponytail: scans full expense history each call; add a cached read-model if a shop's expense count ever makes this slow.
+        Map<String, List<TransactionLine>> groups = transactionLineRepository.findExpenseLinesByStore(store.getId())
+                .stream()
+                .filter(line -> line.getTransaction().getDescription() != null
+                        && !line.getTransaction().getDescription().isBlank())
+                .collect(Collectors.groupingBy(
+                        line -> line.getTransaction().getDescription().trim().toLowerCase(),
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        return groups.values()
+                .stream()
+                .filter(lines -> lines.size() >= 2)
+                .map(this::toDerivedGroup)
+                .toList();
+    }
+
+    private DerivedGroupResponse toDerivedGroup(List<TransactionLine> lines)
+    {
+        List<DerivedStatementRowResponse> rows = RunningBalanceFolder.fold(
+                lines,
+                0,
+                this::value,
+                (line, running) -> {
+                    Transaction transaction = line.getTransaction();
+                    return new DerivedStatementRowResponse(
+                            transaction.getId(),
+                            transaction.getEventDate() != null ? transaction.getEventDate() : transaction.getEntryDate(),
+                            transaction.getCreatedAt(),
+                            value(line),
+                            running
+                    );
+                }
+        );
+
+        double total = rows.isEmpty() ? 0 : rows.getLast().runningTotal();
+        String description = lines.getFirst().getTransaction().getDescription().trim();
+
+        return new DerivedGroupResponse(description, rows.size(), total, rows);
     }
 
     public PartyStatementResponse getStatement(String ownerId, String partyId)

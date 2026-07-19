@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.baeyung.hisaabkitaab.dto.ledger.DerivedGroupResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyBalanceResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyStatementResponse;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
@@ -26,6 +27,12 @@ public class LedgerController
     public ResponseEntity<List<PartyBalanceResponse>> listBalances(@AuthenticationPrincipal UserPrincipal principal)
     {
         return ResponseEntity.ok(ledgerQueryService.listBalances(principal.getId()));
+    }
+
+    @GetMapping("/derived")
+    public ResponseEntity<List<DerivedGroupResponse>> listDerived(@AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(ledgerQueryService.listDerivedGroups(principal.getId()));
     }
 
     @GetMapping("/{partyId}")

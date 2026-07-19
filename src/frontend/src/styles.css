@@ -103,6 +103,13 @@ html[dir='rtl'] .num {
   font-size: 13.5px;
   color: var(--kg-muted);
 }
+/* Section heading between stacked cards (e.g. the ledger's derived-expenses block) */
+.rm-subhead {
+  margin: 22px 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
 
 /* "Bill to <party>" chip under the bill header title */
 .rm-billto {

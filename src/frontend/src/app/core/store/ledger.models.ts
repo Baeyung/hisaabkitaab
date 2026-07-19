@@ -27,3 +27,20 @@ export interface PartyStatement {
   rows: PartyStatementRow[];
   currentBalance: Balance;
 }
+
+/** An expense entry inside a derived group, with the group's running spend. */
+export interface DerivedStatementRow {
+  transactionId: string;
+  date: string;
+  occurredAt: string;
+  amount: number;
+  runningTotal: number;
+}
+
+/** Same-description expenses collapsed into one khata "derived" row (GET /api/ledger/derived). */
+export interface DerivedGroup {
+  description: string;
+  count: number;
+  total: number;
+  rows: DerivedStatementRow[];
+}

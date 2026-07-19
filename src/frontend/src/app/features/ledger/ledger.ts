@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
-import { PartyBalanceRow } from '../../core/store/ledger.models';
+import { DerivedGroup, PartyBalanceRow } from '../../core/store/ledger.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 
@@ -22,6 +22,8 @@ export class Ledger {
   private readonly router = inject(Router);
 
   protected readonly parties = signal<PartyBalanceRow[] | null>(null);
+  protected readonly derived = signal<DerivedGroup[]>([]);
+  protected readonly expanded = signal<string | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly noStore = signal(false);
@@ -44,8 +46,11 @@ export class Ledger {
     this.loading.set(true);
     this.loadError.set(false);
     this.noStore.set(false);
+    this.expanded.set(null);
     try {
-      this.parties.set(await this.api.list());
+      const [parties, derived] = await Promise.all([this.api.list(), this.api.listDerived()]);
+      this.parties.set(parties);
+      this.derived.set(derived);
     } catch (err) {
       if ((err as { status?: number }).status === 404) {
         this.noStore.set(true);
@@ -59,6 +64,11 @@ export class Ledger {
 
   open(partyId: string): void {
     void this.router.navigate(['/ledger', partyId]);
+  }
+
+  /** Derived rows have no page of their own — clicking one unfolds its entries in place. */
+  toggle(description: string): void {
+    this.expanded.update((cur) => (cur === description ? null : description));
   }
 
   print(): void {

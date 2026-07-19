@@ -119,6 +119,32 @@ class TransactionLineAggregationTest
         assertEquals(1500.0, lines.getFirst().getValue());
     }
 
+    @Test
+    void expenseLinesAreOnlyExpenseCashOut()
+    {
+        // Two bijli expenses + one chai, plus the seeded SALE/RECEIPT cash lines that must be excluded.
+        expense("Bijli", 900.0, YESTERDAY);
+        expense("Bijli", 1100.0, TODAY);
+        expense("Chai", 50.0, TODAY);
+
+        List<TransactionLine> lines = transactionLineRepository.findExpenseLinesByStore(store.getId());
+
+        // Only the three EXPENSE cash lines, chronological — the SALE's CASH/IN is not one.
+        assertEquals(List.of(900.0, 1100.0, 50.0), lines.stream().map(TransactionLine::getValue).toList());
+    }
+
+    private void expense(String description, Double amount, LocalDate eventDate)
+    {
+        Transaction expense = transactionRepository.save(Transaction.builder()
+                .store(store)
+                .event(TransactionEvent.EXPENSE)
+                .eventDate(eventDate)
+                .entryDate(TODAY)
+                .description(description)
+                .build());
+        line(expense, TargetKind.CASH, InOut.OUT, amount, null, null);
+    }
+
     private Transaction transaction(TransactionEvent event, LocalDate eventDate)
     {
         return transactionRepository.save(Transaction.builder()

@@ -53,6 +53,17 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<TransactionLine> findCashLinesInRange(@Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
+    /** Every EXPENSE cash-out line for the store, chronological — grouped by description into the khata's derived rows. */
+    @Query("""
+            select tl from TransactionLine tl
+            join fetch tl.transaction t
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
+              and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.EXPENSE
+              and t.store.id = :storeId
+            order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
+            """)
+    List<TransactionLine> findExpenseLinesByStore(@Param("storeId") String storeId);
+
     /** One net balance per party over its full PARTY-line history (positive = they owe the store). */
     @Query("""
             select tl.party.id as partyId,
