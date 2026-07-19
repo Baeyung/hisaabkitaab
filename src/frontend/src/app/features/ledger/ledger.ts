@@ -23,7 +23,6 @@ export class Ledger {
 
   protected readonly parties = signal<PartyBalanceRow[] | null>(null);
   protected readonly derived = signal<DerivedGroup[]>([]);
-  protected readonly expanded = signal<string | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly noStore = signal(false);
@@ -46,7 +45,6 @@ export class Ledger {
     this.loading.set(true);
     this.loadError.set(false);
     this.noStore.set(false);
-    this.expanded.set(null);
     try {
       const [parties, derived] = await Promise.all([this.api.list(), this.api.listDerived()]);
       this.parties.set(parties);
@@ -66,9 +64,13 @@ export class Ledger {
     void this.router.navigate(['/ledger', partyId]);
   }
 
-  /** Derived rows have no page of their own — clicking one unfolds its entries in place. */
-  toggle(description: string): void {
-    this.expanded.update((cur) => (cur === description ? null : description));
+  /** The description is the group's identity; encode it for the route param. */
+  encode(description: string): string {
+    return encodeURIComponent(description);
+  }
+
+  openDerived(description: string): void {
+    void this.router.navigate(['/ledger/derived', this.encode(description)]);
   }
 
   print(): void {

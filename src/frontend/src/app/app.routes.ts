@@ -48,6 +48,10 @@ export const routes: Routes = [
             loadComponent: () => import('./features/ledger/ledger').then((m) => m.Ledger),
           },
           {
+            path: 'ledger/derived/:key',
+            loadComponent: () => import('./features/ledger/derived-detail').then((m) => m.DerivedDetail),
+          },
+          {
             path: 'ledger/:partyId',
             loadComponent: () => import('./features/ledger/ledger-detail').then((m) => m.LedgerDetail),
           },

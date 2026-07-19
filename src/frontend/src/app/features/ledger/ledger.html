@@ -103,28 +103,15 @@
             </thead>
             <tbody>
               @for (group of derived(); track group.description) {
-                <tr
-                  class="rm-rowlink"
-                  (click)="toggle(group.description)"
-                  [attr.aria-expanded]="expanded() === group.description"
-                >
+                <tr class="rm-rowlink" (click)="openDerived(group.description)">
                   <td class="rm-cell-head">
-                    <span class="rm-tbl__name">{{ group.description }}</span>
+                    <a [routerLink]="['/ledger/derived', encode(group.description)]" class="rm-tbl__name">{{ group.description }}</a>
                   </td>
                   <td class="end num" [attr.data-label]="locale.t('ledger.derived.col.count')">{{ group.count }}</td>
                   <td class="end num amt--out" [attr.data-label]="locale.t('ledger.derived.col.total')">
                     {{ locale.money(group.total) }}
                   </td>
                 </tr>
-                @if (expanded() === group.description) {
-                  @for (row of group.rows; track row.transactionId + row.occurredAt) {
-                    <tr class="rm-subrow">
-                      <td class="num">{{ row.date }}</td>
-                      <td class="end num amt--out">{{ locale.money(row.amount) }}</td>
-                      <td class="end num">{{ locale.money(row.runningTotal) }}</td>
-                    </tr>
-                  }
-                }
               }
             </tbody>
           </table>
