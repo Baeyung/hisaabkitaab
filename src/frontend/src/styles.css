@@ -754,101 +754,189 @@ html[dir='rtl'] .num {
 
 
 /* ── Dashboard (analytics home) ───────────────────────────────────────────── */
-.dash-card__title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--kg-ink);
-  margin: 0 0 4px;
+/* KPI strip: cash + profit shown as two distinct numbers (APPLICATION_DOMAIN
+   §3.4), receivables/payables alongside. A semantic left accent bar encodes
+   what each number means, so the tone never rides on colour alone. */
+.dw-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
 }
-.dash-card__sub {
+.dw-kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 18px 15px;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.dw-kpi::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: var(--kg-line-strong);
+}
+.dw-kpi--brand::before {
+  background: var(--kg-brand);
+}
+.dw-kpi--in::before {
+  background: var(--kg-in);
+}
+.dw-kpi--out::before {
+  background: var(--kg-out);
+}
+.dw-kpi__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.dw-kpi__value {
+  margin-top: 3px;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--kg-ink);
+}
+.dw-kpi__hint {
   font-size: 12px;
   color: var(--kg-faint);
-  margin: 0 0 8px;
 }
-/* Canvas needs a sized box: chart.js fills its container height. */
-.dash-chart {
-  height: clamp(240px, 34vh, 340px);
-  margin-top: 8px;
+
+/* Cards reuse .rm-card (bg/border/radius/clip); these add the header and rows. */
+.dw-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 18px 13px;
+  border-bottom: 1px solid var(--kg-line);
 }
-.dash-spark {
-  height: 32px;
-  margin: 8px 0 2px;
+.dw-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kg-ink);
 }
-.dash-grid {
+.dw-card__hint {
+  font-size: 12px;
+  color: var(--kg-faint);
+  white-space: nowrap;
+}
+
+/* Sized box so chart.js (maintainAspectRatio:false) has a definite height to
+   fill — see app-chart. Without a fixed height here the canvas runs away. */
+.dw-chart {
+  position: relative;
+  height: clamp(240px, 30vw, 300px);
+  padding: 10px 10px 6px;
+}
+
+.dw-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  align-items: start;
   margin-top: 16px;
 }
-.dash-subhead {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  margin: 12px 0 2px;
-}
-.dash-list {
+
+.dw-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.dash-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--kg-line);
+.dw-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 12px;
+  padding: 11px 18px;
 }
-.dash-list .dash-row:last-child {
-  border-bottom: none;
+.dw-row + .dw-row {
+  border-top: 1px solid var(--kg-line);
 }
-.dash-row__name {
-  flex: 1 1 auto;
+/* Faint proportional fill behind ranked rows — reads as a bar chart without
+   the clutter. Full-bleed; the card's overflow:hidden clips it to the corners.
+   Grows from the inline-start edge, so it mirrors correctly under RTL. */
+.dw-row__fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 0;
+  width: var(--fill, 0%);
+}
+.dw-row__fill--in {
+  background: color-mix(in srgb, var(--kg-in) 9%, transparent);
+}
+.dw-row__fill--out {
+  background: color-mix(in srgb, var(--kg-out) 9%, transparent);
+}
+.dw-row__name {
+  position: relative;
+  z-index: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
   font-weight: 600;
   color: var(--kg-ink);
   text-decoration: none;
 }
-a.dash-row__name {
+a.dw-row__name {
   color: var(--kg-brand);
 }
-a.dash-row__name:hover {
+a.dw-row__name:hover {
   text-decoration: underline;
 }
-.dash-row__val {
-  margin-inline-start: auto;
+.dw-row__val {
+  position: relative;
+  z-index: 1;
+  text-align: end;
+  white-space: nowrap;
+  font-size: 14px;
   font-weight: 700;
+  line-height: 1.25;
   color: var(--kg-ink);
 }
-.dash-row__sub {
-  flex: 0 0 100%;
-  order: 6;
-  text-align: end;
-  font-size: 12px;
+.dw-row__val small {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 500;
   color: var(--kg-faint);
 }
-.dash-bar {
-  flex: 0 0 100%;
-  order: 5;
-  height: 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--kg-ink) 7%, transparent);
-  overflow: hidden;
+.dw-grouplabel {
+  margin: 0;
+  padding: 12px 18px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-.dash-bar__fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-}
-.dash-bar__fill--in {
-  background: var(--kg-in);
-}
-.dash-bar__fill--out {
-  background: var(--kg-out);
-}
-.dash-empty {
+.dw-empty {
+  padding: 14px 18px;
   color: var(--kg-faint);
   font-size: 13px;
-  padding: 10px 0;
+}
+
+@media (max-width: 860px) {
+  .dw-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dw-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .dw-kpis {
+    grid-template-columns: 1fr;
+  }
 }

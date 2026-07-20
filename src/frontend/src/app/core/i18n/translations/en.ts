@@ -352,6 +352,7 @@ export const en = {
     'Daily sales, spending and profit for the selected period. Sales {{sales}}, spending {{spend}}, profit {{profit}}.',
   'dash.sales': 'Sales',
   'dash.spend': 'Spending',
+  'dash.byRevenue': 'by revenue',
   'dash.topItems.title': 'Top-selling designs',
   'dash.topItems.empty': 'No sales in this period.',
   'dash.deadStock.title': 'Dead stock',

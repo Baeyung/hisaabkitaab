@@ -16,10 +16,19 @@ Chart.register(...registerables);
   selector: 'app-chart',
   template: `<canvas #canvas role="img" [attr.aria-label]="label()"></canvas>`,
   styles: `
+    /* The host fills its (sized) parent and the canvas is absolutely pinned to
+       it, so chart.js with maintainAspectRatio:false has a definite box to draw
+       into. Without this the canvas has no height and chart.js grows it every
+       resize tick — the runaway that pushed the whole page around. */
     :host {
       display: block;
       position: relative;
       width: 100%;
+      height: 100%;
+    }
+    canvas {
+      position: absolute;
+      inset: 0;
     }
   `,
 })

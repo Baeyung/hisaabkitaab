@@ -45,10 +45,10 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class DashboardQueryService
 {
-    private static final int TOP_ITEMS = 8;
-    private static final int TOP_DEAD_STOCK = 8;
+    private static final int TOP_ITEMS = 6;
+    private static final int TOP_DEAD_STOCK = 6;
     private static final int TOP_PARTIES = 5;
-    private static final int TOP_EXPENSES = 5;
+    private static final int TOP_EXPENSES = 6;
 
     private final StoreService storeService;
     private final PartyRepository partyRepository;

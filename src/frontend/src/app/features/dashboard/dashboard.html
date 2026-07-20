@@ -54,129 +54,135 @@
       <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('dash.empty.cta') }}</a>
     </div>
   } @else if (data(); as d) {
-    <!-- Hero: cash and profit are two different numbers on purpose. -->
-    <div class="rm-stats">
-      <div class="rm-stat">
-        <span class="rm-stat__label">{{ locale.t('dash.cash') }}</span>
-        <span class="rm-stat__value num">{{ locale.money(d.cashPosition) }}</span>
-        <span class="rm-stat__hint">{{ locale.t('dash.cash.hint') }}</span>
-      </div>
-      <div class="rm-stat">
-        <span class="rm-stat__label">{{ locale.t('dash.profit') }}</span>
-        <span
-          class="rm-stat__value num"
-          [class.amt--in]="d.profit >= 0"
-          [class.amt--out]="d.profit < 0"
-        >{{ locale.money(d.profit) }}</span>
-        @if (d.daily.length > 1) {
-          <div class="dash-spark" aria-hidden="true">
-            <app-chart [config]="profitSparkConfig()" />
-          </div>
-        }
-        <span class="rm-stat__hint">{{ locale.t('dash.window') }}</span>
-      </div>
-      <div class="rm-stat">
-        <span class="rm-stat__label">{{ locale.t('dash.receivables') }}</span>
-        <span class="rm-stat__value num amt--in">{{ locale.money(d.receivablesTotal) }}</span>
-        <span class="rm-stat__hint">{{ locale.t('auth.hero.theyOwe') }}</span>
-      </div>
-      <div class="rm-stat">
-        <span class="rm-stat__label">{{ locale.t('dash.payables') }}</span>
-        <span class="rm-stat__value num amt--out">{{ locale.money(d.payablesTotal) }}</span>
-        <span class="rm-stat__hint">{{ locale.t('auth.hero.youOwe') }}</span>
-      </div>
+    <!-- Cash and profit are two different numbers on purpose (APPLICATION_DOMAIN §3.4). -->
+    <div class="dw-kpis">
+      <article class="dw-kpi dw-kpi--brand">
+        <span class="dw-kpi__label">{{ locale.t('dash.cash') }}</span>
+        <span class="dw-kpi__value num">{{ locale.money(d.cashPosition) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('dash.cash.hint') }}</span>
+      </article>
+      <article class="dw-kpi" [class.dw-kpi--in]="d.profit >= 0" [class.dw-kpi--out]="d.profit < 0">
+        <span class="dw-kpi__label">{{ locale.t('dash.profit') }}</span>
+        <span class="dw-kpi__value num" [class.amt--in]="d.profit >= 0" [class.amt--out]="d.profit < 0">
+          {{ locale.money(d.profit) }}
+        </span>
+        <span class="dw-kpi__hint">{{ locale.t('dash.window') }}</span>
+      </article>
+      <article class="dw-kpi dw-kpi--in">
+        <span class="dw-kpi__label">{{ locale.t('dash.receivables') }}</span>
+        <span class="dw-kpi__value num amt--in">{{ locale.money(d.receivablesTotal) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('auth.hero.theyOwe') }}</span>
+      </article>
+      <article class="dw-kpi dw-kpi--out">
+        <span class="dw-kpi__label">{{ locale.t('dash.payables') }}</span>
+        <span class="dw-kpi__value num amt--out">{{ locale.money(d.payablesTotal) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('auth.hero.youOwe') }}</span>
+      </article>
     </div>
 
-    <!-- Sales vs spendings, with profit overlaid. -->
-    <div class="rm-card">
-      <h2 class="dash-card__title">{{ locale.t('dash.trend.title') }}</h2>
-      <div class="dash-chart">
+    <!-- Sales vs spending, with profit overlaid. -->
+    <section class="rm-card dw-card">
+      <header class="dw-card__head">
+        <h2 class="dw-card__title">{{ locale.t('dash.trend.title') }}</h2>
+      </header>
+      <div class="dw-chart">
         <app-chart [config]="trendConfig()" [label]="trendLabel()" />
       </div>
-    </div>
+    </section>
 
-    <div class="dash-grid">
+    <div class="dw-grid">
       <!-- Top-selling designs -->
-      <div class="rm-card">
-        <h2 class="dash-card__title">{{ locale.t('dash.topItems.title') }}</h2>
-        <ul class="dash-list">
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('dash.topItems.title') }}</h2>
+          <span class="dw-card__hint">{{ locale.t('dash.byRevenue') }}</span>
+        </header>
+        <ul class="dw-list">
           @for (item of d.topItems; track item.itemId) {
-            <li class="dash-row">
-              <a class="dash-row__name" [routerLink]="['/inventory', item.itemId]">{{ item.name }}</a>
-              <span class="dash-bar" aria-hidden="true">
-                <span class="dash-bar__fill dash-bar__fill--in" [style.width.%]="itemPct(item.revenue)"></span>
+            <li class="dw-row dw-row--bar" [style.--fill.%]="itemPct(item.revenue)">
+              <span class="dw-row__fill dw-row__fill--in" aria-hidden="true"></span>
+              <a class="dw-row__name" [routerLink]="['/inventory', item.itemId]">{{ item.name }}</a>
+              <span class="dw-row__val num">
+                {{ locale.money(item.revenue) }}
+                <small class="num">{{ locale.qtyUnit(item.quantity, item.unit) }}</small>
               </span>
-              <span class="dash-row__val num">{{ locale.money(item.revenue) }}</span>
-              <span class="dash-row__sub num">{{ locale.qtyUnit(item.quantity, item.unit) }}</span>
             </li>
           } @empty {
-            <li class="dash-empty">{{ locale.t('dash.topItems.empty') }}</li>
+            <li class="dw-empty">{{ locale.t('dash.topItems.empty') }}</li>
           }
         </ul>
-      </div>
+      </section>
 
       <!-- Dead stock -->
-      <div class="rm-card">
-        <h2 class="dash-card__title">{{ locale.t('dash.deadStock.title') }}</h2>
-        <p class="dash-card__sub">{{ locale.t('dash.deadStock.sub') }}</p>
-        <ul class="dash-list">
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('dash.deadStock.title') }}</h2>
+          <span class="dw-card__hint">{{ locale.t('dash.deadStock.sub') }}</span>
+        </header>
+        <ul class="dw-list">
           @for (item of d.deadStock; track item.itemId) {
-            <li class="dash-row dash-row--plain">
-              <a class="dash-row__name" [routerLink]="['/inventory', item.itemId]">{{ item.name }}</a>
-              <span class="dash-row__val num">{{ locale.money(item.value) }}</span>
-              <span class="dash-row__sub num">{{ locale.qtyUnit(item.stock, item.unit) }}</span>
+            <li class="dw-row">
+              <a class="dw-row__name" [routerLink]="['/inventory', item.itemId]">{{ item.name }}</a>
+              <span class="dw-row__val num">
+                {{ locale.money(item.value) }}
+                <small class="num">{{ locale.qtyUnit(item.stock, item.unit) }}</small>
+              </span>
             </li>
           } @empty {
-            <li class="dash-empty">{{ locale.t('dash.deadStock.empty') }}</li>
+            <li class="dw-empty">{{ locale.t('dash.deadStock.empty') }}</li>
           }
         </ul>
-      </div>
+      </section>
 
       <!-- Top parties: receivables and payables -->
-      <div class="rm-card">
-        <h2 class="dash-card__title">{{ locale.t('dash.parties.title') }}</h2>
-        <h3 class="dash-subhead amt--in">{{ locale.t('auth.hero.theyOwe') }}</h3>
-        <ul class="dash-list">
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('dash.parties.title') }}</h2>
+        </header>
+        <p class="dw-grouplabel amt--in">{{ locale.t('auth.hero.theyOwe') }}</p>
+        <ul class="dw-list">
           @for (p of d.topReceivables; track p.partyId) {
-            <li class="dash-row dash-row--plain">
-              <a class="dash-row__name" [routerLink]="['/ledger', p.partyId]">{{ p.name }}</a>
-              <span class="dash-row__val num amt--in">{{ locale.money(p.amount) }}</span>
+            <li class="dw-row">
+              <a class="dw-row__name" [routerLink]="['/ledger', p.partyId]">{{ p.name }}</a>
+              <span class="dw-row__val num amt--in">{{ locale.money(p.amount) }}</span>
             </li>
           } @empty {
-            <li class="dash-empty">{{ locale.t('dash.parties.noneIn') }}</li>
+            <li class="dw-empty">{{ locale.t('dash.parties.noneIn') }}</li>
           }
         </ul>
-        <h3 class="dash-subhead amt--out">{{ locale.t('auth.hero.youOwe') }}</h3>
-        <ul class="dash-list">
+        <p class="dw-grouplabel amt--out">{{ locale.t('auth.hero.youOwe') }}</p>
+        <ul class="dw-list">
           @for (p of d.topPayables; track p.partyId) {
-            <li class="dash-row dash-row--plain">
-              <a class="dash-row__name" [routerLink]="['/ledger', p.partyId]">{{ p.name }}</a>
-              <span class="dash-row__val num amt--out">{{ locale.money(p.amount) }}</span>
+            <li class="dw-row">
+              <a class="dw-row__name" [routerLink]="['/ledger', p.partyId]">{{ p.name }}</a>
+              <span class="dw-row__val num amt--out">{{ locale.money(p.amount) }}</span>
             </li>
           } @empty {
-            <li class="dash-empty">{{ locale.t('dash.parties.noneOut') }}</li>
+            <li class="dw-empty">{{ locale.t('dash.parties.noneOut') }}</li>
           }
         </ul>
-      </div>
+      </section>
 
       <!-- Most-expensive expenses -->
-      <div class="rm-card">
-        <h2 class="dash-card__title">{{ locale.t('dash.expenses.title') }}</h2>
-        <ul class="dash-list">
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('dash.expenses.title') }}</h2>
+        </header>
+        <ul class="dw-list">
           @for (e of d.topExpenses; track e.description) {
-            <li class="dash-row">
-              <span class="dash-row__name">{{ e.description }}</span>
-              <span class="dash-bar" aria-hidden="true">
-                <span class="dash-bar__fill dash-bar__fill--out" [style.width.%]="expensePct(e.total)"></span>
+            <li class="dw-row dw-row--bar" [style.--fill.%]="expensePct(e.total)">
+              <span class="dw-row__fill dw-row__fill--out" aria-hidden="true"></span>
+              <span class="dw-row__name">{{ e.description }}</span>
+              <span class="dw-row__val num amt--out">
+                {{ locale.money(e.total) }}
+                <small>{{ locale.t('dash.expenses.count', { count: e.count + '' }) }}</small>
               </span>
-              <span class="dash-row__val num amt--out">{{ locale.money(e.total) }}</span>
-              <span class="dash-row__sub">{{ locale.t('dash.expenses.count', { count: e.count + '' }) }}</span>
             </li>
           } @empty {
-            <li class="dash-empty">{{ locale.t('dash.expenses.empty') }}</li>
+            <li class="dw-empty">{{ locale.t('dash.expenses.empty') }}</li>
           }
         </ul>
-      </div>
+      </section>
     </div>
   }
 </section>

@@ -12,6 +12,10 @@ import { ChartView } from '../../shared/chart/chart';
 const GREEN = '#1f7a4d'; // money in / sales / receivable
 const RED = '#a8342a'; //   money out / spend / payable
 const PINE = '#1f5c4d'; //  brand — profit
+const INK = '#23201c'; //   primary text
+const MUTED = '#6b655c'; // axis labels
+const LINE = 'rgba(35, 32, 28, 0.12)'; // hairline grid
+const FONT = "'IBM Plex Sans', system-ui, sans-serif";
 
 /**
  * The analytics home screen. Cash position and profit are shown as two distinct
@@ -67,17 +71,32 @@ export class Dashboard {
       data: {
         labels: points.map((p) => this.shortDate(p.date)),
         datasets: [
-          { label: this.locale.t('dash.sales'), data: points.map((p) => p.sales), backgroundColor: GREEN, borderRadius: 3 },
-          { label: this.locale.t('dash.spend'), data: points.map((p) => p.spend), backgroundColor: RED, borderRadius: 3 },
+          {
+            label: this.locale.t('dash.sales'),
+            data: points.map((p) => p.sales),
+            backgroundColor: GREEN,
+            borderRadius: 4,
+            maxBarThickness: 22,
+          },
+          {
+            label: this.locale.t('dash.spend'),
+            data: points.map((p) => p.spend),
+            backgroundColor: RED,
+            borderRadius: 4,
+            maxBarThickness: 22,
+          },
           {
             type: 'line',
             label: this.locale.t('dash.profit'),
             data: points.map((p) => p.profit),
             borderColor: PINE,
-            backgroundColor: PINE,
+            backgroundColor: '#fff',
             borderWidth: 2,
-            tension: 0.3,
+            tension: 0.35,
             pointRadius: 3,
+            pointBackgroundColor: PINE,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1.5,
           },
         ],
       },
@@ -85,34 +104,38 @@ export class Dashboard {
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
+        layout: { padding: { top: 4 } },
+        font: { family: FONT },
         scales: {
-          x: { reverse: rtl, grid: { display: false } },
-          y: { beginAtZero: true, ticks: { callback: (v) => this.locale.money(Number(v)) } },
+          x: {
+            reverse: rtl,
+            grid: { display: false },
+            border: { color: LINE },
+            ticks: { color: MUTED, font: { family: FONT, size: 11 } },
+          },
+          y: {
+            beginAtZero: true,
+            border: { display: false },
+            grid: { color: LINE },
+            ticks: { color: MUTED, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+          },
         },
         plugins: {
-          legend: { rtl, labels: { boxWidth: 12 } },
-          tooltip: { rtl, callbacks: { label: (c) => `${c.dataset.label}: ${this.locale.money(Number(c.parsed.y))}` } },
+          legend: {
+            rtl,
+            position: 'top',
+            align: 'end',
+            labels: { color: INK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { family: FONT, size: 12 }, padding: 16 },
+          },
+          tooltip: {
+            rtl,
+            backgroundColor: INK,
+            padding: 10,
+            titleFont: { family: FONT, size: 12 },
+            bodyFont: { family: FONT, size: 12 },
+            callbacks: { label: (c) => `${c.dataset.label}: ${this.locale.money(Number(c.parsed.y))}` },
+          },
         },
-      },
-    };
-  });
-
-  /** Tiny profit-trend line for the profit hero card. */
-  protected readonly profitSparkConfig = computed<ChartConfiguration>(() => {
-    const points = this.data()?.daily ?? [];
-    return {
-      type: 'line',
-      data: {
-        labels: points.map((p) => p.date),
-        datasets: [
-          { data: points.map((p) => p.profit), borderColor: PINE, borderWidth: 2, tension: 0.35, pointRadius: 0, fill: false },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { x: { display: false }, y: { display: false } },
-        plugins: { legend: { display: false }, tooltip: { enabled: false } },
       },
     };
   });
@@ -178,5 +201,17 @@ export class Dashboard {
 
   private shortDate(iso: string): string {
     return new Date(iso).toLocaleDateString(this.locale.locale(), { month: 'short', day: 'numeric' });
+  }
+
+  /** Axis-friendly short money: 176000 → "176k", 1_200_000 → "1.2m". */
+  private compact(n: number): string {
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000) {
+      return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'm';
+    }
+    if (abs >= 1000) {
+      return Math.round(n / 1000) + 'k';
+    }
+    return String(n);
   }
 }

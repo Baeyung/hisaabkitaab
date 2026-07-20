@@ -304,6 +304,7 @@ export const ur: Record<TranslationKey, string> = {
     'منتخب مدت کے لیے روزانہ سیل، خرچ اور منافع۔ سیل {{sales}}، خرچ {{spend}}، منافع {{profit}}۔',
   'dash.sales': 'سیل',
   'dash.spend': 'خرچ',
+  'dash.byRevenue': 'آمدنی کے حساب سے',
   'dash.topItems.title': 'سب سے زیادہ بکنے والے ڈیزائن',
   'dash.topItems.empty': 'اِس مدت میں کوئی سیل نہیں۔',
   'dash.deadStock.title': 'ٹھہرا ہوا اسٹاک',
