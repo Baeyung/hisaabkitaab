@@ -10,7 +10,7 @@
     </div>
   } @else if (notFound()) {
     <div class="rm-state">
-      <h2 class="rm-state__title">{{ locale.t('ledger.derived.detail.notFound') }}</h2>
+      <h2 class="rm-state__title">{{ locale.t('ledger.category.detail.notFound') }}</h2>
       <a class="rm-btn rm-btn--ghost" routerLink="/ledger">{{ locale.t('common.back') }}</a>
     </div>
   } @else if (loadError()) {
@@ -21,10 +21,10 @@
   } @else if (group(); as g) {
     <header class="rm-head">
       <div>
-        <h1 class="rm-title">{{ g.description }}</h1>
-        <p class="rm-sub">{{ locale.t('ledger.derived.entries', { count: locale.formatNumber(g.count) }) }}</p>
+        <h1 class="rm-title">{{ locale.t(categoryLabel[g.category]) }}</h1>
+        <p class="rm-sub">{{ locale.t('ledger.category.entries', { count: locale.formatNumber(g.count) }) }}</p>
         <div class="rm-baqaya">
-          <span class="rm-baqaya__label">{{ locale.t('ledger.derived.col.total') }}</span>
+          <span class="rm-baqaya__label">{{ locale.t('ledger.category.col.total') }}</span>
           <span class="rm-baqaya__amt num amt--out">{{ locale.money(g.total) }}</span>
         </div>
       </div>
@@ -42,14 +42,16 @@
           <thead>
             <tr>
               <th scope="col">{{ locale.t('ledger.detail.col.date') }}</th>
+              <th scope="col">{{ locale.t('expense.details') }}</th>
               <th scope="col" class="end">{{ locale.t('ledger.detail.col.amount') }}</th>
-              <th scope="col" class="end">{{ locale.t('ledger.derived.detail.col.running') }}</th>
+              <th scope="col" class="end">{{ locale.t('ledger.category.detail.col.running') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (row of g.rows; track row.transactionId + row.occurredAt) {
               <tr>
                 <td class="num">{{ row.date }}</td>
+                <td>{{ row.description || '—' }}</td>
                 <td class="end num amt--out">{{ locale.money(row.amount) }}</td>
                 <td class="end num">{{ locale.money(row.runningTotal) }}</td>
               </tr>

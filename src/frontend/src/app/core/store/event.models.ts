@@ -1,3 +1,5 @@
+import type { TranslationKey } from '../i18n/translations/en';
+
 /**
  * The transaction-entry contract sent to `POST /api/event`. Mirrors the backend
  * `EventRequest`: the shopkeeper records one business event (a sale, a receipt…)
@@ -16,7 +18,38 @@ export interface EventRequest {
   billDate: string | null;
   party: EventParty | null;
   items: EventItem[];
+  /** Only sent for EXPENSE; the spend head the cash went to. */
+  expenseCategory?: ExpenseCategory;
 }
+
+/** Mirrors the backend `ExpenseCategory` enum — the head an expense is filed under. */
+export type ExpenseCategory =
+  | 'PARTS'
+  | 'ELECTRICITY'
+  | 'GENERAL'
+  | 'MISC'
+  | 'SALARIES'
+  | 'UNCATEGORIZED';
+
+/** The categories in the order they're offered on the expense form. */
+export const EXPENSE_CATEGORIES: readonly ExpenseCategory[] = [
+  'PARTS',
+  'ELECTRICITY',
+  'GENERAL',
+  'MISC',
+  'SALARIES',
+  'UNCATEGORIZED',
+];
+
+/** The i18n key for each category's label (typed so `locale.t` accepts it). */
+export const EXPENSE_CATEGORY_LABEL: Record<ExpenseCategory, TranslationKey> = {
+  PARTS: 'expense.category.PARTS',
+  ELECTRICITY: 'expense.category.ELECTRICITY',
+  GENERAL: 'expense.category.GENERAL',
+  MISC: 'expense.category.MISC',
+  SALARIES: 'expense.category.SALARIES',
+  UNCATEGORIZED: 'expense.category.UNCATEGORIZED',
+};
 
 /** A party on the event — `partyId` null when the typed name is new. */
 export interface EventParty {

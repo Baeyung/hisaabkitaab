@@ -1,5 +1,6 @@
 package io.github.baeyung.hisaabkitaab.dto.event;
 
+import io.github.baeyung.hisaabkitaab.enums.ExpenseCategory;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,7 @@ public class EventRequest
     LocalDate billDate;
     Party party;
     List<Item> items;
+    ExpenseCategory expenseCategory;
 
 
     @Getter

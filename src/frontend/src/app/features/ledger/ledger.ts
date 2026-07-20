@@ -2,7 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
-import { DerivedGroup, PartyBalanceRow } from '../../core/store/ledger.models';
+import { ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.models';
+import { EXPENSE_CATEGORY_LABEL } from '../../core/store/event.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 
@@ -22,7 +23,7 @@ export class Ledger {
   private readonly router = inject(Router);
 
   protected readonly parties = signal<PartyBalanceRow[] | null>(null);
-  protected readonly derived = signal<DerivedGroup[]>([]);
+  protected readonly categories = signal<ExpenseCategoryGroup[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly noStore = signal(false);
@@ -36,6 +37,7 @@ export class Ledger {
 
   protected readonly directionKey = directionKey;
   protected readonly directionClass = directionClass;
+  protected readonly categoryLabel = EXPENSE_CATEGORY_LABEL;
 
   constructor() {
     void this.load();
@@ -46,9 +48,9 @@ export class Ledger {
     this.loadError.set(false);
     this.noStore.set(false);
     try {
-      const [parties, derived] = await Promise.all([this.api.list(), this.api.listDerived()]);
+      const [parties, categories] = await Promise.all([this.api.list(), this.api.listExpenseCategories()]);
       this.parties.set(parties);
-      this.derived.set(derived);
+      this.categories.set(categories);
     } catch (err) {
       if ((err as { status?: number }).status === 404) {
         this.noStore.set(true);
@@ -64,13 +66,8 @@ export class Ledger {
     void this.router.navigate(['/ledger', partyId]);
   }
 
-  /** The description is the group's identity; encode it for the route param. */
-  encode(description: string): string {
-    return encodeURIComponent(description);
-  }
-
-  openDerived(description: string): void {
-    void this.router.navigate(['/ledger/derived', this.encode(description)]);
+  openCategory(category: string): void {
+    void this.router.navigate(['/ledger/category', category]);
   }
 
   print(): void {

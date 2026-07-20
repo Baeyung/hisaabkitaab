@@ -5,6 +5,7 @@
     "playwright@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
     "chrome-devtools-mcp@claude-plugins-official": true,
-    "ponytail@ponytail": true
+    "ponytail@ponytail": true,
+    "claude-mem@thedotmack": true
   }
 }

@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
-import io.github.baeyung.hisaabkitaab.dto.ledger.DerivedGroupResponse;
-import io.github.baeyung.hisaabkitaab.dto.ledger.DerivedStatementRowResponse;
+import io.github.baeyung.hisaabkitaab.dto.ledger.ExpenseCategoryGroupResponse;
+import io.github.baeyung.hisaabkitaab.dto.ledger.ExpenseCategoryRowResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyBalanceResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyStatementResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyStatementRowResponse;
@@ -19,6 +19,7 @@ import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
+import io.github.baeyung.hisaabkitaab.enums.ExpenseCategory;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
@@ -66,47 +67,46 @@ public class LedgerQueryService
     }
 
     /**
-     * Same-description expenses collapsed into "derived" khata rows. Expenses
-     * carry no party, so they never surface in the party list; grouping them by
-     * their note (trimmed, case-insensitive) puts recurring outgoings — bijli,
-     * mazdoori, transport — where the shopkeeper reads their balances. Only
-     * groups of two or more show: a one-off expense is cashbook noise, not a
-     * standing head. The display name is the first entry's original text.
+     * Every expense totalled by its category — parts, bijli, salaries, misc… —
+     * the khata's spend heads. Expenses carry no party, so they never surface in
+     * the party list; grouping them by category puts recurring outgoings where the
+     * shopkeeper reads their balances. Every category with at least one expense
+     * shows, biggest spend first. Lines with no category (older than the feature)
+     * fall under UNCATEGORIZED so nothing is lost.
      */
-    public List<DerivedGroupResponse> listDerivedGroups(String ownerId)
+    public List<ExpenseCategoryGroupResponse> listExpenseCategories(String ownerId)
     {
         Store store = storeService.getPrimaryStoreForOwner(ownerId);
 
         // ponytail: scans full expense history each call; add a cached read-model if a shop's expense count ever makes this slow.
-        Map<String, List<TransactionLine>> groups = transactionLineRepository.findExpenseLinesByStore(store.getId())
+        Map<ExpenseCategory, List<TransactionLine>> groups = transactionLineRepository.findExpenseLinesByStore(store.getId())
                 .stream()
-                .filter(line -> line.getTransaction().getDescription() != null
-                        && !line.getTransaction().getDescription().isBlank())
                 .collect(Collectors.groupingBy(
-                        line -> line.getTransaction().getDescription().trim().toLowerCase(),
+                        line -> line.getExpenseCategory() != null ? line.getExpenseCategory() : ExpenseCategory.UNCATEGORIZED,
                         LinkedHashMap::new,
                         Collectors.toList()
                 ));
 
-        return groups.values()
+        return groups.entrySet()
                 .stream()
-                .filter(lines -> lines.size() >= 2)
-                .map(this::toDerivedGroup)
+                .map(entry -> toCategoryGroup(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparingDouble(ExpenseCategoryGroupResponse::total).reversed())
                 .toList();
     }
 
-    private DerivedGroupResponse toDerivedGroup(List<TransactionLine> lines)
+    private ExpenseCategoryGroupResponse toCategoryGroup(ExpenseCategory category, List<TransactionLine> lines)
     {
-        List<DerivedStatementRowResponse> rows = RunningBalanceFolder.fold(
+        List<ExpenseCategoryRowResponse> rows = RunningBalanceFolder.fold(
                 lines,
                 0,
                 this::value,
                 (line, running) -> {
                     Transaction transaction = line.getTransaction();
-                    return new DerivedStatementRowResponse(
+                    return new ExpenseCategoryRowResponse(
                             transaction.getId(),
                             transaction.getEventDate() != null ? transaction.getEventDate() : transaction.getEntryDate(),
                             transaction.getCreatedAt(),
+                            transaction.getDescription(),
                             value(line),
                             running
                     );
@@ -114,9 +114,8 @@ public class LedgerQueryService
         );
 
         double total = rows.isEmpty() ? 0 : rows.getLast().runningTotal();
-        String description = lines.getFirst().getTransaction().getDescription().trim();
 
-        return new DerivedGroupResponse(description, rows.size(), total, rows);
+        return new ExpenseCategoryGroupResponse(category.name(), rows.size(), total, rows);
     }
 
     public PartyStatementResponse getStatement(String ownerId, String partyId)

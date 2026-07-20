@@ -3,6 +3,7 @@ package io.github.baeyung.hisaabkitaab.processors.targetkind;
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
+import io.github.baeyung.hisaabkitaab.enums.ExpenseCategory;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
@@ -46,6 +47,15 @@ public class CashProcessor implements KindProcessor
                 payload.getCashAmount(),
                 inOut
         );
+
+        if (transactionEvent == TransactionEvent.EXPENSE)
+        {
+            transactionLine.setExpenseCategory(
+                    payload.getExpenseCategory() != null
+                            ? payload.getExpenseCategory()
+                            : ExpenseCategory.UNCATEGORIZED
+            );
+        }
 
         transactionLineService.create(transactionLine);
     }

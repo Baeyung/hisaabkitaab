@@ -1,5 +1,6 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
+import io.github.baeyung.hisaabkitaab.enums.ExpenseCategory;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import jakarta.persistence.Column;
@@ -52,6 +53,10 @@ public class TransactionLine
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InOut inOut;
+
+    /** Set only on an EXPENSE cash line (see CashProcessor); null on every other line. */
+    @Enumerated(EnumType.STRING)
+    private ExpenseCategory expenseCategory;
 
 //    @Column(columnDefinition = "TEXT")
 //    @Convert(converter = ValueMetaDataConverter.class)

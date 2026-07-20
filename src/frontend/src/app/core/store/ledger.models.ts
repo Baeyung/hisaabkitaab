@@ -1,5 +1,6 @@
 import { Balance } from './balance.models';
 import { TransactionEventKind } from './cashbook.models';
+import { ExpenseCategory } from './event.models';
 
 /** Mirrors the backend `dto/ledger` records (GET /api/ledger). */
 export interface PartyBalanceRow {
@@ -28,19 +29,20 @@ export interface PartyStatement {
   currentBalance: Balance;
 }
 
-/** An expense entry inside a derived group, with the group's running spend. */
-export interface DerivedStatementRow {
+/** An expense entry inside a category group, with the category's running spend. */
+export interface ExpenseCategoryRow {
   transactionId: string;
   date: string;
   occurredAt: string;
+  description: string | null;
   amount: number;
   runningTotal: number;
 }
 
-/** Same-description expenses collapsed into one khata "derived" row (GET /api/ledger/derived). */
-export interface DerivedGroup {
-  description: string;
+/** All expenses of one category collapsed into a khata head (GET /api/ledger/expense-categories). */
+export interface ExpenseCategoryGroup {
+  category: ExpenseCategory;
   count: number;
   total: number;
-  rows: DerivedStatementRow[];
+  rows: ExpenseCategoryRow[];
 }

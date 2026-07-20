@@ -47,6 +47,21 @@
       <small class="fld__hint">{{ locale.t('expense.details.hint') }}</small>
     </div>
 
+    <!-- category -->
+    <div class="fld">
+      <label class="fld__label" for="expense-category">{{ locale.t('expense.category') }}</label>
+      <select
+        class="fld__input"
+        id="expense-category"
+        [value]="category()"
+        (change)="category.set($any($event.target).value)"
+      >
+        @for (c of categories; track c) {
+          <option [value]="c">{{ locale.t(categoryLabel[c]) }}</option>
+        }
+      </select>
+    </div>
+
     <div class="meta">
       <div class="fld">
         <label class="fld__label" for="expense-bill">{{ locale.t('expense.billNumber') }}</label>

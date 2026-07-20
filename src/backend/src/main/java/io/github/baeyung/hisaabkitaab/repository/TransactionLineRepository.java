@@ -53,7 +53,7 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<TransactionLine> findCashLinesInRange(@Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    /** Every EXPENSE cash-out line for the store, chronological — grouped by description into the khata's derived rows. */
+    /** Every EXPENSE cash-out line for the store, chronological — grouped by category into the khata's spend heads. */
     @Query("""
             select tl from TransactionLine tl
             join fetch tl.transaction t
