@@ -2,11 +2,14 @@ package io.github.baeyung.hisaabkitaab.service.query;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -17,6 +20,7 @@ import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.DailyPoint
 import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.DeadStockItem;
 import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.ExpenseGroup;
 import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.PartyRef;
+import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.StaleParty;
 import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.TopItem;
 import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
@@ -28,7 +32,10 @@ import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.ItemStockRow;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
+import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
+import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
+import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging.Movement;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -48,6 +55,7 @@ public class DashboardQueryService
     private static final int TOP_ITEMS = 6;
     private static final int TOP_DEAD_STOCK = 6;
     private static final int TOP_PARTIES = 5;
+    private static final int TOP_STALE = 12;
     private static final int TOP_EXPENSES = 6;
 
     private final StoreService storeService;
@@ -93,13 +101,25 @@ public class DashboardQueryService
             }
         }
 
-        List<DailyPoint> daily = byDay.entrySet()
-                .stream()
-                .map(e -> {
-                    double[] s = e.getValue();
-                    return new DailyPoint(e.getKey(), s[0], s[2], s[0] - s[1] - s[2]);
-                })
-                .toList();
+        // ── Cash line: opening drawer balance carried forward by each day's net cash ──
+        // Cash is a running balance, not a per-day flow, so we seed it with the
+        // position before the window and fold the daily net (Σ IN − Σ OUT) onto it;
+        // the last day's value lands on `cashPosition` by construction.
+        Map<LocalDate, Double> cashDeltaByDay = new HashMap<>();
+        for (TransactionLine line : transactionLineRepository.findCashLinesInRange(storeId, from, to))
+        {
+            double signed = line.getInOut() == InOut.IN ? value(line) : -value(line);
+            cashDeltaByDay.merge(businessDate(line), signed, Double::sum);
+        }
+        double runningCash = transactionLineRepository.sumCashBefore(storeId, from);
+
+        List<DailyPoint> daily = new ArrayList<>();
+        for (Map.Entry<LocalDate, double[]> e : byDay.entrySet())
+        {
+            double[] s = e.getValue();
+            runningCash += cashDeltaByDay.getOrDefault(e.getKey(), 0.0);
+            daily.add(new DailyPoint(e.getKey(), s[0], s[2], s[0] - s[1] - s[2], runningCash));
+        }
 
         double sales = daily.stream().mapToDouble(DailyPoint::sales).sum();
         double spend = daily.stream().mapToDouble(DailyPoint::spend).sum();
@@ -121,6 +141,7 @@ public class DashboardQueryService
                 deadStock(storeId, saleLines),
                 parties.receivables(),
                 parties.payables(),
+                staleReceivables(storeId, to),
                 topExpenses(expenseLines)
         );
     }
@@ -241,6 +262,42 @@ public class DashboardQueryService
 
     private record PartySplit(List<PartyRef> receivables, List<PartyRef> payables, double receivablesTotal, double payablesTotal)
     {
+    }
+
+    // ── Receivable aging: how long each party's oldest unpaid charge has sat ──
+    // Walk each party's PARTY lines in order, FIFO-settling payments (OUT) against
+    // the oldest outstanding charges (IN). Whatever charge is still unpaid at the
+    // front of the queue is the oldest due; its business date, measured against
+    // `asOf`, is the party's staleness. Only parties still net-owing are surfaced.
+    private List<StaleParty> staleReceivables(String storeId, LocalDate asOf)
+    {
+        Map<String, List<TransactionLine>> byParty = transactionLineRepository.findPartyLinesByStore(storeId)
+                .stream()
+                .collect(Collectors.groupingBy(line -> line.getParty().getId(), LinkedHashMap::new, Collectors.toList()));
+
+        List<StaleParty> stale = new ArrayList<>();
+        for (List<TransactionLine> lines : byParty.values())
+        {
+            double net = 0;
+            List<Movement> movements = new ArrayList<>(lines.size());
+            for (TransactionLine line : lines)
+            {
+                double v = value(line);
+                boolean in = line.getInOut() == InOut.IN;
+                net += in ? v : -v;
+                movements.add(new Movement(businessDate(line).toEpochDay(), in ? v : 0, in ? 0 : v));
+            }
+            OptionalLong oldest = ReceivableAging.oldestUnpaidEpochDay(movements);
+            if (net > 0.005 && oldest.isPresent())
+            {
+                Party party = lines.getFirst().getParty();
+                LocalDate oldestDate = LocalDate.ofEpochDay(oldest.getAsLong());
+                int days = (int) Math.max(0, ChronoUnit.DAYS.between(oldestDate, asOf));
+                stale.add(new StaleParty(party.getId(), party.getName(), net, days));
+            }
+        }
+        stale.sort(Comparator.comparingDouble(StaleParty::amount).reversed());
+        return stale.stream().limit(TOP_STALE).toList();
     }
 
     private LocalDate businessDate(TransactionLine line)

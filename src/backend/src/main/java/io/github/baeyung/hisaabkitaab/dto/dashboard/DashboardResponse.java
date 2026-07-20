@@ -26,11 +26,16 @@ public record DashboardResponse(
         List<DeadStockItem> deadStock,
         List<PartyRef> topReceivables,
         List<PartyRef> topPayables,
+        List<StaleParty> staleReceivables,
         List<ExpenseGroup> topExpenses
 )
 {
-    /** One calendar day's sales (revenue), spend (expenses), and profit — the trend bars/line. */
-    public record DailyPoint(LocalDate date, double sales, double spend, double profit)
+    /**
+     * One calendar day's trend point: sales (revenue), spend (expenses) and
+     * profit are that day's flows; {@code cash} is the running drawer balance at
+     * the day's close — a stock, so it rides the chart's secondary axis.
+     */
+    public record DailyPoint(LocalDate date, double sales, double spend, double profit, double cash)
     {
     }
 
@@ -46,6 +51,15 @@ public record DashboardResponse(
 
     /** A party the shop owes or is owed, for the top-parties lists. */
     public record PartyRef(String partyId, String name, double amount)
+    {
+    }
+
+    /**
+     * A party who owes the shop, plus {@code daysStale} — how long the oldest
+     * still-unpaid charge has sat (FIFO: payments settle oldest charges first).
+     * Big amount + high days = a customer to stop extending credit to.
+     */
+    public record StaleParty(String partyId, String name, double amount, int daysStale)
     {
     }
 

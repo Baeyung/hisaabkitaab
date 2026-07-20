@@ -88,6 +88,22 @@
       <div class="dw-chart">
         <app-chart [config]="trendConfig()" [label]="trendLabel()" />
       </div>
+      <p class="dw-note">{{ locale.t('dash.profit.disclaimer') }}</p>
+    </section>
+
+    <!-- Receivable aging: who owes, how much, and how long it's been sitting. -->
+    <section class="rm-card dw-card">
+      <header class="dw-card__head">
+        <h2 class="dw-card__title">{{ locale.t('dash.stale.title') }}</h2>
+        <span class="dw-card__hint">{{ locale.t('dash.stale.sub') }}</span>
+      </header>
+      @if (hasStale()) {
+        <div class="dw-chart">
+          <app-chart [config]="staleConfig()" [label]="staleLabel()" />
+        </div>
+      } @else {
+        <p class="dw-empty">{{ locale.t('dash.stale.empty') }}</p>
+      }
     </section>
 
     <div class="dw-grid">

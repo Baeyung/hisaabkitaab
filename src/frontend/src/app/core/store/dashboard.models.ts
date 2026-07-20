@@ -4,6 +4,8 @@ export interface DashboardDailyPoint {
   sales: number;
   spend: number;
   profit: number;
+  /** Running drawer balance at the day's close — the trend's secondary-axis line. */
+  cash: number;
 }
 
 export interface DashboardTopItem {
@@ -28,6 +30,14 @@ export interface DashboardPartyRef {
   amount: number;
 }
 
+/** A receivable party with how long their oldest unpaid charge has sat. */
+export interface DashboardStaleParty {
+  partyId: string;
+  name: string;
+  amount: number;
+  daysStale: number;
+}
+
 export interface DashboardExpenseGroup {
   description: string;
   count: number;
@@ -50,5 +60,6 @@ export interface Dashboard {
   deadStock: DashboardDeadStockItem[];
   topReceivables: DashboardPartyRef[];
   topPayables: DashboardPartyRef[];
+  staleReceivables: DashboardStaleParty[];
   topExpenses: DashboardExpenseGroup[];
 }

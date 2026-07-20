@@ -930,6 +930,14 @@ a.dw-row__name:hover {
   color: var(--kg-faint);
   font-size: 13px;
 }
+/* Footnote under a chart — the profit-vs-cash-realised caveat. */
+.dw-note {
+  margin: 0;
+  padding: 0 18px 14px;
+  color: var(--kg-faint);
+  font-size: 12px;
+  line-height: 1.45;
+}
 
 @media (max-width: 860px) {
   .dw-kpis {

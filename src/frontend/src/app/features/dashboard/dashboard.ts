@@ -13,6 +13,7 @@ const GREEN = '#1f7a4d'; // money in / sales / receivable / profit
 const RED = '#a8342a'; //   money out / spend / payable / expenses
 const PINE = '#1f5c4d'; //  brand — profit line
 const BLUE = '#1d4e7a'; //  cost of goods (neutral, not a money-in/out signal)
+const AMBER = '#c98a2b'; // aging warning — dues 30–60 days old
 const INK = '#23201c'; //   primary text
 const MUTED = '#6b655c'; // axis labels
 const LINE = 'rgba(35, 32, 28, 0.12)'; // hairline grid
@@ -68,42 +69,39 @@ export class Dashboard {
     Math.max(1, ...(this.data()?.topExpenses ?? []).map((e) => e.total)),
   );
 
-  /** Grouped bars (sales vs spend) with profit as an overlaid line. */
+  /** Sales, expenses and profit as three lines over the window. */
   protected readonly trendConfig = computed<ChartConfiguration>(() => {
     const d = this.data();
     const points = d?.daily ?? [];
     const rtl = this.locale.dir() === 'rtl';
+    const line = (label: string, values: number[], color: string) => ({
+      label,
+      data: values,
+      borderColor: color,
+      backgroundColor: color,
+      borderWidth: 2,
+      tension: 0.35,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      pointBackgroundColor: color,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1.5,
+    });
     return {
-      type: 'bar',
+      type: 'line',
       data: {
         labels: points.map((p) => this.shortDate(p.date)),
         datasets: [
+          line(this.locale.t('dash.sales'), points.map((p) => p.sales), GREEN),
+          line(this.locale.t('dash.spend'), points.map((p) => p.spend), RED),
+          line(this.locale.t('dash.profit'), points.map((p) => p.profit), PINE),
+          // Cash is a running balance, not a daily flow — dashed, on its own
+          // right-hand axis so its scale never squashes the three flow lines.
           {
-            label: this.locale.t('dash.sales'),
-            data: points.map((p) => p.sales),
-            backgroundColor: GREEN,
-            borderRadius: 4,
-            maxBarThickness: 22,
-          },
-          {
-            label: this.locale.t('dash.spend'),
-            data: points.map((p) => p.spend),
-            backgroundColor: RED,
-            borderRadius: 4,
-            maxBarThickness: 22,
-          },
-          {
-            type: 'line',
-            label: this.locale.t('dash.profit'),
-            data: points.map((p) => p.profit),
-            borderColor: PINE,
-            backgroundColor: '#fff',
-            borderWidth: 2,
-            tension: 0.35,
-            pointRadius: 3,
-            pointBackgroundColor: PINE,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 1.5,
+            ...line(this.locale.t('dash.cash'), points.map((p) => p.cash), BLUE),
+            yAxisID: 'y1',
+            borderDash: [6, 4],
+            pointRadius: 2,
           },
         ],
       },
@@ -125,6 +123,14 @@ export class Dashboard {
             border: { display: false },
             grid: { color: LINE },
             ticks: { color: MUTED, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+          },
+          // Secondary axis for the cash balance. Its gridlines are hidden so the
+          // chart keeps one set of horizontal rules (the flows' axis).
+          y1: {
+            position: 'right',
+            border: { display: false },
+            grid: { drawOnChartArea: false },
+            ticks: { color: BLUE, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
           },
         },
         plugins: {
@@ -183,6 +189,76 @@ export class Dashboard {
       colors.push(MIX_OTHER);
     }
     return this.doughnut(labels, values, colors);
+  });
+
+  /** True once loaded with at least one party still owing on an aged charge. */
+  protected readonly hasStale = computed(() => (this.data()?.staleReceivables?.length ?? 0) > 0);
+
+  /**
+   * Receivable aging as a bubble field: x = days the oldest due has sat,
+   * y = amount owed, dot size scales with amount. Worst offenders land
+   * top-right and deepen from muted → amber → red as they age.
+   */
+  protected readonly staleConfig = computed<ChartConfiguration>(() => {
+    const parties = this.data()?.staleReceivables ?? [];
+    const rtl = this.locale.dir() === 'rtl';
+    const maxAmount = Math.max(1, ...parties.map((p) => p.amount));
+    const color = (days: number) => (days >= 60 ? RED : days >= 30 ? AMBER : MUTED);
+    const config: ChartConfiguration<'bubble'> = {
+      type: 'bubble',
+      data: {
+        datasets: [
+          {
+            label: this.locale.t('dash.stale.title'),
+            data: parties.map((p) => ({ x: p.daysStale, y: p.amount, r: 6 + (p.amount / maxAmount) * 14 })),
+            backgroundColor: parties.map((p) => color(p.daysStale) + '99'),
+            borderColor: parties.map((p) => color(p.daysStale)),
+            borderWidth: 1.5,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: 6 },
+        font: { family: FONT },
+        scales: {
+          x: {
+            reverse: rtl,
+            beginAtZero: true,
+            title: { display: true, text: this.locale.t('dash.stale.xaxis'), color: MUTED, font: { family: FONT, size: 11 } },
+            grid: { color: LINE },
+            border: { color: LINE },
+            ticks: { color: MUTED, font: { family: FONT, size: 11 }, callback: (v) => `${v}d` },
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: this.locale.t('dash.stale.yaxis'), color: MUTED, font: { family: FONT, size: 11 } },
+            border: { display: false },
+            grid: { color: LINE },
+            ticks: { color: MUTED, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            rtl,
+            backgroundColor: INK,
+            padding: 10,
+            titleFont: { family: FONT, size: 12 },
+            bodyFont: { family: FONT, size: 12 },
+            callbacks: {
+              title: (items) => parties[items[0].dataIndex]?.name ?? '',
+              label: (c) => {
+                const p = parties[c.dataIndex];
+                return `${this.locale.money(p.amount)} · ${this.locale.t('dash.stale.days', { days: p.daysStale + '' })}`;
+              },
+            },
+          },
+        },
+      },
+    };
+    return config as ChartConfiguration;
   });
 
   constructor() {
@@ -279,6 +355,7 @@ export class Dashboard {
       sales: this.locale.money(d.sales),
       spend: this.locale.money(d.spend),
       profit: this.locale.money(d.profit),
+      cash: this.locale.money(d.cashPosition),
     });
   }
 
@@ -301,6 +378,19 @@ export class Dashboard {
       return this.locale.t('dash.topItems.empty');
     }
     return this.locale.t('dash.mix.aria', { name: items[0].name, amount: this.locale.money(items[0].revenue) });
+  }
+
+  protected staleLabel(): string {
+    const parties = this.data()?.staleReceivables ?? [];
+    if (parties.length === 0) {
+      return this.locale.t('dash.stale.empty');
+    }
+    const worst = parties.reduce((a, b) => (b.daysStale > a.daysStale ? b : a));
+    return this.locale.t('dash.stale.aria', {
+      name: worst.name,
+      amount: this.locale.money(worst.amount),
+      days: worst.daysStale + '',
+    });
   }
 
   private shortDate(iso: string): string {

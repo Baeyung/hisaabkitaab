@@ -87,6 +87,21 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<TransactionLine> findPartyLedgerLines(@Param("partyId") String partyId);
 
+    /**
+     * Every PARTY line for the store, chronological, with party fetched — the raw
+     * material for receivable aging: FIFO payments against charges to find how long
+     * each party's oldest still-unpaid amount has sat.
+     */
+    @Query("""
+            select tl from TransactionLine tl
+            join fetch tl.transaction t
+            join fetch tl.party
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.PARTY
+              and t.store.id = :storeId
+            order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
+            """)
+    List<TransactionLine> findPartyLinesByStore(@Param("storeId") String storeId);
+
     /** One net stock quantity per item over its full STOCK-line history. */
     @Query("""
             select tl.item.id as itemId,
