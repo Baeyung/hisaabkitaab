@@ -91,6 +91,40 @@
     </section>
 
     <div class="dw-grid">
+      <!-- How sales became profit: cost of goods vs expenses vs profit. -->
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('dash.anatomy.title') }}</h2>
+          @if (hasSales()) {
+            <span class="dw-card__hint">{{ locale.t('dash.anatomy.margin', { pct: profitMargin() + '' }) }}</span>
+          }
+        </header>
+        @if (hasSales()) {
+          <div class="dw-chart dw-chart--donut">
+            <app-chart [config]="salesAnatomyConfig()" [label]="anatomyLabel()" />
+          </div>
+        } @else {
+          <p class="dw-empty">{{ locale.t('dash.topItems.empty') }}</p>
+        }
+      </section>
+
+      <!-- Where sales came from: revenue share by design. -->
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('dash.mix.title') }}</h2>
+          <span class="dw-card__hint">{{ locale.t('dash.byRevenue') }}</span>
+        </header>
+        @if (data()?.topItems?.length) {
+          <div class="dw-chart dw-chart--donut">
+            <app-chart [config]="salesMixConfig()" [label]="mixLabel()" />
+          </div>
+        } @else {
+          <p class="dw-empty">{{ locale.t('dash.topItems.empty') }}</p>
+        }
+      </section>
+    </div>
+
+    <div class="dw-grid">
       <!-- Top-selling designs -->
       <section class="rm-card dw-card">
         <header class="dw-card__head">

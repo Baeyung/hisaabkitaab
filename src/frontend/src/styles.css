@@ -838,6 +838,10 @@ html[dir='rtl'] .num {
   height: clamp(240px, 30vw, 300px);
   padding: 10px 10px 6px;
 }
+/* Doughnuts read fine a touch shorter, and the bottom legend needs the room. */
+.dw-chart--donut {
+  height: clamp(260px, 26vw, 290px);
+}
 
 .dw-grid {
   display: grid;
