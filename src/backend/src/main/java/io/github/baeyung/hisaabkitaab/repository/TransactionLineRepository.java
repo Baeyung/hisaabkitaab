@@ -110,6 +110,23 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<TransactionLine> findItemMovementLines(@Param("itemId") String itemId);
 
+    /**
+     * Every goods-out line of a SALE in {@code from..to}, with transaction and item fetched —
+     * the dashboard's raw material for daily sales, profit (line qty×itemSoldAt − qty×costPrice),
+     * top-selling designs, and which items had any turnover in the window.
+     */
+    @Query("""
+            select tl from TransactionLine tl
+            join fetch tl.transaction t
+            join fetch tl.item
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.STOCK
+              and tl.inOut = io.github.baeyung.hisaabkitaab.enums.InOut.OUT
+              and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.SALE
+              and t.store.id = :storeId
+              and coalesce(t.eventDate, t.entryDate) between :from and :to
+            """)
+    List<TransactionLine> findSaleStockLinesInRange(@Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+
     /** The opening-balance PARTY line per party (at most one each) — for prefill + the settings column. */
     @Query("""
             select tl.party.id as partyId, tl.inOut as inOut, tl.value as value

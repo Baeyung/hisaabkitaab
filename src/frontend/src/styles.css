@@ -752,3 +752,103 @@ html[dir='rtl'] .num {
   }
 }
 
+
+/* ── Dashboard (analytics home) ───────────────────────────────────────────── */
+.dash-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--kg-ink);
+  margin: 0 0 4px;
+}
+.dash-card__sub {
+  font-size: 12px;
+  color: var(--kg-faint);
+  margin: 0 0 8px;
+}
+/* Canvas needs a sized box: chart.js fills its container height. */
+.dash-chart {
+  height: clamp(240px, 34vh, 340px);
+  margin-top: 8px;
+}
+.dash-spark {
+  height: 32px;
+  margin: 8px 0 2px;
+}
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.dash-subhead {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin: 12px 0 2px;
+}
+.dash-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dash-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--kg-line);
+}
+.dash-list .dash-row:last-child {
+  border-bottom: none;
+}
+.dash-row__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--kg-ink);
+  text-decoration: none;
+}
+a.dash-row__name {
+  color: var(--kg-brand);
+}
+a.dash-row__name:hover {
+  text-decoration: underline;
+}
+.dash-row__val {
+  margin-inline-start: auto;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.dash-row__sub {
+  flex: 0 0 100%;
+  order: 6;
+  text-align: end;
+  font-size: 12px;
+  color: var(--kg-faint);
+}
+.dash-bar {
+  flex: 0 0 100%;
+  order: 5;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--kg-ink) 7%, transparent);
+  overflow: hidden;
+}
+.dash-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+.dash-bar__fill--in {
+  background: var(--kg-in);
+}
+.dash-bar__fill--out {
+  background: var(--kg-out);
+}
+.dash-empty {
+  color: var(--kg-faint);
+  font-size: 13px;
+  padding: 10px 0;
+}

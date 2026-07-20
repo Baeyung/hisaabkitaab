@@ -133,6 +133,16 @@ class TransactionLineAggregationTest
         assertEquals(List.of(900.0, 1100.0, 50.0), lines.stream().map(TransactionLine::getValue).toList());
     }
 
+    @Test
+    void saleStockLinesInRangeAreOnlySaleGoodsOutWithinWindow()
+    {
+        // Yesterday's SALE has one STOCK/OUT line; today's RECEIPT has none.
+        assertEquals(1, transactionLineRepository.findSaleStockLinesInRange(store.getId(), YESTERDAY, YESTERDAY).size());
+        assertEquals(0, transactionLineRepository.findSaleStockLinesInRange(store.getId(), TODAY, TODAY).size());
+        // The window spanning both days still returns just the one sale line.
+        assertEquals(1, transactionLineRepository.findSaleStockLinesInRange(store.getId(), YESTERDAY, TODAY).size());
+    }
+
     private void expense(String description, Double amount, LocalDate eventDate)
     {
         Transaction expense = transactionRepository.save(Transaction.builder()
