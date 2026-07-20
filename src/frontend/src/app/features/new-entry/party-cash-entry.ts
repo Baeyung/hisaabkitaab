@@ -8,6 +8,7 @@ import { EventRequest } from '../../core/store/event.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { ToastState } from '../../shared/toast-state';
+import { Combobox } from '../../shared/combobox/combobox';
 
 /**
  * The screen's copy. Keys are passed in as literals rather than built from a
@@ -66,6 +67,7 @@ export interface PartyCashEntryConfig {
   selector: 'app-party-cash-entry',
   templateUrl: './party-cash-entry.html',
   styleUrl: './sale.css',
+  imports: [Combobox],
 })
 export class PartyCashEntry {
   readonly eventType = input.required<'RECEIPT' | 'PAYMENT'>();
@@ -79,6 +81,9 @@ export class PartyCashEntry {
 
   /** Autocomplete source; empty when there's no store yet (list 404s). */
   protected readonly parties = signal<Party[]>([]);
+
+  /** Just the names, for the combobox suggestion list. */
+  protected readonly partyNames = computed(() => this.parties().map((p) => p.name));
 
   protected readonly partyName = signal('');
   protected readonly billDate = signal(todayIso());

@@ -9,6 +9,7 @@ import { StoreItem } from '../../core/store/store-item.models';
 import { EventRequest } from '../../core/store/event.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
+import { Combobox } from '../../shared/combobox/combobox';
 
 /** One line of cloth on the bill. `key` is a stable id for @for tracking. */
 interface Line {
@@ -105,6 +106,7 @@ export interface GoodsEntryConfig {
   selector: 'app-goods-entry',
   templateUrl: './goods-entry.html',
   styleUrl: './sale.css',
+  imports: [Combobox],
 })
 export class GoodsEntry {
   readonly config = input.required<GoodsEntryConfig>();
@@ -122,6 +124,10 @@ export class GoodsEntry {
   /** Autocomplete sources; empty when there's no store yet (list 404s). */
   protected readonly parties = signal<Party[]>([]);
   protected readonly items = signal<StoreItem[]>([]);
+
+  /** Just the names, for the combobox suggestion lists. */
+  protected readonly partyNames = computed(() => this.parties().map((p) => p.name));
+  protected readonly itemNames = computed(() => this.items().map((i) => i.name));
 
   protected readonly partyName = signal('');
   protected readonly cashParty = signal(false);

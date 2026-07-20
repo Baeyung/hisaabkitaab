@@ -20,14 +20,12 @@
       <label class="fld__label" [attr.for]="config().idPrefix + '-party'">
         {{ locale.t(config().labels.party) }}
       </label>
-      <input
-        class="fld__input"
-        type="text"
-        [attr.id]="config().idPrefix + '-party'"
-        [attr.list]="config().idPrefix + '-parties'"
+      <app-combobox
+        [inputId]="config().idPrefix + '-party'"
+        [options]="partyNames()"
         [value]="partyName()"
-        (input)="partyName.set($any($event.target).value)"
-        [attr.placeholder]="locale.t(config().labels.partyPh)"
+        (valueChange)="partyName.set($event)"
+        [placeholder]="locale.t(config().labels.partyPh)"
       />
       <small class="fld__hint">{{ locale.t(config().labels.partyHint) }}</small>
     </div>
@@ -141,9 +139,3 @@
 @if (toast.message(); as msg) {
   <div class="toast toast--error" role="alert">{{ msg }}</div>
 }
-
-<datalist [attr.id]="config().idPrefix + '-parties'">
-  @for (p of parties(); track p.id) {
-    <option [value]="p.name"></option>
-  }
-</datalist>
