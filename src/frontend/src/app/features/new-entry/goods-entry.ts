@@ -195,6 +195,8 @@ export class GoodsEntry {
     })),
   );
 
+  protected readonly abs = Math.abs;
+
   /** Print the current entry as a bill (letterhead + items + totals). */
   print(): void {
     window.print();

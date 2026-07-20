@@ -1,4 +1,84 @@
 <app-print-header />
+
+<div class="rm-printonly">
+  <header class="rm-head">
+    <div>
+      <h1 class="rm-title num">{{ billNumber() || locale.t(config().labels.title) }}</h1>
+      <p class="rm-sub num">{{ billDate() }}</p>
+      <p class="rm-billto">
+        <span class="rm-billto__label">{{ locale.t('bill.detail.billTo') }}</span>
+        <span class="rm-billto__name">{{ printParty() }}</span>
+      </p>
+    </div>
+  </header>
+
+  <div class="rm-card">
+    @if (printLines().length === 0) {
+      <div class="rm-state" style="border: 0">
+        <p class="rm-state__body">{{ locale.t('bill.detail.empty') }}</p>
+      </div>
+    } @else {
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('bill.detail.col.item') }}</th>
+              <th scope="col" class="end">{{ locale.t('bill.detail.col.qty') }}</th>
+              <th scope="col" class="end">{{ locale.t('bill.detail.col.rate') }}</th>
+              <th scope="col" class="end">{{ locale.t('bill.detail.col.amount') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of printLines(); track $index) {
+              <tr>
+                <td class="rm-cell-head">
+                  <span class="rm-tbl__name">{{ line.name }}</span>
+                  @if (line.unit) {
+                    <span class="rm-tbl__meta">{{ line.unit }}</span>
+                  }
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('bill.detail.col.qty')">{{ locale.formatNumber(line.qty) }}</td>
+                <td class="end num" [attr.data-label]="locale.t('bill.detail.col.rate')">{{ locale.money(line.rate) }}</td>
+                <td class="end num rm-tbl__name" [attr.data-label]="locale.t('bill.detail.col.amount')">{{ locale.money(line.amount) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <div class="rm-foot">
+      <span>
+        {{ locale.t('bill.detail.goodsTotal') }}
+        <strong class="num">{{ locale.money(total()) }}</strong>
+      </span>
+      <span>
+        {{ locale.t(config().labels.cash) }}
+        <strong class="num amt--in">{{ locale.money(effectiveCash()) }}</strong>
+      </span>
+      @if (balance() !== 0) {
+        @if (cashParty()) {
+          <span>
+            {{ locale.t('bill.detail.discount') }}
+            <strong class="num">{{ locale.money(abs(balance())) }}</strong>
+          </span>
+        } @else {
+          <span>
+            {{ locale.t('bill.detail.outstanding') }}
+            <strong class="num" [class]="balance() > 0 ? 'amt--out' : 'amt--in'">
+              {{ locale.money(abs(balance())) }}
+            </strong>
+            <span class="rm-tbl__meta">{{ balance() > 0 ? locale.t(config().labels.effectOutstanding) : locale.t(config().labels.effectOverpaid) }}</span>
+          </span>
+        }
+      }
+    </div>
+  </div>
+
+  @if (description()) {
+    <p class="rm-sub" style="margin-top: 12px">{{ description() }}</p>
+  }
+</div>
+
 <section class="sale rm-noprint">
   <!-- ── entry form ─────────────────────────────────────────────────────── -->
   <div class="sale__form">
