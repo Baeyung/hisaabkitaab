@@ -1,4 +1,5 @@
-<section class="sale">
+<app-print-header />
+<section class="sale rm-noprint">
   <!-- ── entry form ─────────────────────────────────────────────────────── -->
   <div class="sale__form">
     <header class="sale__head">
@@ -157,6 +158,9 @@
     <div class="sale__actions">
       <button type="button" class="btn btn--ghost" (click)="reset()">
         {{ locale.t(config().labels.clear) }}
+      </button>
+      <button type="button" class="btn btn--ghost" (click)="print()" [disabled]="total() === 0">
+        {{ locale.t('common.print') }}
       </button>
       <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
         {{ locale.t(config().labels.saveNext) }} ↵

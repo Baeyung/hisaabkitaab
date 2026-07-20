@@ -4,6 +4,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
 import { BillDetail as BillDetailModel } from '../../core/store/bill.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
+import { PrintHeader } from '../../shared/print-header';
 
 /**
  * One bill, derived from its SALE transaction: line items, goods total, cash
@@ -12,10 +13,14 @@ import { directionClass, directionKey } from '../../shared/balance.util';
  */
 @Component({
   selector: 'app-bill-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, PrintHeader],
   templateUrl: './bill-detail.html',
 })
 export class BillDetail {
+  print(): void {
+    window.print();
+  }
+
   readonly billId = input.required<string>();
 
   protected readonly locale = inject(LocaleService);

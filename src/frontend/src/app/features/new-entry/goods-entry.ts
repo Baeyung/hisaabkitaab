@@ -10,6 +10,7 @@ import { EventRequest } from '../../core/store/event.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { Combobox } from '../../shared/combobox/combobox';
+import { PrintHeader } from '../../shared/print-header';
 
 /** One line of cloth on the bill. `key` is a stable id for @for tracking. */
 interface Line {
@@ -106,7 +107,7 @@ export interface GoodsEntryConfig {
   selector: 'app-goods-entry',
   templateUrl: './goods-entry.html',
   styleUrl: './sale.css',
-  imports: [Combobox],
+  imports: [Combobox, PrintHeader],
 })
 export class GoodsEntry {
   readonly config = input.required<GoodsEntryConfig>();
@@ -176,6 +177,28 @@ export class GoodsEntry {
   protected readonly balance = computed(() => this.total() - this.effectiveCash());
 
   protected readonly canSave = computed(() => this.validLines().length > 0 && !this.saving());
+
+  /** Who the printed bill is made out to — the party, or the cash-sale label. */
+  protected readonly printParty = computed(() => {
+    const name = this.partyName().trim();
+    return this.cashParty() || !name ? this.locale.t(this.config().labels.partyCash) : name;
+  });
+
+  /** Valid lines flattened for the print-only bill table. */
+  protected readonly printLines = computed(() =>
+    this.validLines().map((l) => ({
+      name: l.design.trim(),
+      qty: l.qty as number,
+      unit: this.lineUnit(l.design),
+      rate: l.rate as number,
+      amount: (l.qty as number) * (l.rate as number),
+    })),
+  );
+
+  /** Print the current entry as a bill (letterhead + items + totals). */
+  print(): void {
+    window.print();
+  }
 
   constructor() {
     this.loadSources();

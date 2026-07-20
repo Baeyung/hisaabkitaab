@@ -1,5 +1,6 @@
 <section class="rm-page">
-  <a class="rm-back" routerLink="/bill-management">← {{ locale.t('common.back') }}</a>
+  <app-print-header />
+  <a class="rm-back rm-noprint" routerLink="/bill-management">← {{ locale.t('common.back') }}</a>
 
   @if (loading()) {
     <div class="rm-card" aria-hidden="true">
@@ -27,16 +28,24 @@
           <span class="rm-billto__name">{{ b.partyName || locale.t('bill.cashSale') }}</span>
         </p>
       </div>
-      <button type="button" class="rm-btn rm-btn--danger" (click)="askDelete()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-        </svg>
-        {{ locale.t('bill.deleteAction') }}
-      </button>
+      <div class="rm-toolbar rm-noprint">
+        <button type="button" class="rm-btn rm-btn--ghost" (click)="print()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
+          </svg>
+          {{ locale.t('common.print') }}
+        </button>
+        <button type="button" class="rm-btn rm-btn--danger" (click)="askDelete()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+          </svg>
+          {{ locale.t('bill.deleteAction') }}
+        </button>
+      </div>
     </header>
 
     @if (confirming()) {
-      <div class="rm-confirm rm-confirm--card">
+      <div class="rm-confirm rm-confirm--card rm-noprint">
         <span class="rm-confirm__msg">
           {{ locale.t('bill.delete.confirm', { name: b.billNumber || locale.t('bill.cashSale') }) }}
         </span>
