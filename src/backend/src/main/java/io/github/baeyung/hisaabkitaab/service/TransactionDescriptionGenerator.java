@@ -32,6 +32,7 @@ public class TransactionDescriptionGenerator
             case ADJUSTMENT -> "Adjustment of " + money(request.getCashAmount());
             case OPENING_BALANCE -> withParty("Opening balance", "for", partyName);
             case OPENING_STOCK -> "Opening stock " + itemSummary(request);
+            case OPENING_CASH -> "Opening drawer balance";
         };
     }
 

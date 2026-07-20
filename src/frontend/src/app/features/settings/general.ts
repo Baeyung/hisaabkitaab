@@ -38,6 +38,9 @@ export class SettingsGeneral {
   /** The persisted store, or null when the user has none yet (create mode). */
   protected readonly store = signal<Store | null>(null);
 
+  /** Opening drawer balance — cash on hand at onboarding. null = field empty (clears it). */
+  protected readonly openingCash = signal<number | null>(null);
+
   protected readonly model = signal<StoreDraft>({ ...EMPTY_DRAFT });
   protected readonly storeForm = form(this.model, (path) => {
     required(path.name);
@@ -56,6 +59,7 @@ export class SettingsGeneral {
     // A fresh edit supersedes the last "saved" confirmation.
     effect(() => {
       this.model();
+      this.openingCash();
       this.savedKey.set(null);
     });
   }
@@ -66,6 +70,9 @@ export class SettingsGeneral {
     try {
       const first = (await this.stores.list())[0] ?? null;
       this.store.set(first);
+      // Opening drawer balance only exists once a store does; 0 → empty field.
+      const cash = first ? await this.stores.getOpeningCash() : 0;
+      this.openingCash.set(cash > 0 ? cash : null);
       // Backend nullable columns can arrive as null; forms want strings.
       this.model.set(
         first
@@ -98,6 +105,8 @@ export class SettingsGeneral {
         ? await this.stores.update(current.id, draft)
         : await this.stores.create(draft);
       this.store.set(saved);
+      // Store must exist before its drawer balance can be set, so this runs after.
+      await this.stores.setOpeningCash(this.openingCash() ?? 0);
       this.savedKey.set(current ? 'settings.general.saved' : 'settings.general.created');
     } catch {
       this.errorKey.set('error.generic');

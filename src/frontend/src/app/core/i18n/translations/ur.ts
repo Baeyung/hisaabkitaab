@@ -65,6 +65,11 @@ export const ur: Record<TranslationKey, string> = {
   'settings.general.nameplateHint': 'ہر بل اور کھاتہ پر آپ کی دکان',
   'settings.general.section.details': 'دکان کی تفصیلات',
   'settings.general.details.help': 'وہ نام، پتہ اور نمبر جو ہر بل اور کھاتہ پر آتے ہیں۔',
+  'settings.general.section.drawer': 'ابتدائی دراز کی رقم',
+  'settings.general.drawer.help':
+    'شروع میں آپ کی دراز میں موجود نقدی — آپ کے روزنامچے کی ابتدائی رقم۔ اسے تبدیل کرنے سے یہ اپڈیٹ ہوتی ہے؛ ہر بار نئی اندراج نہیں بنتی۔',
+  'settings.general.drawer.label': 'موجودہ نقدی',
+  'settings.general.drawer.amountPh': 'رقم',
   'settings.general.section.branding': 'برانڈنگ',
   'settings.general.branding.help': 'آپ کا لوگو اور واٹر مارک، چھپے ہوئے بل اور اسٹیٹمنٹ پر دکھایا جاتا ہے۔',
   'settings.general.name': 'دکان کا نام',

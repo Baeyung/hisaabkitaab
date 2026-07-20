@@ -1,5 +1,6 @@
 package io.github.baeyung.hisaabkitaab.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,4 +45,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     /** The single opening-stock transaction holding an item's opening line, if one has been set. */
     @EntityGraph(attributePaths = {"lines"})
     Optional<Transaction> findFirstByStoreIdAndEventAndLinesItemId(String storeId, TransactionEvent event, String itemId);
+
+    /** The single store-level transaction for a store-wide event (opening drawer cash), if one has been set. */
+    @EntityGraph(attributePaths = {"lines"})
+    Optional<Transaction> findFirstByStoreIdAndEvent(String storeId, TransactionEvent event);
+
+    /** The store's earliest business date across all transactions — null when it has none yet. */
+    @Query("select min(coalesce(t.eventDate, t.entryDate)) from Transaction t where t.store.id = :storeId")
+    LocalDate findEarliestEntryDate(@Param("storeId") String storeId);
 }

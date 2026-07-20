@@ -13,5 +13,6 @@ public enum TransactionEvent
     EXPENSE,
     ADJUSTMENT,
     OPENING_BALANCE,
-    OPENING_STOCK
+    OPENING_STOCK,
+    OPENING_CASH
 }

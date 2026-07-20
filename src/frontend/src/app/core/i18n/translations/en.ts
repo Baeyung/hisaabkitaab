@@ -63,6 +63,11 @@ export const en = {
   'settings.general.nameplateHint': 'Your shop, on every bill & khata',
   'settings.general.section.details': 'Store details',
   'settings.general.details.help': 'The name, address, and number that appear on every bill and khata.',
+  'settings.general.section.drawer': 'Opening drawer balance',
+  'settings.general.drawer.help':
+    "The cash in your drawer when you started — your cashbook's opening balance. Editing this updates it; it won't add a new entry each time.",
+  'settings.general.drawer.label': 'Cash on hand',
+  'settings.general.drawer.amountPh': 'Amount',
   'settings.general.section.branding': 'Branding',
   'settings.general.branding.help': 'Your logo and watermark, shown on printed bills and statements.',
   'settings.general.name': 'Store name',

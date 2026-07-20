@@ -7,7 +7,8 @@ export type TransactionEventKind =
   | 'EXPENSE'
   | 'ADJUSTMENT'
   | 'OPENING_BALANCE'
-  | 'OPENING_STOCK';
+  | 'OPENING_STOCK'
+  | 'OPENING_CASH';
 
 export interface CashbookRow {
   transactionId: string;

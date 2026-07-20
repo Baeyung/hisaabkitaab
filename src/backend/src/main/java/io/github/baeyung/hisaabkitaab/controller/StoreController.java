@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.baeyung.hisaabkitaab.dto.opening.OpeningCashRequest;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
+import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +32,27 @@ import lombok.RequiredArgsConstructor;
 public class StoreController
 {
     private final StoreService storeService;
+    private final OpeningEntryService openingEntryService;
 
     @GetMapping
     public ResponseEntity<List<Store>> list(@AuthenticationPrincipal UserPrincipal principal)
     {
         return ResponseEntity.ok(storeService.findByOwner(principal.getId()));
+    }
+
+    /** The store's opening drawer balance — the cash on hand at onboarding (0 when none set). */
+    @GetMapping("/opening-cash")
+    public ResponseEntity<Double> getOpeningCash(@AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(openingEntryService.openingCashByOwner(principal.getId()));
+    }
+
+    /** Upsert the store's opening drawer balance; zero clears it. */
+    @PutMapping("/opening-cash")
+    public ResponseEntity<Double> setOpeningCash(@Valid @RequestBody OpeningCashRequest request,
+            @AuthenticationPrincipal UserPrincipal principal)
+    {
+        return ResponseEntity.ok(openingEntryService.setOpeningCash(principal.getId(), request.amount()));
     }
 
     @GetMapping("/{id}")

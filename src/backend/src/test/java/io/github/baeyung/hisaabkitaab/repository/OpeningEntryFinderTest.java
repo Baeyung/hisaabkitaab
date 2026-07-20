@@ -82,6 +82,13 @@ class OpeningEntryFinderTest
                 .quantity(new java.math.BigDecimal("50")).item(lawn).build());
         transactionRepository.save(stock);
 
+        Transaction cash = Transaction.builder()
+                .store(store).event(TransactionEvent.OPENING_CASH)
+                .entryDate(LocalDate.now()).build();
+        cash.getLines().add(TransactionLine.builder()
+                .transaction(cash).targetKind(TargetKind.CASH).inOut(InOut.IN).value(3000.0).build());
+        transactionRepository.save(cash);
+
         // Force the finders to read from the DB (fresh context), as a real request would.
         entityManager.flush();
         entityManager.clear();
@@ -105,6 +112,16 @@ class OpeningEntryFinderTest
 
         assertTrue(found.isPresent());
         assertEquals(0, new java.math.BigDecimal("50").compareTo(found.get().getLines().getFirst().getQuantity()));
+    }
+
+    @Test
+    void findsStoreOpeningCash()
+    {
+        Optional<Transaction> found = transactionRepository
+                .findFirstByStoreIdAndEvent(store.getId(), TransactionEvent.OPENING_CASH);
+
+        assertTrue(found.isPresent());
+        assertEquals(3000.0, found.get().getLines().getFirst().getValue());
     }
 
     @Test

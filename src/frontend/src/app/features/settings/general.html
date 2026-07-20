@@ -164,6 +164,31 @@
         </div>
       </section>
 
+      <!-- Opening drawer balance -->
+      <section class="sec" aria-labelledby="sec-drawer">
+        <div class="sec__intro">
+          <h2 class="sec__eyebrow" id="sec-drawer">{{ locale.t('settings.general.section.drawer') }}</h2>
+          <p class="sec__desc">{{ locale.t('settings.general.drawer.help') }}</p>
+        </div>
+
+        <div class="sec__fields">
+          <div class="fld">
+            <label class="fld__label" for="store-drawer">{{ locale.t('settings.general.drawer.label') }}</label>
+            <input
+              id="store-drawer"
+              class="fld__input"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              [value]="openingCash() ?? ''"
+              (input)="openingCash.set($any($event.target).valueAsNumber || null)"
+              [attr.placeholder]="locale.t('settings.general.drawer.amountPh')"
+            />
+          </div>
+        </div>
+      </section>
+
       @if (errorKey(); as key) {
         <p role="alert" class="set__alert">{{ locale.t(key) }}</p>
       }

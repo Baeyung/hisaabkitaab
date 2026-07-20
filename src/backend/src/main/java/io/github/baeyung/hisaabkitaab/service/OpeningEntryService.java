@@ -111,6 +111,66 @@ public class OpeningEntryService
         return PartyBalance.of(inOut == InOut.IN ? amount : -amount);
     }
 
+    /** Current opening drawer (cash) balance for the owner's store — 0 when none set. */
+    @Transactional(readOnly = true)
+    public double openingCashByOwner(String ownerId)
+    {
+        Store store = storeService.getPrimaryStoreForOwner(ownerId);
+        return transactionRepository.findFirstByStoreIdAndEvent(store.getId(), TransactionEvent.OPENING_CASH)
+                .map(t -> {
+                    Double value = t.getLines().getFirst().getValue();
+                    return value != null ? value : 0;
+                })
+                .orElse(0.0);
+    }
+
+    /**
+     * Upsert the store's opening drawer balance: the cash on hand at onboarding.
+     * A single CASH IN line the cashbook folds into its opening figure; dated at
+     * store creation so it always sorts before real movements. Zero clears it.
+     */
+    public double setOpeningCash(String ownerId, double amount)
+    {
+        Store store = storeService.getPrimaryStoreForOwner(ownerId);
+
+        Optional<Transaction> existing =
+                transactionRepository.findFirstByStoreIdAndEvent(store.getId(), TransactionEvent.OPENING_CASH);
+
+        if (amount <= 0)
+        {
+            existing.ifPresent(transactionRepository::delete);
+            return 0;
+        }
+
+        if (existing.isPresent())
+        {
+            existing.get().getLines().getFirst().setValue(amount);
+            transactionRepository.save(existing.get());
+        }
+        else
+        {
+            // Date it at the store's first activity so it always sorts before real cash
+            // movements (folding into the cashbook opening); today if it has none yet.
+            LocalDate earliest = transactionRepository.findEarliestEntryDate(store.getId());
+            LocalDate openedOn = earliest != null ? earliest : LocalDate.now();
+            Transaction transaction = Transaction.builder()
+                    .store(store)
+                    .event(TransactionEvent.OPENING_CASH)
+                    .entryDate(openedOn)
+                    .description("Opening drawer balance")
+                    .build();
+            transaction.getLines().add(TransactionLine.builder()
+                    .transaction(transaction)
+                    .targetKind(TargetKind.CASH)
+                    .inOut(InOut.IN)
+                    .value(amount)
+                    .build());
+            transactionRepository.save(transaction);
+        }
+
+        return amount;
+    }
+
     public BigDecimal setOpeningStock(String itemId, String ownerId, BigDecimal quantity)
     {
         Store store = storeService.getPrimaryStoreForOwner(ownerId);

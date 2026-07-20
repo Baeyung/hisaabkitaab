@@ -50,4 +50,14 @@ export class StoreService {
     this._stores.update((s) => (s ?? []).map((x) => (x.id === id ? store : x)));
     return store;
   }
+
+  /** The store's opening drawer balance — cash on hand at onboarding (0 when none). */
+  getOpeningCash(): Promise<number> {
+    return firstValueFrom(this.http.get<number>(`${this.url}/opening-cash`));
+  }
+
+  /** Upsert the opening drawer balance (0 clears it). Single-sided — one CASH line, not a new entry each time. */
+  setOpeningCash(amount: number): Promise<number> {
+    return firstValueFrom(this.http.put<number>(`${this.url}/opening-cash`, { amount }));
+  }
 }
