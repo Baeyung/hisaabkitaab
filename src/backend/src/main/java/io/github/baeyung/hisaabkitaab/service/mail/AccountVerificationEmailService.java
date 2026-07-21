@@ -12,12 +12,12 @@ public class AccountVerificationEmailService
     private static final String EMAIL_SUBJECT = "Account Verification @ HisaabKitaab";
     private static final String EMAIL_TEMPLATE_NAME = "AccountVerification";
 
-    public void sendEmail(String to, String username, String verificationCode)
+    public void sendEmail(String to, String username, String verificationUrl)
     {
         Context context = new Context();
 
         context.setVariable("username", username);
-        context.setVariable("verificationCode", verificationCode);
+        context.setVariable("verificationUrl", verificationUrl);
 
         mailService.sendTemplatedEmail(
                 to,

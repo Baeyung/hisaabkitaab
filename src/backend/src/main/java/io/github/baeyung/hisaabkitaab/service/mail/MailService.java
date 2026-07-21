@@ -14,6 +14,8 @@ import org.thymeleaf.context.Context;
 
 @Service
 @RequiredArgsConstructor
+// do not autowire this directly in other non mail services, create a specific action related mail service
+// autowire there and then send email
 public class MailService
 {
     private final JavaMailSender mailSender;

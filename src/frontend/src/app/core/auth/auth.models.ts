@@ -3,6 +3,7 @@ export interface User {
   contactNumber: string;
   name: string;
   email: string;
+  verified: boolean;
 }
 
 export interface SignupRequest {

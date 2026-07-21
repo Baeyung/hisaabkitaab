@@ -27,7 +27,16 @@ spring:
     password: ${ BREVO_SMPTP_KEY:password }
     properties:
       mail:
-        smptp:
+        smtp:
           auth: true
           starttls:
             enable: true
+
+# Base URL of the Angular app; used to build the account-verification link in emails.
+app:
+  frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
+  verification:
+    # Set to false (e.g. in dev) to skip email verification entirely: new signups are
+    # created already-verified with no email sent, and the "verified" access gate is
+    # relaxed to plain authentication so existing unverified accounts get in too.
+    enabled: true

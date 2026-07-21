@@ -1,7 +1,9 @@
 package io.github.baeyung.hisaabkitaab.config;
 
+import io.github.baeyung.hisaabkitaab.security.RestAccessDeniedHandler;
 import io.github.baeyung.hisaabkitaab.security.RestAuthenticationEntryPoint;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,20 +18,29 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 /**
  * HTTP Basic auth backed by {@code CustomUserDetailsService}, which resolves the
  * username against either a user's contact number or email. Sessions are stateless
- * since Basic auth re-sends credentials on every request. Only signup is public;
- * {@code /api/users} is an authenticated, admin-style CRUD API. CORS is scoped to the
- * Angular dev server, and authentication failures are handled by
- * {@link RestAuthenticationEntryPoint} so the browser never shows its native
- * Basic-auth popup.
+ * since Basic auth re-sends credentials on every request. Signup and the email
+ * verify/resend endpoints are public; every other request requires a {@code ROLE_USER}
+ * authority, which an account only holds once verified — so an authenticated but
+ * unverified user is denied by {@link RestAccessDeniedHandler} (403 {@code ACCOUNT_UNVERIFIED}),
+ * distinct from a bad-credentials 401 from {@link RestAuthenticationEntryPoint}. CORS is
+ * scoped to the Angular dev server, and both handlers return JSON so the browser never
+ * shows its native Basic-auth popup.
  */
 @Configuration
 public class SecurityConfig
 {
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
 
-    public SecurityConfig(RestAuthenticationEntryPoint authenticationEntryPoint)
+    private final RestAccessDeniedHandler accessDeniedHandler;
+
+    @Value("${app.verification.enabled:true}")
+    private boolean verificationEnabled;
+
+    public SecurityConfig(RestAuthenticationEntryPoint authenticationEntryPoint,
+            RestAccessDeniedHandler accessDeniedHandler)
     {
         this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
@@ -39,11 +50,28 @@ public class SecurityConfig
                 .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                        .anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> {
+                    auth
+                            .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/auth/verify/*").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/auth/resend-verification").permitAll();
+                    // With verification on, everything else needs a *verified* account:
+                    // unverified logins authenticate but hold only ROLE_UNVERIFIED, so they
+                    // fall through to the 403 access-denied handler. With it off, plain
+                    // authentication is enough.
+                    if (verificationEnabled)
+                    {
+                        auth.anyRequest().hasRole("USER");
+                    }
+                    else
+                    {
+                        auth.anyRequest().authenticated();
+                    }
+                })
                 .httpBasic(basic -> basic.authenticationEntryPoint(authenticationEntryPoint))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint));
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler));
 
         return http.build();
     }

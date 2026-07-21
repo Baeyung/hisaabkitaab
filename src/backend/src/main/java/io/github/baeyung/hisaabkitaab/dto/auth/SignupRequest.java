@@ -15,6 +15,8 @@ public class SignupRequest
     @NotBlank
     private String contactNumber;
 
+    // Required now that email verification gates access — no email means no way to verify.
+    @NotBlank
     @Email
     private String email;
 

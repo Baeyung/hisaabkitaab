@@ -37,4 +37,14 @@ public class User
     private String name;
 
     private String email;
+
+    // DB default lets ddl-auto=update add this NOT NULL column to a table that already
+    // has rows (Postgres rejects adding a NOT NULL column with no default otherwise).
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    private boolean verified = false;
+
+    /** Single-use random token emailed at signup; nulled once the account verifies. */
+    @JsonIgnore
+    private String verificationToken;
 }

@@ -31,6 +31,20 @@ export class AuthService {
     return user;
   }
 
+  /** Confirms the account tied to this token. Rejects (404) if the token is unknown/used. */
+  async verifyEmail(token: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/verify/${encodeURIComponent(token)}`, {}),
+    );
+  }
+
+  /** Re-sends the verification email. Always resolves (backend is deliberately silent). */
+  async resendVerification(identifier: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/resend-verification`, { identifier }),
+    );
+  }
+
   logout(): void {
     this.store.clear();
   }

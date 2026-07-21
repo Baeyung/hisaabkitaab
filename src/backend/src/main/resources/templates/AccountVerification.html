@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Verify your HisaabKitaab account</title>
+</head>
+<body style="margin:0;padding:24px;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#18181b;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;">
+        <tr>
+            <td style="padding:32px;">
+                <h1 style="margin:0 0 16px;font-size:20px;">HisaabKitaab</h1>
+                <p style="margin:0 0 16px;font-size:15px;">Assalam-o-alaikum <strong th:text="${username}">there</strong>,</p>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.5;">
+                    Please confirm your email to start using your account.
+                </p>
+                <a th:href="${verificationUrl}"
+                   style="display:inline-block;padding:12px 24px;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:bold;">
+                    Verify my account
+                </a>
+                <p style="margin:24px 0 0;font-size:13px;color:#71717a;line-height:1.5;">
+                    If the button doesn't work, copy this link into your browser:<br/>
+                    <a th:href="${verificationUrl}" th:text="${verificationUrl}" style="color:#16a34a;word-break:break-all;">link</a>
+                </p>
+                <p style="margin:16px 0 0;font-size:13px;color:#71717a;">
+                    Didn't create this account? You can safely ignore this email.
+                </p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
