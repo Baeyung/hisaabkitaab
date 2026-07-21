@@ -791,15 +791,18 @@ html[dir='rtl'] .num {
   margin-bottom: 0;
 }
 
-/* KPI strip: cash + profit shown as two distinct numbers (APPLICATION_DOMAIN
-   §3.4), receivables/payables alongside. A semantic left accent bar encodes
-   what each number means, so the tone never rides on colour alone. */
+/* KPI strip: revenue/spending (period flows), cash, and receivables/payables
+   as five distinct numbers. A semantic left accent bar encodes what each number
+   means, so the tone never rides on colour alone. Wrapping flex (not grid) so a
+   card that wraps to a new row grows to fill the width instead of stranding at a
+   fixed column width beside dead space. */
 .dw-kpis {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--dw-gap);
 }
 .dw-kpi {
+  flex: 1 1 180px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -975,15 +978,7 @@ a.dw-row__name:hover {
 }
 
 @media (max-width: 860px) {
-  .dw-kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .dw-grid {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 520px) {
-  .dw-kpis {
     grid-template-columns: 1fr;
   }
 }

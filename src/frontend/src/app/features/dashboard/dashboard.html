@@ -60,6 +60,11 @@
         <span class="dw-kpi__value num amt--in">{{ locale.money(d.sales) }}</span>
         <span class="dw-kpi__hint">{{ locale.t('dash.sales.hint') }}</span>
       </article>
+      <article class="dw-kpi dw-kpi--out">
+        <span class="dw-kpi__label">{{ locale.t('dash.spend') }}</span>
+        <span class="dw-kpi__value num amt--out">{{ locale.money(d.spend) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('dash.spend.hint') }}</span>
+      </article>
       <article class="dw-kpi dw-kpi--brand">
         <span class="dw-kpi__label">{{ locale.t('dash.cash') }}</span>
         <span class="dw-kpi__value num">{{ locale.money(d.cashPosition) }}</span>
@@ -87,21 +92,9 @@
       </div>
     </section>
 
-    <!-- Receivable aging: who owes, how much, and how long it's been sitting. -->
-    <section class="rm-card dw-card">
-      <header class="dw-card__head">
-        <h2 class="dw-card__title">{{ locale.t('dash.stale.title') }}</h2>
-        <span class="dw-card__hint">{{ locale.t('dash.stale.sub') }}</span>
-      </header>
-      @if (hasStale()) {
-        <div class="dw-chart">
-          <app-chart [config]="staleConfig()" [label]="staleLabel()" />
-        </div>
-      } @else {
-        <p class="dw-empty">{{ locale.t('dash.stale.empty') }}</p>
-      }
-    </section>
-
+    <!-- Two charts share a row: revenue mix (share by design) and receivable
+         aging (who owes, how much, how long). Keeps neither stranded at half
+         width beside dead space. -->
     <div class="dw-grid">
       <!-- Where sales came from: revenue share by design. -->
       <section class="rm-card dw-card">
@@ -115,6 +108,21 @@
           </div>
         } @else {
           <p class="dw-empty">{{ locale.t('dash.topItems.empty') }}</p>
+        }
+      </section>
+
+      <!-- Receivable aging: who owes, how much, and how long it's been sitting. -->
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('dash.stale.title') }}</h2>
+          <span class="dw-card__hint">{{ locale.t('dash.stale.sub') }}</span>
+        </header>
+        @if (hasStale()) {
+          <div class="dw-chart">
+            <app-chart [config]="staleConfig()" [label]="staleLabel()" />
+          </div>
+        } @else {
+          <p class="dw-empty">{{ locale.t('dash.stale.empty') }}</p>
         }
       </section>
     </div>
