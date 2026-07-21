@@ -77,11 +77,11 @@ public class DashboardQueryService
                 .filter(line -> inRange(businessDate(line), from, to))
                 .toList();
 
-        // ── Daily series: revenue and cogs from sale lines, spend from expense lines ──
-        Map<LocalDate, double[]> byDay = new LinkedHashMap<>(); // [sales, cogs, spend]
+        // ── Daily series: revenue from sale lines, spend from expense lines ──
+        Map<LocalDate, double[]> byDay = new LinkedHashMap<>(); // [sales, spend]
         for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1))
         {
-            byDay.put(d, new double[3]);
+            byDay.put(d, new double[2]);
         }
         for (TransactionLine line : saleLines)
         {
@@ -89,7 +89,6 @@ public class DashboardQueryService
             if (slot != null)
             {
                 slot[0] += revenue(line);
-                slot[1] += cogs(line);
             }
         }
         for (TransactionLine line : expenseLines)
@@ -97,7 +96,7 @@ public class DashboardQueryService
             double[] slot = byDay.get(businessDate(line));
             if (slot != null)
             {
-                slot[2] += value(line);
+                slot[1] += value(line);
             }
         }
 
@@ -118,12 +117,11 @@ public class DashboardQueryService
         {
             double[] s = e.getValue();
             runningCash += cashDeltaByDay.getOrDefault(e.getKey(), 0.0);
-            daily.add(new DailyPoint(e.getKey(), s[0], s[2], s[0] - s[1] - s[2], runningCash));
+            daily.add(new DailyPoint(e.getKey(), s[0], s[1], runningCash));
         }
 
         double sales = daily.stream().mapToDouble(DailyPoint::sales).sum();
         double spend = daily.stream().mapToDouble(DailyPoint::spend).sum();
-        double profit = daily.stream().mapToDouble(DailyPoint::profit).sum();
 
         PartySplit parties = topReceivablesAndPayables(storeId);
 
@@ -131,7 +129,6 @@ public class DashboardQueryService
                 from,
                 to,
                 cashPosition,
-                profit,
                 sales,
                 spend,
                 parties.receivablesTotal(),
@@ -320,13 +317,6 @@ public class DashboardQueryService
     {
         double rate = line.getItemSoldAt() != null ? line.getItemSoldAt() : 0;
         return quantity(line) * rate;
-    }
-
-    private double cogs(TransactionLine line)
-    {
-        StoreItem item = line.getItem();
-        double cost = item != null && item.getCostPrice() != null ? item.getCostPrice().doubleValue() : 0;
-        return quantity(line) * cost;
     }
 
     private double value(TransactionLine line)

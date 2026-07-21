@@ -128,7 +128,7 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
 
     /**
      * Every goods-out line of a SALE in {@code from..to}, with transaction and item fetched —
-     * the dashboard's raw material for daily sales, profit (line qty×itemSoldAt − qty×costPrice),
+     * the dashboard's raw material for daily sales (line qty×itemSoldAt),
      * top-selling designs, and which items had any turnover in the window.
      */
     @Query("""

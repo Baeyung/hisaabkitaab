@@ -3,7 +3,6 @@ export interface DashboardDailyPoint {
   date: string;
   sales: number;
   spend: number;
-  profit: number;
   /** Running drawer balance at the day's close — the trend's secondary-axis line. */
   cash: number;
 }
@@ -47,10 +46,8 @@ export interface DashboardExpenseGroup {
 export interface Dashboard {
   from: string;
   to: string;
-  /** Net cash in the galla as of `to` — the drawer position, not profit. */
+  /** Net cash in the galla as of `to` — the drawer position. */
   cashPosition: number;
-  /** Profit over the window: sales − cost of goods sold − expenses. */
-  profit: number;
   sales: number;
   spend: number;
   receivablesTotal: number;

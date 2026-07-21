@@ -4,9 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * The analytics dashboard for one window. Cash position and profit are two
- * separate numbers on purpose (APPLICATION_DOMAIN §3.4): a shop can turn a
- * profit today yet watch its cash fall because it paid down a supplier.
+ * The analytics dashboard for one window.
  *
  * Totals and series are window-scoped ({@code from..to}); balances
  * (receivables/payables) and cash position are cumulative as-of {@code to},
@@ -16,7 +14,6 @@ public record DashboardResponse(
         LocalDate from,
         LocalDate to,
         double cashPosition,
-        double profit,
         double sales,
         double spend,
         double receivablesTotal,
@@ -31,11 +28,11 @@ public record DashboardResponse(
 )
 {
     /**
-     * One calendar day's trend point: sales (revenue), spend (expenses) and
-     * profit are that day's flows; {@code cash} is the running drawer balance at
-     * the day's close — a stock, so it rides the chart's secondary axis.
+     * One calendar day's trend point: sales (revenue) and spend (expenses) are
+     * that day's flows; {@code cash} is the running drawer balance at the day's
+     * close — a stock, so it rides the chart's secondary axis.
      */
-    public record DailyPoint(LocalDate date, double sales, double spend, double profit, double cash)
+    public record DailyPoint(LocalDate date, double sales, double spend, double cash)
     {
     }
 

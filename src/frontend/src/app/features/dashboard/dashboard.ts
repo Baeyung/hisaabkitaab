@@ -9,10 +9,9 @@ import { ChartView } from '../../shared/chart/chart';
 
 // Semantic tokens from styles.css, mirrored here so charts read the same
 // money-in/money-out language as the rest of the app.
-const GREEN = '#1f7a4d'; // money in / sales / receivable / profit
+const GREEN = '#1f7a4d'; // money in / revenue / receivable
 const RED = '#a8342a'; //   money out / spend / payable / expenses
-const PINE = '#1f5c4d'; //  brand — profit line
-const BLUE = '#1d4e7a'; //  cost of goods (neutral, not a money-in/out signal)
+const BLUE = '#1d4e7a'; //  running cash balance (neutral, not a money-in/out signal)
 const AMBER = '#c98a2b'; // aging warning — dues 30–60 days old
 const INK = '#23201c'; //   primary text
 const MUTED = '#6b655c'; // axis labels
@@ -26,10 +25,8 @@ const MIX = ['#1f5c4d', '#2d8f6b', '#3f9c93', '#c98a2b', '#1d4e7a', '#6b8f3a'];
 const MIX_OTHER = '#b0a99c';
 
 /**
- * The analytics home screen. Cash position and profit are shown as two distinct
- * cards on purpose (APPLICATION_DOMAIN §3.4) — a shop can profit today yet see
- * its cash fall. One backend call feeds every widget for the chosen window;
- * default is the last 7 days, and the from/to inputs mirror the cashbook.
+ * The analytics home screen. One backend call feeds every widget for the chosen
+ * window; default is the last 7 days, and the from/to inputs mirror the cashbook.
  */
 @Component({
   selector: 'app-dashboard',
@@ -69,7 +66,7 @@ export class Dashboard {
     Math.max(1, ...(this.data()?.topExpenses ?? []).map((e) => e.total)),
   );
 
-  /** Sales, expenses and profit as three lines over the window. */
+  /** Revenue (sales) and spending as flow lines over the window, cash as a running balance. */
   protected readonly trendConfig = computed<ChartConfiguration>(() => {
     const d = this.data();
     const points = d?.daily ?? [];
@@ -94,9 +91,8 @@ export class Dashboard {
         datasets: [
           line(this.locale.t('dash.sales'), points.map((p) => p.sales), GREEN),
           line(this.locale.t('dash.spend'), points.map((p) => p.spend), RED),
-          line(this.locale.t('dash.profit'), points.map((p) => p.profit), PINE),
           // Cash is a running balance, not a daily flow — dashed, on its own
-          // right-hand axis so its scale never squashes the three flow lines.
+          // right-hand axis so its scale never squashes the flow lines.
           {
             ...line(this.locale.t('dash.cash'), points.map((p) => p.cash), BLUE),
             yAxisID: 'y1',
@@ -151,28 +147,6 @@ export class Dashboard {
         },
       },
     };
-  });
-
-  /** Sales split into cost of goods, expenses, and profit — the cash≠profit story. */
-  protected readonly hasSales = computed(() => (this.data()?.sales ?? 0) > 0);
-
-  /** Profit as a share of sales, e.g. 15 → "15% margin". */
-  protected readonly profitMargin = computed(() => {
-    const d = this.data();
-    return d && d.sales > 0 ? Math.round((d.profit / d.sales) * 100) : 0;
-  });
-
-  protected readonly salesAnatomyConfig = computed<ChartConfiguration>(() => {
-    const d = this.data();
-    const sales = d?.sales ?? 0;
-    const spend = d?.spend ?? 0;
-    const profit = d?.profit ?? 0;
-    const cogs = Math.max(0, sales - spend - profit);
-    return this.doughnut(
-      [this.locale.t('dash.anatomy.cogs'), this.locale.t('dash.anatomy.expenses'), this.locale.t('dash.anatomy.profit')],
-      [cogs, spend, Math.max(0, profit)],
-      [BLUE, RED, GREEN],
-    );
   });
 
   /** Revenue share by design, with everything past the top few folded into "Other". */
@@ -354,21 +328,7 @@ export class Dashboard {
     return this.locale.t('dash.trend.aria', {
       sales: this.locale.money(d.sales),
       spend: this.locale.money(d.spend),
-      profit: this.locale.money(d.profit),
       cash: this.locale.money(d.cashPosition),
-    });
-  }
-
-  protected anatomyLabel(): string {
-    const d = this.data();
-    if (!d) {
-      return '';
-    }
-    const cogs = Math.max(0, d.sales - d.spend - d.profit);
-    return this.locale.t('dash.anatomy.aria', {
-      cogs: this.locale.money(cogs),
-      expenses: this.locale.money(d.spend),
-      profit: this.locale.money(d.profit),
     });
   }
 

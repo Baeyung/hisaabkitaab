@@ -54,19 +54,11 @@
       <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('dash.empty.cta') }}</a>
     </div>
   } @else if (data(); as d) {
-    <!-- Cash and profit are two different numbers on purpose (APPLICATION_DOMAIN §3.4). -->
     <div class="dw-kpis">
       <article class="dw-kpi dw-kpi--brand">
         <span class="dw-kpi__label">{{ locale.t('dash.cash') }}</span>
         <span class="dw-kpi__value num">{{ locale.money(d.cashPosition) }}</span>
         <span class="dw-kpi__hint">{{ locale.t('dash.cash.hint') }}</span>
-      </article>
-      <article class="dw-kpi" [class.dw-kpi--in]="d.profit >= 0" [class.dw-kpi--out]="d.profit < 0">
-        <span class="dw-kpi__label">{{ locale.t('dash.profit') }}</span>
-        <span class="dw-kpi__value num" [class.amt--in]="d.profit >= 0" [class.amt--out]="d.profit < 0">
-          {{ locale.money(d.profit) }}
-        </span>
-        <span class="dw-kpi__hint">{{ locale.t('dash.window') }}</span>
       </article>
       <article class="dw-kpi dw-kpi--in">
         <span class="dw-kpi__label">{{ locale.t('dash.receivables') }}</span>
@@ -80,7 +72,7 @@
       </article>
     </div>
 
-    <!-- Sales vs spending, with profit overlaid. -->
+    <!-- Revenue vs spending, with the running cash balance overlaid. -->
     <section class="rm-card dw-card">
       <header class="dw-card__head">
         <h2 class="dw-card__title">{{ locale.t('dash.trend.title') }}</h2>
@@ -88,7 +80,6 @@
       <div class="dw-chart">
         <app-chart [config]="trendConfig()" [label]="trendLabel()" />
       </div>
-      <p class="dw-note">{{ locale.t('dash.profit.disclaimer') }}</p>
     </section>
 
     <!-- Receivable aging: who owes, how much, and how long it's been sitting. -->
@@ -107,23 +98,6 @@
     </section>
 
     <div class="dw-grid">
-      <!-- How sales became profit: cost of goods vs expenses vs profit. -->
-      <section class="rm-card dw-card">
-        <header class="dw-card__head">
-          <h2 class="dw-card__title">{{ locale.t('dash.anatomy.title') }}</h2>
-          @if (hasSales()) {
-            <span class="dw-card__hint">{{ locale.t('dash.anatomy.margin', { pct: profitMargin() + '' }) }}</span>
-          }
-        </header>
-        @if (hasSales()) {
-          <div class="dw-chart dw-chart--donut">
-            <app-chart [config]="salesAnatomyConfig()" [label]="anatomyLabel()" />
-          </div>
-        } @else {
-          <p class="dw-empty">{{ locale.t('dash.topItems.empty') }}</p>
-        }
-      </section>
-
       <!-- Where sales came from: revenue share by design. -->
       <section class="rm-card dw-card">
         <header class="dw-card__head">
