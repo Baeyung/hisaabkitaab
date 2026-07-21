@@ -1,6 +1,7 @@
 package io.github.baeyung.hisaabkitaab.service.query.support;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.OptionalLong;
@@ -52,5 +53,49 @@ public final class ReceivableAging
             }
         }
         return unpaid.isEmpty() ? OptionalLong.empty() : OptionalLong.of((long) unpaid.peekFirst()[0]);
+    }
+
+    /**
+     * Remaining unpaid amount for each charge after the same FIFO settlement, in the
+     * order charges appear. A value at/near zero means that bill is fully covered
+     * (green on the party statement); a positive value is still owed. Payment
+     * movements carry no output — index i lines up with the i-th charge, not the
+     * i-th movement.
+     */
+    public static double[] chargeRemaining(List<Movement> movements)
+    {
+        List<double[]> charges = new ArrayList<>(); // each holder shared with the FIFO queue, so it settles in place
+        Deque<double[]> unpaid = new ArrayDeque<>();
+        for (Movement m : movements)
+        {
+            if (m.charge() > 0.005)
+            {
+                double[] holder = { m.charge() };
+                charges.add(holder);
+                unpaid.addLast(holder);
+            }
+            double pay = m.payment();
+            while (pay > 0.005 && !unpaid.isEmpty())
+            {
+                double[] head = unpaid.peekFirst();
+                if (head[0] <= pay + 0.005)
+                {
+                    pay -= head[0];
+                    head[0] = 0;
+                    unpaid.removeFirst();
+                }
+                else
+                {
+                    head[0] -= pay;
+                    pay = 0;
+                }
+            }
+        }
+        double[] remaining = new double[charges.size()];
+        for (int i = 0; i < charges.size(); i++)
+        {
+            remaining[i] = charges.get(i)[0];
+        }
+        return remaining;
     }
 }

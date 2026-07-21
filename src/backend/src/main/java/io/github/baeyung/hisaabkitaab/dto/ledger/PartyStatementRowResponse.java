@@ -15,7 +15,9 @@ public record PartyStatementRowResponse(
         String description,
         InOut inOut,
         double amount,
-        PartyBalance runningBalance
+        PartyBalance runningBalance,
+        /** For a charge (a bill): true once payments have covered it under FIFO; null for payment rows. */
+        Boolean cleared
 )
 {
 }

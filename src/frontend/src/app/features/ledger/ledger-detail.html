@@ -44,7 +44,45 @@
         <p class="rm-state__body">{{ locale.t('ledger.detail.empty') }}</p>
       </div>
     } @else {
+      <div class="rm-stats">
+        <div class="rm-stat">
+          <span class="rm-stat__label">{{ locale.t('report.totalBilled') }}</span>
+          <span class="rm-stat__value num">{{ locale.money(st.totalBilled) }}</span>
+        </div>
+        <div class="rm-stat">
+          <span class="rm-stat__label">{{ locale.t('report.totalPaid') }}</span>
+          <span class="rm-stat__value num amt--in">{{ locale.money(st.totalPaid) }}</span>
+        </div>
+        <div class="rm-stat">
+          <span class="rm-stat__label">{{ locale.t('report.outstanding') }}</span>
+          <span class="rm-stat__value num" [class]="directionClass(st.currentBalance.direction)">{{ locale.money(st.currentBalance.amount) }}</span>
+        </div>
+        <div class="rm-stat">
+          <span class="rm-stat__label">{{ locale.t('report.lastPayment') }}</span>
+          <span class="rm-stat__value num">{{ st.lastPaymentDate || locale.t('report.never') }}</span>
+        </div>
+      </div>
+
       <div class="rm-card">
+        <div class="rm-toolbar rm-toolbar--filters rm-noprint">
+          <label class="rm-field">
+            <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
+            <input class="rm-input rm-input--date" type="date" [value]="fromDate()" (input)="fromDate.set(fromInput.value)" #fromInput [attr.aria-label]="locale.t('bill.filter.from')" />
+          </label>
+          <label class="rm-field">
+            <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
+            <input class="rm-input rm-input--date" type="date" [value]="toDate()" (input)="toDate.set(toInput.value)" #toInput [attr.aria-label]="locale.t('bill.filter.to')" />
+          </label>
+          <label class="rm-field">
+            <span class="rm-field__label">{{ locale.t('report.filter.event') }}</span>
+            <select class="rm-input" [value]="eventFilter()" (change)="eventFilter.set(eventSelect.value)" #eventSelect [attr.aria-label]="locale.t('report.filter.event')">
+              <option value="">{{ locale.t('report.filter.allEvents') }}</option>
+              @for (kind of eventKinds(); track kind) {
+                <option [value]="kind">{{ eventLabel(kind) }}</option>
+              }
+            </select>
+          </label>
+        </div>
         <div class="rm-tablewrap">
           <table class="rm-tbl">
             <thead>
@@ -56,14 +94,17 @@
               </tr>
             </thead>
             <tbody>
-              @for (row of st.rows; track row.transactionId + row.occurredAt) {
-                <tr [class.rm-rowlink]="row.event === 'SALE'" (click)="row.event === 'SALE' && openBill(row.transactionId)">
+              @for (row of filteredRows(); track row.transactionId + row.occurredAt) {
+                <tr [class.rm-rowlink]="row.event === 'SALE'" [class.rm-row--cleared]="row.cleared === true" (click)="row.event === 'SALE' && openBill(row.transactionId)">
                   <td class="num">{{ row.date }}</td>
                   <td>
                     @if (row.event === 'SALE') {
                       <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()">{{ row.description || '—' }}</a>
                     } @else {
                       {{ row.description || '—' }}
+                    }
+                    @if (row.cleared === true) {
+                      <span class="rm-badge rm-badge--paid">{{ locale.t('report.cleared') }}</span>
                     }
                   </td>
                   <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
@@ -101,6 +142,10 @@
                     </td>
                   </tr>
                 }
+              } @empty {
+                <tr>
+                  <td colspan="4">{{ locale.t('report.filtered.none') }}</td>
+                </tr>
               }
             </tbody>
           </table>

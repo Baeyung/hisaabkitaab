@@ -1,5 +1,6 @@
 package io.github.baeyung.hisaabkitaab.service.query;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,12 +20,14 @@ import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
+import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
+import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
 import lombok.RequiredArgsConstructor;
 
@@ -127,12 +130,30 @@ public class LedgerQueryService
 
         List<TransactionLine> lines = transactionLineRepository.findPartyLedgerLines(partyId);
 
+        // FIFO settlement of charges (IN) by payments (OUT), oldest bill first — the
+        // shopkeeper doesn't tie a payment to a bill, so newest money clears oldest dues.
+        // ponytail: receivable view (IN = charge). Supplier/payable per-bill status isn't marked; add if a shop needs it.
+        double[] chargeRemaining = ReceivableAging.chargeRemaining(
+                lines.stream()
+                        .map(line -> line.getInOut() == InOut.IN
+                                ? new ReceivableAging.Movement(0, value(line), 0)
+                                : line.getInOut() == InOut.OUT
+                                        ? new ReceivableAging.Movement(0, 0, value(line))
+                                        : new ReceivableAging.Movement(0, 0, 0))
+                        .toList()
+        );
+
+        int[] chargeIndex = { 0 }; // advances once per IN line, staying aligned with chargeRemaining
+
         List<PartyStatementRowResponse> rows = RunningBalanceFolder.fold(
                 lines,
                 0,
                 this::signedValue,
                 (line, running) -> {
                     Transaction transaction = line.getTransaction();
+                    Boolean cleared = line.getInOut() == InOut.IN
+                            ? chargeRemaining[chargeIndex[0]++] <= 0.005
+                            : null;
                     return new PartyStatementRowResponse(
                             transaction.getId(),
                             transaction.getEventDate() != null ? transaction.getEventDate() : transaction.getEntryDate(),
@@ -141,14 +162,26 @@ public class LedgerQueryService
                             transaction.getDescription(),
                             line.getInOut(),
                             value(line),
-                            PartyBalance.of(running)
+                            PartyBalance.of(running),
+                            cleared
                     );
                 }
         );
 
         PartyBalance current = rows.isEmpty() ? PartyBalance.of(0) : rows.getLast().runningBalance();
 
-        return new PartyStatementResponse(party.getId(), party.getName(), party.getContact(), rows, current);
+        double totalBilled = lines.stream().filter(l -> l.getInOut() == InOut.IN).mapToDouble(this::value).sum();
+        double totalPaid = lines.stream().filter(l -> l.getInOut() == InOut.OUT).mapToDouble(this::value).sum();
+        LocalDate lastPaymentDate = rows.stream()
+                .filter(r -> r.inOut() == InOut.OUT)
+                .map(PartyStatementRowResponse::date)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+
+        return new PartyStatementResponse(
+                party.getId(), party.getName(), party.getContact(), rows, current,
+                totalBilled, totalPaid, lastPaymentDate
+        );
     }
 
     private double signedValue(TransactionLine line)

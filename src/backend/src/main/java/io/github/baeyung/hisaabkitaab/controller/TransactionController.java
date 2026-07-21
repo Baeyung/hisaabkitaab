@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.baeyung.hisaabkitaab.dto.transaction.BillDetailResponse;
@@ -26,9 +27,13 @@ public class TransactionController
     private final TransactionService transactionService;
 
     @GetMapping("/bills")
-    public ResponseEntity<List<BillSummaryResponse>> listBills(@AuthenticationPrincipal UserPrincipal principal)
+    public ResponseEntity<List<BillSummaryResponse>> listBills(
+            @RequestParam(required = false) String partyId,
+            @RequestParam(required = false) String itemId,
+            @AuthenticationPrincipal UserPrincipal principal
+    )
     {
-        return ResponseEntity.ok(transactionQueryService.listBills(principal.getId()));
+        return ResponseEntity.ok(transactionQueryService.listBills(principal.getId(), partyId, itemId));
     }
 
     @GetMapping("/bills/{id}")

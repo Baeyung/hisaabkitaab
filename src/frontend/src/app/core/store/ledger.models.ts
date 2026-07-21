@@ -18,6 +18,8 @@ export interface PartyStatementRow {
   inOut: 'IN' | 'OUT';
   amount: number;
   runningBalance: Balance;
+  /** For a charge (a bill): true once FIFO payments have covered it; null for payment rows. */
+  cleared: boolean | null;
 }
 
 export interface PartyStatement {
@@ -26,6 +28,9 @@ export interface PartyStatement {
   contact: string | null;
   rows: PartyStatementRow[];
   currentBalance: Balance;
+  totalBilled: number;
+  totalPaid: number;
+  lastPaymentDate: string | null;
 }
 
 /** An expense entry inside a category group, with the category's running spend. */

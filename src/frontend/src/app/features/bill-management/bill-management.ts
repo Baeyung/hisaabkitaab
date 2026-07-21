@@ -1,8 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
 import { BillSummary } from '../../core/store/bill.models';
+import { LedgerService } from '../../core/store/ledger.service';
+import { InventoryService } from '../../core/store/inventory.service';
+import { PartyBalanceRow } from '../../core/store/ledger.models';
+import { ItemStockRow } from '../../core/store/inventory.models';
 import { todayIso } from '../../shared/date.util';
 
 /**
@@ -18,6 +22,8 @@ import { todayIso } from '../../shared/date.util';
 export class BillManagement {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(BillService);
+  private readonly ledger = inject(LedgerService);
+  private readonly inventory = inject(InventoryService);
   private readonly router = inject(Router);
 
   protected readonly bills = signal<BillSummary[] | null>(null);
@@ -27,6 +33,13 @@ export class BillManagement {
   protected readonly query = signal('');
   protected readonly fromDate = signal(todayIso());
   protected readonly toDate = signal(todayIso());
+
+  /** Server-side filters — changing either re-fetches; the dropdowns are populated once on init. */
+  protected readonly partyFilter = signal('');
+  protected readonly itemFilter = signal('');
+  protected readonly parties = signal<PartyBalanceRow[]>([]);
+  protected readonly items = signal<ItemStockRow[]>([]);
+  protected readonly hasServerFilter = computed(() => !!this.partyFilter() || !!this.itemFilter());
 
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly deleting = signal(false);
@@ -48,15 +61,30 @@ export class BillManagement {
   });
 
   constructor() {
-    void this.load();
+    void this.loadFilterOptions();
+    // Re-fetch whenever a server-side filter changes; runs once on init too.
+    effect(() => {
+      const filters = { partyId: this.partyFilter(), itemId: this.itemFilter() };
+      void this.load(filters);
+    });
   }
 
-  async load(): Promise<void> {
+  private async loadFilterOptions(): Promise<void> {
+    try {
+      const [parties, items] = await Promise.all([this.ledger.list(), this.inventory.list()]);
+      this.parties.set(parties);
+      this.items.set(items);
+    } catch {
+      // Dropdowns stay empty; the list itself still loads and reports its own errors.
+    }
+  }
+
+  async load(filters?: { partyId?: string; itemId?: string }): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
     this.noStore.set(false);
     try {
-      this.bills.set(await this.api.list());
+      this.bills.set(await this.api.list(filters));
     } catch (err) {
       if ((err as { status?: number }).status === 404) {
         this.noStore.set(true);

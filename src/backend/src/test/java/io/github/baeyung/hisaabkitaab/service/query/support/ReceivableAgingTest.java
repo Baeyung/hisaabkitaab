@@ -73,4 +73,32 @@ class ReceivableAgingTest
 
         assertFalse(oldest.isPresent());
     }
+
+    @Test
+    void chargeRemainingClearsOldestBillFirst()
+    {
+        // Two 5000 bills, party has paid 7000 — the first bill is fully covered
+        // (green), the second still owes 3000.
+        double[] remaining = ReceivableAging.chargeRemaining(List.of(
+                charge(10, 5000),
+                charge(20, 5000),
+                payment(30, 7000)
+        ));
+
+        assertEquals(2, remaining.length);
+        assertEquals(0, remaining[0], 0.005);
+        assertEquals(3000, remaining[1], 0.005);
+    }
+
+    @Test
+    void chargeRemainingLeavesEverythingOwedWhenNothingPaid()
+    {
+        double[] remaining = ReceivableAging.chargeRemaining(List.of(
+                charge(10, 5000),
+                charge(20, 5000)
+        ));
+
+        assertEquals(5000, remaining[0], 0.005);
+        assertEquals(5000, remaining[1], 0.005);
+    }
 }

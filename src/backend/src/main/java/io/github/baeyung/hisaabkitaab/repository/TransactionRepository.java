@@ -26,14 +26,23 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
      * Bill list: SALE transactions with party and lines fetched — the amount needs every STOCK
      * line anyway. Ordered by the same coalesced business date the response displays, so a bill
      * saved without a bill date sorts by its entry date instead of NULLS FIRST-ing to the top.
+     * The optional party/item filters are null-guarded so an absent filter is a no-op; the
+     * {@code exists} keeps item filtering from multiplying rows the way a fetch-join would.
      */
     @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
     @Query("""
             select t from Transaction t
             where t.store.id = :storeId and t.event = :event
+              and (:partyId is null or t.party.id = :partyId)
+              and (:itemId is null or exists (
+                    select 1 from TransactionLine l where l.transaction = t and l.item.id = :itemId))
             order by coalesce(t.eventDate, t.entryDate) desc, t.createdAt desc
             """)
-    List<Transaction> findByStoreIdAndEventNewestFirst(@Param("storeId") String storeId, @Param("event") TransactionEvent event);
+    List<Transaction> findBillsFiltered(
+            @Param("storeId") String storeId,
+            @Param("event") TransactionEvent event,
+            @Param("partyId") String partyId,
+            @Param("itemId") String itemId);
 
     @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
     Optional<Transaction> findByIdAndStoreId(String id, String storeId);

@@ -1,8 +1,10 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
-import { PartyStatement } from '../../core/store/ledger.models';
+import { PartyStatement, PartyStatementRow } from '../../core/store/ledger.models';
+import { TransactionEventKind } from '../../core/store/cashbook.models';
+import { TranslationKey } from '../../core/i18n/translations/en';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintDetailsService } from '../../shared/print-details.service';
@@ -30,8 +32,35 @@ export class LedgerDetail {
   protected readonly loadError = signal(false);
   protected readonly notFound = signal(false);
 
+  // Report filters — client-side over the already-loaded rows. Empty = no bound.
+  protected readonly fromDate = signal('');
+  protected readonly toDate = signal('');
+  protected readonly eventFilter = signal('');
+
+  /** Event kinds actually present, for the filter dropdown (statement order preserved). */
+  protected readonly eventKinds = computed(() => [
+    ...new Set((this.statement()?.rows ?? []).map((r) => r.event)),
+  ]);
+
+  protected readonly filteredRows = computed<PartyStatementRow[]>(() => {
+    const from = this.fromDate();
+    const to = this.toDate();
+    const event = this.eventFilter();
+    // row.date is an ISO `YYYY-MM-DD` string, so lexical comparison is a date comparison.
+    return (this.statement()?.rows ?? []).filter(
+      (row) =>
+        (!from || row.date >= from) &&
+        (!to || row.date <= to) &&
+        (!event || row.event === event),
+    );
+  });
+
   protected readonly directionKey = directionKey;
   protected readonly directionClass = directionClass;
+
+  /** Bilingual label for an event kind — all kinds have a `report.event.*` key. */
+  protected readonly eventLabel = (kind: TransactionEventKind): string =>
+    this.locale.t(`report.event.${kind}` as TranslationKey);
 
   constructor() {
     effect(() => {

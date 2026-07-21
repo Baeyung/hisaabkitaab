@@ -8,10 +8,16 @@
 # Order (each step depends on IDs returned by the previous one):
 #   1. Sign up test@test.com   POST /api/auth/signup      (public; ok if it already exists)
 #   2. Ensure a store exists    POST /api/stores           (basic auth)
-#   3. Ensure 4 parties exist   POST /api/parties          (basic auth)
+#   3. Ensure 7 parties exist   POST /api/parties          (basic auth)
 #   4. Ensure 20 items exist    POST /api/store-items      (basic auth)
-#   5. Publish ~17 entries      POST /api/event            (basic auth) across
-#      SALE, PURCHASE, RECEIPT, PAYMENT and EXPENSE, several with multi-line items.
+#   5. Publish ~46 entries      POST /api/event            (basic auth) across
+#      SALE, PURCHASE, RECEIPT, PAYMENT and EXPENSE, spread over the last 30 days.
+#      Several are multi-line; expenses carry a spend category; and one customer
+#      (Adeel) has three unpaid bills cleared oldest-first by a single lump receipt,
+#      so the party-report FIFO "Paid" marking has something to show.
+#
+# Adding more next time: use the line/txn/settle/expense helpers below -- each
+# entry is a single call, so extending this dataset is a one-liner.
 #
 # Requirements: bash + curl + jq.
 #
@@ -55,6 +61,31 @@ publish_event() { # <json>
   resp=$(req POST /api/event "$1")
   code=$(code_of "$resp"); body=$(body_of "$resp")
   [ "$code" = "200" ] || die "event failed (HTTP $code): $body"
+}
+
+# One item line for a SALE/PURCHASE. args: <itemId> <name> <qty> <rate>
+line() { printf '{"itemId":"%s","name":"%s","quantity":%s,"itemSoldAt":%s}' "$1" "$2" "$3" "$4"; }
+
+# SALE or PURCHASE with items. args:
+#   <event> <cash> <billAmount> <days_ago> <billNo> <desc> <partyId> <partyName> <itemsJson>
+# billAmount must equal Σ(qty×rate) of the lines (the backend recomputes goods total from them).
+txn() {
+  publish_event "{\"transactionEvent\":\"$1\",\"cashAmount\":$2,\"billAmount\":$3,\"description\":\"$6\",\"billNumber\":\"$5\",\"billDate\":\"$(days_ago "$4")\",\"party\":{\"partyId\":\"$7\",\"name\":\"$8\"},\"items\":[$9]}"
+  info "$5 ($8)"
+}
+
+# RECEIPT or PAYMENT against a party (cash only, no items). args:
+#   <event> <cash> <days_ago> <billNo> <desc> <partyId> <partyName>
+settle() {
+  publish_event "{\"transactionEvent\":\"$1\",\"cashAmount\":$2,\"description\":\"$5\",\"billNumber\":\"$4\",\"billDate\":\"$(days_ago "$3")\",\"party\":{\"partyId\":\"$6\",\"name\":\"$7\"}}"
+  info "$4 ($7)"
+}
+
+# EXPENSE (cash out, no party/item, tagged with a spend category). args:
+#   <cash> <days_ago> <billNo> <desc> <category>
+expense() {
+  publish_event "{\"transactionEvent\":\"EXPENSE\",\"cashAmount\":$1,\"description\":\"$4\",\"billNumber\":\"$3\",\"billDate\":\"$(days_ago "$2")\",\"expenseCategory\":\"$5\"}"
+  info "$3 ($5)"
 }
 
 # Portable "N days before today" -> YYYY-MM-DD (BSD date on macOS, GNU date on Linux).
@@ -122,7 +153,8 @@ PARTIES_JSON=$(body_of "$parties_resp")
 
 get_or_create_party() { # <name> <contact>
   local name="$1" contact="$2" id resp
-  id=$(printf '%s' "$PARTIES_JSON" | jq -r --arg n "$name" '[.[] | select(.name==$n)][0].id // empty')
+  # GET /api/parties returns partyId; POST /api/parties returns a Party with id — accept either.
+  id=$(printf '%s' "$PARTIES_JSON" | jq -r --arg n "$name" '[.[] | select(.name==$n)][0] | (.partyId // .id) // empty')
   if [ -n "$id" ]; then
     printf '%s' "$id"
     return
@@ -137,10 +169,16 @@ PARTY_BILAL=$(get_or_create_party "Bilal Traders" "03111111111")
 PARTY_USMAN=$(get_or_create_party "Usman Wholesale" "03122222222")
 PARTY_KAMRAN=$(get_or_create_party "Kamran Retail" "03133333333")
 PARTY_FAISAL=$(get_or_create_party "Faisal Distributors" "03144444444")
+PARTY_ADEEL=$(get_or_create_party "Adeel General Store" "03155555555")
+PARTY_SAJID=$(get_or_create_party "Sajid Karyana" "03166666666")
+PARTY_NOMAN=$(get_or_create_party "Noman Suppliers" "03177777777")
 info "Bilal Traders -> $PARTY_BILAL"
 info "Usman Wholesale -> $PARTY_USMAN"
 info "Kamran Retail -> $PARTY_KAMRAN"
 info "Faisal Distributors -> $PARTY_FAISAL"
+info "Adeel General Store -> $PARTY_ADEEL"
+info "Sajid Karyana -> $PARTY_SAJID"
+info "Noman Suppliers -> $PARTY_NOMAN"
 
 # ---------------------------------------------------------------------------
 # 4. Store items (get-or-create by name; 20 kiryana items).
@@ -187,198 +225,103 @@ info "20 items ready (Sugar, Flour, Rice, Cooking Oil, Tea, Salt, Daal Chana, Da
 info "Red Chili Powder, Turmeric Powder, Basmati Rice, Vermicelli, Milk Powder, Butter,"
 info "Ghee, Soap, Detergent Powder, Matchbox, Biscuits, Rock Salt)"
 
+
 # ---------------------------------------------------------------------------
-# 5. Entries -- every supported TransactionEvent, several multi-item lines,
-#    a mix of fully paid / partially paid / overpaid bills, spread over the
-#    last two weeks so cashbook/ledger date filters have something to show.
+# 5. Entries -- 46 events over the last 30 days: SALE / PURCHASE / RECEIPT /
+#    PAYMENT / EXPENSE, single- and multi-line, fully / partially / over-paid,
+#    expenses tagged by category. Adeel's oldest unpaid bills (SALE-003, SALE-005)
+#    are cleared oldest-first by one 12,000 receipt (RCPT-002) to exercise the
+#    party-report FIFO "Paid" marking. Extend with the txn/settle/expense helpers.
 # ---------------------------------------------------------------------------
 say "Publishing entries"
 
-# SALE: Sugar 20kg + Flour 10kg, bill 3300, paid in full.
-publish_event "{
-  \"transactionEvent\":\"SALE\",\"cashAmount\":3300,\"billAmount\":3300,
-  \"description\":\"Sugar and flour sale to Bilal Traders\",
-  \"billNumber\":\"SALE-001\",\"billDate\":\"$(days_ago 13)\",
-  \"party\":{\"partyId\":\"$PARTY_BILAL\",\"name\":\"Bilal Traders\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_SUGAR\",\"name\":\"Sugar\",\"quantity\":20,\"itemSoldAt\":120},
-    {\"itemId\":\"$ITEM_FLOUR\",\"name\":\"Flour\",\"quantity\":10,\"itemSoldAt\":90}
-  ]
-}"
-info "SALE-001 ok (Bilal Traders, paid in full)"
+# ---- ~4 weeks ago ----
+txn SALE 3300 3300 30 SALE-001 "Sugar and flour sale to Bilal Traders" "$PARTY_BILAL" "Bilal Traders" \
+  "$(line "$ITEM_SUGAR" "Sugar" 20 120),$(line "$ITEM_FLOUR" "Flour" 10 90)"
+txn PURCHASE 15000 24500 29 PUR-001 "Rice and daal chana from Usman Wholesale" "$PARTY_USMAN" "Usman Wholesale" \
+  "$(line "$ITEM_RICE" "Rice" 100 170),$(line "$ITEM_DAAL_CHANA" "Daal Chana" 50 150)"
+txn SALE 3000 3950 28 SALE-002 "Cooking oil and tea to Kamran Retail" "$PARTY_KAMRAN" "Kamran Retail" \
+  "$(line "$ITEM_OIL" "Cooking Oil" 5 550),$(line "$ITEM_TEA" "Tea" 3 400)"
+expense 300 28 EXP-008 "Chai and refreshments for staff" "Tea/Refreshments"
+txn SALE 0 6050 27 SALE-003 "Basmati and biscuits to Adeel General Store" "$PARTY_ADEEL" "Adeel General Store" \
+  "$(line "$ITEM_BASMATI" "Basmati Rice" 15 350),$(line "$ITEM_BISCUITS" "Biscuits" 10 80)"
+expense 1500 26 EXP-001 "Shop electricity bill" "ELECTRICITY"
+txn SALE 1850 1850 26 SALE-017 "Detergent and soap to Sajid Karyana" "$PARTY_SAJID" "Sajid Karyana" \
+  "$(line "$ITEM_DETERGENT" "Detergent Powder" 5 250),$(line "$ITEM_SOAP" "Soap" 10 60)"
+txn PURCHASE 12400 12400 25 PUR-002 "Ghee from Faisal Distributors" "$PARTY_FAISAL" "Faisal Distributors" \
+  "$(line "$ITEM_GHEE" "Ghee" 20 620)"
+txn SALE 4000 7300 24 SALE-004 "Milk powder and butter to Sajid Karyana" "$PARTY_SAJID" "Sajid Karyana" \
+  "$(line "$ITEM_MILK_POWDER" "Milk Powder" 5 950),$(line "$ITEM_BUTTER" "Butter" 3 850)"
 
-# PURCHASE: Rice 100kg + Daal Chana 50kg, bill 24500, paid 15000 -> owe 9500.
-publish_event "{
-  \"transactionEvent\":\"PURCHASE\",\"cashAmount\":15000,\"billAmount\":24500,
-  \"description\":\"Rice and daal chana purchase from Usman Wholesale\",
-  \"billNumber\":\"PUR-001\",\"billDate\":\"$(days_ago 12)\",
-  \"party\":{\"partyId\":\"$PARTY_USMAN\",\"name\":\"Usman Wholesale\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_RICE\",\"name\":\"Rice\",\"quantity\":100,\"itemSoldAt\":170},
-    {\"itemId\":\"$ITEM_DAAL_CHANA\",\"name\":\"Daal Chana\",\"quantity\":50,\"itemSoldAt\":150}
-  ]
-}"
-info "PUR-001 ok (Usman Wholesale, owe 9,500)"
+# ---- ~3 weeks ago ----
+txn SALE 0 5200 23 SALE-005 "Sugar and rice to Adeel General Store" "$PARTY_ADEEL" "Adeel General Store" \
+  "$(line "$ITEM_SUGAR" "Sugar" 10 120),$(line "$ITEM_RICE" "Rice" 20 200)"
+expense 15000 22 EXP-002 "Monthly shop rent" "Rent"
+txn PURCHASE 20000 21800 21 PUR-003 "Turmeric and chili from Faisal Distributors" "$PARTY_FAISAL" "Faisal Distributors" \
+  "$(line "$ITEM_TURMERIC" "Turmeric Powder" 30 380),$(line "$ITEM_CHILI" "Red Chili Powder" 20 520)"
+txn SALE 3700 3700 20 SALE-006 "Detergent and soap to Kamran Retail" "$PARTY_KAMRAN" "Kamran Retail" \
+  "$(line "$ITEM_DETERGENT" "Detergent Powder" 10 250),$(line "$ITEM_SOAP" "Soap" 20 60)"
+txn PURCHASE 3000 6200 20 PUR-007 "Ghee from Faisal Distributors" "$PARTY_FAISAL" "Faisal Distributors" \
+  "$(line "$ITEM_GHEE" "Ghee" 10 620)"
+txn SALE 2000 5500 19 SALE-007 "Cooking oil to Bilal Traders" "$PARTY_BILAL" "Bilal Traders" \
+  "$(line "$ITEM_OIL" "Cooking Oil" 10 550)"
+settle RECEIPT 950 18 RCPT-001 "Balance received from Kamran Retail" "$PARTY_KAMRAN" "Kamran Retail"
+expense 25000 17 EXP-003 "Staff salaries" "SALARIES"
 
-# SALE: Cooking Oil 5L + Tea 3 packets, bill 3950, paid 3000 -> owed 950.
-publish_event "{
-  \"transactionEvent\":\"SALE\",\"cashAmount\":3000,\"billAmount\":3950,
-  \"description\":\"Cooking oil and tea sale to Kamran Retail\",
-  \"billNumber\":\"SALE-002\",\"billDate\":\"$(days_ago 11)\",
-  \"party\":{\"partyId\":\"$PARTY_KAMRAN\",\"name\":\"Kamran Retail\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_OIL\",\"name\":\"Cooking Oil\",\"quantity\":5,\"itemSoldAt\":550},
-    {\"itemId\":\"$ITEM_TEA\",\"name\":\"Tea\",\"quantity\":3,\"itemSoldAt\":400}
-  ]
-}"
-info "SALE-002 ok (Kamran Retail, owed 950)"
+# ---- ~2 weeks ago ----
+txn PURCHASE 3400 3400 16 PUR-004 "Vermicelli and matchbox from Usman Wholesale" "$PARTY_USMAN" "Usman Wholesale" \
+  "$(line "$ITEM_VERMICELLI" "Vermicelli" 40 70),$(line "$ITEM_MATCHBOX" "Matchbox" 100 6)"
+txn SALE 5000 6000 16 SALE-018 "Rice to Kamran Retail" "$PARTY_KAMRAN" "Kamran Retail" \
+  "$(line "$ITEM_RICE" "Rice" 30 200)"
+txn SALE 0 4000 15 SALE-008 "Tea to Adeel General Store" "$PARTY_ADEEL" "Adeel General Store" \
+  "$(line "$ITEM_TEA" "Tea" 10 400)"
+settle PAYMENT 5000 14 PAY-001 "Part payment to Usman Wholesale" "$PARTY_USMAN" "Usman Wholesale"
+txn SALE 3900 3900 13 SALE-009 "Ghee and salt to Sajid Karyana" "$PARTY_SAJID" "Sajid Karyana" \
+  "$(line "$ITEM_GHEE" "Ghee" 5 700),$(line "$ITEM_SALT" "Salt" 10 40)"
+expense 800 12 EXP-004 "Transport and delivery charges" "Transport"
+expense 5000 12 EXP-009 "Salary advance to helper" "SALARIES"
+txn SALE 1700 1700 11 SALE-010 "Salt to Bilal Traders" "$PARTY_BILAL" "Bilal Traders" \
+  "$(line "$ITEM_ROCK_SALT" "Rock Salt" 10 150),$(line "$ITEM_SALT" "Salt" 5 40)"
 
-# PURCHASE: Ghee 20kg, bill 12400, paid in full.
-publish_event "{
-  \"transactionEvent\":\"PURCHASE\",\"cashAmount\":12400,\"billAmount\":12400,
-  \"description\":\"Ghee purchase from Faisal Distributors\",
-  \"billNumber\":\"PUR-002\",\"billDate\":\"$(days_ago 10)\",
-  \"party\":{\"partyId\":\"$PARTY_FAISAL\",\"name\":\"Faisal Distributors\"},
-  \"items\":[{\"itemId\":\"$ITEM_GHEE\",\"name\":\"Ghee\",\"quantity\":20,\"itemSoldAt\":620}]
-}"
-info "PUR-002 ok (Faisal Distributors, paid in full)"
+# ---- FIFO demo: Adeel owes 6050 + 5200 + 4000 = 15250; this 12,000 clears the
+#      two oldest bills in full (SALE-003, SALE-005) and part of SALE-008. ----
+settle RECEIPT 12000 10 RCPT-002 "Lump payment from Adeel General Store" "$PARTY_ADEEL" "Adeel General Store"
 
-# SALE: Basmati Rice 15kg + Biscuits 10 packets, bill 6050, paid 5000 -> owed 1050.
-publish_event "{
-  \"transactionEvent\":\"SALE\",\"cashAmount\":5000,\"billAmount\":6050,
-  \"description\":\"Basmati rice and biscuits sale to Bilal Traders\",
-  \"billNumber\":\"SALE-003\",\"billDate\":\"$(days_ago 9)\",
-  \"party\":{\"partyId\":\"$PARTY_BILAL\",\"name\":\"Bilal Traders\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_BASMATI\",\"name\":\"Basmati Rice\",\"quantity\":15,\"itemSoldAt\":350},
-    {\"itemId\":\"$ITEM_BISCUITS\",\"name\":\"Biscuits\",\"quantity\":10,\"itemSoldAt\":80}
-  ]
-}"
-info "SALE-003 ok (Bilal Traders, owed 1,050)"
+# ---- last week ----
+txn PURCHASE 6000 12700 9 PUR-005 "Milk powder and detergent from Noman Suppliers" "$PARTY_NOMAN" "Noman Suppliers" \
+  "$(line "$ITEM_MILK_POWDER" "Milk Powder" 10 850),$(line "$ITEM_DETERGENT" "Detergent Powder" 20 210)"
+txn SALE 2700 2700 9 SALE-019 "Flour to Bilal Traders" "$PARTY_BILAL" "Bilal Traders" \
+  "$(line "$ITEM_FLOUR" "Flour" 30 90)"
+txn SALE 4000 3600 8 SALE-011 "Sugar and flour to Kamran Retail (overpaid)" "$PARTY_KAMRAN" "Kamran Retail" \
+  "$(line "$ITEM_SUGAR" "Sugar" 15 120),$(line "$ITEM_FLOUR" "Flour" 20 90)"
+expense 3500 7 EXP-005 "Weighing scale repair and spares" "PARTS"
+txn SALE 2000 4700 6 SALE-012 "Basmati and biscuits to Sajid Karyana" "$PARTY_SAJID" "Sajid Karyana" \
+  "$(line "$ITEM_BASMATI" "Basmati Rice" 10 350),$(line "$ITEM_BISCUITS" "Biscuits" 15 80)"
+settle RECEIPT 1000 6 RCPT-005 "Balance received from Kamran Retail" "$PARTY_KAMRAN" "Kamran Retail"
+settle PAYMENT 1800 5 PAY-002 "Final payment to Faisal Distributors" "$PARTY_FAISAL" "Faisal Distributors"
 
-# SALE: Milk Powder 5kg + Butter 3kg, bill 7300, paid in full.
-publish_event "{
-  \"transactionEvent\":\"SALE\",\"cashAmount\":7300,\"billAmount\":7300,
-  \"description\":\"Milk powder and butter sale to Kamran Retail\",
-  \"billNumber\":\"SALE-004\",\"billDate\":\"$(days_ago 8)\",
-  \"party\":{\"partyId\":\"$PARTY_KAMRAN\",\"name\":\"Kamran Retail\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_MILK_POWDER\",\"name\":\"Milk Powder\",\"quantity\":5,\"itemSoldAt\":950},
-    {\"itemId\":\"$ITEM_BUTTER\",\"name\":\"Butter\",\"quantity\":3,\"itemSoldAt\":850}
-  ]
-}"
-info "SALE-004 ok (Kamran Retail, paid in full)"
+# ---- this week ----
+txn SALE 4250 4250 4 SALE-013 "Butter to Bilal Traders" "$PARTY_BILAL" "Bilal Traders" \
+  "$(line "$ITEM_BUTTER" "Butter" 5 850)"
+txn PURCHASE 7500 7500 4 PUR-008 "Butter from Noman Suppliers" "$PARTY_NOMAN" "Noman Suppliers" \
+  "$(line "$ITEM_BUTTER" "Butter" 10 750)"
+settle RECEIPT 3500 3 RCPT-003 "Balance received from Bilal Traders" "$PARTY_BILAL" "Bilal Traders"
+expense 1200 3 EXP-006 "Sundry shop supplies" "GENERAL"
+txn PURCHASE 8500 8500 2 PUR-006 "Rice from Usman Wholesale" "$PARTY_USMAN" "Usman Wholesale" \
+  "$(line "$ITEM_RICE" "Rice" 50 170)"
+txn SALE 0 4850 2 SALE-014 "Oil and ghee to Adeel General Store" "$PARTY_ADEEL" "Adeel General Store" \
+  "$(line "$ITEM_OIL" "Cooking Oil" 5 550),$(line "$ITEM_GHEE" "Ghee" 3 700)"
+expense 950 2 EXP-010 "Rickshaw delivery charges" "Transport"
+settle RECEIPT 3300 1 RCPT-004 "Balance received from Sajid Karyana" "$PARTY_SAJID" "Sajid Karyana"
+txn SALE 3900 3900 1 SALE-015 "Milk powder and tea to Kamran Retail" "$PARTY_KAMRAN" "Kamran Retail" \
+  "$(line "$ITEM_MILK_POWDER" "Milk Powder" 2 950),$(line "$ITEM_TEA" "Tea" 5 400)"
+settle PAYMENT 4500 1 PAY-003 "Settling balance to Usman Wholesale" "$PARTY_USMAN" "Usman Wholesale"
 
-# PURCHASE: Turmeric 30kg + Red Chili 20kg, bill 21800, paid 20000 -> owe 1800.
-publish_event "{
-  \"transactionEvent\":\"PURCHASE\",\"cashAmount\":20000,\"billAmount\":21800,
-  \"description\":\"Turmeric and chili powder purchase from Faisal Distributors\",
-  \"billNumber\":\"PUR-003\",\"billDate\":\"$(days_ago 8)\",
-  \"party\":{\"partyId\":\"$PARTY_FAISAL\",\"name\":\"Faisal Distributors\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_TURMERIC\",\"name\":\"Turmeric Powder\",\"quantity\":30,\"itemSoldAt\":380},
-    {\"itemId\":\"$ITEM_CHILI\",\"name\":\"Red Chili Powder\",\"quantity\":20,\"itemSoldAt\":520}
-  ]
-}"
-info "PUR-003 ok (Faisal Distributors, owe 1,800)"
+# ---- today ----
+expense 600 0 EXP-007 "Shopping bags and packaging" "Packaging"
+txn SALE 1000 3000 0 SALE-016 "Sugar to Bilal Traders" "$PARTY_BILAL" "Bilal Traders" \
+  "$(line "$ITEM_SUGAR" "Sugar" 25 120)"
+txn SALE 600 600 0 SALE-020 "Sugar to Adeel General Store" "$PARTY_ADEEL" "Adeel General Store" \
+  "$(line "$ITEM_SUGAR" "Sugar" 5 120)"
 
-# EXPENSE: shop electricity bill (cash out only, no party/item).
-publish_event "{
-  \"transactionEvent\":\"EXPENSE\",\"cashAmount\":1500,
-  \"description\":\"Shop electricity bill\",
-  \"billNumber\":\"EXP-001\",\"billDate\":\"$(days_ago 8)\"
-}"
-info "EXP-001 ok (electricity)"
-
-# EXPENSE: monthly shop rent.
-publish_event "{
-  \"transactionEvent\":\"EXPENSE\",\"cashAmount\":15000,
-  \"description\":\"Monthly shop rent\",
-  \"billNumber\":\"EXP-002\",\"billDate\":\"$(days_ago 15)\"
-}"
-info "EXP-002 ok (rent)"
-
-# PAYMENT: pay Usman Wholesale 5000 of the 9500 owed from PUR-001.
-publish_event "{
-  \"transactionEvent\":\"PAYMENT\",\"cashAmount\":5000,
-  \"description\":\"Part payment to Usman Wholesale\",
-  \"billNumber\":\"PAY-001\",\"billDate\":\"$(days_ago 6)\",
-  \"party\":{\"partyId\":\"$PARTY_USMAN\",\"name\":\"Usman Wholesale\"}
-}"
-info "PAY-001 ok (Usman Wholesale, paid 5,000)"
-
-# SALE: Detergent 10kg + Soap 20 pieces, bill 3700, customer paid 4200 (overpaid by 500).
-publish_event "{
-  \"transactionEvent\":\"SALE\",\"cashAmount\":4200,\"billAmount\":3700,
-  \"description\":\"Detergent and soap sale to Kamran Retail\",
-  \"billNumber\":\"SALE-005\",\"billDate\":\"$(days_ago 5)\",
-  \"party\":{\"partyId\":\"$PARTY_KAMRAN\",\"name\":\"Kamran Retail\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_DETERGENT\",\"name\":\"Detergent Powder\",\"quantity\":10,\"itemSoldAt\":250},
-    {\"itemId\":\"$ITEM_SOAP\",\"name\":\"Soap\",\"quantity\":20,\"itemSoldAt\":60}
-  ]
-}"
-info "SALE-005 ok (Kamran Retail, overpaid by 500)"
-
-# PAYMENT: pay Faisal Distributors the remaining 1800 owed from PUR-003.
-publish_event "{
-  \"transactionEvent\":\"PAYMENT\",\"cashAmount\":1800,
-  \"description\":\"Final payment to Faisal Distributors\",
-  \"billNumber\":\"PAY-002\",\"billDate\":\"$(days_ago 4)\",
-  \"party\":{\"partyId\":\"$PARTY_FAISAL\",\"name\":\"Faisal Distributors\"}
-}"
-info "PAY-002 ok (Faisal Distributors, settled)"
-
-# RECEIPT: collect the 1050 Bilal Traders owed from SALE-003.
-publish_event "{
-  \"transactionEvent\":\"RECEIPT\",\"cashAmount\":1050,
-  \"description\":\"Balance received from Bilal Traders\",
-  \"billNumber\":\"RCPT-001\",\"billDate\":\"$(days_ago 3)\",
-  \"party\":{\"partyId\":\"$PARTY_BILAL\",\"name\":\"Bilal Traders\"}
-}"
-info "RCPT-001 ok (Bilal Traders, settled)"
-
-# RECEIPT: collect the 950 Kamran Retail owed from SALE-002.
-publish_event "{
-  \"transactionEvent\":\"RECEIPT\",\"cashAmount\":950,
-  \"description\":\"Balance received from Kamran Retail\",
-  \"billNumber\":\"RCPT-002\",\"billDate\":\"$(days_ago 2)\",
-  \"party\":{\"partyId\":\"$PARTY_KAMRAN\",\"name\":\"Kamran Retail\"}
-}"
-info "RCPT-002 ok (Kamran Retail, settled)"
-
-# PURCHASE: Vermicelli 40 packets + Matchbox 100 packets, bill 3400, paid in full.
-publish_event "{
-  \"transactionEvent\":\"PURCHASE\",\"cashAmount\":3400,\"billAmount\":3400,
-  \"description\":\"Vermicelli and matchbox purchase from Usman Wholesale\",
-  \"billNumber\":\"PUR-004\",\"billDate\":\"$(days_ago 2)\",
-  \"party\":{\"partyId\":\"$PARTY_USMAN\",\"name\":\"Usman Wholesale\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_VERMICELLI\",\"name\":\"Vermicelli\",\"quantity\":40,\"itemSoldAt\":70},
-    {\"itemId\":\"$ITEM_MATCHBOX\",\"name\":\"Matchbox\",\"quantity\":100,\"itemSoldAt\":6}
-  ]
-}"
-info "PUR-004 ok (Usman Wholesale, paid in full)"
-
-# SALE: Salt 5kg + Rock Salt 10kg, bill 1700, paid in full.
-publish_event "{
-  \"transactionEvent\":\"SALE\",\"cashAmount\":1700,\"billAmount\":1700,
-  \"description\":\"Salt sale to Bilal Traders\",
-  \"billNumber\":\"SALE-006\",\"billDate\":\"$(days_ago 1)\",
-  \"party\":{\"partyId\":\"$PARTY_BILAL\",\"name\":\"Bilal Traders\"},
-  \"items\":[
-    {\"itemId\":\"$ITEM_SALT\",\"name\":\"Salt\",\"quantity\":5,\"itemSoldAt\":40},
-    {\"itemId\":\"$ITEM_ROCK_SALT\",\"name\":\"Rock Salt\",\"quantity\":10,\"itemSoldAt\":150}
-  ]
-}"
-info "SALE-006 ok (Bilal Traders, paid in full)"
-
-# EXPENSE: delivery/transport charges.
-publish_event "{
-  \"transactionEvent\":\"EXPENSE\",\"cashAmount\":800,
-  \"description\":\"Transport and delivery charges\",
-  \"billNumber\":\"EXP-003\",\"billDate\":\"$(days_ago 1)\"
-}"
-info "EXP-003 ok (transport)"
-
-say "Done. Log in as $EMAIL / $PASSWORD -- 4 parties, 20 items, 17 entries loaded."
+say "Done. Log in as $EMAIL / $PASSWORD -- 7 parties, 20 items, 46 entries loaded."

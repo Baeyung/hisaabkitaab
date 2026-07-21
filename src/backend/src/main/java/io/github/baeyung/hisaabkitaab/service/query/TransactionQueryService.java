@@ -34,12 +34,12 @@ public class TransactionQueryService
     private final StoreService storeService;
     private final TransactionRepository transactionRepository;
 
-    public List<BillSummaryResponse> listBills(String ownerId)
+    public List<BillSummaryResponse> listBills(String ownerId, String partyId, String itemId)
     {
         Store store = storeService.getPrimaryStoreForOwner(ownerId);
 
         return transactionRepository
-                .findByStoreIdAndEventNewestFirst(store.getId(), TransactionEvent.SALE)
+                .findBillsFiltered(store.getId(), TransactionEvent.SALE, blankToNull(partyId), blankToNull(itemId))
                 .stream()
                 .map(transaction -> new BillSummaryResponse(
                         transaction.getId(),
@@ -129,6 +129,11 @@ public class TransactionQueryService
     private double value(TransactionLine line)
     {
         return line.getValue() != null ? line.getValue() : 0;
+    }
+
+    private static String blankToNull(String value)
+    {
+        return value == null || value.isBlank() ? null : value;
     }
 
     private LocalDate dateOf(Transaction transaction)

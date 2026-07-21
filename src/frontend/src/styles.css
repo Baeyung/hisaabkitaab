@@ -342,6 +342,27 @@ html[dir='rtl'] .num {
   border-radius: 6px;
 }
 
+/* a bill fully covered by later payments (FIFO) — green tint + a "Paid" badge */
+.rm-tbl tr.rm-row--cleared td {
+  background: rgba(31, 122, 77, 0.06);
+}
+.rm-tbl tr.rm-row--cleared.rm-rowlink:hover td {
+  background: rgba(31, 122, 77, 0.1);
+}
+.rm-badge {
+  display: inline-block;
+  margin-inline-start: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+.rm-badge--paid {
+  color: var(--kg-in);
+  background: rgba(31, 122, 77, 0.12);
+}
+
 /* footer strip (cashbook closing, bill totals) */
 .rm-foot {
   display: flex;
