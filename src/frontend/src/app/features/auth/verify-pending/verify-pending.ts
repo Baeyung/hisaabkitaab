@@ -5,12 +5,12 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { AuthShell } from '../auth-shell/auth-shell';
 
-const RESEND_COOLDOWN_SECONDS = 180;
+const RESEND_COOLDOWN_SECONDS = 40;
 
 /**
  * Landing screen for an account that has signed up but not yet verified its email.
  * Shows where the link was sent and lets the user resend it — but only once every
- * 3 minutes, enforced here as a simple countdown (the backend is not throttled).
+ * 40 seconds, enforced here as a simple countdown (the backend is not throttled).
  */
 @Component({
   selector: 'app-verify-pending',
