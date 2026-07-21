@@ -1,6 +1,8 @@
 spring:
   application:
     name: hisaabkitaab
+
+  # Database properties
   datasource:
     url: jdbc:postgresql://localhost:5432/hisaabkitaab
     username: hkadmin
@@ -16,9 +18,16 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
-#  activemq:
-#    broker-url: tcp://localhost:61616
-#    user: hkadmin
-#    password: admin
-#    packages:
-#      trust-all: true
+
+  # Email properties
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: ${ BREVO_MAIL_USER_IDENTIFIER:hisaabKitaab }@smtp-brevo.com
+    password: ${ BREVO_SMPTP_KEY:password }
+    properties:
+      mail:
+        smptp:
+          auth: true
+          starttls:
+            enable: true
