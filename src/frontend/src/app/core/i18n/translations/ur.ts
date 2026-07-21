@@ -315,6 +315,7 @@ export const ur: Record<TranslationKey, string> = {
   'dash.trend.aria':
     'منتخب مدت کے لیے روزانہ سیل اور خرچ، ساتھ گلے کی چلتی نقدی۔ سیل {{sales}}، خرچ {{spend}}، گلے میں نقدی {{cash}}۔',
   'dash.sales': 'آمدنی',
+  'dash.sales.hint': 'منتخب مدت کی کل',
   'dash.spend': 'خرچ',
   'dash.byRevenue': 'آمدنی کے حساب سے',
   'dash.mix.title': 'سیل کہاں سے آئی',

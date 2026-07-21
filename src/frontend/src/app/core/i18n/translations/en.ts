@@ -381,6 +381,7 @@ export const en = {
   'dash.trend.aria':
     'Daily sales and spending, with the running cash balance, for the selected period. Sales {{sales}}, spending {{spend}}, cash in drawer {{cash}}.',
   'dash.sales': 'Revenue',
+  'dash.sales.hint': 'Total for the selected period',
   'dash.spend': 'Spending',
   'dash.byRevenue': 'by revenue',
   'dash.mix.title': 'Where sales came from',

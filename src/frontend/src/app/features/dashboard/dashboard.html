@@ -55,6 +55,11 @@
     </div>
   } @else if (data(); as d) {
     <div class="dw-kpis">
+      <article class="dw-kpi dw-kpi--in">
+        <span class="dw-kpi__label">{{ locale.t('dash.sales') }}</span>
+        <span class="dw-kpi__value num amt--in">{{ locale.money(d.sales) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('dash.sales.hint') }}</span>
+      </article>
       <article class="dw-kpi dw-kpi--brand">
         <span class="dw-kpi__label">{{ locale.t('dash.cash') }}</span>
         <span class="dw-kpi__value num">{{ locale.money(d.cashPosition) }}</span>
