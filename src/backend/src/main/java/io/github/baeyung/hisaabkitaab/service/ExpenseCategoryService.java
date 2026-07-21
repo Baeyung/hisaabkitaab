@@ -3,12 +3,14 @@ package io.github.baeyung.hisaabkitaab.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import io.github.baeyung.hisaabkitaab.entity.ExpenseCategory;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.repository.ExpenseCategoryRepository;
+import io.github.baeyung.hisaabkitaab.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -32,6 +34,7 @@ public class ExpenseCategoryService
     public static final String UNCATEGORIZED = "UNCATEGORIZED";
 
     private final ExpenseCategoryRepository repository;
+    private final StoreRepository storeRepository;
 
     /** Gives a fresh store its default heads. No-op if it already has any. */
     public void seedDefaults(Store store)
@@ -42,6 +45,17 @@ public class ExpenseCategoryService
         }
         DEFAULT_NAMES.forEach(name -> repository.save(
                 ExpenseCategory.builder().store(store).name(name).build()));
+    }
+
+    /**
+     * Seeds by store id in its own transaction — used by the one-time migration, which
+     * iterates detached stores and needs each seed isolated (so one failure or a lost
+     * concurrent-seed race can't poison the others).
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void seedDefaultsById(String storeId)
+    {
+        seedDefaults(storeRepository.getReferenceById(storeId));
     }
 
     /**
