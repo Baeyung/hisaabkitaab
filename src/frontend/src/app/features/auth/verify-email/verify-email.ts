@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { TranslationKey } from '../../../core/i18n/translations/en';
@@ -25,7 +25,7 @@ const BODY_KEYS: Record<State, TranslationKey> = {
  */
 @Component({
   selector: 'app-verify-email',
-  imports: [RouterLink, AuthShell],
+  imports: [AuthShell],
   template: `
     <app-auth-shell>
       <div class="auth__head">
@@ -35,7 +35,9 @@ const BODY_KEYS: Record<State, TranslationKey> = {
 
       @if (state() !== 'verifying') {
         <div class="auth__stack">
-          <a class="auth__cta" routerLink="/login">{{ locale.t('auth.verifyEmail.toLogin') }}</a>
+          <button class="auth__cta" type="button" (click)="goToLogin()">
+            {{ locale.t('auth.verifyEmail.toLogin') }}
+          </button>
         </div>
       }
     </app-auth-shell>
@@ -44,6 +46,7 @@ const BODY_KEYS: Record<State, TranslationKey> = {
 export class VerifyEmail {
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   protected readonly locale = inject(LocaleService);
 
   protected readonly state = signal<State>('verifying');
@@ -61,4 +64,15 @@ export class VerifyEmail {
       .then(() => this.state.set('success'))
       .catch(() => this.state.set('error'));
   }
+
+  goToLogin(): void {
+    // On success, keep any stored creds so publicOnlyGuard drops a now-verified user
+    // straight into the app. On error the account is still unverified, so clear the
+    // session first — otherwise /login would bounce back to the verify screen.
+    if (this.state() === 'error') {
+      this.auth.logout();
+    }
+    this.router.navigate(['/login']);
+  }
 }
+

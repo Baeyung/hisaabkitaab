@@ -1,5 +1,5 @@
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { LocaleService } from '../../../core/i18n/locale.service';
@@ -14,7 +14,7 @@ const RESEND_COOLDOWN_SECONDS = 180;
  */
 @Component({
   selector: 'app-verify-pending',
-  imports: [RouterLink, AuthShell],
+  imports: [AuthShell],
   template: `
     <app-auth-shell>
       <div class="auth__head">
@@ -46,7 +46,9 @@ const RESEND_COOLDOWN_SECONDS = 180;
       </div>
 
       <p class="auth__foot">
-        <a routerLink="/login">{{ locale.t('auth.verifyPending.toLogin') }}</a>
+        <button type="button" (click)="backToLogin()">
+          {{ locale.t('auth.verifyPending.toLogin') }}
+        </button>
       </p>
     </app-auth-shell>
   `,
@@ -54,6 +56,7 @@ const RESEND_COOLDOWN_SECONDS = 180;
 export class VerifyPending implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly store = inject(AuthStore);
+  private readonly router = inject(Router);
   protected readonly locale = inject(LocaleService);
 
   protected readonly identifier = this.store.pendingIdentifier;
@@ -71,6 +74,12 @@ export class VerifyPending implements OnDestroy {
 
   constructor() {
     this.startCooldown();
+  }
+
+  /** Abandon verification: clear the stored (unverified) session so publicOnlyGuard lets /login through. */
+  backToLogin(): void {
+    this.auth.logout();
+    this.router.navigate(['/login']);
   }
 
   async resend(): Promise<void> {

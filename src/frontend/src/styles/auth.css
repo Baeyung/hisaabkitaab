@@ -352,12 +352,21 @@
   text-align: center;
   color: var(--kg-muted);
 }
-.auth__foot a {
+.auth__foot a,
+.auth__foot button {
   color: var(--kg-brand);
   font-weight: 600;
   text-decoration: none;
 }
-.auth__foot a:hover {
+.auth__foot button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.auth__foot a:hover,
+.auth__foot button:hover {
   text-decoration: underline;
 }
 
