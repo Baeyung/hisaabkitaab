@@ -12,6 +12,7 @@ import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.repository.UserRepository;
+import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +26,7 @@ public class StoreServiceImpl implements StoreService
     private final PartyRepository partyRepository;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final ExpenseCategoryService expenseCategoryService;
 
     @Transactional
     @Override
@@ -73,7 +75,9 @@ public class StoreServiceImpl implements StoreService
                 .watermarkUri(input.getWatermarkUri())
                 .build();
 
-        return storeRepository.save(store);
+        Store saved = storeRepository.save(store);
+        expenseCategoryService.seedDefaults(saved);
+        return saved;
     }
 
     @Override

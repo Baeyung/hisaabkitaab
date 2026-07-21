@@ -105,7 +105,7 @@
               @for (group of categories(); track group.category) {
                 <tr class="rm-rowlink" (click)="openCategory(group.category)">
                   <td class="rm-cell-head">
-                    <a [routerLink]="['/ledger/category', group.category]" class="rm-tbl__name">{{ locale.t(categoryLabel[group.category]) }}</a>
+                    <a [routerLink]="['/ledger/category', group.category]" class="rm-tbl__name">{{ categoryLabel(group.category) }}</a>
                   </td>
                   <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">{{ group.count }}</td>
                   <td class="end num amt--out" [attr.data-label]="locale.t('ledger.category.col.total')">

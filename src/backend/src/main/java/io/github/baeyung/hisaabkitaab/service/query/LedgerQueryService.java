@@ -19,10 +19,10 @@ import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
-import io.github.baeyung.hisaabkitaab.enums.ExpenseCategory;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
+import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
@@ -79,10 +79,12 @@ public class LedgerQueryService
         Store store = storeService.getPrimaryStoreForOwner(ownerId);
 
         // ponytail: scans full expense history each call; add a cached read-model if a shop's expense count ever makes this slow.
-        Map<ExpenseCategory, List<TransactionLine>> groups = transactionLineRepository.findExpenseLinesByStore(store.getId())
+        Map<String, List<TransactionLine>> groups = transactionLineRepository.findExpenseLinesByStore(store.getId())
                 .stream()
                 .collect(Collectors.groupingBy(
-                        line -> line.getExpenseCategory() != null ? line.getExpenseCategory() : ExpenseCategory.UNCATEGORIZED,
+                        line -> line.getExpenseCategory() != null
+                                ? line.getExpenseCategory().getName()
+                                : ExpenseCategoryService.UNCATEGORIZED,
                         LinkedHashMap::new,
                         Collectors.toList()
                 ));
@@ -94,7 +96,7 @@ public class LedgerQueryService
                 .toList();
     }
 
-    private ExpenseCategoryGroupResponse toCategoryGroup(ExpenseCategory category, List<TransactionLine> lines)
+    private ExpenseCategoryGroupResponse toCategoryGroup(String category, List<TransactionLine> lines)
     {
         List<ExpenseCategoryRowResponse> rows = RunningBalanceFolder.fold(
                 lines,
@@ -115,7 +117,7 @@ public class LedgerQueryService
 
         double total = rows.isEmpty() ? 0 : rows.getLast().runningTotal();
 
-        return new ExpenseCategoryGroupResponse(category.name(), rows.size(), total, rows);
+        return new ExpenseCategoryGroupResponse(category, rows.size(), total, rows);
     }
 
     public PartyStatementResponse getStatement(String ownerId, String partyId)

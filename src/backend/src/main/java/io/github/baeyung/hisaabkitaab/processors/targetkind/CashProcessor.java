@@ -3,10 +3,10 @@ package io.github.baeyung.hisaabkitaab.processors.targetkind;
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
-import io.github.baeyung.hisaabkitaab.enums.ExpenseCategory;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
+import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.TransactionLineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,11 +15,14 @@ import org.springframework.stereotype.Component;
 public class CashProcessor implements KindProcessor
 {
     private final TransactionLineService transactionLineService;
+    private final ExpenseCategoryService expenseCategoryService;
 
     @Autowired
-    public CashProcessor(TransactionLineService transactionLineService)
+    public CashProcessor(TransactionLineService transactionLineService,
+                         ExpenseCategoryService expenseCategoryService)
     {
         this.transactionLineService = transactionLineService;
+        this.expenseCategoryService = expenseCategoryService;
     }
 
     @Override
@@ -51,9 +54,8 @@ public class CashProcessor implements KindProcessor
         if (transactionEvent == TransactionEvent.EXPENSE)
         {
             transactionLine.setExpenseCategory(
-                    payload.getExpenseCategory() != null
-                            ? payload.getExpenseCategory()
-                            : ExpenseCategory.UNCATEGORIZED
+                    expenseCategoryService.resolveOrCreate(
+                            transaction.getStore(), payload.getExpenseCategory())
             );
         }
 

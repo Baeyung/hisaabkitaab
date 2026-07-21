@@ -4,10 +4,12 @@ erDiagram
   STORE ||--o{ STORE_ITEM : stocks
   STORE ||--o{ PARTY : has
   STORE ||--o{ TRANSACTION : records
+  STORE ||--o{ EXPENSE_CATEGORY : "defines heads"
   TRANSACTION ||--o{ TRANSACTION_LINE : posts
   TRANSACTION }o--o| PARTY : counterparty
   TRANSACTION_LINE }o--o| PARTY : "targets party"
   TRANSACTION_LINE }o--o| STORE_ITEM : "targets stock"
+  TRANSACTION_LINE }o--o| EXPENSE_CATEGORY : "filed under (expense only)"
 
   USER {
     string id PK
@@ -40,6 +42,11 @@ erDiagram
     string contact
     string address
   }
+  EXPENSE_CATEGORY {
+    string id PK
+    string store_id FK
+    string name "unique per store; seed heads keep tokens (PARTS…)"
+  }
   TRANSACTION {
     string id PK
     string store_id FK
@@ -57,6 +64,7 @@ erDiagram
     enum target_kind "Cash/Bank/Party/Stock"
     string party_id FK "nullable"
     string item_id FK "nullable"
+    string expense_category_id FK "nullable, expense cash line only"
     enum in_out "In/Out/None"
     json value_meta_data "credit, debit"
     decimal quantity "stock only"

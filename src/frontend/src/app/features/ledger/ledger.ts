@@ -3,7 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
 import { ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.models';
-import { EXPENSE_CATEGORY_LABEL } from '../../core/store/event.models';
+import { expenseCategoryLabel } from '../../core/store/event.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 
@@ -37,7 +37,10 @@ export class Ledger {
 
   protected readonly directionKey = directionKey;
   protected readonly directionClass = directionClass;
-  protected readonly categoryLabel = EXPENSE_CATEGORY_LABEL;
+
+  /** Display label for a spend head: seed tokens translated, custom names shown raw. */
+  protected readonly categoryLabel = (name: string): string =>
+    expenseCategoryLabel(name, (k) => this.locale.t(k));
 
   constructor() {
     void this.load();

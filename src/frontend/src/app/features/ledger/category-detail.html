@@ -21,7 +21,7 @@
   } @else if (group(); as g) {
     <header class="rm-head">
       <div>
-        <h1 class="rm-title">{{ locale.t(categoryLabel[g.category]) }}</h1>
+        <h1 class="rm-title">{{ categoryLabel(g.category) }}</h1>
         <p class="rm-sub">{{ locale.t('ledger.category.entries', { count: locale.formatNumber(g.count) }) }}</p>
         <div class="rm-baqaya">
           <span class="rm-baqaya__label">{{ locale.t('ledger.category.col.total') }}</span>

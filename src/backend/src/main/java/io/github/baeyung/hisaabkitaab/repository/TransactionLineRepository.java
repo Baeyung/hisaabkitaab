@@ -57,6 +57,7 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
     @Query("""
             select tl from TransactionLine tl
             join fetch tl.transaction t
+            left join fetch tl.expenseCategory
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
               and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.EXPENSE
               and t.store.id = :storeId

@@ -1,15 +1,14 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { EventService } from '../../core/store/event.service';
-import {
-  EventRequest,
-  EXPENSE_CATEGORIES,
-  EXPENSE_CATEGORY_LABEL,
-  ExpenseCategory,
-} from '../../core/store/event.models';
+import { ExpenseCategoryService } from '../../core/store/expense-category.service';
+import { EventRequest, expenseCategoryLabel } from '../../core/store/event.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { ToastState } from '../../shared/toast-state';
+
+/** Sentinel <select> value that reveals the "add a new category" text field. */
+const ADD_NEW = '__new__';
 
 /**
  * EXPENSE entry (خرچ) — cash leaves the drawer for something that isn't a party
@@ -41,17 +40,20 @@ import { ToastState } from '../../shared/toast-state';
 export class Expense {
   protected readonly locale = inject(LocaleService);
   private readonly events = inject(EventService);
+  private readonly categoryApi = inject(ExpenseCategoryService);
 
   protected readonly toast = new ToastState();
   protected readonly recent = new RecentLog();
 
-  protected readonly categories = EXPENSE_CATEGORIES;
-  protected readonly categoryLabel = EXPENSE_CATEGORY_LABEL;
+  protected readonly addNew = ADD_NEW;
+  /** The store's existing heads, offered in the dropdown; grows as new ones are added. */
+  protected readonly categories = signal<string[]>(['UNCATEGORIZED']);
   protected readonly billDate = signal(todayIso());
   protected readonly amount = signal<number | null>(null);
   protected readonly details = signal('');
   protected readonly billNumber = signal('');
-  protected readonly category = signal<ExpenseCategory>('UNCATEGORIZED');
+  protected readonly category = signal<string>('UNCATEGORIZED');
+  protected readonly newCategory = signal('');
   protected readonly saving = signal(false);
 
   protected readonly total = computed(() => this.amount() ?? 0);
@@ -60,8 +62,29 @@ export class Expense {
     () => this.total() > 0 && this.details().trim().length > 0 && !this.saving(),
   );
 
+  /** Display label for a head: seed tokens translated, custom names shown raw. */
+  protected readonly label = (name: string): string =>
+    expenseCategoryLabel(name, (k) => this.locale.t(k));
+
   constructor() {
     inject(DestroyRef).onDestroy(() => this.toast.dispose());
+    void this.loadCategories();
+  }
+
+  private async loadCategories(): Promise<void> {
+    try {
+      const names = await this.categoryApi.names();
+      if (names.length > 0) {
+        this.categories.set(names);
+      }
+    } catch {
+      // Non-fatal: the shopkeeper can still type a new category or use the default.
+    }
+  }
+
+  /** The head to file this expense under: the typed-new name when adding, else the picked one. */
+  private chosenCategory(): string {
+    return this.category() === ADD_NEW ? this.newCategory().trim() : this.category();
   }
 
   setAmount(value: string): void {
@@ -88,11 +111,17 @@ export class Expense {
       description: details,
       party: null,
       items: [],
-      expenseCategory: this.category(),
+      expenseCategory: this.chosenCategory(),
     };
+
+    const chosen = this.chosenCategory();
 
     try {
       await this.events.publishEvent(request);
+      // A brand-new head is now saved server-side; surface it in the dropdown right away.
+      if (chosen && !this.categories().includes(chosen)) {
+        this.categories.update((names) => [...names, chosen].sort());
+      }
       // Details go on the sub-line, where Payment/Receipt put their counterparty:
       // it's the free-text half and can run long, so it reads better small.
       this.recent.push(
@@ -113,5 +142,6 @@ export class Expense {
     this.details.set('');
     this.billNumber.set('');
     this.category.set('UNCATEGORIZED');
+    this.newCategory.set('');
   }
 }

@@ -264,6 +264,8 @@ export const ur: Record<TranslationKey, string> = {
   'expense.category.MISC': 'متفرق',
   'expense.category.SALARIES': 'تنخواہیں',
   'expense.category.UNCATEGORIZED': 'غیر مختص',
+  'expense.category.addNew': '+ نئی قسم شامل کریں',
+  'expense.category.new.ph': 'نئی قسم کا نام',
   'expense.billNumber': 'حوالہ نمبر',
   'expense.billNumber.ph': 'اختیاری',
   'expense.clear': 'صاف کریں',

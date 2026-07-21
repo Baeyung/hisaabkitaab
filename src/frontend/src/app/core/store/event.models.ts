@@ -18,11 +18,15 @@ export interface EventRequest {
   billDate: string | null;
   party: EventParty | null;
   items: EventItem[];
-  /** Only sent for EXPENSE; the spend head the cash went to. */
-  expenseCategory?: ExpenseCategory;
+  /** Only sent for EXPENSE; the spend head the cash went to, by name. Auto-created if new. */
+  expenseCategory?: string;
 }
 
-/** Mirrors the backend `ExpenseCategory` enum — the head an expense is filed under. */
+/**
+ * Categories are now per-store free text (see the backend `expense_categories` table),
+ * so a category is just its name. The six seed heads keep stable tokens, though, so
+ * their bilingual labels still resolve — see {@link expenseCategoryLabel}.
+ */
 export type ExpenseCategory =
   | 'PARTS'
   | 'ELECTRICITY'
@@ -31,17 +35,7 @@ export type ExpenseCategory =
   | 'SALARIES'
   | 'UNCATEGORIZED';
 
-/** The categories in the order they're offered on the expense form. */
-export const EXPENSE_CATEGORIES: readonly ExpenseCategory[] = [
-  'PARTS',
-  'ELECTRICITY',
-  'GENERAL',
-  'MISC',
-  'SALARIES',
-  'UNCATEGORIZED',
-];
-
-/** The i18n key for each category's label (typed so `locale.t` accepts it). */
+/** The i18n key for each seed category's label (typed so `locale.t` accepts it). */
 export const EXPENSE_CATEGORY_LABEL: Record<ExpenseCategory, TranslationKey> = {
   PARTS: 'expense.category.PARTS',
   ELECTRICITY: 'expense.category.ELECTRICITY',
@@ -50,6 +44,19 @@ export const EXPENSE_CATEGORY_LABEL: Record<ExpenseCategory, TranslationKey> = {
   SALARIES: 'expense.category.SALARIES',
   UNCATEGORIZED: 'expense.category.UNCATEGORIZED',
 };
+
+/**
+ * A category's display label: seed heads (PARTS, ELECTRICITY…) get their bilingual
+ * translation; anything a shopkeeper typed shows raw. Pass `locale.t`.
+ */
+export function expenseCategoryLabel(
+  name: string,
+  t: (key: TranslationKey) => string,
+): string {
+  return name in EXPENSE_CATEGORY_LABEL
+    ? t(EXPENSE_CATEGORY_LABEL[name as ExpenseCategory])
+    : name;
+}
 
 /** A party on the event — `partyId` null when the typed name is new. */
 export interface EventParty {

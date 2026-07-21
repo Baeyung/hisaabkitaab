@@ -262,6 +262,8 @@ export const en = {
   'expense.category.MISC': 'Misc',
   'expense.category.SALARIES': 'Salaries',
   'expense.category.UNCATEGORIZED': 'Uncategorized',
+  'expense.category.addNew': '+ Add new category',
+  'expense.category.new.ph': 'New category name',
   'expense.billNumber': 'Reference no.',
   'expense.billNumber.ph': 'Optional',
   'expense.clear': 'Clear',

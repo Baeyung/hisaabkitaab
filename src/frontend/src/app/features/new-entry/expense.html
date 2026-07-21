@@ -56,10 +56,21 @@
         [value]="category()"
         (change)="category.set($any($event.target).value)"
       >
-        @for (c of categories; track c) {
-          <option [value]="c">{{ locale.t(categoryLabel[c]) }}</option>
+        @for (c of categories(); track c) {
+          <option [value]="c">{{ label(c) }}</option>
         }
+        <option [value]="addNew">{{ locale.t('expense.category.addNew') }}</option>
       </select>
+      @if (category() === addNew) {
+        <input
+          class="fld__input"
+          type="text"
+          [value]="newCategory()"
+          (input)="newCategory.set($any($event.target).value)"
+          [attr.placeholder]="locale.t('expense.category.new.ph')"
+          [attr.aria-label]="locale.t('expense.category.addNew')"
+        />
+      }
     </div>
 
     <div class="meta">
