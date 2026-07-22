@@ -11,6 +11,7 @@ import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { Combobox } from '../../shared/combobox/combobox';
 import { PrintHeader } from '../../shared/print-header';
+import { DateField } from '../../shared/date-field/date-field';
 
 /** One line of cloth on the bill. `key` is a stable id for @for tracking. */
 interface Line {
@@ -107,7 +108,7 @@ export interface GoodsEntryConfig {
   selector: 'app-goods-entry',
   templateUrl: './goods-entry.html',
   styleUrl: './sale.css',
-  imports: [Combobox, PrintHeader],
+  imports: [Combobox, PrintHeader, DateField],
 })
 export class GoodsEntry {
   readonly config = input.required<GoodsEntryConfig>();

@@ -6,6 +6,7 @@ import { EventRequest, expenseCategoryLabel } from '../../core/store/event.model
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { ToastState } from '../../shared/toast-state';
+import { DateField } from '../../shared/date-field/date-field';
 
 /** Sentinel <select> value that reveals the "add a new category" text field. */
 const ADD_NEW = '__new__';
@@ -34,6 +35,7 @@ const ADD_NEW = '__new__';
  */
 @Component({
   selector: 'app-expense',
+  imports: [DateField],
   templateUrl: './expense.html',
   styleUrl: './sale.css',
 })

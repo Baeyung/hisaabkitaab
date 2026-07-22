@@ -9,6 +9,7 @@ import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { ToastState } from '../../shared/toast-state';
 import { Combobox } from '../../shared/combobox/combobox';
+import { DateField } from '../../shared/date-field/date-field';
 
 /**
  * The screen's copy. Keys are passed in as literals rather than built from a
@@ -67,7 +68,7 @@ export interface PartyCashEntryConfig {
   selector: 'app-party-cash-entry',
   templateUrl: './party-cash-entry.html',
   styleUrl: './sale.css',
-  imports: [Combobox],
+  imports: [Combobox, DateField],
 })
 export class PartyCashEntry {
   readonly eventType = input.required<'RECEIPT' | 'PAYMENT'>();

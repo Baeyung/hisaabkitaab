@@ -9,6 +9,7 @@ import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { Select } from '../../shared/select/select';
+import { DateField } from '../../shared/date-field/date-field';
 
 /**
  * One party's khata statement: every entry with the running baqaya, clean
@@ -17,7 +18,7 @@ import { Select } from '../../shared/select/select';
  */
 @Component({
   selector: 'app-ledger-detail',
-  imports: [RouterLink, PrintHeader, Select],
+  imports: [RouterLink, PrintHeader, Select, DateField],
   templateUrl: './ledger-detail.html',
 })
 export class LedgerDetail {

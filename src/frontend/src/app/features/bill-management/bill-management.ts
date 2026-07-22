@@ -6,6 +6,7 @@ import { BillDetail, BillSummary } from '../../core/store/bill.models';
 import { PrintHeader } from '../../shared/print-header';
 import { BillInvoice } from '../../shared/bill-invoice';
 import { Select } from '../../shared/select/select';
+import { DateField } from '../../shared/date-field/date-field';
 import { LedgerService } from '../../core/store/ledger.service';
 import { InventoryService } from '../../core/store/inventory.service';
 import { PartyBalanceRow } from '../../core/store/ledger.models';
@@ -19,7 +20,7 @@ import { todayIso } from '../../shared/date.util';
  */
 @Component({
   selector: 'app-bill-management',
-  imports: [RouterLink, PrintHeader, BillInvoice, Select],
+  imports: [RouterLink, PrintHeader, BillInvoice, Select, DateField],
   templateUrl: './bill-management.html',
 })
 export class BillManagement {

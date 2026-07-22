@@ -6,6 +6,7 @@ import { CashbookDay } from '../../core/store/cashbook.models';
 import { todayIso } from '../../shared/date.util';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintDetailsService } from '../../shared/print-details.service';
+import { DateField } from '../../shared/date-field/date-field';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -14,7 +15,7 @@ import { PrintDetailsService } from '../../shared/print-details.service';
  */
 @Component({
   selector: 'app-cashbook',
-  imports: [RouterLink, PrintHeader],
+  imports: [RouterLink, PrintHeader, DateField],
   templateUrl: './cashbook.html',
 })
 export class Cashbook {

@@ -6,12 +6,10 @@
         <p class="sale__eyebrow">{{ locale.t(config().labels.newEntry) }}</p>
         <h1 class="sale__title">{{ locale.t(config().labels.title) }}</h1>
       </div>
-      <input
-        class="fld__input fld__input--date"
-        type="date"
+      <app-date-field
         [value]="billDate()"
-        (input)="billDate.set($any($event.target).value)"
-        [attr.aria-label]="locale.t('sale.billDate')"
+        (valueChange)="billDate.set($event)"
+        [ariaLabel]="locale.t('sale.billDate')"
       />
     </header>
 

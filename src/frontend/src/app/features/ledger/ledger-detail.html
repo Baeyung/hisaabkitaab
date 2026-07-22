@@ -65,14 +65,14 @@
 
       <div class="rm-card">
         <div class="rm-toolbar rm-toolbar--filters rm-noprint">
-          <label class="rm-field">
+          <div class="rm-field">
             <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
-            <input class="rm-input rm-input--date" type="date" [value]="fromDate()" (input)="fromDate.set(fromInput.value)" #fromInput [attr.aria-label]="locale.t('bill.filter.from')" />
-          </label>
-          <label class="rm-field">
+            <app-date-field [value]="fromDate()" (valueChange)="fromDate.set($event)" [ariaLabel]="locale.t('bill.filter.from')" />
+          </div>
+          <div class="rm-field">
             <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
-            <input class="rm-input rm-input--date" type="date" [value]="toDate()" (input)="toDate.set(toInput.value)" #toInput [attr.aria-label]="locale.t('bill.filter.to')" />
-          </label>
+            <app-date-field [value]="toDate()" (valueChange)="toDate.set($event)" [ariaLabel]="locale.t('bill.filter.to')" />
+          </div>
           <label class="rm-field">
             <span class="rm-field__label">{{ locale.t('report.filter.event') }}</span>
             <app-select

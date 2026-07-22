@@ -42,28 +42,22 @@
           [attr.placeholder]="locale.t('bill.search.ph')"
           [attr.aria-label]="locale.t('bill.search.ph')"
         />
-        <label class="rm-field">
+        <div class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
-          <input
-            class="rm-input rm-input--date"
-            type="date"
+          <app-date-field
             [value]="fromDate()"
-            (input)="fromDate.set(fromInput.value)"
-            #fromInput
-            [attr.aria-label]="locale.t('bill.filter.from')"
+            (valueChange)="fromDate.set($event)"
+            [ariaLabel]="locale.t('bill.filter.from')"
           />
-        </label>
-        <label class="rm-field">
+        </div>
+        <div class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
-          <input
-            class="rm-input rm-input--date"
-            type="date"
+          <app-date-field
             [value]="toDate()"
-            (input)="toDate.set(toInput.value)"
-            #toInput
-            [attr.aria-label]="locale.t('bill.filter.to')"
+            (valueChange)="toDate.set($event)"
+            [ariaLabel]="locale.t('bill.filter.to')"
           />
-        </label>
+        </div>
         <label class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.party') }}</span>
           <app-select
