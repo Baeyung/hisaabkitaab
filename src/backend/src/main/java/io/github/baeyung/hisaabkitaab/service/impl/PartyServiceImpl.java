@@ -57,10 +57,10 @@ public class PartyServiceImpl implements PartyService
     @Override
     public Party create(Party input, String ownerId)
     {
-        // ownerId is the user's id (PartyController passes principal.getId()), so resolve the
-        // store by id — findFirstByOwnerIdentifier expects an email/contact and would return null.
+        // ownerId is a user-id from PartyController or an email/contact from EventService's
+        // dynamic-party path — findFirstByOwnerIdentifier resolves the store from any of them.
         Party party = Party.builder()
-                .store(storeService.getPrimaryStoreForOwner(ownerId))
+                .store(storeService.findFirstByOwnerIdentifier(ownerId))
                 .name(input.getName())
                 .contact(input.getContact())
                 .address(input.getAddress())
