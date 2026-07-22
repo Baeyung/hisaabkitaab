@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
+import { anchorPopup } from '../anchor-popup';
 
 /** Module-level counter so each instance gets a unique grid label id. */
 let uid = 0;
@@ -84,8 +85,10 @@ function parseTyped(s: string): string | null {
         (click)="toggle()"
         (keydown)="onTriggerKeydown($event)"
       >
+        <!-- Falls back to the format hint: an empty label gives the button no
+             text to size against, collapsing it to a squished stub. -->
         <span class="df__val" [class.df__val--ph]="!displayValue()">{{
-          displayValue() || placeholder()
+          displayValue() || placeholder() || locale.t('date.typeHint')
         }}</span>
         <svg
           class="df__icon"
@@ -105,6 +108,7 @@ function parseTyped(s: string): string | null {
       </button>
       @if (open()) {
         <div
+          #popEl
           class="df__pop"
           role="dialog"
           [attr.aria-label]="ariaLabel()"
@@ -359,6 +363,7 @@ export class DateField {
   private readonly root = viewChild.required<ElementRef<HTMLElement>>('root');
   private readonly trigger = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
   private readonly typedEl = viewChild<ElementRef<HTMLInputElement>>('typedEl');
+  private readonly popEl = viewChild<ElementRef<HTMLElement>>('popEl');
 
   protected readonly gridLabelId = `df-${uid++}`;
   protected readonly today = toIso(new Date());
@@ -436,6 +441,7 @@ export class DateField {
     // Focus the typed field when the popup opens; select its text for quick replace.
     effect(() => {
       if (!this.open()) return;
+      this.positionPopup(); // re-anchor now the popup is rendered and has a real size
       const el = this.typedEl()?.nativeElement;
       if (el) {
         el.focus();
@@ -477,8 +483,9 @@ export class DateField {
   }
 
   private positionPopup(): void {
-    const r = this.trigger().nativeElement.getBoundingClientRect();
-    this.pop.set({ top: r.bottom + 4, left: r.left });
+    this.pop.set(
+      anchorPopup(this.trigger().nativeElement.getBoundingClientRect(), this.popEl()?.nativeElement),
+    );
   }
 
   protected shiftMonth(delta: number): void {

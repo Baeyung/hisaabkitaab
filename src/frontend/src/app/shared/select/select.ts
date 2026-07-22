@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
+import { anchorPopup } from '../anchor-popup';
 
 export interface SelectOption {
   value: string;
@@ -70,6 +71,7 @@ let uid = 0;
       </button>
       @if (open()) {
         <div
+          #popEl
           class="sel__pop"
           [style.top.px]="pop().top"
           [style.left.px]="pop().left"
@@ -259,6 +261,7 @@ export class Select {
   private readonly trigger = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
   private readonly search = viewChild<ElementRef<HTMLInputElement>>('search');
   private readonly list = viewChild<ElementRef<HTMLUListElement>>('list');
+  private readonly popEl = viewChild<ElementRef<HTMLElement>>('popEl');
 
   protected readonly listboxId = `sel-${uid++}`;
   protected readonly open = signal(false);
@@ -282,6 +285,7 @@ export class Select {
     // Move focus into the search field once the popup renders.
     effect(() => {
       if (this.open()) {
+        this.positionPopup(); // re-anchor now the popup is rendered and has a real size
         this.search()?.nativeElement.focus();
       }
     });
@@ -328,7 +332,7 @@ export class Select {
 
   private positionPopup(): void {
     const r = this.trigger().nativeElement.getBoundingClientRect();
-    this.pop.set({ top: r.bottom + 4, left: r.left, width: r.width });
+    this.pop.set({ ...anchorPopup(r, this.popEl()?.nativeElement), width: r.width });
   }
 
   private close(): void {

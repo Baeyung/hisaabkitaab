@@ -47,19 +47,19 @@
       <div class="rm-stats">
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.totalBilled') }}</span>
-          <span class="rm-stat__value num">{{ locale.money(st.totalBilled) }}</span>
+          <span class="rm-stat__value num">{{ locale.money(stats().totalBilled) }}</span>
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.totalPaid') }}</span>
-          <span class="rm-stat__value num amt--in">{{ locale.money(st.totalPaid) }}</span>
+          <span class="rm-stat__value num amt--in">{{ locale.money(stats().totalPaid) }}</span>
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.outstanding') }}</span>
-          <span class="rm-stat__value num" [class]="directionClass(st.currentBalance.direction)">{{ locale.money(st.currentBalance.amount) }}</span>
+          <span class="rm-stat__value num" [class]="directionClass(stats().balance.direction)">{{ locale.money(stats().balance.amount) }}</span>
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.lastPayment') }}</span>
-          <span class="rm-stat__value num">{{ st.lastPaymentDate || locale.t('report.never') }}</span>
+          <span class="rm-stat__value num">{{ stats().lastPaymentDate || locale.t('report.never') }}</span>
         </div>
       </div>
 
