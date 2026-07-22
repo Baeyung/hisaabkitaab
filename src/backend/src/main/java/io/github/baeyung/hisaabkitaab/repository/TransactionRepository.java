@@ -1,6 +1,7 @@
 package io.github.baeyung.hisaabkitaab.repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,6 +47,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
 
     @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
     Optional<Transaction> findByIdAndStoreId(String id, String storeId);
+
+    /** Batch sibling of findByIdAndStoreId — the "print all bills" printout loads every filtered bill at once. */
+    @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
+    List<Transaction> findByIdInAndStoreId(Collection<String> ids, String storeId);
 
     /** The single opening-balance transaction for a party, if one has been set (see OpeningEntryService). */
     @EntityGraph(attributePaths = {"lines"})

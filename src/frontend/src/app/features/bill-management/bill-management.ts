@@ -111,10 +111,7 @@ export class BillManagement {
     this.printing.set(true);
     this.printError.set(false);
     try {
-      const results = await Promise.allSettled(rows.map((b) => this.api.getDetail(b.id)));
-      const bills = results
-        .filter((r): r is PromiseFulfilledResult<BillDetail> => r.status === 'fulfilled')
-        .map((r) => r.value);
+      const bills = await this.api.getDetails(rows.map((b) => b.id));
       if (bills.length === 0) {
         this.printError.set(true);
         return;
@@ -123,6 +120,8 @@ export class BillManagement {
       // Flush the invoices into the DOM before window.print() reads it.
       this.appRef.tick();
       window.print();
+    } catch {
+      this.printError.set(true);
     } finally {
       this.printing.set(false);
     }

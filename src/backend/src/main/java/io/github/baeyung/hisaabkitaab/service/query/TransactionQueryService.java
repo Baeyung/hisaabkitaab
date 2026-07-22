@@ -2,6 +2,9 @@ package io.github.baeyung.hisaabkitaab.service.query;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,6 +63,36 @@ public class TransactionQueryService
                 .filter(t -> t.getEvent() == TransactionEvent.SALE)
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Bill", transactionId));
 
+        return toBillDetail(transaction);
+    }
+
+    /**
+     * Details for many bills in one round-trip — the "print all bills" printout. Ids that aren't
+     * SALE bills in this store are silently dropped; the result keeps the caller's id order so the
+     * invoices print in the order the list showed them.
+     */
+    public List<BillDetailResponse> getBillDetails(String ownerId, List<String> transactionIds)
+    {
+        if (transactionIds == null || transactionIds.isEmpty())
+        {
+            return List.of();
+        }
+
+        Store store = storeService.getPrimaryStoreForOwner(ownerId);
+        Map<String, Transaction> byId = transactionRepository.findByIdInAndStoreId(transactionIds, store.getId())
+                .stream()
+                .filter(t -> t.getEvent() == TransactionEvent.SALE)
+                .collect(Collectors.toMap(Transaction::getId, t -> t));
+
+        return transactionIds.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .map(this::toBillDetail)
+                .toList();
+    }
+
+    private BillDetailResponse toBillDetail(Transaction transaction)
+    {
         List<BillLineResponse> lines = transaction.getLines()
                 .stream()
                 .filter(line -> line.getTargetKind() == TargetKind.STOCK)
