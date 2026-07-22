@@ -290,7 +290,7 @@ export const ur: Record<TranslationKey, string> = {
   'cashbook.closing': 'اختتامی رقم',
   'cashbook.totalIn': 'نقد آمد',
   'cashbook.totalOut': 'نقد اخراج',
-  'cashbook.col.time': 'وقت',
+  'cashbook.col.time': 'تاریخ و وقت',
   'cashbook.col.detail': 'تفصیل',
   'cashbook.col.amount': 'رقم',
   'cashbook.col.running': 'میزان',

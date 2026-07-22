@@ -288,7 +288,7 @@ export const en = {
   'cashbook.closing': 'Closing balance',
   'cashbook.totalIn': 'Cash in',
   'cashbook.totalOut': 'Cash out',
-  'cashbook.col.time': 'Time',
+  'cashbook.col.time': 'Date & Time',
   'cashbook.col.detail': 'Detail',
   'cashbook.col.amount': 'Amount',
   'cashbook.col.running': 'Balance',
