@@ -6,6 +6,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { PartyService } from '../../core/store/party.service';
 import { OpeningDirection, Party, PartyDraft } from '../../core/store/party.models';
+import { DigitsOnly, toDigits } from '../../shared/digits-only';
 
 /** Form-facing shape: contact/address are non-null strings for the inputs (blank → null on send). */
 interface PartyForm {
@@ -27,7 +28,7 @@ const EMPTY_FORM: PartyForm = { name: '', contact: '', address: '' };
  */
 @Component({
   selector: 'app-party',
-  imports: [FormField, RouterLink, NgTemplateOutlet],
+  imports: [FormField, RouterLink, NgTemplateOutlet, DigitsOnly],
   templateUrl: './party.html',
   styleUrl: './party.css',
 })
@@ -83,7 +84,9 @@ export class SettingsParty {
     this.resetRowState();
     this.draft.set({
       name: party.name,
-      contact: party.contact ?? '',
+      // Rows saved before the digits-only rule can hold "+92 300-1234567"; strip
+      // on load so an untouched contact field can't fail validation on save.
+      contact: toDigits(party.contact),
       address: party.address ?? '',
     });
     this.editingId.set(party.id);

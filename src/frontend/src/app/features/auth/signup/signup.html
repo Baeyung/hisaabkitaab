@@ -21,10 +21,13 @@
         [formField]="signupForm.contactNumber"
         type="tel"
         autocomplete="tel"
-        inputmode="tel"
+        inputmode="numeric"
       />
-      @if (serverFieldErrors()['contactNumber']) {
-        <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+      @if (
+        (signupForm.contactNumber().touched() && signupForm.contactNumber().invalid()) ||
+        serverFieldErrors()['contactNumber']
+      ) {
+        <span role="alert" class="fld__err">{{ locale.t('validation.contact') }}</span>
       }
     </div>
 

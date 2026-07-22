@@ -33,6 +33,7 @@ export const en = {
   'auth.signup.exists': 'An account with these details already exists',
   'validation.required': 'This field is required',
   'validation.email': 'Enter a valid email',
+  'validation.contact': 'Enter a valid mobile number (7–15 digits)',
   'error.generic': 'Something went wrong. Please try again.',
   'home.welcome': 'Welcome, {{name}}',
   'home.logout': 'Log out',

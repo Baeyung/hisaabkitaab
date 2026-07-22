@@ -35,6 +35,7 @@ export const ur: Record<TranslationKey, string> = {
   'auth.signup.exists': 'ان تفصیلات کے ساتھ اکاؤنٹ پہلے سے موجود ہے',
   'validation.required': 'یہ خانہ ضروری ہے',
   'validation.email': 'درست ای میل درج کریں',
+  'validation.contact': 'درست موبائل نمبر درج کریں (7 سے 15 ہندسے)',
   'error.generic': 'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
   'home.welcome': 'خوش آمدید، {{name}}',
   'home.logout': 'لاگ آؤٹ',
