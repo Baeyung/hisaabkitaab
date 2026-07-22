@@ -5,6 +5,7 @@ import { BillService } from '../../core/store/bill.service';
 import { BillDetail, BillSummary } from '../../core/store/bill.models';
 import { PrintHeader } from '../../shared/print-header';
 import { BillInvoice } from '../../shared/bill-invoice';
+import { Select } from '../../shared/select/select';
 import { LedgerService } from '../../core/store/ledger.service';
 import { InventoryService } from '../../core/store/inventory.service';
 import { PartyBalanceRow } from '../../core/store/ledger.models';
@@ -18,7 +19,7 @@ import { todayIso } from '../../shared/date.util';
  */
 @Component({
   selector: 'app-bill-management',
-  imports: [RouterLink, PrintHeader, BillInvoice],
+  imports: [RouterLink, PrintHeader, BillInvoice, Select],
   templateUrl: './bill-management.html',
 })
 export class BillManagement {
@@ -43,6 +44,15 @@ export class BillManagement {
   protected readonly parties = signal<PartyBalanceRow[]>([]);
   protected readonly items = signal<ItemStockRow[]>([]);
   protected readonly hasServerFilter = computed(() => !!this.partyFilter() || !!this.itemFilter());
+
+  protected readonly partyOptions = computed(() => [
+    { value: '', label: this.locale.t('bill.filter.allParties') },
+    ...this.parties().map((p) => ({ value: p.partyId, label: p.name })),
+  ]);
+  protected readonly itemOptions = computed(() => [
+    { value: '', label: this.locale.t('bill.filter.allItems') },
+    ...this.items().map((i) => ({ value: i.itemId, label: i.name })),
+  ]);
 
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly deleting = signal(false);

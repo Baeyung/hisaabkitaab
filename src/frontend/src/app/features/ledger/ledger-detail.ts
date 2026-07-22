@@ -8,6 +8,7 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintDetailsService } from '../../shared/print-details.service';
+import { Select } from '../../shared/select/select';
 
 /**
  * One party's khata statement: every entry with the running baqaya, clean
@@ -16,7 +17,7 @@ import { PrintDetailsService } from '../../shared/print-details.service';
  */
 @Component({
   selector: 'app-ledger-detail',
-  imports: [RouterLink, PrintHeader],
+  imports: [RouterLink, PrintHeader, Select],
   templateUrl: './ledger-detail.html',
 })
 export class LedgerDetail {
@@ -40,6 +41,11 @@ export class LedgerDetail {
   /** Event kinds actually present, for the filter dropdown (statement order preserved). */
   protected readonly eventKinds = computed(() => [
     ...new Set((this.statement()?.rows ?? []).map((r) => r.event)),
+  ]);
+
+  protected readonly eventOptions = computed(() => [
+    { value: '', label: this.locale.t('report.filter.allEvents') },
+    ...this.eventKinds().map((kind) => ({ value: kind, label: this.eventLabel(kind) })),
   ]);
 
   protected readonly filteredRows = computed<PartyStatementRow[]>(() => {

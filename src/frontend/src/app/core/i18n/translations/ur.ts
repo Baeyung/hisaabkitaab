@@ -369,6 +369,8 @@ export const ur: Record<TranslationKey, string> = {
   'report.never': 'ابھی نہیں',
   'report.filter.event': 'قسم',
   'report.filter.allEvents': 'تمام اقسام',
+  'filter.search.ph': 'تلاش کریں…',
+  'filter.search.none': 'کوئی نتیجہ نہیں',
   'report.cleared': 'ادا شدہ',
   'report.filtered.none': 'ان فلٹرز سے کوئی انٹری میل نہیں کھاتی۔',
   'report.event.SALE': 'فروخت',

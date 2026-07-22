@@ -326,6 +326,8 @@ export const en = {
   'report.never': 'None yet',
   'report.filter.event': 'Type',
   'report.filter.allEvents': 'All types',
+  'filter.search.ph': 'Search…',
+  'filter.search.none': 'No matches',
   'report.cleared': 'Paid',
   'report.filtered.none': 'No entries match these filters.',
   'report.event.SALE': 'Sale',

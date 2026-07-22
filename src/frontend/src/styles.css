@@ -271,6 +271,10 @@ html[dir='rtl'] .num {
   background: var(--kg-card);
   border: 1px solid var(--kg-line-strong);
   border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.rm-input:hover:not(:focus):not(:disabled) {
+  border-color: var(--kg-brand);
 }
 .rm-input:focus {
   outline: none;
@@ -280,6 +284,22 @@ html[dir='rtl'] .num {
 .rm-input::placeholder {
   color: #b6afa4;
   font-weight: 400;
+}
+select.rm-input {
+  appearance: none;
+  padding-inline-end: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a847a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+/* Chevron turns pine on focus so the active filter reads at a glance, matching
+   the combobox's brand-focused border. */
+select.rm-input:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f5c4d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+html[dir='rtl'] select.rm-input {
+  background-position: left 12px center;
 }
 
 .rm-tablewrap {

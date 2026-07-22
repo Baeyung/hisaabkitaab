@@ -66,33 +66,21 @@
         </label>
         <label class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.party') }}</span>
-          <select
-            class="rm-input"
+          <app-select
+            [options]="partyOptions()"
             [value]="partyFilter()"
-            (change)="partyFilter.set(partySelect.value)"
-            #partySelect
-            [attr.aria-label]="locale.t('bill.filter.party')"
-          >
-            <option value="">{{ locale.t('bill.filter.allParties') }}</option>
-            @for (party of parties(); track party.partyId) {
-              <option [value]="party.partyId">{{ party.name }}</option>
-            }
-          </select>
+            (valueChange)="partyFilter.set($event)"
+            [ariaLabel]="locale.t('bill.filter.party')"
+          />
         </label>
         <label class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.item') }}</span>
-          <select
-            class="rm-input"
+          <app-select
+            [options]="itemOptions()"
             [value]="itemFilter()"
-            (change)="itemFilter.set(itemSelect.value)"
-            #itemSelect
-            [attr.aria-label]="locale.t('bill.filter.item')"
-          >
-            <option value="">{{ locale.t('bill.filter.allItems') }}</option>
-            @for (item of items(); track item.itemId) {
-              <option [value]="item.itemId">{{ item.name }}</option>
-            }
-          </select>
+            (valueChange)="itemFilter.set($event)"
+            [ariaLabel]="locale.t('bill.filter.item')"
+          />
         </label>
         <button
           type="button"

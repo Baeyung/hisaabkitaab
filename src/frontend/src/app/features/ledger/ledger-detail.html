@@ -75,12 +75,12 @@
           </label>
           <label class="rm-field">
             <span class="rm-field__label">{{ locale.t('report.filter.event') }}</span>
-            <select class="rm-input" [value]="eventFilter()" (change)="eventFilter.set(eventSelect.value)" #eventSelect [attr.aria-label]="locale.t('report.filter.event')">
-              <option value="">{{ locale.t('report.filter.allEvents') }}</option>
-              @for (kind of eventKinds(); track kind) {
-                <option [value]="kind">{{ eventLabel(kind) }}</option>
-              }
-            </select>
+            <app-select
+              [options]="eventOptions()"
+              [value]="eventFilter()"
+              (valueChange)="eventFilter.set($event)"
+              [ariaLabel]="locale.t('report.filter.event')"
+            />
           </label>
         </div>
         <div class="rm-tablewrap">
