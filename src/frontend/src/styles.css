@@ -641,6 +641,16 @@ html[dir='rtl'] .num {
     overflow: visible !important;
     container-type: normal !important;
   }
+  /* Paper is white — drop the app's cream desk/surface fills. Value colours
+     (red/green/grey) are `color`, not background, so they still print. */
+  html,
+  body,
+  .layout,
+  .body,
+  .content,
+  .content main {
+    background: #fff !important;
+  }
   .rm-page {
     max-width: none;
     padding: 0;
