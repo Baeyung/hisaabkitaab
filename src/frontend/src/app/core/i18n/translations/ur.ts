@@ -410,6 +410,8 @@ export const ur: Record<TranslationKey, string> = {
   'inventory.detail.notFound': 'یہ آئٹم نہیں ملا۔',
   'bill.subtitle': 'ہر فروخت، بل کی صورت میں۔',
   'bill.new': 'نئی فروخت',
+  'bill.printAll': 'پرنٹ',
+  'bill.printError': 'پرنٹ کے لیے بل لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔',
   'bill.search.ph': 'بل نمبر یا پارٹی سے تلاش کریں…',
   'bill.search.none': 'تلاش سے کوئی بل نہیں ملا۔',
   'bill.filter.from': 'سے',

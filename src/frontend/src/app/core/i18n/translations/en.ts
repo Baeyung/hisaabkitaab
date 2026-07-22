@@ -408,6 +408,8 @@ export const en = {
   'dash.stale.aria': 'Receivable aging. {{name}} is the stalest at {{amount}}, owed for {{days}} days.',
   'bill.subtitle': 'Every sale, saved as a bill.',
   'bill.new': 'New sale',
+  'bill.printAll': 'Print',
+  'bill.printError': "Couldn't load bills to print. Please try again.",
   'bill.search.ph': 'Search by bill no. or party…',
   'bill.search.none': 'No bills match your search.',
   'bill.filter.from': 'From',

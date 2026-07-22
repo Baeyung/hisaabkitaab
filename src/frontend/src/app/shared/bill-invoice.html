@@ -1,0 +1,78 @@
+@if (bill(); as b) {
+  <header class="rm-head">
+    <div>
+      <h1 class="rm-title num">{{ b.billNumber || locale.t('nav.billManagement') }}</h1>
+      <p class="rm-sub num">{{ b.date }}</p>
+      <p class="rm-billto">
+        <span class="rm-billto__label">{{ locale.t('bill.detail.billTo') }}</span>
+        <span class="rm-billto__name">{{ b.partyName || locale.t('bill.cashSale') }}</span>
+      </p>
+    </div>
+  </header>
+
+  <div class="rm-card">
+    @if (b.lines.length === 0) {
+      <div class="rm-state" style="border: 0">
+        <p class="rm-state__body">{{ locale.t('bill.detail.empty') }}</p>
+      </div>
+    } @else {
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('bill.detail.col.item') }}</th>
+              <th scope="col" class="end">{{ locale.t('bill.detail.col.qty') }}</th>
+              <th scope="col" class="end">{{ locale.t('bill.detail.col.rate') }}</th>
+              <th scope="col" class="end">{{ locale.t('bill.detail.col.amount') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of b.lines; track $index) {
+              <tr>
+                <td class="rm-cell-head">
+                  <span class="rm-tbl__name">{{ line.itemName || '—' }}</span>
+                  @if (line.unit) {
+                    <span class="rm-tbl__meta">{{ line.unit }}</span>
+                  }
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('bill.detail.col.qty')">{{ line.quantity != null ? locale.formatNumber(line.quantity) : '—' }}</td>
+                <td class="end num" [attr.data-label]="locale.t('bill.detail.col.rate')">{{ locale.money(line.rate) }}</td>
+                <td class="end num rm-tbl__name" [attr.data-label]="locale.t('bill.detail.col.amount')">{{ locale.money(line.amount) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <div class="rm-foot">
+      <span>
+        {{ locale.t('bill.detail.goodsTotal') }}
+        <strong class="num">{{ locale.money(b.goodsTotal) }}</strong>
+      </span>
+      <span>
+        {{ locale.t('bill.detail.cashReceived') }}
+        <strong class="num amt--in">{{ locale.money(b.cashReceived) }}</strong>
+      </span>
+      @if (b.outstanding.direction !== 'SETTLED') {
+        @if (!b.partyName) {
+          <span>
+            {{ locale.t('bill.detail.discount') }}
+            <strong class="num">{{ locale.money(b.outstanding.amount) }}</strong>
+          </span>
+        } @else {
+          <span>
+            {{ locale.t('bill.detail.outstanding') }}
+            <strong class="num" [class]="directionClass(b.outstanding.direction)">
+              {{ locale.money(b.outstanding.amount) }}
+            </strong>
+            <span class="rm-tbl__meta">{{ locale.t(directionKey(b.outstanding.direction)) }}</span>
+          </span>
+        }
+      }
+    </div>
+  </div>
+
+  @if (b.description) {
+    <p class="rm-sub" style="margin-top: 12px">{{ b.description }}</p>
+  }
+}

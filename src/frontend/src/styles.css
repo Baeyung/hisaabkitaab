@@ -705,6 +705,15 @@ html[dir='rtl'] .num {
     flex-wrap: wrap;
     gap: 2px 16px;
   }
+  /* "Print all bills": each invoice starts a fresh page. The first invoice's
+     letterhead watermark is position:fixed, so it already repeats on every
+     page — hide the rest so N stacked watermarks don't compound the opacity. */
+  .rm-print-invoice + .rm-print-invoice {
+    break-before: page;
+  }
+  .rm-print-invoice:not(:first-of-type) .pf-watermark {
+    display: none !important;
+  }
   @page {
     margin: 12mm;
   }

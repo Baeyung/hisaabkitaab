@@ -1,5 +1,5 @@
 <section class="rm-page">
-  <header class="rm-head">
+  <header class="rm-head rm-noprint">
     <div>
       <h1 class="rm-title">{{ locale.t('nav.billManagement') }}</h1>
       <p class="rm-sub">{{ locale.t('bill.subtitle') }}</p>
@@ -31,7 +31,7 @@
       <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('bill.empty.cta') }}</a>
     </div>
   } @else {
-    <div class="rm-card">
+    <div class="rm-card rm-noprint">
       <div class="rm-toolbar rm-toolbar--filters">
         <input
           class="rm-input"
@@ -94,7 +94,21 @@
             }
           </select>
         </label>
+        <button
+          type="button"
+          class="rm-btn rm-btn--ghost"
+          (click)="printAll()"
+          [disabled]="printing() || filtered().length === 0"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
+          </svg>
+          {{ locale.t('bill.printAll') }}
+        </button>
       </div>
+      @if (printError()) {
+        <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t('bill.printError') }}</p>
+      }
       @if (deleteError()) {
         <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t('bill.delete.error') }}</p>
       }
@@ -163,4 +177,14 @@
       </div>
     </div>
   }
+
+  <!-- Print-only: one invoice per filtered bill, each on its own page. -->
+  <div class="rm-printonly">
+    @for (b of printBills(); track b.id) {
+      <div class="rm-print-invoice">
+        <app-print-header />
+        <app-bill-invoice [bill]="b" />
+      </div>
+    }
+  </div>
 </section>
