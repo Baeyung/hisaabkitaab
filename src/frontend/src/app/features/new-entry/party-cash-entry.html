@@ -6,11 +6,26 @@
         <p class="sale__eyebrow">{{ locale.t(config().labels.newEntry) }}</p>
         <h1 class="sale__title">{{ locale.t(config().labels.title) }}</h1>
       </div>
-      <app-date-field
-        [value]="billDate()"
-        (valueChange)="billDate.set($event)"
-        [ariaLabel]="locale.t('sale.billDate')"
-      />
+      <div class="sale__head-right">
+        <app-date-field
+          [value]="billDate()"
+          (valueChange)="billDate.set($event)"
+          [ariaLabel]="locale.t('sale.billDate')"
+        />
+        <div class="fld">
+          <label class="fld__label" [attr.for]="config().idPrefix + '-bill'">
+            {{ locale.t(config().labels.billNumber) }}
+          </label>
+          <input
+            class="fld__input"
+            type="text"
+            [attr.id]="config().idPrefix + '-bill'"
+            [value]="billNumber()"
+            (input)="billNumber.set($any($event.target).value)"
+            [attr.placeholder]="locale.t(config().labels.billNumberPh)"
+          />
+        </div>
+      </div>
     </header>
 
     <!-- party (existing only) -->
@@ -47,34 +62,19 @@
       </div>
     </div>
 
-    <!-- reference + note -->
-    <div class="meta">
-      <div class="fld">
-        <label class="fld__label" [attr.for]="config().idPrefix + '-bill'">
-          {{ locale.t(config().labels.billNumber) }}
-        </label>
-        <input
-          class="fld__input"
-          type="text"
-          [attr.id]="config().idPrefix + '-bill'"
-          [value]="billNumber()"
-          (input)="billNumber.set($any($event.target).value)"
-          [attr.placeholder]="locale.t(config().labels.billNumberPh)"
-        />
-      </div>
-      <div class="fld">
-        <label class="fld__label" [attr.for]="config().idPrefix + '-desc'">
-          {{ locale.t(config().labels.description) }}
-        </label>
-        <input
-          class="fld__input"
-          type="text"
-          [attr.id]="config().idPrefix + '-desc'"
-          [value]="description()"
-          (input)="description.set($any($event.target).value)"
-          [attr.placeholder]="locale.t(config().labels.descriptionPh)"
-        />
-      </div>
+    <!-- note -->
+    <div class="fld">
+      <label class="fld__label" [attr.for]="config().idPrefix + '-desc'">
+        {{ locale.t(config().labels.description) }}
+      </label>
+      <input
+        class="fld__input"
+        type="text"
+        [attr.id]="config().idPrefix + '-desc'"
+        [value]="description()"
+        (input)="description.set($any($event.target).value)"
+        [attr.placeholder]="locale.t(config().labels.descriptionPh)"
+      />
     </div>
 
     <div class="sale__actions">

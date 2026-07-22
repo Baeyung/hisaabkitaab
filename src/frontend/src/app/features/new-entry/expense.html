@@ -6,11 +6,24 @@
         <p class="sale__eyebrow">{{ locale.t('expense.newEntry') }}</p>
         <h1 class="sale__title">{{ locale.t('nav.expense') }}</h1>
       </div>
-      <app-date-field
-        [value]="billDate()"
-        (valueChange)="billDate.set($event)"
-        [ariaLabel]="locale.t('sale.billDate')"
-      />
+      <div class="sale__head-right">
+        <app-date-field
+          [value]="billDate()"
+          (valueChange)="billDate.set($event)"
+          [ariaLabel]="locale.t('sale.billDate')"
+        />
+        <div class="fld">
+          <label class="fld__label" for="expense-bill">{{ locale.t('expense.billNumber') }}</label>
+          <input
+            class="fld__input"
+            type="text"
+            id="expense-bill"
+            [value]="billNumber()"
+            (input)="billNumber.set($any($event.target).value)"
+            [attr.placeholder]="locale.t('expense.billNumber.ph')"
+          />
+        </div>
+      </div>
     </header>
 
     <!-- amount -->
@@ -69,20 +82,6 @@
           [attr.aria-label]="locale.t('expense.category.addNew')"
         />
       }
-    </div>
-
-    <div class="meta">
-      <div class="fld">
-        <label class="fld__label" for="expense-bill">{{ locale.t('expense.billNumber') }}</label>
-        <input
-          class="fld__input"
-          type="text"
-          id="expense-bill"
-          [value]="billNumber()"
-          (input)="billNumber.set($any($event.target).value)"
-          [attr.placeholder]="locale.t('expense.billNumber.ph')"
-        />
-      </div>
     </div>
 
     <div class="sale__actions">
