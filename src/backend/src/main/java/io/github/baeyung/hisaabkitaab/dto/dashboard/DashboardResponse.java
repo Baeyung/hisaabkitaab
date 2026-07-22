@@ -60,8 +60,7 @@ public record DashboardResponse(
     {
     }
 
-    /** Recurring outgoings grouped by note — bijli, mazdoori, transport. */
-    public record ExpenseGroup(String description, int count, double total)
+    public record ExpenseGroup(String category, int count, double total)
     {
     }
 }

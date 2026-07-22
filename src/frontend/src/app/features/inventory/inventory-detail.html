@@ -53,7 +53,7 @@
               @for (row of mv.rows; track row.transactionId + row.occurredAt) {
                 <tr>
                   <td class="num" [attr.data-label]="locale.t('inventory.detail.col.date')">{{ row.date }}</td>
-                  <td class="rm-cell-head">{{ row.description || '—' }}</td>
+                  <td class="rm-cell-head">{{ row.description || locale.describe(row.event) }}</td>
                   <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'" [attr.data-label]="locale.t('inventory.detail.col.qty')">
                     {{ locale.formatNumber(row.quantity) }}
                   </td>

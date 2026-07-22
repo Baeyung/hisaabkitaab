@@ -38,7 +38,8 @@ export interface DashboardStaleParty {
 }
 
 export interface DashboardExpenseGroup {
-  description: string;
+  /** Spend head — a seed token (PARTS…) or a name the shopkeeper typed. */
+  category: string;
   count: number;
   total: number;
 }

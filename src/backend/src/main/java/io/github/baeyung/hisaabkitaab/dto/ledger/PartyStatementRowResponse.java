@@ -13,10 +13,10 @@ public record PartyStatementRowResponse(
         Instant occurredAt,
         TransactionEvent event,
         String description,
+        String itemSummary,
         InOut inOut,
         double amount,
         PartyBalance runningBalance,
-        /** For a charge (a bill): true once payments have covered it under FIFO; null for payment rows. */
         Boolean cleared
 )
 {

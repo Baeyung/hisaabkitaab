@@ -96,7 +96,6 @@ public class OpeningEntryService
                     .event(TransactionEvent.OPENING_BALANCE)
                     .party(party)
                     .entryDate(LocalDate.now())
-                    .description("Opening balance for " + party.getName())
                     .build();
             transaction.getLines().add(TransactionLine.builder()
                     .transaction(transaction)
@@ -157,7 +156,6 @@ public class OpeningEntryService
                     .store(store)
                     .event(TransactionEvent.OPENING_CASH)
                     .entryDate(openedOn)
-                    .description("Opening drawer balance")
                     .build();
             transaction.getLines().add(TransactionLine.builder()
                     .transaction(transaction)
@@ -196,7 +194,6 @@ public class OpeningEntryService
                     .store(store)
                     .event(TransactionEvent.OPENING_STOCK)
                     .entryDate(LocalDate.now())
-                    .description("Opening stock " + item.getName())
                     .build();
             transaction.getLines().add(TransactionLine.builder()
                     .transaction(transaction)

@@ -12,7 +12,6 @@ import io.github.baeyung.hisaabkitaab.processors.transactionevent.EventProcessor
 import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
-import io.github.baeyung.hisaabkitaab.service.TransactionDescriptionGenerator;
 import io.github.baeyung.hisaabkitaab.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,6 @@ public class EventService
     private final TransactionService transactionService;
     private final StoreItemService storeItemService;
     private final PartyService partyService;
-    private final TransactionDescriptionGenerator descriptionGenerator;
 
     @Autowired
     public EventService(
@@ -42,8 +40,7 @@ public class EventService
             StoreService storeService,
             TransactionService transactionService,
             StoreItemService storeItemService,
-            PartyService partyService,
-            TransactionDescriptionGenerator descriptionGenerator
+            PartyService partyService
     )
     {
         this.eventProcessorMap = eventProcessors
@@ -78,7 +75,6 @@ public class EventService
         this.transactionService = transactionService;
         this.storeItemService = storeItemService;
         this.partyService = partyService;
-        this.descriptionGenerator = descriptionGenerator;
     }
 
     public void publishEvent(EventRequest eventRequest, String ownerIdentifier)
@@ -96,9 +92,12 @@ public class EventService
 
             Party party = resolveParty(eventRequest, ownerIdentifier);
 
+            // Only the shopkeeper's own note is stored. An entry saved without one gets
+            // its label rendered by the frontend from the event, party and amount, so it
+            // follows the UI language instead of freezing English into the row.
             String description = StringUtils.hasText(eventRequest.getDescription())
-                    ? eventRequest.getDescription()
-                    : descriptionGenerator.generate(eventRequest, party);
+                    ? eventRequest.getDescription().trim()
+                    : null;
 
             Transaction transaction = transactionService.create(
                     Transaction

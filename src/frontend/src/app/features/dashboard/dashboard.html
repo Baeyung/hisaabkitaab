@@ -200,10 +200,10 @@
           <h2 class="dw-card__title">{{ locale.t('dash.expenses.title') }}</h2>
         </header>
         <ul class="dw-list">
-          @for (e of d.topExpenses; track e.description) {
+          @for (e of d.topExpenses; track e.category) {
             <li class="dw-row dw-row--bar" [style.--fill.%]="expensePct(e.total)">
               <span class="dw-row__fill dw-row__fill--out" aria-hidden="true"></span>
-              <span class="dw-row__name">{{ e.description }}</span>
+              <span class="dw-row__name">{{ categoryLabel(e.category) }}</span>
               <span class="dw-row__val num amt--out">
                 {{ locale.money(e.total) }}
                 <small>{{ locale.t('dash.expenses.count', { count: e.count + '' }) }}</small>

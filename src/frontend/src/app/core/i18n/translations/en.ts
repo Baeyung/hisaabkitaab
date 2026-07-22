@@ -456,6 +456,28 @@ export const en = {
   'bill.detail.empty': 'No items on this bill.',
   'bill.detail.loadError': "Couldn't load this bill. Please try again.",
   'bill.detail.notFound': 'This bill was not found.',
+
+  // Auto-worded rows: an entry saved without a note. `.party` variants are used
+  // when the row carries a party name (see LocaleService.describe).
+  'auto.SALE': 'Sale',
+  'auto.SALE.party': 'Sold to {{party}}',
+  'auto.SALE.items': 'Sold {{items}}',
+  'auto.SALE.items.party': 'Sold {{items}} to {{party}}',
+  'auto.PURCHASE': 'Purchase',
+  'auto.PURCHASE.party': 'Purchased from {{party}}',
+  'auto.PURCHASE.items': 'Purchased {{items}}',
+  'auto.PURCHASE.items.party': 'Purchased {{items}} from {{party}}',
+  'auto.RECEIPT': 'Received {{amount}}',
+  'auto.RECEIPT.party': 'Received {{amount}} from {{party}}',
+  'auto.PAYMENT': 'Paid {{amount}}',
+  'auto.PAYMENT.party': 'Paid {{amount}} to {{party}}',
+  'auto.EXPENSE': 'Expense of {{amount}}',
+  'auto.ADJUSTMENT': 'Adjustment of {{amount}}',
+  'auto.OPENING_BALANCE': 'Opening balance',
+  'auto.OPENING_BALANCE.party': 'Opening balance for {{party}}',
+  'auto.OPENING_STOCK': 'Opening stock',
+  'auto.OPENING_STOCK.items': 'Opening stock {{items}}',
+  'auto.OPENING_CASH': 'Opening drawer balance',
 } as const;
 
 export type TranslationKey = keyof typeof en;

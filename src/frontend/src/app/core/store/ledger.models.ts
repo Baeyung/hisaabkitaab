@@ -15,6 +15,8 @@ export interface PartyStatementRow {
   occurredAt: string;
   event: TransactionEventKind;
   description: string | null;
+  /** Goods on the entry ("Lawn Print × 12") — null when it moves none. */
+  itemSummary: string | null;
   inOut: 'IN' | 'OUT';
   amount: number;
   runningBalance: Balance;

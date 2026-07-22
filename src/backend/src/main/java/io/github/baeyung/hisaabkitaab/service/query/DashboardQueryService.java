@@ -33,6 +33,7 @@ import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.ItemStockRow;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
+import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging.Movement;
@@ -191,24 +192,26 @@ public class DashboardQueryService
                 .toList();
     }
 
-    // ── Most-expensive expenses: window expense lines grouped by note ──
+    // ── Most-expensive expenses: window expense lines grouped by spend head ──
+    // Grouped by category, not by note: notes are optional, so grouping on them
+    // dropped every unnoted expense off the dashboard.
     private List<ExpenseGroup> topExpenses(List<TransactionLine> expenseLines)
     {
         Map<String, List<TransactionLine>> groups = expenseLines.stream()
-                .filter(line -> line.getTransaction().getDescription() != null
-                        && !line.getTransaction().getDescription().isBlank())
                 .collect(Collectors.groupingBy(
-                        line -> line.getTransaction().getDescription().trim().toLowerCase(),
+                        line -> line.getExpenseCategory() != null
+                                ? line.getExpenseCategory().getName()
+                                : ExpenseCategoryService.UNCATEGORIZED,
                         LinkedHashMap::new,
                         Collectors.toList()
                 ));
 
-        return groups.values()
+        return groups.entrySet()
                 .stream()
-                .map(lines -> new ExpenseGroup(
-                        lines.getFirst().getTransaction().getDescription().trim(),
-                        lines.size(),
-                        lines.stream().mapToDouble(this::value).sum()
+                .map(entry -> new ExpenseGroup(
+                        entry.getKey(),
+                        entry.getValue().size(),
+                        entry.getValue().stream().mapToDouble(this::value).sum()
                 ))
                 .sorted(Comparator.comparingDouble(ExpenseGroup::total).reversed())
                 .limit(TOP_EXPENSES)

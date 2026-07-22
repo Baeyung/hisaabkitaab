@@ -94,9 +94,9 @@
                   <td class="num" [attr.data-label]="locale.t('cashbook.col.time')">{{ time(row.occurredAt) }}</td>
                   <td class="rm-cell-head">
                     @if (row.event === 'SALE') {
-                      <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()" class="rm-tbl__name">{{ row.description || row.partyName || '—' }}</a>
+                      <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()" class="rm-tbl__name">{{ row.description || locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}</a>
                     } @else {
-                      <span class="rm-tbl__name">{{ row.description || row.partyName || '—' }}</span>
+                      <span class="rm-tbl__name">{{ row.description || locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}</span>
                     }
                   </td>
                   <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'" [attr.data-label]="locale.t('cashbook.col.amount')">
