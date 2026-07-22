@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { form, FormField, required, email } from '@angular/forms/signals';
+import { form, FormField, required, email, pattern } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ApiError } from '../../../core/auth/auth.models';
 import { LocaleService } from '../../../core/i18n/locale.service';
@@ -22,6 +22,8 @@ export class Signup {
     required(path.contactNumber);
     required(path.password);
     email(path.email);
+    // email() accepts "user@localhost"; mirror the backend regexp and demand a TLD.
+    pattern(path.email, /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/);
   });
 
   protected readonly submitting = signal(false);

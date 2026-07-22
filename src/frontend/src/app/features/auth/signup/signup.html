@@ -38,7 +38,7 @@
         autocomplete="email"
         inputmode="email"
       />
-      @if (serverFieldErrors()['email']) {
+      @if ((signupForm.email().touched() && signupForm.email().invalid()) || serverFieldErrors()['email']) {
         <span role="alert" class="fld__err">{{ locale.t('validation.email') }}</span>
       }
     </div>

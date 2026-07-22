@@ -15,7 +15,7 @@ public class SignupRequest
     @NotBlank
     private String contactNumber;
 
-    @Email
+    @Email(regexp = "^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$")
     private String email;
 
     @NotBlank
