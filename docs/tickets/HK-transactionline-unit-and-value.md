@@ -70,9 +70,51 @@ meant to be null for stock, it should be null.
 `targetKind` — CASH and STOCK rows carry the party too. May be intentional (denormalised
 for querying), may be copy-paste. Worth a sentence of comment either way.
 
+## 3. A negative cash amount is dropped to stdout and swallowed
+
+Added by a later audit sweep — same "filed so it isn't lost" spirit as the rest of this
+ticket.
+
+`CashProcessor.process` opens with:
+
+```java
+if (payload.getCashAmount().compareTo(0.0d) < 0)
+{
+    System.out.println("Cash amount must be greater or equal to zero");
+    return;
+}
+```
+
+Two problems on four lines:
+
+- **The `return` is silent.** The transaction has *already been created* by
+  `EventService.publishEvent` before any `KindProcessor` runs. So a negative cash amount
+  leaves a saved `TRANSACTION` with no CASH line against it — a half-posted entry, and the
+  API still answers 200. The shopkeeper sees the entry save and the drawer not move.
+  Rejecting the request at the boundary (`@PositiveOrZero` on `EventRequest.cashAmount`,
+  which `GlobalExceptionHandler` already turns into a 400 with field errors) is both
+  smaller and correct.
+- **`System.out.println` for an error condition**, when slf4j is already a dependency and
+  used elsewhere in the tree (`ExpenseCategoryBackfill`). On the home-server deployment
+  this goes to the container's stdout unstructured and unleveled, so it is invisible to
+  any log filter. Two more copies sit in `converters/ValueMetaDataConverter.java:24,44` —
+  those die with HK-DEAD-01, leaving this one.
+
+Also note `getCashAmount()` is a `Double` and is dereferenced without a null check, so an
+event posted without `cashAmount` NPEs into the generic 500 handler rather than a 400.
+Bean validation on the DTO fixes that on the same line as the negative case.
+
+**Question before fixing:** is there an event type that legitimately posts no cash and
+relies on this early return? `ExpenseEventProcessor` maps only `CASH`, so an expense with
+no amount would currently save an empty transaction. Confirm the intended contract for
+"cash amount omitted" before choosing between `@NotNull @PositiveOrZero` and defaulting to
+zero.
+
 ## Done when
 
 - One spelling of the unit, sourced from `StoreItem.unit` rather than hardcoded.
+- A negative or missing `cashAmount` is rejected with a 400 before any transaction row is
+  written, and no `System.out.println` remains in `processors/`.
 - Stock lines' `value` either holds the per-line amount or is explicitly null, with the
   reason written down.
 - The `party`-on-every-line decision is documented on `KindProcessor.getTransactionLine`.

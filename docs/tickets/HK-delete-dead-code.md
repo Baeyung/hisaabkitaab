@@ -78,9 +78,74 @@ absorbed here.
 Empty file, still wired via `styleUrl: './app.css'` in `app.ts`. Delete the file and the
 `styleUrl` line.
 
+## Addendum — second sweep
+
+Found by a later repo-wide audit; same ticket, same commit(s), nothing above changes.
+
+### ⚠️ One item above has gone stale
+`controller/TransactionController.java` is **no longer empty** — it now has a
+`deleteBill` handler at line 60. Drop it from the "empty controllers" item and delete only
+`UserController.java`, which is still a bare `@RestController` over `/api/users` with no
+methods. Adjust the final `grep` check accordingly.
+
+### `Placeholder` component (31 lines)
+`shared/placeholder/placeholder.ts` renders a "coming soon" stub. `<app-placeholder>`
+appears in no template and the class is imported nowhere — every route in `app.routes.ts`
+now loads a real screen. Delete the directory.
+
+Check `common.comingSoon` in `translations/en.ts` / `ur.ts` afterwards: if this component
+was its only reader, the key goes too.
+
+### Dead translation keys (22 lines across both dictionaries)
+- `report.event.SALE` … `report.event.OPENING_CASH` (10 keys) — no static reference and no
+  dynamic one either; `grep -rn "report\.event"` outside `translations/` returns nothing.
+- `cashbook.dateLabel` — no reference.
+
+**Do not touch the `auto.*` keys.** A naive "unused key" grep flags all 19 of them, but
+they are built at runtime by `LocaleService.describe()`:
+
+```ts
+const key = [
+  items && party ? `auto.${event}.items.party` : null,
+  ...
+].find((k): k is TranslationKey => !!k && k in en)!;
+```
+
+Deleting those breaks every auto-worded cashbook and ledger row — and the `!` on that
+`.find` means it fails at runtime with an unhelpful error, not at compile time. Same
+caution applies to any future key assembled from a template literal: grep is not the
+authority, `describe()` is.
+
+### `update.sh` (12 lines) — not a shell script
+`update.sh` is byte-identical to `update.bat` (`diff` confirms), including its first line:
+
+```
+@echo off
+```
+
+It is Windows batch content in a `.sh` file. Running it on the home server does not pull
+and rebuild — `@echo` isn't a command, and `echo ---...---` lines print noise before
+`git pull` and `docker compose up -d --build` happen to run anyway. It half-works by
+accident, which is worse than not working.
+
+Either delete it and keep `update.bat`, or write a real one:
+
+```sh
+#!/bin/sh
+set -e
+git pull
+docker compose up -d --build
+```
+
+Given `docs/homeserver/home-server.md` targets a Linux box, the `.sh` is probably the one
+that matters — write it, `chmod +x`, and drop the `.bat` if nobody deploys from Windows.
+
 ## Done when
 
 - All listed files are gone; `ng build` and `mvn package` both succeed.
 - No enum constant is deleted without confirming the DB holds no such value.
-- `grep -rn "ValueMetaData\|UserController\|TransactionController\|features/home" src/`
-  returns nothing.
+- `grep -rn "ValueMetaData\|UserController\|features/home\|app-placeholder" src/` returns
+  nothing.
+- `report.event.*` and `cashbook.dateLabel` are gone from both dictionaries; every `auto.*`
+  key is still present and the cashbook still words its own rows in both languages.
+- `update.sh` either runs on the home server or does not exist.
