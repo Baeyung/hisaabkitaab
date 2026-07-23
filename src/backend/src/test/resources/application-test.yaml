@@ -10,3 +10,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+
+# Default the general API tests to the dev-like relaxed gate: they exercise CRUD, not
+# the verification flow, so signups are born verified. VerificationApiTest flips this
+# back on via @TestPropertySource to cover the actual gate.
+app:
+  verification:
+    enabled: false
