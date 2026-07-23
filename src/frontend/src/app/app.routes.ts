@@ -31,6 +31,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/verify-email/verify-email').then((m) => m.VerifyEmail),
   },
+  // No guard: reached from an email link, user may or may not hold a stored session.
+  {
+    path: 'reset-password/:token',
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password').then((m) => m.ResetPassword),
+  },
   {
     path: '',
     canActivate: [authGuard],

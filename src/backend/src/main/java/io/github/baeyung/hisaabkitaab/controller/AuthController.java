@@ -1,6 +1,8 @@
 package io.github.baeyung.hisaabkitaab.controller;
 
+import io.github.baeyung.hisaabkitaab.dto.auth.ForgotPasswordRequest;
 import io.github.baeyung.hisaabkitaab.dto.auth.ResendVerificationRequest;
+import io.github.baeyung.hisaabkitaab.dto.auth.ResetPasswordRequest;
 import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
@@ -48,5 +50,20 @@ public class AuthController
     {
         userService.resendVerification(request.getIdentifier());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request)
+    {
+        userService.requestPasswordReset(request.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request)
+    {
+        return userService.resetPassword(request.getToken(), request.getPassword())
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 }

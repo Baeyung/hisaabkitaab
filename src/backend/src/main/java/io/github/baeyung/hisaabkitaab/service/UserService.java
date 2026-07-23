@@ -16,4 +16,16 @@ public interface UserService
      * matching unverified account, so callers can't probe for account existence.
      */
     void resendVerification(String identifier);
+
+    /**
+     * Generates a reset token and emails a reset link to the account matching {@code email}.
+     * Silently no-ops when no account has that email, so callers can't probe for existence.
+     */
+    void requestPasswordReset(String email);
+
+    /**
+     * Sets a new password for the account matching a non-expired {@code token}, then invalidates
+     * the token. Returns false if the token is unknown or expired.
+     */
+    boolean resetPassword(String token, String newPassword);
 }

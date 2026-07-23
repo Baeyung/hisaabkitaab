@@ -1,5 +1,7 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
+import java.time.Instant;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,4 +49,12 @@ public class User
     /** Single-use random token emailed at signup; nulled once the account verifies. */
     @JsonIgnore
     private String verificationToken;
+
+    /** Single-use random token emailed for password reset; nulled once the password is reset. */
+    @JsonIgnore
+    private String resetToken;
+
+    /** When {@link #resetToken} stops working. A reset link is only good for a short window. */
+    @JsonIgnore
+    private Instant resetTokenExpiry;
 }

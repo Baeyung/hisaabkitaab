@@ -45,6 +45,20 @@ export class AuthService {
     );
   }
 
+  /** Requests a reset link. Always resolves (backend is deliberately silent to avoid leaking which emails exist). */
+  async requestPasswordReset(email: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email }),
+    );
+  }
+
+  /** Sets a new password using the token from the reset link. Rejects (404) if the token is unknown/expired. */
+  async resetPassword(token: string, password: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/reset-password`, { token, password }),
+    );
+  }
+
   logout(): void {
     this.store.clear();
   }
