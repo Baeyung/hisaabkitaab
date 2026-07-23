@@ -49,6 +49,15 @@
   font-weight: 700;
   color: var(--kg-ink);
 }
+/* Top-right stack: date field with the bill/reference number beneath it.
+   170px matches the date field's max-width so the two inputs line up. */
+.sale__head-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 170px;
+  flex: none;
+}
 .sale__actions {
   display: flex;
   justify-content: flex-end;
@@ -229,12 +238,6 @@ select.fld__input {
   font-size: 20px;
   font-weight: 700;
   color: var(--kg-ink);
-}
-
-.meta {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
 }
 
 /* ── buttons (duplicated primitives — see header note) ───────────────────── */
@@ -473,9 +476,6 @@ select.fld__input {
   .grid__row > .iconbtn {
     grid-area: remove;
     justify-self: end;
-  }
-  .meta {
-    grid-template-columns: 1fr;
   }
 }
 

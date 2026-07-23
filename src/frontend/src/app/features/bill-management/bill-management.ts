@@ -1,8 +1,12 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { ApplicationRef, Component, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
-import { BillSummary } from '../../core/store/bill.models';
+import { BillDetail, BillSummary } from '../../core/store/bill.models';
+import { PrintHeader } from '../../shared/print-header';
+import { BillInvoice } from '../../shared/bill-invoice';
+import { Select } from '../../shared/select/select';
+import { DateField } from '../../shared/date-field/date-field';
 import { LedgerService } from '../../core/store/ledger.service';
 import { InventoryService } from '../../core/store/inventory.service';
 import { PartyBalanceRow } from '../../core/store/ledger.models';
@@ -16,7 +20,7 @@ import { todayIso } from '../../shared/date.util';
  */
 @Component({
   selector: 'app-bill-management',
-  imports: [RouterLink],
+  imports: [RouterLink, PrintHeader, BillInvoice, Select, DateField],
   templateUrl: './bill-management.html',
 })
 export class BillManagement {
@@ -25,6 +29,7 @@ export class BillManagement {
   private readonly ledger = inject(LedgerService);
   private readonly inventory = inject(InventoryService);
   private readonly router = inject(Router);
+  private readonly appRef = inject(ApplicationRef);
 
   protected readonly bills = signal<BillSummary[] | null>(null);
   protected readonly loading = signal(true);
@@ -41,9 +46,23 @@ export class BillManagement {
   protected readonly items = signal<ItemStockRow[]>([]);
   protected readonly hasServerFilter = computed(() => !!this.partyFilter() || !!this.itemFilter());
 
+  protected readonly partyOptions = computed(() => [
+    { value: '', label: this.locale.t('bill.filter.allParties') },
+    ...this.parties().map((p) => ({ value: p.partyId, label: p.name })),
+  ]);
+  protected readonly itemOptions = computed(() => [
+    { value: '', label: this.locale.t('bill.filter.allItems') },
+    ...this.items().map((i) => ({ value: i.itemId, label: i.name })),
+  ]);
+
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal(false);
+
+  /** Full details of the filtered bills, rendered as print-only invoices. */
+  protected readonly printBills = signal<BillDetail[]>([]);
+  protected readonly printing = signal(false);
+  protected readonly printError = signal(false);
 
   protected readonly filtered = computed(() => {
     const q = this.query().trim().toLowerCase();
@@ -93,6 +112,29 @@ export class BillManagement {
       }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /** Fetch every filtered bill's details and print each as an invoice. */
+  async printAll(): Promise<void> {
+    const rows = this.filtered();
+    if (rows.length === 0 || this.printing()) return;
+    this.printing.set(true);
+    this.printError.set(false);
+    try {
+      const bills = await this.api.getDetails(rows.map((b) => b.id));
+      if (bills.length === 0) {
+        this.printError.set(true);
+        return;
+      }
+      this.printBills.set(bills);
+      // Flush the invoices into the DOM before window.print() reads it.
+      this.appRef.tick();
+      window.print();
+    } catch {
+      this.printError.set(true);
+    } finally {
+      this.printing.set(false);
     }
   }
 

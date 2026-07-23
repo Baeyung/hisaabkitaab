@@ -23,6 +23,11 @@ export class BillService {
     return firstValueFrom(this.http.get<BillDetail>(`${this.url}/${id}`));
   }
 
+  /** Full details for many bills in one round-trip — the "print all" printout. Order is preserved. */
+  getDetails(ids: string[]): Promise<BillDetail[]> {
+    return firstValueFrom(this.http.post<BillDetail[]>(`${this.url}/details`, ids));
+  }
+
   /** Delete a bill (SALE); the backend cascades its transaction lines away. */
   delete(id: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`${this.url}/${id}`));

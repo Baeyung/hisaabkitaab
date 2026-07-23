@@ -27,6 +27,7 @@ import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.Party
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
+import io.github.baeyung.hisaabkitaab.service.query.support.ItemSummary;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
 import lombok.RequiredArgsConstructor;
@@ -160,6 +161,7 @@ public class LedgerQueryService
                             transaction.getCreatedAt(),
                             transaction.getEvent(),
                             transaction.getDescription(),
+                            ItemSummary.of(transaction),
                             line.getInOut(),
                             value(line),
                             PartyBalance.of(running),

@@ -47,40 +47,40 @@
       <div class="rm-stats">
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.totalBilled') }}</span>
-          <span class="rm-stat__value num">{{ locale.money(st.totalBilled) }}</span>
+          <span class="rm-stat__value num">{{ locale.money(stats().totalBilled) }}</span>
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.totalPaid') }}</span>
-          <span class="rm-stat__value num amt--in">{{ locale.money(st.totalPaid) }}</span>
+          <span class="rm-stat__value num amt--in">{{ locale.money(stats().totalPaid) }}</span>
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.outstanding') }}</span>
-          <span class="rm-stat__value num" [class]="directionClass(st.currentBalance.direction)">{{ locale.money(st.currentBalance.amount) }}</span>
+          <span class="rm-stat__value num" [class]="directionClass(stats().balance.direction)">{{ locale.money(stats().balance.amount) }}</span>
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.lastPayment') }}</span>
-          <span class="rm-stat__value num">{{ st.lastPaymentDate || locale.t('report.never') }}</span>
+          <span class="rm-stat__value num">{{ stats().lastPaymentDate || locale.t('report.never') }}</span>
         </div>
       </div>
 
       <div class="rm-card">
         <div class="rm-toolbar rm-toolbar--filters rm-noprint">
-          <label class="rm-field">
+          <div class="rm-field">
             <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
-            <input class="rm-input rm-input--date" type="date" [value]="fromDate()" (input)="fromDate.set(fromInput.value)" #fromInput [attr.aria-label]="locale.t('bill.filter.from')" />
-          </label>
-          <label class="rm-field">
+            <app-date-field [value]="fromDate()" (valueChange)="fromDate.set($event)" [ariaLabel]="locale.t('bill.filter.from')" />
+          </div>
+          <div class="rm-field">
             <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
-            <input class="rm-input rm-input--date" type="date" [value]="toDate()" (input)="toDate.set(toInput.value)" #toInput [attr.aria-label]="locale.t('bill.filter.to')" />
-          </label>
+            <app-date-field [value]="toDate()" (valueChange)="toDate.set($event)" [ariaLabel]="locale.t('bill.filter.to')" />
+          </div>
           <label class="rm-field">
             <span class="rm-field__label">{{ locale.t('report.filter.event') }}</span>
-            <select class="rm-input" [value]="eventFilter()" (change)="eventFilter.set(eventSelect.value)" #eventSelect [attr.aria-label]="locale.t('report.filter.event')">
-              <option value="">{{ locale.t('report.filter.allEvents') }}</option>
-              @for (kind of eventKinds(); track kind) {
-                <option [value]="kind">{{ eventLabel(kind) }}</option>
-              }
-            </select>
+            <app-select
+              [options]="eventOptions()"
+              [value]="eventFilter()"
+              (valueChange)="eventFilter.set($event)"
+              [ariaLabel]="locale.t('report.filter.event')"
+            />
           </label>
         </div>
         <div class="rm-tablewrap">
@@ -99,9 +99,9 @@
                   <td class="num">{{ row.date }}</td>
                   <td>
                     @if (row.event === 'SALE') {
-                      <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()">{{ row.description || '—' }}</a>
+                      <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()">{{ row.description || locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}</a>
                     } @else {
-                      {{ row.description || '—' }}
+                      {{ row.description || locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}
                     }
                     @if (row.cleared === true) {
                       <span class="rm-badge rm-badge--paid">{{ locale.t('report.cleared') }}</span>

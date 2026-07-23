@@ -3,8 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
 import { BillDetail as BillDetailModel } from '../../core/store/bill.models';
-import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
+import { BillInvoice } from '../../shared/bill-invoice';
 
 /**
  * One bill, derived from its SALE transaction: line items, goods total, cash
@@ -13,7 +13,7 @@ import { PrintHeader } from '../../shared/print-header';
  */
 @Component({
   selector: 'app-bill-detail',
-  imports: [RouterLink, PrintHeader],
+  imports: [RouterLink, PrintHeader, BillInvoice],
   templateUrl: './bill-detail.html',
 })
 export class BillDetail {
@@ -35,9 +35,6 @@ export class BillDetail {
   protected readonly confirming = signal(false);
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal(false);
-
-  protected readonly directionKey = directionKey;
-  protected readonly directionClass = directionClass;
 
   constructor() {
     effect(() => {

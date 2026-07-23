@@ -1,5 +1,5 @@
 <section class="rm-page">
-  <header class="rm-head">
+  <header class="rm-head rm-noprint">
     <div>
       <h1 class="rm-title">{{ locale.t('nav.billManagement') }}</h1>
       <p class="rm-sub">{{ locale.t('bill.subtitle') }}</p>
@@ -31,7 +31,7 @@
       <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('bill.empty.cta') }}</a>
     </div>
   } @else {
-    <div class="rm-card">
+    <div class="rm-card rm-noprint">
       <div class="rm-toolbar rm-toolbar--filters">
         <input
           class="rm-input"
@@ -42,59 +42,55 @@
           [attr.placeholder]="locale.t('bill.search.ph')"
           [attr.aria-label]="locale.t('bill.search.ph')"
         />
-        <label class="rm-field">
+        <div class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
-          <input
-            class="rm-input rm-input--date"
-            type="date"
+          <app-date-field
             [value]="fromDate()"
-            (input)="fromDate.set(fromInput.value)"
-            #fromInput
-            [attr.aria-label]="locale.t('bill.filter.from')"
+            (valueChange)="fromDate.set($event)"
+            [ariaLabel]="locale.t('bill.filter.from')"
           />
-        </label>
-        <label class="rm-field">
+        </div>
+        <div class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
-          <input
-            class="rm-input rm-input--date"
-            type="date"
+          <app-date-field
             [value]="toDate()"
-            (input)="toDate.set(toInput.value)"
-            #toInput
-            [attr.aria-label]="locale.t('bill.filter.to')"
+            (valueChange)="toDate.set($event)"
+            [ariaLabel]="locale.t('bill.filter.to')"
           />
-        </label>
+        </div>
         <label class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.party') }}</span>
-          <select
-            class="rm-input"
+          <app-select
+            [options]="partyOptions()"
             [value]="partyFilter()"
-            (change)="partyFilter.set(partySelect.value)"
-            #partySelect
-            [attr.aria-label]="locale.t('bill.filter.party')"
-          >
-            <option value="">{{ locale.t('bill.filter.allParties') }}</option>
-            @for (party of parties(); track party.partyId) {
-              <option [value]="party.partyId">{{ party.name }}</option>
-            }
-          </select>
+            (valueChange)="partyFilter.set($event)"
+            [ariaLabel]="locale.t('bill.filter.party')"
+          />
         </label>
         <label class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.item') }}</span>
-          <select
-            class="rm-input"
+          <app-select
+            [options]="itemOptions()"
             [value]="itemFilter()"
-            (change)="itemFilter.set(itemSelect.value)"
-            #itemSelect
-            [attr.aria-label]="locale.t('bill.filter.item')"
-          >
-            <option value="">{{ locale.t('bill.filter.allItems') }}</option>
-            @for (item of items(); track item.itemId) {
-              <option [value]="item.itemId">{{ item.name }}</option>
-            }
-          </select>
+            (valueChange)="itemFilter.set($event)"
+            [ariaLabel]="locale.t('bill.filter.item')"
+          />
         </label>
+        <button
+          type="button"
+          class="rm-btn rm-btn--ghost"
+          (click)="printAll()"
+          [disabled]="printing() || filtered().length === 0"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
+          </svg>
+          {{ locale.t('bill.printAll') }}
+        </button>
       </div>
+      @if (printError()) {
+        <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t('bill.printError') }}</p>
+      }
       @if (deleteError()) {
         <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t('bill.delete.error') }}</p>
       }
@@ -163,4 +159,14 @@
       </div>
     </div>
   }
+
+  <!-- Print-only: one invoice per filtered bill, each on its own page. -->
+  <div class="rm-printonly">
+    @for (b of printBills(); track b.id) {
+      <div class="rm-print-invoice">
+        <app-print-header />
+        <app-bill-invoice [bill]="b" />
+      </div>
+    }
+  </div>
 </section>

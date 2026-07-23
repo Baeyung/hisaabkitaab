@@ -1,15 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { form, FormField, required, email } from '@angular/forms/signals';
+import { form, FormField, required, email, pattern } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { ApiError } from '../../../core/auth/auth.models';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { AuthShell } from '../auth-shell/auth-shell';
+import { DigitsOnly, PHONE_PATTERN } from '../../../shared/digits-only';
 
 @Component({
   selector: 'app-signup',
-  imports: [FormField, RouterLink, AuthShell],
+  imports: [FormField, RouterLink, AuthShell, DigitsOnly],
   templateUrl: './signup.html',
 })
 export class Signup {
@@ -22,9 +23,14 @@ export class Signup {
   protected readonly signupForm = form(this.model, (path) => {
     required(path.name);
     required(path.contactNumber);
+    // DigitsOnly already strips letters at the keyboard; this catches a too
+    // short/long number and keeps the rule in step with the backend @Pattern.
+    pattern(path.contactNumber, PHONE_PATTERN);
     required(path.password);
     required(path.email);
     email(path.email);
+    // email() accepts "user@localhost"; mirror the backend regexp and demand a TLD.
+    pattern(path.email, /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/);
   });
 
   protected readonly submitting = signal(false);

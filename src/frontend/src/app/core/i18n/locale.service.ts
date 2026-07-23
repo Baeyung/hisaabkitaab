@@ -2,6 +2,7 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { en, TranslationKey } from './translations/en';
 import { ur } from './translations/ur';
+import { TransactionEventKind } from '../store/cashbook.models';
 
 type Locale = 'en' | 'ur';
 const LOCALE_KEY = 'hk.locale';
@@ -42,6 +43,32 @@ export class LocaleService {
       }
     }
     return value;
+  }
+
+  /**
+   * Label for an entry the shopkeeper saved without a note. The backend stores
+   * no description in that case, so the row is worded here and re-words itself
+   * when the language is toggled. Item names and the party come from the row;
+   * whichever the event has no wording for is dropped ("Sold Lawn Print × 12 to
+   * Rana" → "Sold Lawn Print × 12" → "Sold to Rana" → "Sale").
+   */
+  describe(
+    event: TransactionEventKind,
+    party?: string | null,
+    amount?: number | null,
+    items?: string | null,
+  ): string {
+    const key = [
+      items && party ? `auto.${event}.items.party` : null,
+      items ? `auto.${event}.items` : null,
+      party ? `auto.${event}.party` : null,
+      `auto.${event}`,
+    ].find((k): k is TranslationKey => !!k && k in en)!;
+    return this.t(key, {
+      party: party ?? '',
+      amount: this.money(amount ?? 0),
+      items: items ?? '',
+    });
   }
 
   formatNumber(n: number): string {

@@ -51,7 +51,7 @@
             @for (row of g.rows; track row.transactionId + row.occurredAt) {
               <tr>
                 <td class="num">{{ row.date }}</td>
-                <td>{{ row.description || '—' }}</td>
+                <td>{{ row.description || locale.describe('EXPENSE', null, row.amount) }}</td>
                 <td class="end num amt--out">{{ locale.money(row.amount) }}</td>
                 <td class="end num">{{ locale.money(row.runningTotal) }}</td>
               </tr>

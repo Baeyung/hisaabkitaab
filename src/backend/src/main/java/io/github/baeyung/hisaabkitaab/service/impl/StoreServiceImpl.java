@@ -35,6 +35,7 @@ public class StoreServiceImpl implements StoreService
         // A user can log in with either their email or contact number, so try both.
         return storeRepository.findAllByOwnerEmail(identifier).stream().findFirst()
                 .or(() -> storeRepository.findAllByOwnerContactNumber(identifier).stream().findFirst())
+                .or(() -> storeRepository.findByOwnerId(identifier).stream().findFirst())
                 .orElse(null);
     }
 

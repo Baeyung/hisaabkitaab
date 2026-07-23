@@ -16,6 +16,7 @@ import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
+import io.github.baeyung.hisaabkitaab.service.query.support.ItemSummary;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
 import lombok.RequiredArgsConstructor;
 
@@ -66,6 +67,7 @@ public class CashbookQueryService
                             transaction.getCreatedAt(),
                             transaction.getEvent(),
                             transaction.getDescription(),
+                            ItemSummary.of(transaction),
                             transaction.getParty() != null ? transaction.getParty().getName() : null,
                             line.getInOut(),
                             value(line),

@@ -2,10 +2,12 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
 import { LocaleService } from '../../core/i18n/locale.service';
+import { expenseCategoryLabel } from '../../core/store/event.models';
 import { DashboardService } from '../../core/store/dashboard.service';
 import { Dashboard as DashboardData } from '../../core/store/dashboard.models';
 import { daysAgoIso, todayIso } from '../../shared/date.util';
 import { ChartView } from '../../shared/chart/chart';
+import { DateField } from '../../shared/date-field/date-field';
 
 // Semantic tokens from styles.css, mirrored here so charts read the same
 // money-in/money-out language as the rest of the app.
@@ -30,12 +32,16 @@ const MIX_OTHER = '#b0a99c';
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, ChartView],
+  imports: [RouterLink, ChartView, DateField],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(DashboardService);
+
+  /** Display label for a spend head: seed tokens translated, custom names shown raw. */
+  protected readonly categoryLabel = (name: string): string =>
+    expenseCategoryLabel(name, (k) => this.locale.t(k));
 
   protected readonly fromDate = signal(daysAgoIso(6));
   protected readonly toDate = signal(todayIso());

@@ -6,6 +6,7 @@ import { CashbookDay } from '../../core/store/cashbook.models';
 import { todayIso } from '../../shared/date.util';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintDetailsService } from '../../shared/print-details.service';
+import { DateField } from '../../shared/date-field/date-field';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -14,7 +15,7 @@ import { PrintDetailsService } from '../../shared/print-details.service';
  */
 @Component({
   selector: 'app-cashbook',
-  imports: [RouterLink, PrintHeader],
+  imports: [RouterLink, PrintHeader, DateField],
   templateUrl: './cashbook.html',
 })
 export class Cashbook {
@@ -79,9 +80,10 @@ export class Cashbook {
     void this.load();
   }
 
-  /** HH:mm from the row's entry timestamp — when it was keyed in, galla time. */
+  /** "12 Jul, 14:05" from the row's entry timestamp — the range spans days, so the date matters. */
   time(occurredAt: string): string {
     const d = new Date(occurredAt);
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const day = d.toLocaleDateString(this.locale.locale(), { month: 'short', day: 'numeric' });
+    return `${day}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
 }

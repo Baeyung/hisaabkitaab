@@ -5,28 +5,22 @@
       <p class="rm-sub">{{ locale.t('dash.subtitle') }}</p>
     </div>
     <div class="rm-toolbar rm-toolbar--filters">
-      <label class="rm-field">
+      <div class="rm-field">
         <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
-        <input
-          class="rm-input rm-input--date"
-          type="date"
+        <app-date-field
           [value]="fromDate()"
-          (change)="setFrom(fromInput.value)"
-          #fromInput
-          [attr.aria-label]="locale.t('bill.filter.from')"
+          (valueChange)="setFrom($event)"
+          [ariaLabel]="locale.t('bill.filter.from')"
         />
-      </label>
-      <label class="rm-field">
+      </div>
+      <div class="rm-field">
         <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
-        <input
-          class="rm-input rm-input--date"
-          type="date"
+        <app-date-field
           [value]="toDate()"
-          (change)="setTo(toInput.value)"
-          #toInput
-          [attr.aria-label]="locale.t('bill.filter.to')"
+          (valueChange)="setTo($event)"
+          [ariaLabel]="locale.t('bill.filter.to')"
         />
-      </label>
+      </div>
     </div>
   </header>
 
@@ -206,10 +200,10 @@
           <h2 class="dw-card__title">{{ locale.t('dash.expenses.title') }}</h2>
         </header>
         <ul class="dw-list">
-          @for (e of d.topExpenses; track e.description) {
+          @for (e of d.topExpenses; track e.category) {
             <li class="dw-row dw-row--bar" [style.--fill.%]="expensePct(e.total)">
               <span class="dw-row__fill dw-row__fill--out" aria-hidden="true"></span>
-              <span class="dw-row__name">{{ e.description }}</span>
+              <span class="dw-row__name">{{ categoryLabel(e.category) }}</span>
               <span class="dw-row__val num amt--out">
                 {{ locale.money(e.total) }}
                 <small>{{ locale.t('dash.expenses.count', { count: e.count + '' }) }}</small>

@@ -4,6 +4,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
 import { Store, StoreDraft } from '../../core/store/store.models';
+import { DigitsOnly, toDigits } from '../../shared/digits-only';
 
 // ponytail: base64-image-in-DB stopgap — this cap keeps a store row and every
 // GET /api/stores payload sane until bucket upload lands (docs/tickets/HK-store-media-object-storage.md).
@@ -20,7 +21,7 @@ type ImageField = 'logoUri' | 'watermarkUri';
  */
 @Component({
   selector: 'app-general',
-  imports: [FormField],
+  imports: [FormField, DigitsOnly],
   templateUrl: './general.html',
   styleUrl: './general.css',
 })
@@ -79,7 +80,9 @@ export class SettingsGeneral {
           ? {
               name: first.name ?? '',
               address: first.address ?? '',
-              contact: first.contact ?? '',
+              // Pre-digits-only rows may hold punctuation; strip so an untouched
+              // contact field can't fail validation on save.
+              contact: toDigits(first.contact),
               logoUri: first.logoUri ?? '',
               watermarkUri: first.watermarkUri ?? '',
             }

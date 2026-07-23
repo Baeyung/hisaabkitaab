@@ -10,6 +10,8 @@ public record CashbookRowResponse(
         Instant occurredAt,
         TransactionEvent event,
         String description,
+        /** Goods on the entry ("Lawn Print × 12") — null when it moves none. */
+        String itemSummary,
         String partyName,
         InOut inOut,
         double amount,

@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,6 +43,8 @@ public class Store
 
     private String address;
 
+    /** Optional phone number: blank, or digits only. */
+    @Pattern(regexp = "(\\d{7,15})?")
     private String contact;
 
     // Stored as a base64 data URI for now (see docs/tickets/HK-store-media-object-storage.md);
