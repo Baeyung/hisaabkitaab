@@ -101,10 +101,11 @@ public class StoreServiceImpl implements StoreService
         Store store = findByIdForOwner(id, ownerId);
 
         // Cascade: transactions first (their lines are removed via orphanRemoval), which clears the
-        // references from items and parties, then the items and parties, then the store itself.
+        // references from items, parties and expense categories, then those, then the store itself.
         transactionRepository.deleteAll(transactionRepository.findByStoreId(id));
         storeItemRepository.deleteAll(storeItemRepository.findByStoreId(id));
         partyRepository.deleteAll(partyRepository.findByStoreId(id));
+        expenseCategoryService.deleteByStore(id);
         storeRepository.delete(store);
     }
 }

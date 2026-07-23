@@ -71,6 +71,12 @@ public class ExpenseCategoryService
                         ExpenseCategory.builder().store(store).name(wanted).build()));
     }
 
+    /** Removes every expense head of a store — used when the store itself is deleted. */
+    public void deleteByStore(String storeId)
+    {
+        repository.deleteByStoreId(storeId);
+    }
+
     @Transactional(readOnly = true)
     public List<String> listNames(String storeId)
     {

@@ -16,4 +16,6 @@ public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory
     Optional<ExpenseCategory> findByStoreIdAndNameIgnoreCase(String storeId, String name);
 
     boolean existsByStoreId(String storeId);
+
+    void deleteByStoreId(String storeId);
 }
