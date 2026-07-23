@@ -21,6 +21,8 @@ public class MailService
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private static final Logger log = LoggerFactory.getLogger(MailService.class);
+    public static final String SUPPORT_EMAIL = "support@hisaabkitaab.shop";
+    public static final String NO_REPLY_EMAIL = "no-reply@hisaabkitaab.shop";
 
     public void sendSimpleMail(String to, String subject, String content)
     {
@@ -66,6 +68,7 @@ public class MailService
 
     public void sendTemplatedEmail(
             String to,
+            String from,
             String templateName,
             Context context,
             String subject
@@ -79,6 +82,7 @@ public class MailService
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(to);
+            helper.setFrom(from);
             helper.setSubject(subject);
             helper.setText(html, true);
 

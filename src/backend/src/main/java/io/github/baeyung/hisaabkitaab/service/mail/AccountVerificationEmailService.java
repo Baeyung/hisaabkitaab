@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 
+import static io.github.baeyung.hisaabkitaab.service.mail.MailService.NO_REPLY_EMAIL;
+
 @Service
 @RequiredArgsConstructor
 public class AccountVerificationEmailService
@@ -21,6 +23,7 @@ public class AccountVerificationEmailService
 
         mailService.sendTemplatedEmail(
                 to,
+                NO_REPLY_EMAIL,
                 EMAIL_TEMPLATE_NAME,
                 context,
                 EMAIL_SUBJECT

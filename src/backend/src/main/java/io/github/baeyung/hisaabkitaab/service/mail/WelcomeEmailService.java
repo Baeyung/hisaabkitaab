@@ -20,6 +20,7 @@ public class WelcomeEmailService
 
         mailService.sendTemplatedEmail(
                 to,
+                MailService.NO_REPLY_EMAIL,
                 EMAIL_TEMPLATE_NAME,
                 context,
                 EMAIL_SUBJECT
