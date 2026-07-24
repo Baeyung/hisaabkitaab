@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',
+  apiUrl: 'https://bootleg-phantom-email.ngrok-free.dev/api',
 };

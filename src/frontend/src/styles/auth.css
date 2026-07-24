@@ -161,6 +161,7 @@
   position: absolute;
   inset-block-start: 18px;
   inset-inline-end: 18px;
+  z-index: 1; /* sits above the kgfade-transformed brand/form siblings, else they cover the button */
 }
 
 /* compact brand — shown only when the hero is hidden (mobile) */

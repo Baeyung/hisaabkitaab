@@ -24,6 +24,8 @@ services:
     restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hisaabkitaab
+      BREVO_MAIL_USER_IDENTIFIER: ${BREVO_MAIL_USER_IDENTIFIER}
+      BREVO_SMPTP_KEY: ${BREVO_SMPTP_KEY}
     depends_on:
       postgres:
         condition: service_healthy
