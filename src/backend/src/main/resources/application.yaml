@@ -1,6 +1,8 @@
 spring:
   application:
     name: hisaabkitaab
+
+  # Database properties
   datasource:
     url: jdbc:postgresql://localhost:5432/hisaabkitaab
     username: hkadmin
@@ -16,9 +18,25 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
-#  activemq:
-#    broker-url: tcp://localhost:61616
-#    user: hkadmin
-#    password: admin
-#    packages:
-#      trust-all: true
+
+  # Email properties
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: ${BREVO_MAIL_USER_IDENTIFIER:hisaabKitaab}@smtp-brevo.com
+    password: ${BREVO_SMPTP_KEY:password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Base URL of the Angular app; used to build the account-verification link in emails.
+app:
+  frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
+  verification:
+    # Set to false (e.g. in dev) to skip email verification entirely: new signups are
+    # created already-verified with no email sent, and the "verified" access gate is
+    # relaxed to plain authentication so existing unverified accounts get in too.
+    enabled: false

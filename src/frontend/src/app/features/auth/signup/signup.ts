@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { form, FormField, required, email, pattern } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
+import { AuthStore } from '../../../core/auth/auth.store';
 import { ApiError } from '../../../core/auth/auth.models';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { AuthShell } from '../auth-shell/auth-shell';
@@ -14,6 +15,7 @@ import { DigitsOnly, PHONE_PATTERN } from '../../../shared/digits-only';
 })
 export class Signup {
   private readonly auth = inject(AuthService);
+  private readonly store = inject(AuthStore);
   private readonly router = inject(Router);
   protected readonly locale = inject(LocaleService);
 
@@ -25,6 +27,7 @@ export class Signup {
     // short/long number and keeps the rule in step with the backend @Pattern.
     pattern(path.contactNumber, PHONE_PATTERN);
     required(path.password);
+    required(path.email);
     email(path.email);
     // email() accepts "user@localhost"; mirror the backend regexp and demand a TLD.
     pattern(path.email, /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/);
@@ -42,8 +45,15 @@ export class Signup {
     this.serverFieldErrors.set({});
     this.errorKey.set(null);
     try {
-      await this.auth.signup(this.model());
-      this.router.navigate(['/']);
+      const user = await this.auth.signup(this.model());
+      if (user.verified) {
+        // Verification disabled server-side: account is already usable.
+        this.router.navigate(['/']);
+      } else {
+        const { email, contactNumber } = this.model();
+        this.store.setPendingIdentifier(email?.trim() || contactNumber);
+        this.router.navigate(['/verify-pending']);
+      }
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
       const body = (err as { error?: ApiError }).error;

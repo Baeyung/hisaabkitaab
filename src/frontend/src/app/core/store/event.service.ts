@@ -16,4 +16,19 @@ export class EventService {
   publishEvent(event: EventRequest): Promise<EventRequest> {
     return firstValueFrom(this.http.post<EventRequest>(this.url, event));
   }
+
+  /** One entry rebuilt as a request, to prefill the entry screen in edit mode. */
+  getEvent(id: string): Promise<EventRequest> {
+    return firstValueFrom(this.http.get<EventRequest>(`${this.url}/${id}`));
+  }
+
+  /** Correct an entry in place; the backend re-derives its lines from the new values. */
+  updateEvent(id: string, event: EventRequest): Promise<void> {
+    return firstValueFrom(this.http.put<void>(`${this.url}/${id}`, event));
+  }
+
+  /** Delete an entry of any kind; the backend cascades its lines away. */
+  deleteEvent(id: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`${this.url}/${id}`));
+  }
 }

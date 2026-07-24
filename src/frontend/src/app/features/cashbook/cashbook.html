@@ -86,6 +86,7 @@
                 <th scope="col">{{ locale.t('cashbook.col.detail') }}</th>
                 <th scope="col" class="end">{{ locale.t('cashbook.col.amount') }}</th>
                 <th scope="col" class="end">{{ locale.t('cashbook.col.running') }}</th>
+                <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t('bill.col.actions') }}</span></th>
               </tr>
             </thead>
             <tbody>
@@ -103,7 +104,40 @@
                     {{ locale.money(row.amount) }}
                   </td>
                   <td class="end num" [attr.data-label]="locale.t('cashbook.col.running')">{{ locale.money(row.runningBalance) }}</td>
+                  <td class="end rm-noprint">
+                    @if (canEdit(row.event)) {
+                      <div class="rm-rowactions">
+                        <button type="button" class="rm-iconbtn" (click)="$event.stopPropagation(); editEntry(row.event, row.transactionId)" [attr.aria-label]="locale.t('common.edit')" [attr.title]="locale.t('common.edit')">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                        </button>
+                        <button type="button" class="rm-iconbtn rm-iconbtn--danger" (click)="$event.stopPropagation(); askDelete(row.transactionId)" [attr.aria-label]="locale.t('common.delete')" [attr.title]="locale.t('common.delete')">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></svg>
+                        </button>
+                      </div>
+                    }
+                  </td>
                 </tr>
+
+                @if (pendingDelete() === row.transactionId) {
+                  <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
+                    <td colspan="5">
+                      <div class="rm-confirm">
+                        <span class="rm-confirm__msg">{{ locale.t('entry.delete.confirm') }}</span>
+                        <span class="rm-confirm__actions">
+                          @if (deleteError()) {
+                            <span class="rm-alert" role="alert">{{ locale.t('entry.delete.error') }}</span>
+                          }
+                          <button type="button" class="rm-btn rm-btn--ghost rm-btn--sm" (click)="cancelDelete()" [disabled]="deleting()">
+                            {{ locale.t('common.cancel') }}
+                          </button>
+                          <button type="button" class="rm-btn rm-btn--danger rm-btn--sm" (click)="confirmDelete()" [disabled]="deleting()">
+                            {{ locale.t('entry.delete.confirmBtn') }}
+                          </button>
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                }
                 @if (printer.bills().get(row.transactionId); as bill) {
                   @for (line of bill.lines; track $index) {
                     <tr class="rm-subrow">
@@ -116,6 +150,7 @@
                       </td>
                       <td class="end num">{{ locale.money(line.amount) }}</td>
                       <td></td>
+                      <td class="rm-noprint"></td>
                     </tr>
                   }
                   <tr class="rm-subrow rm-subrow--tot">
@@ -127,6 +162,7 @@
                         <span>{{ locale.t(bill.partyName ? 'bill.detail.outstanding' : 'bill.detail.discount') }} <b class="num">{{ locale.money(bill.outstanding.amount) }}</b></span>
                       }
                     </td>
+                    <td class="rm-noprint"></td>
                   </tr>
                 }
               }

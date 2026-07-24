@@ -31,6 +31,34 @@ export class AuthService {
     return user;
   }
 
+  /** Confirms the account tied to this token. Rejects (404) if the token is unknown/used. */
+  async verifyEmail(token: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/verify/${encodeURIComponent(token)}`, {}),
+    );
+  }
+
+  /** Re-sends the verification email. Always resolves (backend is deliberately silent). */
+  async resendVerification(identifier: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/resend-verification`, { identifier }),
+    );
+  }
+
+  /** Requests a reset link. Always resolves (backend is deliberately silent to avoid leaking which emails exist). */
+  async requestPasswordReset(email: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email }),
+    );
+  }
+
+  /** Sets a new password using the token from the reset link. Rejects (404) if the token is unknown/expired. */
+  async resetPassword(token: string, password: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/reset-password`, { token, password }),
+    );
+  }
+
   logout(): void {
     this.store.clear();
   }

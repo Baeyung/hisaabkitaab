@@ -1,0 +1,25 @@
+{
+  "name": "Hisaabkitaab",
+  "short_name": "Hisaabkitaab",
+  "description": "Digital khata — ledgers, bills, inventory and dashboard.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f4ee",
+  "theme_color": "#a8342a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

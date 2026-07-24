@@ -1,4 +1,6 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { PartyService } from '../../core/store/party.service';
@@ -117,6 +119,11 @@ export class GoodsEntry {
   private readonly partyApi = inject(PartyService);
   private readonly itemApi = inject(StoreItemService);
   private readonly events = inject(EventService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly location = inject(Location);
+
+  /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
+  protected readonly editId = signal<string | null>(null);
 
   // Declared before `lines` below, whose initializer calls blankLine() → keySeq++.
   // Class fields init top-to-bottom, so it must already be a real number here
@@ -204,7 +211,15 @@ export class GoodsEntry {
   }
 
   constructor() {
-    this.loadSources();
+    void this.init();
+  }
+
+  private async init(): Promise<void> {
+    await this.loadSources();
+    const id = this.route.snapshot.paramMap.get('entryId');
+    if (id) {
+      await this.loadEntry(id);
+    }
   }
 
   private async loadSources(): Promise<void> {
@@ -216,6 +231,34 @@ export class GoodsEntry {
     ]);
     this.parties.set(parties);
     this.items.set(items);
+  }
+
+  private async loadEntry(id: string): Promise<void> {
+    try {
+      const e = await this.events.getEvent(id);
+      this.editId.set(id);
+      // No party on the entry means it was a cash sale/purchase — the same walk-in toggle.
+      this.cashParty.set(e.party == null);
+      this.partyName.set(e.party?.name ?? '');
+      this.billNumber.set(e.billNumber ?? '');
+      this.description.set(e.description ?? '');
+      if (e.billDate) {
+        this.billDate.set(e.billDate);
+      }
+      // Cash is exactly what was recorded — mark it touched so the prefill logic
+      // doesn't override it with the total.
+      this.cash.set(e.cashAmount);
+      this.cashTouched.set(true);
+      const lines = e.items.map<Line>((item) => ({
+        key: this.keySeq++,
+        design: item.name,
+        qty: item.quantity,
+        rate: item.itemSoldAt,
+      }));
+      this.lines.set(lines.length > 0 ? lines : [this.blankLine()]);
+    } catch {
+      this.errorKey.set('error.generic');
+    }
   }
 
   toggleCashParty(): void {
@@ -305,6 +348,12 @@ export class GoodsEntry {
     };
 
     try {
+      const editId = this.editId();
+      if (editId) {
+        await this.events.updateEvent(editId, request);
+        this.location.back();
+        return;
+      }
       await this.events.publishEvent(request);
       this.recent.push(
         `${this.locale.t(labels.recentLabel)} · ${partyLabel} · ${this.locale.money(total)}`,
@@ -316,6 +365,11 @@ export class GoodsEntry {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** Leave edit mode without saving — back to wherever the edit was launched from. */
+  cancel(): void {
+    this.location.back();
   }
 
   reset(): void {

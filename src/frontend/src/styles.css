@@ -551,6 +551,14 @@ html[dir='rtl'] select.rm-input {
   outline: none;
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
+/** Right-aligned edit/delete cluster on a table row (cashbook, ledger statement). */
+.rm-rowactions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+  white-space: nowrap;
+}
 
 /* inline delete confirmation (list row + detail card) */
 .rm-confirm {

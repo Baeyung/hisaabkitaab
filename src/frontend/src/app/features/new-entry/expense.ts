@@ -1,4 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { EventService } from '../../core/store/event.service';
 import { ExpenseCategoryService } from '../../core/store/expense-category.service';
@@ -43,6 +45,11 @@ export class Expense {
   protected readonly locale = inject(LocaleService);
   private readonly events = inject(EventService);
   private readonly categoryApi = inject(ExpenseCategoryService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly location = inject(Location);
+
+  /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
+  protected readonly editId = signal<string | null>(null);
 
   protected readonly toast = new ToastState();
   protected readonly recent = new RecentLog();
@@ -70,7 +77,15 @@ export class Expense {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.toast.dispose());
-    void this.loadCategories();
+    void this.init();
+  }
+
+  private async init(): Promise<void> {
+    await this.loadCategories();
+    const id = this.route.snapshot.paramMap.get('entryId');
+    if (id) {
+      await this.loadEntry(id);
+    }
   }
 
   private async loadCategories(): Promise<void> {
@@ -81,6 +96,28 @@ export class Expense {
       }
     } catch {
       // Non-fatal: the shopkeeper can still type a new category or use the default.
+    }
+  }
+
+  private async loadEntry(id: string): Promise<void> {
+    try {
+      const e = await this.events.getEvent(id);
+      this.editId.set(id);
+      this.amount.set(e.cashAmount);
+      this.details.set(e.description ?? '');
+      this.billNumber.set(e.billNumber ?? '');
+      const cat = e.expenseCategory ?? 'UNCATEGORIZED';
+      // A saved head might not be in the loaded list yet (e.g. a one-off name); add it so
+      // the dropdown can select it rather than silently snapping back to the default.
+      if (!this.categories().includes(cat)) {
+        this.categories.update((names) => [...names, cat]);
+      }
+      this.category.set(cat);
+      if (e.billDate) {
+        this.billDate.set(e.billDate);
+      }
+    } catch {
+      this.toast.show(this.locale.t('error.generic'));
     }
   }
 
@@ -119,6 +156,12 @@ export class Expense {
     const chosen = this.chosenCategory();
 
     try {
+      const editId = this.editId();
+      if (editId) {
+        await this.events.updateEvent(editId, request);
+        this.location.back();
+        return;
+      }
       await this.events.publishEvent(request);
       // A brand-new head is now saved server-side; surface it in the dropdown right away.
       if (chosen && !this.categories().includes(chosen)) {
@@ -136,6 +179,11 @@ export class Expense {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** Leave edit mode without saving — back to wherever the edit was launched from. */
+  cancel(): void {
+    this.location.back();
   }
 
   /** Clears the entry but keeps the date — a batch run stays on one day. */

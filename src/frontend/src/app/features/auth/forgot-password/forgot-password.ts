@@ -1,34 +1,55 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { form, FormField, required, email as emailValidator, pattern } from '@angular/forms/signals';
+import { AuthService } from '../../../core/auth/auth.service';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { AuthShell } from '../auth-shell/auth-shell';
 
 /**
- * Password reset is manual for now: this screen points the shopkeeper at the
- * support line to call/message from their registered number. No form — the
- * phone number is the one action.
+ * Asks for the account's email and requests a reset link. The backend is deliberately
+ * silent about whether the email exists, so on submit we always show the same
+ * "if it matches, we've sent a link" message — no account enumeration.
  */
 @Component({
   selector: 'app-forgot-password',
-  imports: [RouterLink, AuthShell],
+  imports: [FormField, RouterLink, AuthShell],
   template: `
     <app-auth-shell>
       <div class="auth__head">
-        <h1>{{ locale.t('auth.forgot.title') }}</h1>
+        <h1>{{ locale.t(sent() ? 'auth.forgot.sentTitle' : 'auth.forgot.title') }}</h1>
+        <p>{{ locale.t(sent() ? 'auth.forgot.sentSubtitle' : 'auth.forgot.subtitle') }}</p>
       </div>
 
-      <div class="auth__stack">
-        <p class="auth__body">{{ locale.t('auth.forgot.body') }}</p>
-
-        <div class="auth__callout">
-          <span class="lbl">{{ locale.t('auth.forgot.calloutLabel') }}</span>
-          <a class="tel num" [href]="'tel:' + telHref">{{ telDisplay }}</a>
+      @if (sent()) {
+        <div class="auth__stack" role="status">
+          <div class="auth__callout">
+            <span class="lbl">{{ locale.t('auth.forgot.sentTo') }}</span>
+            <span class="num">{{ sentTo() }}</span>
+          </div>
+          <p class="auth__hint">{{ locale.t('auth.forgot.sentHint') }}</p>
         </div>
+      } @else {
+        <form class="auth__form" (submit)="$event.preventDefault(); submit()">
+          <div class="fld">
+            <label class="fld__label" for="forgot-email">{{ locale.t('auth.forgot.email') }}</label>
+            <input
+              id="forgot-email"
+              class="fld__input"
+              [formField]="forgotForm.email"
+              type="email"
+              autocomplete="email"
+              inputmode="email"
+            />
+            @if (forgotForm.email().touched() && forgotForm.email().invalid()) {
+              <span role="alert" class="fld__err">{{ locale.t('validation.email') }}</span>
+            }
+          </div>
 
-        <a class="auth__cta" [href]="'tel:' + telHref">{{ locale.t('auth.forgot.cta') }}</a>
-
-        <p class="auth__hint">{{ locale.t('auth.forgot.hint') }}</p>
-      </div>
+          <button class="auth__cta" type="submit" [disabled]="submitting()">
+            {{ locale.t('auth.forgot.submit') }}
+          </button>
+        </form>
+      }
 
       <p class="auth__foot">
         <a routerLink="/login">{{ locale.t('auth.forgot.back') }}</a>
@@ -37,7 +58,36 @@ import { AuthShell } from '../auth-shell/auth-shell';
   `,
 })
 export class ForgotPassword {
+  private readonly auth = inject(AuthService);
   protected readonly locale = inject(LocaleService);
-  protected readonly telHref = '+923394010046';
-  protected readonly telDisplay = '+92 339 401 0046';
+
+  protected readonly model = signal({ email: '' });
+  protected readonly forgotForm = form(this.model, (path) => {
+    required(path.email);
+    emailValidator(path.email);
+    // Mirror the backend and demand a TLD (email() alone accepts "user@localhost").
+    pattern(path.email, /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/);
+  });
+
+  protected readonly submitting = signal(false);
+  protected readonly sent = signal(false);
+  /** The email we sent to, echoed back on the confirmation. */
+  protected readonly sentTo = signal('');
+
+  async submit(): Promise<void> {
+    if (this.forgotForm().invalid()) {
+      return;
+    }
+    this.submitting.set(true);
+    const email = this.model().email.trim();
+    try {
+      await this.auth.requestPasswordReset(email);
+    } finally {
+      this.sentTo.set(email);
+      // Always land on the same confirmation, even on a network error, so we never
+      // hint at whether the email is registered.
+      this.submitting.set(false);
+      this.sent.set(true);
+    }
+  }
 }

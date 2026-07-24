@@ -20,7 +20,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((err) => {
-      if (err.status === 401) {
+      if (err.status === 403 && err.error?.error === 'ACCOUNT_UNVERIFIED') {
+        // Authenticated but unverified: hold them on the verification screen, keep creds
+        // so they land straight in the app once verified.
+        router.navigate(['/verify-pending']);
+      } else if (err.status === 401) {
         store.clear();
         router.navigate(['/login']);
       }

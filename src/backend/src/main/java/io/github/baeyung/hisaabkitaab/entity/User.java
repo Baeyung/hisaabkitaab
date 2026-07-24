@@ -1,5 +1,7 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
+import java.time.Instant;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,4 +39,22 @@ public class User
     private String name;
 
     private String email;
+
+    // DB default lets ddl-auto=update add this NOT NULL column to a table that already
+    // has rows (Postgres rejects adding a NOT NULL column with no default otherwise).
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    private boolean verified = false;
+
+    /** Single-use random token emailed at signup; nulled once the account verifies. */
+    @JsonIgnore
+    private String verificationToken;
+
+    /** Single-use random token emailed for password reset; nulled once the password is reset. */
+    @JsonIgnore
+    private String resetToken;
+
+    /** When {@link #resetToken} stops working. A reset link is only good for a short window. */
+    @JsonIgnore
+    private Instant resetTokenExpiry;
 }

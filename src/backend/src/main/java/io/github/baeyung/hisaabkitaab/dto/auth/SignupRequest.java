@@ -19,6 +19,8 @@ public class SignupRequest
     @Pattern(regexp = "\\d{7,15}")
     private String contactNumber;
 
+    // Required now that email verification gates access — no email means no way to verify.
+    @NotBlank
     @Email(regexp = "^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$")
     private String email;
 

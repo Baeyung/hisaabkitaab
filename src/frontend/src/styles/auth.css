@@ -279,6 +279,14 @@
   text-decoration: none;
   direction: ltr;
 }
+/* echoed identifier (email in forgot-password, phone/email in verify-pending) */
+.auth__callout .num {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  direction: ltr;
+  word-break: break-all;
+}
 .auth__hint {
   margin: 0;
   font-size: 12.5px;
@@ -352,12 +360,21 @@
   text-align: center;
   color: var(--kg-muted);
 }
-.auth__foot a {
+.auth__foot a,
+.auth__foot button {
   color: var(--kg-brand);
   font-weight: 600;
   text-decoration: none;
 }
-.auth__foot a:hover {
+.auth__foot button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.auth__foot a:hover,
+.auth__foot button:hover {
   text-decoration: underline;
 }
 

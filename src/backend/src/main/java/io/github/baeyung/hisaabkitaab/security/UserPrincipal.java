@@ -29,9 +29,16 @@ public class UserPrincipal implements UserDetails
         this.user = user;
     }
 
+    /**
+     * A verified account gets {@code ROLE_USER}; an unverified one gets only
+     * {@code ROLE_UNVERIFIED}. The password still authenticates either way — the
+     * missing role is what makes protected endpoints answer 403 (not 401) for an
+     * authenticated-but-unverified user, without leaking verification state on a
+     * wrong password.
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority(user.isVerified() ? "ROLE_USER" : "ROLE_UNVERIFIED"));
     }
 }
