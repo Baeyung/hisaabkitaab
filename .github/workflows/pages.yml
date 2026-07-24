@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: 26.5.0
       - run: npm ci
-      - run: npm run build -- --base-href=/hisaabkitaab/
+      - run: npm run build -- --base-href=/
       - run: cp dist/hisaabkitaab/browser/index.html dist/hisaabkitaab/browser/404.html
       - uses: actions/upload-pages-artifact@v3
         with:
