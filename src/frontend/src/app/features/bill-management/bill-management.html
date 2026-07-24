@@ -1,4 +1,9 @@
 <section class="rm-page">
+  <!-- Report layout only — each invoice carries its own letterhead. -->
+  @if (reportMode()) {
+    <app-print-header />
+    <p class="rm-sub rm-printonly">{{ locale.t('cashbook.print.period', { from: fromDate(), to: toDate() }) }}</p>
+  }
   <header class="rm-head rm-noprint">
     <div>
       <h1 class="rm-title">{{ locale.t('nav.billManagement') }}</h1>
@@ -31,8 +36,9 @@
       <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('bill.empty.cta') }}</a>
     </div>
   } @else {
-    <div class="rm-card rm-noprint">
-      <div class="rm-toolbar rm-toolbar--filters">
+    <!-- The list itself prints only in report layout; invoices print instead. -->
+    <div class="rm-card" [class.rm-noprint]="!reportMode()">
+      <div class="rm-toolbar rm-toolbar--filters rm-noprint">
         <input
           class="rm-input"
           type="search"
@@ -102,7 +108,7 @@
               <th scope="col">{{ locale.t('bill.col.date') }}</th>
               <th scope="col">{{ locale.t('bill.col.party') }}</th>
               <th scope="col" class="end">{{ locale.t('bill.col.amount') }}</th>
-              <th scope="col" class="end"><span class="sr-only">{{ locale.t('bill.col.actions') }}</span></th>
+              <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t('bill.col.actions') }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -116,7 +122,7 @@
                 <td class="num">{{ bill.date }}</td>
                 <td [attr.data-label]="locale.t('bill.col.party')">{{ bill.partyName || locale.t('bill.cashSale') }}</td>
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(bill.amount) }}</td>
-                <td class="end">
+                <td class="end rm-noprint">
                   <button
                     type="button"
                     class="rm-iconbtn rm-iconbtn--danger"
@@ -130,8 +136,35 @@
                 </td>
               </tr>
 
+              @if (reportMode() && printDetail().get(bill.id); as detail) {
+                @for (line of detail.lines; track $index) {
+                  <tr class="rm-subrow">
+                    <td></td>
+                    <td colspan="2">
+                      <span class="rm-tbl__name">{{ line.itemName || '—' }}</span>
+                      @if (line.quantity != null) {
+                        <span class="rm-tbl__meta num">{{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }}</span>
+                      }
+                    </td>
+                    <td class="end num">{{ locale.money(line.amount) }}</td>
+                    <td class="rm-noprint"></td>
+                  </tr>
+                }
+                <tr class="rm-subrow rm-subrow--tot">
+                  <td></td>
+                  <td colspan="3" class="rm-subrow__tot">
+                    <span>{{ locale.t('bill.detail.goodsTotal') }} <b class="num">{{ locale.money(detail.goodsTotal) }}</b></span>
+                    <span>{{ locale.t('bill.detail.cashReceived') }} <b class="num amt--in">{{ locale.money(detail.cashReceived) }}</b></span>
+                    @if (detail.outstanding.direction !== 'SETTLED') {
+                      <span>{{ locale.t(detail.partyName ? 'bill.detail.outstanding' : 'bill.detail.discount') }} <b class="num">{{ locale.money(detail.outstanding.amount) }}</b></span>
+                    }
+                  </td>
+                  <td class="rm-noprint"></td>
+                </tr>
+              }
+
               @if (confirmingId() === bill.id) {
-                <tr class="rm-confirm-row" (click)="$event.stopPropagation()">
+                <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
                   <td colspan="5">
                     <div class="rm-confirm">
                       <span class="rm-confirm__msg">
@@ -157,16 +190,46 @@
           </tbody>
         </table>
       </div>
+      @if (reportMode()) {
+        <div class="rm-printonly">
+          <div class="rm-foot">
+            <span>
+              {{ locale.t('bill.printTotals.bills') }}
+              <strong class="num">{{ locale.formatNumber(printTotals().count) }}</strong>
+            </span>
+            <span>
+              {{ locale.t('bill.printTotals.revenue') }}
+              <strong class="num">{{ locale.money(printTotals().revenue) }}</strong>
+            </span>
+            <span>
+              {{ locale.t('bill.detail.cashReceived') }}
+              <strong class="num amt--in">{{ locale.money(printTotals().cash) }}</strong>
+            </span>
+            <span>
+              {{ locale.t('bill.detail.outstanding') }}
+              <strong class="num">{{ locale.money(printTotals().khata) }}</strong>
+            </span>
+            @if (printTotals().discount) {
+              <span>
+                {{ locale.t('bill.detail.discount') }}
+                <strong class="num">{{ locale.money(printTotals().discount) }}</strong>
+              </span>
+            }
+          </div>
+        </div>
+      }
     </div>
   }
 
   <!-- Print-only: one invoice per filtered bill, each on its own page. -->
-  <div class="rm-printonly">
-    @for (b of printBills(); track b.id) {
-      <div class="rm-print-invoice">
-        <app-print-header />
-        <app-bill-invoice [bill]="b" />
-      </div>
-    }
-  </div>
+  @if (!reportMode()) {
+    <div class="rm-printonly">
+      @for (b of printBills(); track b.id) {
+        <div class="rm-print-invoice">
+          <app-print-header />
+          <app-bill-invoice [bill]="b" />
+        </div>
+      }
+    </div>
+  }
 </section>

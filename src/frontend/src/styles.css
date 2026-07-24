@@ -591,6 +591,10 @@ html[dir='rtl'] select.rm-input {
 
 /* Themed modal (native <dialog>) — e.g. the "print with details?" prompt. */
 .rm-dialog {
+  /* Tailwind's preflight zeroes every margin, including the `margin: auto` the
+     UA uses to centre a modal <dialog> — put it back or the box sticks to the
+     inline-start corner (top-right under RTL). */
+  margin: auto;
   width: min(92vw, 400px);
   padding: 22px;
   color: var(--kg-ink);

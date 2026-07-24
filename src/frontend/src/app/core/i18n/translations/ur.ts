@@ -454,6 +454,13 @@ export const ur: Record<TranslationKey, string> = {
   'bill.new': 'نئی فروخت',
   'bill.printAll': 'پرنٹ',
   'bill.printError': 'پرنٹ کے لیے بل لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔',
+  'bill.printLayout.title': 'پرنٹ کے اختیارات',
+  'bill.printLayout.body':
+    'ہر بل الگ رسید کے طور پر پرنٹ کریں، یا سب کو ایک رپورٹ میں آئٹمز کی تفصیل کے ساتھ؟',
+  'bill.printLayout.invoices': 'الگ الگ رسیدیں',
+  'bill.printLayout.report': 'ایک رپورٹ',
+  'bill.printTotals.bills': 'بل',
+  'bill.printTotals.revenue': 'کل فروخت',
   'bill.search.ph': 'بل نمبر یا پارٹی سے تلاش کریں…',
   'bill.search.none': 'تلاش سے کوئی بل نہیں ملا۔',
   'bill.filter.from': 'سے',

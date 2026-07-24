@@ -1,6 +1,22 @@
 import { ApplicationRef, Injectable, inject, signal } from '@angular/core';
 import { BillService } from '../core/store/bill.service';
 import { BillDetail } from '../core/store/bill.models';
+import { TranslationKey } from '../core/i18n/translations/en';
+
+/** The four strings the print prompt shows — `yes` resolves true, `no` false. */
+export interface PrintPromptKeys {
+  title: TranslationKey;
+  body: TranslationKey;
+  no: TranslationKey;
+  yes: TranslationKey;
+}
+
+const DETAILS_PROMPT: PrintPromptKeys = {
+  title: 'common.printDetails.title',
+  body: 'common.printDetails.confirm',
+  no: 'common.printDetails.without',
+  yes: 'common.printDetails.with',
+};
 
 /**
  * Print-with-bill-details for the cashbook and ledger statement. Both screens
@@ -21,8 +37,9 @@ export class PrintDetailsService {
 
   readonly bills = signal<Map<string, BillDetail>>(new Map());
 
-  /** Drives the themed dialog: true while it's asking. */
+  /** Drives the themed dialog: true while it's asking, with the wording to show. */
   readonly prompting = signal(false);
+  readonly promptKeys = signal<PrintPromptKeys>(DETAILS_PROMPT);
   private resolve: ((choice: boolean | null) => void) | null = null;
 
   /** Ask, optionally load every bill's lines, then print. */
@@ -55,7 +72,13 @@ export class PrintDetailsService {
     window.print();
   }
 
-  private ask(): Promise<boolean | null> {
+  /**
+   * Open the themed prompt and resolve with the user's choice — true/false for
+   * the two buttons, null if they cancelled. Public so screens with their own
+   * fetch/print (bill management) can reuse the dialog with their own wording.
+   */
+  ask(keys: PrintPromptKeys = DETAILS_PROMPT): Promise<boolean | null> {
+    this.promptKeys.set(keys);
     this.prompting.set(true);
     return new Promise((resolve) => (this.resolve = resolve));
   }

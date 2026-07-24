@@ -3,23 +3,25 @@ import { LocaleService } from '../core/i18n/locale.service';
 import { PrintDetailsService } from './print-details.service';
 
 /**
- * Themed "print with bill details?" prompt — replaces the browser confirm box.
- * A native <dialog> so focus-trap, Escape and the backdrop come for free; we
- * only theme it. Mounted once in the shell; opens whenever the print service
- * asks. Escape / backdrop / the dialog's own cancel resolve as null (no print).
+ * Themed two-choice print prompt — replaces the browser confirm box. A native
+ * <dialog> so focus-trap, Escape and the backdrop come for free; we only theme
+ * it. Mounted once in the shell; opens whenever the print service asks, showing
+ * whichever wording that caller passed (cashbook/ledger ask about bill details,
+ * bill management asks invoices vs. report). Escape / backdrop / the dialog's
+ * own cancel resolve as null (no print).
  */
 @Component({
   selector: 'app-print-details-dialog',
   template: `
     <dialog #dlg class="rm-dialog" (cancel)="answer($event, null)" (click)="onBackdrop($event)">
-      <h2 class="rm-dialog__title">{{ locale.t('common.printDetails.title') }}</h2>
-      <p class="rm-dialog__body">{{ locale.t('common.printDetails.confirm') }}</p>
+      <h2 class="rm-dialog__title">{{ locale.t(printer.promptKeys().title) }}</h2>
+      <p class="rm-dialog__body">{{ locale.t(printer.promptKeys().body) }}</p>
       <div class="rm-dialog__actions">
         <button type="button" class="rm-btn rm-btn--ghost" (click)="answer($event, false)">
-          {{ locale.t('common.printDetails.without') }}
+          {{ locale.t(printer.promptKeys().no) }}
         </button>
         <button type="button" class="rm-btn rm-btn--primary" (click)="answer($event, true)">
-          {{ locale.t('common.printDetails.with') }}
+          {{ locale.t(printer.promptKeys().yes) }}
         </button>
       </div>
     </dialog>
@@ -27,7 +29,7 @@ import { PrintDetailsService } from './print-details.service';
 })
 export class PrintDetailsDialog {
   protected readonly locale = inject(LocaleService);
-  private readonly printer = inject(PrintDetailsService);
+  protected readonly printer = inject(PrintDetailsService);
   private readonly dlg = viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
 
   constructor() {

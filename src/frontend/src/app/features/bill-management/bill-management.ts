@@ -12,6 +12,44 @@ import { InventoryService } from '../../core/store/inventory.service';
 import { PartyBalanceRow } from '../../core/store/ledger.models';
 import { ItemStockRow } from '../../core/store/inventory.models';
 import { todayIso } from '../../shared/date.util';
+import { PrintDetailsService, PrintPromptKeys } from '../../shared/print-details.service';
+
+/** Print prompt wording: "yes" is the report, "no" keeps the per-bill invoices. */
+const PRINT_LAYOUT_PROMPT: PrintPromptKeys = {
+  title: 'bill.printLayout.title',
+  body: 'bill.printLayout.body',
+  no: 'bill.printLayout.invoices',
+  yes: 'bill.printLayout.report',
+};
+
+/**
+ * What a printed run of bills adds up to — the report's footer line. A cash
+ * sale that doesn't balance is a discount, not a khata entry; an overpaid party
+ * bill leaves you owing them, so it nets off the receivable.
+ */
+export function sumBills(bills: BillDetail[]): {
+  count: number;
+  revenue: number;
+  cash: number;
+  khata: number;
+  discount: number;
+} {
+  const totals = { count: bills.length, revenue: 0, cash: 0, khata: 0, discount: 0 };
+  for (const b of bills) {
+    totals.revenue += b.goodsTotal;
+    totals.cash += b.cashReceived;
+    if (b.outstanding.direction === 'SETTLED') {
+      continue;
+    }
+    if (!b.partyName) {
+      totals.discount += b.outstanding.amount;
+    } else {
+      totals.khata +=
+        b.outstanding.direction === 'THEY_OWE_YOU' ? b.outstanding.amount : -b.outstanding.amount;
+    }
+  }
+  return totals;
+}
 
 /**
  * Bill list — every SALE, newest first, searchable by bill number or party and
@@ -30,6 +68,7 @@ export class BillManagement {
   private readonly inventory = inject(InventoryService);
   private readonly router = inject(Router);
   private readonly appRef = inject(ApplicationRef);
+  private readonly printer = inject(PrintDetailsService);
 
   protected readonly bills = signal<BillSummary[] | null>(null);
   protected readonly loading = signal(true);
@@ -59,10 +98,20 @@ export class BillManagement {
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal(false);
 
-  /** Full details of the filtered bills, rendered as print-only invoices. */
+  /** Full details of the filtered bills, fetched on Print for either layout. */
   protected readonly printBills = signal<BillDetail[]>([]);
   protected readonly printing = signal(false);
   protected readonly printError = signal(false);
+  /** false = one invoice per page (default), true = the list as one flowing report. */
+  protected readonly reportMode = signal(false);
+
+  /** Report layout only: a bill's lines, looked up from its row. */
+  protected readonly printDetail = computed(
+    () => new Map(this.printBills().map((b) => [b.id, b])),
+  );
+
+  /** Report footer — what the printed range added up to. */
+  protected readonly printTotals = computed(() => sumBills(this.printBills()));
 
   protected readonly filtered = computed(() => {
     const q = this.query().trim().toLowerCase();
@@ -115,10 +164,16 @@ export class BillManagement {
     }
   }
 
-  /** Fetch every filtered bill's details and print each as an invoice. */
+  /**
+   * Ask which layout, fetch every filtered bill's details, then print — either
+   * one invoice per page or the whole list as a report with each bill's items
+   * as sub-rows, which fits dozens of bills into a few pages.
+   */
   async printAll(): Promise<void> {
     const rows = this.filtered();
     if (rows.length === 0 || this.printing()) return;
+    const asReport = await this.printer.ask(PRINT_LAYOUT_PROMPT);
+    if (asReport === null) return; // cancelled — don't print at all
     this.printing.set(true);
     this.printError.set(false);
     try {
@@ -127,8 +182,9 @@ export class BillManagement {
         this.printError.set(true);
         return;
       }
+      this.reportMode.set(asReport);
       this.printBills.set(bills);
-      // Flush the invoices into the DOM before window.print() reads it.
+      // Flush the invoices / sub-rows into the DOM before window.print() reads it.
       this.appRef.tick();
       window.print();
     } catch {

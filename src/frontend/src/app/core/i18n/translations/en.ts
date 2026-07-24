@@ -452,6 +452,13 @@ export const en = {
   'bill.new': 'New sale',
   'bill.printAll': 'Print',
   'bill.printError': "Couldn't load bills to print. Please try again.",
+  'bill.printLayout.title': 'Print options',
+  'bill.printLayout.body':
+    'Print each bill as a separate invoice, or all of them as one report with their items listed underneath?',
+  'bill.printLayout.invoices': 'Separate invoices',
+  'bill.printLayout.report': 'One report',
+  'bill.printTotals.bills': 'Bills',
+  'bill.printTotals.revenue': 'Total sales',
   'bill.search.ph': 'Search by bill no. or party…',
   'bill.search.none': 'No bills match your search.',
   'bill.filter.from': 'From',
