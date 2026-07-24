@@ -19,8 +19,10 @@ export const en = {
   'auth.forgot.subtitle': "Enter your email and we'll send you a reset link.",
   'auth.forgot.email': 'Email',
   'auth.forgot.submit': 'Send reset link',
-  'auth.forgot.sent':
-    "If that email matches an account, we've sent a link to reset your password. Check your inbox.",
+  'auth.forgot.sentTitle': 'Check your email',
+  'auth.forgot.sentSubtitle': 'If that email matches an account, a reset link is on its way.',
+  'auth.forgot.sentTo': 'Sent to',
+  'auth.forgot.sentHint': 'The link works for one hour. No email? Check your spam folder.',
   'auth.forgot.back': 'Back to log in',
   'auth.reset.title': 'Set a new password',
   'auth.reset.subtitle': 'Choose a new password for your account.',

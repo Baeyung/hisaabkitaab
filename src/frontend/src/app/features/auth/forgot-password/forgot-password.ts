@@ -16,13 +16,17 @@ import { AuthShell } from '../auth-shell/auth-shell';
   template: `
     <app-auth-shell>
       <div class="auth__head">
-        <h1>{{ locale.t('auth.forgot.title') }}</h1>
-        <p>{{ locale.t('auth.forgot.subtitle') }}</p>
+        <h1>{{ locale.t(sent() ? 'auth.forgot.sentTitle' : 'auth.forgot.title') }}</h1>
+        <p>{{ locale.t(sent() ? 'auth.forgot.sentSubtitle' : 'auth.forgot.subtitle') }}</p>
       </div>
 
       @if (sent()) {
-        <div class="auth__stack">
-          <p role="status" class="auth__body">{{ locale.t('auth.forgot.sent') }}</p>
+        <div class="auth__stack" role="status">
+          <div class="auth__callout">
+            <span class="lbl">{{ locale.t('auth.forgot.sentTo') }}</span>
+            <span class="num">{{ sentTo() }}</span>
+          </div>
+          <p class="auth__hint">{{ locale.t('auth.forgot.sentHint') }}</p>
         </div>
       } @else {
         <form class="auth__form" (submit)="$event.preventDefault(); submit()">
@@ -67,15 +71,19 @@ export class ForgotPassword {
 
   protected readonly submitting = signal(false);
   protected readonly sent = signal(false);
+  /** The email we sent to, echoed back on the confirmation. */
+  protected readonly sentTo = signal('');
 
   async submit(): Promise<void> {
     if (this.forgotForm().invalid()) {
       return;
     }
     this.submitting.set(true);
+    const email = this.model().email.trim();
     try {
-      await this.auth.requestPasswordReset(this.model().email.trim());
+      await this.auth.requestPasswordReset(email);
     } finally {
+      this.sentTo.set(email);
       // Always land on the same confirmation, even on a network error, so we never
       // hint at whether the email is registered.
       this.submitting.set(false);

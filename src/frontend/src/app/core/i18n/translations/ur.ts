@@ -21,8 +21,10 @@ export const ur: Record<TranslationKey, string> = {
   'auth.forgot.subtitle': 'اپنا ای میل درج کریں، ہم آپ کو ری سیٹ لنک بھیج دیں گے۔',
   'auth.forgot.email': 'ای میل',
   'auth.forgot.submit': 'ری سیٹ لنک بھیجیں',
-  'auth.forgot.sent':
-    'اگر یہ ای میل کسی اکاؤنٹ سے مطابقت رکھتا ہے، تو ہم نے پاس ورڈ ری سیٹ کرنے کا لنک بھیج دیا ہے۔ اپنا اِن باکس دیکھیں۔',
+  'auth.forgot.sentTitle': 'اپنی ای میل دیکھیں',
+  'auth.forgot.sentSubtitle': 'اگر یہ ای میل کسی اکاؤنٹ سے مطابقت رکھتی ہے تو ری سیٹ لنک بھیجا جا رہا ہے۔',
+  'auth.forgot.sentTo': 'بھیجا گیا',
+  'auth.forgot.sentHint': 'لنک ایک گھنٹے تک کارآمد ہے۔ ای میل نہیں ملی؟ اپنا سپیم فولڈر دیکھیں۔',
   'auth.forgot.back': 'واپس لاگ اِن پر',
   'auth.reset.title': 'نیا پاس ورڈ مقرر کریں',
   'auth.reset.subtitle': 'اپنے اکاؤنٹ کے لیے نیا پاس ورڈ منتخب کریں۔',
