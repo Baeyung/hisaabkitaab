@@ -98,7 +98,7 @@
               @for (row of filteredRows(); track row.transactionId + row.occurredAt) {
                 <tr [class.rm-rowlink]="row.event === 'SALE'" [class.rm-row--cleared]="row.cleared === true" (click)="row.event === 'SALE' && openBill(row.transactionId)">
                   <td class="num">{{ row.date }}</td>
-                  <td>
+                  <td class="rm-cell-head">
                     @if (row.event === 'SALE') {
                       <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()">{{ row.description || locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}</a>
                     } @else {
@@ -108,10 +108,10 @@
                       <span class="rm-badge rm-badge--paid">{{ locale.t('report.cleared') }}</span>
                     }
                   </td>
-                  <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
+                  <td class="end num rm-cell-amt" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
                     {{ locale.money(row.amount) }}
                   </td>
-                  <td class="end">
+                  <td class="end" [attr.data-label]="locale.t('ledger.detail.col.balance')">
                     <span class="num rm-tbl__name" [class]="directionClass(row.runningBalance.direction)">
                       {{ locale.money(row.runningBalance.amount) }}
                     </span>

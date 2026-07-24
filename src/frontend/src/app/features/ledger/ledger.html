@@ -71,7 +71,7 @@
                   <a [routerLink]="['/ledger', party.partyId]" class="rm-tbl__name">{{ party.name }}</a>
                 </td>
                 <td class="num" [attr.data-label]="locale.t('ledger.col.contact')">{{ party.contact || '—' }}</td>
-                <td class="end" [attr.data-label]="locale.t('ledger.col.balance')">
+                <td class="end rm-cell-amt">
                   <span class="num rm-tbl__name" [class]="directionClass(party.balance.direction)">
                     {{ locale.money(party.balance.amount) }}
                   </span>
@@ -108,7 +108,7 @@
                     <a [routerLink]="['/ledger/category', group.category]" class="rm-tbl__name">{{ categoryLabel(group.category) }}</a>
                   </td>
                   <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">{{ group.count }}</td>
-                  <td class="end num amt--out" [attr.data-label]="locale.t('ledger.category.col.total')">
+                  <td class="end num amt--out rm-cell-amt">
                     {{ locale.money(group.total) }}
                   </td>
                 </tr>

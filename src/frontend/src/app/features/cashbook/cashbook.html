@@ -92,7 +92,7 @@
             <tbody>
               @for (row of cb.rows; track row.transactionId + row.occurredAt) {
                 <tr [class.rm-rowlink]="row.event === 'SALE'" (click)="row.event === 'SALE' && openBill(row.transactionId)">
-                  <td class="num" [attr.data-label]="locale.t('cashbook.col.time')">{{ time(row.occurredAt) }}</td>
+                  <td class="num">{{ time(row.occurredAt) }}</td>
                   <td class="rm-cell-head">
                     @if (row.event === 'SALE') {
                       <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()" class="rm-tbl__name">{{ row.description || locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}</a>
@@ -100,7 +100,7 @@
                       <span class="rm-tbl__name">{{ row.description || locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}</span>
                     }
                   </td>
-                  <td class="end num" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'" [attr.data-label]="locale.t('cashbook.col.amount')">
+                  <td class="end num rm-cell-amt" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
                     {{ locale.money(row.amount) }}
                   </td>
                   <td class="end num" [attr.data-label]="locale.t('cashbook.col.running')">{{ locale.money(row.runningBalance) }}</td>

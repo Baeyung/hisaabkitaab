@@ -113,9 +113,9 @@
                     {{ bill.billNumber || '—' }}
                   </a>
                 </td>
-                <td class="num" [attr.data-label]="locale.t('bill.col.date')">{{ bill.date }}</td>
+                <td class="num">{{ bill.date }}</td>
                 <td [attr.data-label]="locale.t('bill.col.party')">{{ bill.partyName || locale.t('bill.cashSale') }}</td>
-                <td class="end num rm-tbl__name" [attr.data-label]="locale.t('bill.col.amount')">{{ locale.money(bill.amount) }}</td>
+                <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(bill.amount) }}</td>
                 <td class="end">
                   <button
                     type="button"
