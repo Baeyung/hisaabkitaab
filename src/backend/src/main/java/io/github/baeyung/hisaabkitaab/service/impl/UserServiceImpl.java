@@ -15,6 +15,7 @@ import io.github.baeyung.hisaabkitaab.repository.UserRepository;
 import io.github.baeyung.hisaabkitaab.service.UserService;
 import io.github.baeyung.hisaabkitaab.service.mail.AccountVerificationEmailService;
 import io.github.baeyung.hisaabkitaab.service.mail.PasswordResetEmailService;
+import io.github.baeyung.hisaabkitaab.service.mail.WelcomeEmailService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,6 +30,8 @@ public class UserServiceImpl implements UserService
     private final AccountVerificationEmailService verificationEmailService;
 
     private final PasswordResetEmailService passwordResetEmailService;
+
+    private final WelcomeEmailService welcomeEmailService;
 
     private static final Duration RESET_TOKEN_TTL = Duration.ofHours(1);
 
@@ -68,6 +71,10 @@ public class UserServiceImpl implements UserService
                 .map(user -> {
                     user.setVerified(true);
                     user.setVerificationToken(null);
+                    if (user.getEmail() != null && !user.getEmail().isBlank())
+                    {
+                        welcomeEmailService.sendEmail(user.getEmail(), user.getName(), frontendBaseUrl);
+                    }
                     return true;
                 })
                 .orElse(false);

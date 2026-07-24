@@ -12,11 +12,12 @@ public class WelcomeEmailService
     private static final String EMAIL_SUBJECT = "Welcome to HisaabKitaab";
     private static final String EMAIL_TEMPLATE_NAME = "Welcome";
 
-    public void sendEmail(String to, String username)
+    public void sendEmail(String to, String username, String appUrl)
     {
         Context context = new Context();
 
         context.setVariable("username", username);
+        context.setVariable("appUrl", appUrl);
 
         mailService.sendTemplatedEmail(
                 to,

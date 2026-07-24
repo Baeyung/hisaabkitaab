@@ -2,28 +2,108 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Verify your HisaabKitaab account</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="color-scheme" content="light"/>
+    <meta name="supported-color-schemes" content="light"/>
+    <title>Open your HisaabKitaab khata</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,600&display=swap');
+        body { margin:0 !important; padding:0 !important; width:100% !important; }
+        a { text-decoration:none; }
+        @media (prefers-reduced-motion: no-preference) {
+            .rule-shimmer {
+                background:linear-gradient(90deg, rgba(217,169,78,0) 0%, #F4D58D 45%, #D9A94E 55%, rgba(217,169,78,0) 100%);
+                background-size:220% 100%;
+                animation:sweep 3.4s ease-in-out infinite;
+            }
+            @keyframes sweep { 0% { background-position:160% 0; } 100% { background-position:-60% 0; } }
+        }
+        @media (max-width:600px) {
+            .pad { padding-left:24px !important; padding-right:24px !important; }
+            .display { font-size:27px !important; line-height:1.15 !important; }
+        }
+    </style>
 </head>
-<body style="margin:0;padding:24px;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#18181b;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;">
+<body style="margin:0;padding:0;background:#E9E0CE;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#211E2B;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">One tap confirms it's you — then your khata is open for business.</div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#E9E0CE;">
         <tr>
-            <td style="padding:32px;">
-                <h1 style="margin:0 0 16px;font-size:20px;">HisaabKitaab</h1>
-                <p style="margin:0 0 16px;font-size:15px;">Assalam-o-alaikum <strong th:text="${username}">there</strong>,</p>
-                <p style="margin:0 0 24px;font-size:15px;line-height:1.5;">
-                    Please confirm your email to start using your account.
-                </p>
-                <a th:href="${verificationUrl}"
-                   style="display:inline-block;padding:12px 24px;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:bold;">
-                    Verify my account
-                </a>
-                <p style="margin:24px 0 0;font-size:13px;color:#71717a;line-height:1.5;">
-                    If the button doesn't work, copy this link into your browser:<br/>
-                    <a th:href="${verificationUrl}" th:text="${verificationUrl}" style="color:#16a34a;word-break:break-all;">link</a>
-                </p>
-                <p style="margin:16px 0 0;font-size:13px;color:#71717a;">
-                    Didn't create this account? You can safely ignore this email.
-                </p>
+            <td align="center" style="padding:32px 16px;">
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FBF6EA;border-radius:16px;overflow:hidden;box-shadow:0 12px 34px rgba(60,30,20,0.14);">
+
+                    <!-- Masthead: the red khata cover -->
+                    <tr>
+                        <td bgcolor="#8E1B2E" style="background:linear-gradient(135deg,#8E1B2E 0%,#B02A3C 100%);padding:30px 32px 24px;">
+                            <p style="margin:0 0 6px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#EEC77A;font-weight:700;">New account</p>
+                            <h1 style="margin:0;font-family:'Fraunces',Georgia,'Times New Roman',serif;font-size:26px;font-weight:600;color:#FFFFFF;letter-spacing:-0.2px;">
+                                HisaabKitaab <span style="font-size:19px;color:rgba(255,255,255,0.72);">· حساب کتاب</span>
+                            </h1>
+                        </td>
+                    </tr>
+                    <!-- Gold hairline (shimmers in Apple Mail, static elsewhere) -->
+                    <tr><td class="rule-shimmer" bgcolor="#D9A94E" style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td class="pad" style="padding:34px 40px 8px;">
+                            <p style="margin:0 0 14px;font-size:15px;color:#6E6A5E;">Assalam-o-alaikum, <strong style="color:#211E2B;" th:text="${username}">there</strong></p>
+                            <h2 class="display" style="margin:0 0 14px;font-family:'Fraunces',Georgia,serif;font-size:33px;line-height:1.1;font-weight:600;color:#211E2B;letter-spacing:-0.5px;">
+                                Let's open<br/>your khata.
+                            </h2>
+                            <p style="margin:0 0 26px;font-size:16px;line-height:1.6;color:#4A463D;">
+                                One tap confirms this is really you — then your books are ready and waiting. Consider this your very first entry.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- The ledger entry card -->
+                    <tr>
+                        <td class="pad" style="padding:0 40px 30px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E7DBC2;border-left:5px solid #8E1B2E;border-radius:12px;">
+                                <tr>
+                                    <td style="padding:18px 22px 8px;border-bottom:1px solid #F0E7D3;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:1.5px;color:#8E1B2E;font-weight:700;">ENTRY · NEW ACCOUNT</td>
+                                                <td align="right" style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:1px;color:#B08428;">⏳ PENDING</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:26px 22px 28px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                                            <tr>
+                                                <td align="center" bgcolor="#147B4C" style="border-radius:11px;">
+                                                    <a th:href="${verificationUrl}" style="display:inline-block;padding:15px 36px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:700;color:#FFFFFF;border-radius:11px;background:linear-gradient(180deg,#1B9A5F 0%,#147B4C 100%);">Verify my account&nbsp;&rarr;</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Fallback link -->
+                    <tr>
+                        <td class="pad" style="padding:0 40px 30px;">
+                            <p style="margin:0 0 6px;font-size:13px;color:#8A8578;">Button not working? Paste this into your browser:</p>
+                            <a th:href="${verificationUrl}" th:text="${verificationUrl}" style="font-family:'Courier New',monospace;font-size:12px;color:#147B4C;word-break:break-all;">link</a>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:22px 40px 30px;border-top:1px solid #EADFC8;background:#F6EFDD;">
+                            <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#8A8578;">Didn't open this account? Ignore this email — nothing happens without that tap.</p>
+                            <p style="margin:0;font-size:12px;color:#A79F8C;">HisaabKitaab · the ledger your shop deserves · <a href="mailto:support@hisaabkitaab.shop" style="color:#8E1B2E;">support@hisaabkitaab.shop</a></p>
+                        </td>
+                    </tr>
+
+                </table>
             </td>
         </tr>
     </table>

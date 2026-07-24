@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="color-scheme" content="light"/>
+    <meta name="supported-color-schemes" content="light"/>
+    <title>Welcome to HisaabKitaab</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap');
+        body { margin:0 !important; padding:0 !important; width:100% !important; }
+        a { text-decoration:none; }
+        @media (prefers-reduced-motion: no-preference) {
+            .rule-shimmer {
+                background:linear-gradient(90deg, rgba(217,169,78,0) 0%, #F4D58D 45%, #D9A94E 55%, rgba(217,169,78,0) 100%);
+                background-size:220% 100%;
+                animation:sweep 3.4s ease-in-out infinite;
+            }
+            @keyframes sweep { 0% { background-position:160% 0; } 100% { background-position:-60% 0; } }
+        }
+        @media (max-width:600px) {
+            .pad { padding-left:24px !important; padding-right:24px !important; }
+            .display { font-size:28px !important; line-height:1.12 !important; }
+        }
+    </style>
+</head>
+<body style="margin:0;padding:0;background:#E9E0CE;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#211E2B;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Your books are open for business. Here's everything waiting inside. 🎉</div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#E9E0CE;">
+        <tr>
+            <td align="center" style="padding:32px 16px;">
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FBF6EA;border-radius:16px;overflow:hidden;box-shadow:0 12px 34px rgba(60,30,20,0.14);">
+
+                    <!-- Masthead -->
+                    <tr>
+                        <td bgcolor="#8E1B2E" style="background:linear-gradient(135deg,#8E1B2E 0%,#B02A3C 100%);padding:30px 32px 24px;">
+                            <p style="margin:0 0 6px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#EEC77A;font-weight:700;">Khata opened</p>
+                            <h1 style="margin:0;font-family:'Fraunces',Georgia,'Times New Roman',serif;font-size:26px;font-weight:600;color:#FFFFFF;letter-spacing:-0.2px;">
+                                HisaabKitaab <span style="font-size:19px;color:rgba(255,255,255,0.72);">· حساب کتاب</span>
+                            </h1>
+                        </td>
+                    </tr>
+                    <tr><td class="rule-shimmer" bgcolor="#D9A94E" style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td class="pad" style="padding:34px 40px 6px;">
+                            <p style="margin:0 0 14px;font-size:15px;color:#6E6A5E;">Assalam-o-alaikum, <strong style="color:#211E2B;" th:text="${username}">there</strong> 🎉</p>
+                            <h2 class="display" style="margin:0 0 14px;font-family:'Fraunces',Georgia,serif;font-size:34px;line-height:1.08;font-weight:600;color:#211E2B;letter-spacing:-0.5px;">
+                                Your books are<br/>open for business.
+                            </h2>
+                            <p style="margin:0 0 26px;font-size:16px;line-height:1.6;color:#4A463D;">
+                                Everything your shop runs on, now in one place — not a notebook, not a shoebox of receipts. Here's what's already in your khata:
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Feature ledger: each capability as a line item -->
+                    <tr>
+                        <td class="pad" style="padding:0 40px 8px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E7DBC2;border-left:5px solid #8E1B2E;border-radius:12px;">
+                                <tr>
+                                    <td style="padding:14px 20px;font-size:15px;line-height:1.45;color:#211E2B;border-bottom:1px solid #F0E7D3;">
+                                        <span style="font-size:18px;">📒</span>&nbsp;&nbsp;<strong>Party ledgers</strong><br/>
+                                        <span style="font-size:14px;color:#6E6A5E;">Who owes you, who you owe — down to the rupee.</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:14px 20px;font-size:15px;line-height:1.45;color:#211E2B;border-bottom:1px solid #F0E7D3;">
+                                        <span style="font-size:18px;">🧾</span>&nbsp;&nbsp;<strong>Bills &amp; sales</strong><br/>
+                                        <span style="font-size:14px;color:#6E6A5E;">Every sale and purchase recorded in seconds.</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:14px 20px;font-size:15px;line-height:1.45;color:#211E2B;border-bottom:1px solid #F0E7D3;">
+                                        <span style="font-size:18px;">📦</span>&nbsp;&nbsp;<strong>Inventory</strong><br/>
+                                        <span style="font-size:14px;color:#6E6A5E;">Stock counts that keep themselves honest.</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:14px 20px;font-size:15px;line-height:1.45;color:#211E2B;">
+                                        <span style="font-size:18px;">📊</span>&nbsp;&nbsp;<strong>Dashboard</strong><br/>
+                                        <span style="font-size:14px;color:#6E6A5E;">Your whole business, read at a glance.</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Closing balance flourish -->
+                    <tr>
+                        <td class="pad" style="padding:16px 40px 4px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="font-family:'Courier New',monospace;font-size:12px;letter-spacing:1px;color:#8A8578;">TODAY'S BALANCE</td>
+                                    <td align="right" style="font-family:'Courier New',monospace;font-size:13px;letter-spacing:0.5px;color:#147B4C;font-weight:700;">A FRESH START ✦</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- CTA -->
+                    <tr>
+                        <td class="pad" align="center" style="padding:24px 40px 34px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                                <tr>
+                                    <td align="center" bgcolor="#147B4C" style="border-radius:11px;">
+                                        <a th:href="${appUrl}" style="display:inline-block;padding:15px 40px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:700;color:#FFFFFF;border-radius:11px;background:linear-gradient(180deg,#1B9A5F 0%,#147B4C 100%);">Open HisaabKitaab&nbsp;&rarr;</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:22px 40px 30px;border-top:1px solid #EADFC8;background:#F6EFDD;">
+                            <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#6E6A5E;">We're glad you're here. Here's to a business that finally balances itself. 💚</p>
+                            <p style="margin:0;font-size:12px;color:#A79F8C;">HisaabKitaab · the ledger your shop deserves · <a href="mailto:support@hisaabkitaab.shop" style="color:#8E1B2E;">support@hisaabkitaab.shop</a></p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
