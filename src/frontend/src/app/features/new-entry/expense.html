@@ -85,12 +85,21 @@
     </div>
 
     <div class="sale__actions">
-      <button type="button" class="btn btn--ghost" (click)="reset()">
-        {{ locale.t('expense.clear') }}
-      </button>
-      <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
-        {{ locale.t('expense.saveNext') }} ↵
-      </button>
+      @if (editId()) {
+        <button type="button" class="btn btn--ghost" (click)="cancel()">
+          {{ locale.t('common.cancel') }}
+        </button>
+        <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
+          {{ locale.t('common.update') }}
+        </button>
+      } @else {
+        <button type="button" class="btn btn--ghost" (click)="reset()">
+          {{ locale.t('expense.clear') }}
+        </button>
+        <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
+          {{ locale.t('expense.saveNext') }} ↵
+        </button>
+      }
     </div>
   </div>
 

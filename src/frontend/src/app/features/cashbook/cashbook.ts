@@ -2,11 +2,13 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { CashbookService } from '../../core/store/cashbook.service';
-import { CashbookDay } from '../../core/store/cashbook.models';
+import { CashbookDay, TransactionEventKind } from '../../core/store/cashbook.models';
+import { EventService } from '../../core/store/event.service';
 import { todayIso } from '../../shared/date.util';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { DateField } from '../../shared/date-field/date-field';
+import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -21,6 +23,7 @@ import { DateField } from '../../shared/date-field/date-field';
 export class Cashbook {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(CashbookService);
+  private readonly events = inject(EventService);
   private readonly router = inject(Router);
   protected readonly printer = inject(PrintDetailsService);
 
@@ -30,6 +33,13 @@ export class Cashbook {
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly noStore = signal(false);
+
+  /** The row awaiting delete confirmation, and whether a delete is in flight. */
+  protected readonly pendingDelete = signal<string | null>(null);
+  protected readonly deleting = signal(false);
+  protected readonly deleteError = signal(false);
+
+  protected readonly canEdit = isEditableEntry;
 
   constructor() {
     void this.load();
@@ -62,6 +72,41 @@ export class Cashbook {
   /** A sale row's transactionId is the bill's id — open its detail. */
   openBill(transactionId: string): void {
     void this.router.navigate(['/bill-management', transactionId]);
+  }
+
+  /** Open the entry's screen in edit mode, prefilled. */
+  editEntry(event: TransactionEventKind, transactionId: string): void {
+    const link = entryEditLink(event, transactionId);
+    if (link) {
+      void this.router.navigate(link);
+    }
+  }
+
+  askDelete(transactionId: string): void {
+    this.deleteError.set(false);
+    this.pendingDelete.set(transactionId);
+  }
+
+  cancelDelete(): void {
+    this.pendingDelete.set(null);
+  }
+
+  async confirmDelete(): Promise<void> {
+    const id = this.pendingDelete();
+    if (!id) {
+      return;
+    }
+    this.deleting.set(true);
+    this.deleteError.set(false);
+    try {
+      await this.events.deleteEvent(id);
+      this.pendingDelete.set(null);
+      await this.load();
+    } catch {
+      this.deleteError.set(true);
+    } finally {
+      this.deleting.set(false);
+    }
   }
 
   setFrom(value: string): void {

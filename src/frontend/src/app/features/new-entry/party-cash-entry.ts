@@ -1,4 +1,6 @@
 import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { PartyService } from '../../core/store/party.service';
@@ -77,6 +79,11 @@ export class PartyCashEntry {
   protected readonly locale = inject(LocaleService);
   private readonly partyApi = inject(PartyService);
   private readonly events = inject(EventService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly location = inject(Location);
+
+  /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
+  protected readonly editId = signal<string | null>(null);
 
   protected readonly toast = new ToastState();
 
@@ -102,13 +109,38 @@ export class PartyCashEntry {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.toast.dispose());
-    this.loadParties();
+    void this.init();
+  }
+
+  private async init(): Promise<void> {
+    await this.loadParties();
+    const id = this.route.snapshot.paramMap.get('entryId');
+    if (id) {
+      await this.loadEntry(id);
+    }
   }
 
   private async loadParties(): Promise<void> {
     // Lists 404 before a store exists; not an error here — the field is just empty.
     const parties = await this.partyApi.list().catch(() => [] as Party[]);
     this.parties.set(parties);
+  }
+
+  private async loadEntry(id: string): Promise<void> {
+    try {
+      const e = await this.events.getEvent(id);
+      this.editId.set(id);
+      this.partyName.set(e.party?.name ?? '');
+      this.amount.set(e.cashAmount);
+      this.billNumber.set(e.billNumber ?? '');
+      this.description.set(e.description ?? '');
+      if (e.billDate) {
+        this.billDate.set(e.billDate);
+      }
+    } catch {
+      // Missing or not editable (e.g. an opening entry) — fall back to the blank add form.
+      this.toast.show(this.locale.t('error.generic'));
+    }
   }
 
   setAmount(value: string): void {
@@ -144,6 +176,12 @@ export class PartyCashEntry {
     };
 
     try {
+      const editId = this.editId();
+      if (editId) {
+        await this.events.updateEvent(editId, request);
+        this.location.back();
+        return;
+      }
       await this.events.publishEvent(request);
       this.recent.push(
         `${this.locale.t(labels.recentLabel)} · ${party.name} · ${this.locale.money(amount)}`,
@@ -155,6 +193,11 @@ export class PartyCashEntry {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** Leave edit mode without saving — back to wherever the edit was launched from. */
+  cancel(): void {
+    this.location.back();
   }
 
   reset(): void {

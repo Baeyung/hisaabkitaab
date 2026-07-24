@@ -73,8 +73,14 @@ export const routes: Routes = [
             path: 'ledger/:partyId',
             loadComponent: () => import('./features/ledger/ledger-detail').then((m) => m.LedgerDetail),
           },
+          // Each entry screen doubles as its own editor: with an :entryId it loads
+          // that entry and saves as an update instead of a new record.
           {
             path: 'new-entry/sale',
+            loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
+          },
+          {
+            path: 'new-entry/sale/:entryId',
             loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
           },
           {
@@ -82,7 +88,15 @@ export const routes: Routes = [
             loadComponent: () => import('./features/new-entry/receipt').then((m) => m.Receipt),
           },
           {
+            path: 'new-entry/receipt/:entryId',
+            loadComponent: () => import('./features/new-entry/receipt').then((m) => m.Receipt),
+          },
+          {
             path: 'new-entry/purchase',
+            loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
+          },
+          {
+            path: 'new-entry/purchase/:entryId',
             loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
           },
           {
@@ -90,7 +104,15 @@ export const routes: Routes = [
             loadComponent: () => import('./features/new-entry/expense').then((m) => m.Expense),
           },
           {
+            path: 'new-entry/expense/:entryId',
+            loadComponent: () => import('./features/new-entry/expense').then((m) => m.Expense),
+          },
+          {
             path: 'new-entry/payment',
+            loadComponent: () => import('./features/new-entry/payment').then((m) => m.Payment),
+          },
+          {
+            path: 'new-entry/payment/:entryId',
             loadComponent: () => import('./features/new-entry/payment').then((m) => m.Payment),
           },
           {

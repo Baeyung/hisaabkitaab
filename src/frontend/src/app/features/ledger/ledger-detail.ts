@@ -2,10 +2,12 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
+import { EventService } from '../../core/store/event.service';
 import { PartyStatement, PartyStatementRow } from '../../core/store/ledger.models';
 import { Balance } from '../../core/store/balance.models';
 import { TransactionEventKind } from '../../core/store/cashbook.models';
 import { TranslationKey } from '../../core/i18n/translations/en';
+import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
@@ -31,8 +33,16 @@ export class LedgerDetail {
 
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(LedgerService);
+  private readonly events = inject(EventService);
   private readonly router = inject(Router);
   protected readonly printer = inject(PrintDetailsService);
+
+  /** The row awaiting delete confirmation, and whether a delete is in flight. */
+  protected readonly pendingDelete = signal<string | null>(null);
+  protected readonly deleting = signal(false);
+  protected readonly deleteError = signal(false);
+
+  protected readonly canEdit = isEditableEntry;
 
   protected readonly statement = signal<PartyStatement | null>(null);
   protected readonly loading = signal(true);
@@ -113,6 +123,41 @@ export class LedgerDetail {
   /** A sale row's transactionId is the bill's id — open its detail. */
   openBill(transactionId: string): void {
     void this.router.navigate(['/bill-management', transactionId]);
+  }
+
+  /** Open the entry's screen in edit mode, prefilled. */
+  editEntry(event: TransactionEventKind, transactionId: string): void {
+    const link = entryEditLink(event, transactionId);
+    if (link) {
+      void this.router.navigate(link);
+    }
+  }
+
+  askDelete(transactionId: string): void {
+    this.deleteError.set(false);
+    this.pendingDelete.set(transactionId);
+  }
+
+  cancelDelete(): void {
+    this.pendingDelete.set(null);
+  }
+
+  async confirmDelete(): Promise<void> {
+    const id = this.pendingDelete();
+    if (!id) {
+      return;
+    }
+    this.deleting.set(true);
+    this.deleteError.set(false);
+    try {
+      await this.events.deleteEvent(id);
+      this.pendingDelete.set(null);
+      await this.load(this.partyId());
+    } catch {
+      this.deleteError.set(true);
+    } finally {
+      this.deleting.set(false);
+    }
   }
 
   async load(partyId: string): Promise<void> {
