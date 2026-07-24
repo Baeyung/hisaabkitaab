@@ -14,8 +14,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const creds = store.credentials();
 
   let authReq = req;
-  if (isApi && !isSignup && creds && !req.headers.has('Authorization')) {
-    authReq = req.clone({ setHeaders: { Authorization: `Basic ${creds}` } });
+  if (isApi) {
+    authReq = req.clone({ setHeaders: { 'ngrok-skip-browser-warning': 'true' } });
+  }
+  if (isApi && !isSignup && creds && !authReq.headers.has('Authorization')) {
+    authReq = authReq.clone({ setHeaders: { Authorization: `Basic ${creds}` } });
   }
 
   return next(authReq).pipe(
