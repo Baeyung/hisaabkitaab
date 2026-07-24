@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { CashbookService } from '../../core/store/cashbook.service';
@@ -6,6 +6,7 @@ import { CashbookDay, TransactionEventKind } from '../../core/store/cashbook.mod
 import { EventService } from '../../core/store/event.service';
 import { todayIso } from '../../shared/date.util';
 import { PrintHeader } from '../../shared/print-header';
+import { PrintItemsSummary } from '../../shared/print-items-summary';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { DateField } from '../../shared/date-field/date-field';
 import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
@@ -17,7 +18,7 @@ import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
  */
 @Component({
   selector: 'app-cashbook',
-  imports: [RouterLink, PrintHeader, DateField],
+  imports: [RouterLink, PrintHeader, PrintItemsSummary, DateField],
   templateUrl: './cashbook.html',
 })
 export class Cashbook {
@@ -40,6 +41,9 @@ export class Cashbook {
   protected readonly deleteError = signal(false);
 
   protected readonly canEdit = isEditableEntry;
+
+  /** The bills fetched for this printout — empty unless "with details" was chosen. */
+  protected readonly printedBills = computed(() => [...this.printer.bills().values()]);
 
   constructor() {
     void this.load();

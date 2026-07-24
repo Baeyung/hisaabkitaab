@@ -313,6 +313,7 @@ export const ur: Record<TranslationKey, string> = {
     'یہ اندراج حذف کریں؟ یہ اسے مستقل طور پر ہٹا دے گا اور نقد، کھاتہ اور اسٹاک پر اس کا اثر ختم کر دے گا۔',
   'entry.delete.confirmBtn': 'حذف کریں',
   'entry.delete.error': 'اندراج حذف نہیں ہو سکا۔ دوبارہ کوشش کریں۔',
+  'print.items.title': 'اس مدت میں فروخت ہونے والے آئٹمز',
   'common.printDetails.title': 'پرنٹ کے اختیارات',
   'common.printDetails.confirm': 'کیا پرنٹ میں ہر بل کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
   'common.printDetails.with': 'تفصیلات کے ساتھ',

@@ -311,6 +311,7 @@ export const en = {
     'Delete this entry? This permanently removes it and undoes its effect on cash, khata and stock.',
   'entry.delete.confirmBtn': 'Delete',
   'entry.delete.error': "Couldn't delete this entry. Please try again.",
+  'print.items.title': 'Items sold in this period',
   'common.printDetails.title': 'Print options',
   'common.printDetails.confirm': "Include each bill's item details as sub-rows in the printout?",
   'common.printDetails.with': 'With details',

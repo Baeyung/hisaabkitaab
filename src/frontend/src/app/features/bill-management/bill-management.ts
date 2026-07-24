@@ -4,6 +4,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
 import { BillDetail, BillSummary } from '../../core/store/bill.models';
 import { PrintHeader } from '../../shared/print-header';
+import { PrintItemsSummary } from '../../shared/print-items-summary';
 import { BillInvoice } from '../../shared/bill-invoice';
 import { Select } from '../../shared/select/select';
 import { DateField } from '../../shared/date-field/date-field';
@@ -58,7 +59,7 @@ export function sumBills(bills: BillDetail[]): {
  */
 @Component({
   selector: 'app-bill-management',
-  imports: [RouterLink, PrintHeader, BillInvoice, Select, DateField],
+  imports: [RouterLink, PrintHeader, PrintItemsSummary, BillInvoice, Select, DateField],
   templateUrl: './bill-management.html',
 })
 export class BillManagement {

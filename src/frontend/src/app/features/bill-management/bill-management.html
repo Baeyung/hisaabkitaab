@@ -219,6 +219,9 @@
         </div>
       }
     </div>
+    @if (reportMode()) {
+      <app-print-items-summary [bills]="printBills()" />
+    }
   }
 
   <!-- Print-only: one invoice per filtered bill, each on its own page. -->
