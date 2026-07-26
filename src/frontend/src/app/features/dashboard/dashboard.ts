@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
 import { LocaleService } from '../../core/i18n/locale.service';
+import { ThemeService } from '../../core/theme/theme.service';
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { DashboardService } from '../../core/store/dashboard.service';
 import { Dashboard as DashboardData } from '../../core/store/dashboard.models';
@@ -9,22 +10,62 @@ import { daysAgoIso, todayIso } from '../../shared/date.util';
 import { ChartView } from '../../shared/chart/chart';
 import { DateField } from '../../shared/date-field/date-field';
 
-// Semantic tokens from styles.css, mirrored here so charts read the same
-// money-in/money-out language as the rest of the app.
-const GREEN = '#1f7a4d'; // money in / revenue / receivable
-const RED = '#a8342a'; //   money out / spend / payable / expenses
-const BLUE = '#1d4e7a'; //  running cash balance (neutral, not a money-in/out signal)
-const AMBER = '#c98a2b'; // aging warning — dues 30–60 days old
-const INK = '#23201c'; //   primary text
-const MUTED = '#6b655c'; // axis labels
-const LINE = 'rgba(35, 32, 28, 0.12)'; // hairline grid
+// A canvas can't read a CSS custom property, so the palette is mirrored here —
+// once per theme, keyed the same way styles.css is. Chart colours are picked
+// through `palette()` below, which tracks ThemeService, so a theme change
+// rebuilds every config and ChartView redraws.
 const FONT = "'IBM Plex Sans', system-ui, sans-serif";
 
-// Categorical palette for the sales-mix doughnut. Deliberately avoids the
-// semantic green/red so a design's slice never reads as "money in/out"; a
-// calm pine → teal → amber → blue → olive run, with muted clay for "Other".
-const MIX = ['#1f5c4d', '#2d8f6b', '#3f9c93', '#c98a2b', '#1d4e7a', '#6b8f3a'];
-const MIX_OTHER = '#b0a99c';
+export interface ChartPalette {
+  green: string; //  money in / revenue / receivable
+  red: string; //    money out / spend / payable / expenses
+  blue: string; //   running cash balance (neutral, not a money-in/out signal)
+  amber: string; //  aging warning — dues 30–60 days old
+  ink: string; //    legend text
+  muted: string; //  axis labels
+  line: string; //   hairline grid
+  card: string; //   the card behind the canvas — point rings and doughnut gaps
+  tooltipBg: string;
+  tooltipInk: string;
+  // Categorical palette for the sales-mix doughnut. Deliberately avoids the
+  // semantic green/red so a design's slice never reads as "money in/out"; a
+  // calm pine → teal → amber → blue → olive run, with muted clay for "Other".
+  mix: readonly string[];
+  mixOther: string;
+}
+
+export const PALETTES: Record<'light' | 'dark', ChartPalette> = {
+  light: {
+    green: '#1f7a4d',
+    red: '#a8342a',
+    blue: '#1d4e7a',
+    amber: '#c08428',
+    ink: '#23201c',
+    muted: '#6b655c',
+    line: 'rgba(35, 32, 28, 0.12)',
+    card: '#ffffff',
+    tooltipBg: '#23201c',
+    tooltipInk: '#f7f4ee',
+    mix: ['#1f5c4d', '#2d8f6b', '#3f9c93', '#c08428', '#1d4e7a', '#6b8f3a'],
+    mixOther: '#96907f',
+  },
+  // Lifted to carry on a near-black card: the light values sit at 2–3:1 there,
+  // which is the same readability problem the CSS palette fixes.
+  dark: {
+    green: '#55c08a',
+    red: '#f0776a',
+    blue: '#7ab0e0',
+    amber: '#e0a94a',
+    ink: '#ece7db',
+    muted: '#a9a294',
+    line: 'rgba(236, 231, 219, 0.14)',
+    card: '#2b2721',
+    tooltipBg: '#12100b',
+    tooltipInk: '#ece7db',
+    mix: ['#4aa789', '#5fc39b', '#5cc0bb', '#e0a94a', '#7ab0e0', '#9dc25c'],
+    mixOther: '#8b8478',
+  },
+};
 
 /**
  * The analytics home screen. One backend call feeds every widget for the chosen
@@ -38,6 +79,10 @@ const MIX_OTHER = '#b0a99c';
 export class Dashboard {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(DashboardService);
+  private readonly theme = inject(ThemeService);
+
+  /** Every chart config reads this, so all of them retint on a theme change. */
+  private readonly palette = computed(() => PALETTES[this.theme.resolved()]);
 
   /** Display label for a spend head: seed tokens translated, custom names shown raw. */
   protected readonly categoryLabel = (name: string): string =>
@@ -74,6 +119,7 @@ export class Dashboard {
 
   /** Revenue (sales) and spending as flow lines over the window, cash as a running balance. */
   protected readonly trendConfig = computed<ChartConfiguration>(() => {
+    const pal = this.palette();
     const d = this.data();
     const points = d?.daily ?? [];
     const rtl = this.locale.dir() === 'rtl';
@@ -87,7 +133,7 @@ export class Dashboard {
       pointRadius: 3,
       pointHoverRadius: 5,
       pointBackgroundColor: color,
-      pointBorderColor: '#fff',
+      pointBorderColor: pal.card,
       pointBorderWidth: 1.5,
     });
     return {
@@ -95,12 +141,12 @@ export class Dashboard {
       data: {
         labels: points.map((p) => this.shortDate(p.date)),
         datasets: [
-          line(this.locale.t('dash.sales'), points.map((p) => p.sales), GREEN),
-          line(this.locale.t('dash.spend'), points.map((p) => p.spend), RED),
+          line(this.locale.t('dash.sales'), points.map((p) => p.sales), pal.green),
+          line(this.locale.t('dash.spend'), points.map((p) => p.spend), pal.red),
           // Cash is a running balance, not a daily flow — dashed, on its own
           // right-hand axis so its scale never squashes the flow lines.
           {
-            ...line(this.locale.t('dash.cash'), points.map((p) => p.cash), BLUE),
+            ...line(this.locale.t('dash.cash'), points.map((p) => p.cash), pal.blue),
             yAxisID: 'y1',
             borderDash: [6, 4],
             pointRadius: 2,
@@ -117,14 +163,14 @@ export class Dashboard {
           x: {
             reverse: rtl,
             grid: { display: false },
-            border: { color: LINE },
-            ticks: { color: MUTED, font: { family: FONT, size: 11 } },
+            border: { color: pal.line },
+            ticks: { color: pal.muted, font: { family: FONT, size: 11 } },
           },
           y: {
             beginAtZero: true,
             border: { display: false },
-            grid: { color: LINE },
-            ticks: { color: MUTED, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+            grid: { color: pal.line },
+            ticks: { color: pal.muted, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
           },
           // Secondary axis for the cash balance. Its gridlines are hidden so the
           // chart keeps one set of horizontal rules (the flows' axis).
@@ -132,7 +178,7 @@ export class Dashboard {
             position: 'right',
             border: { display: false },
             grid: { drawOnChartArea: false },
-            ticks: { color: BLUE, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+            ticks: { color: pal.blue, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
           },
         },
         plugins: {
@@ -140,11 +186,13 @@ export class Dashboard {
             rtl,
             position: 'top',
             align: 'end',
-            labels: { color: INK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { family: FONT, size: 12 }, padding: 16 },
+            labels: { color: pal.ink, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { family: FONT, size: 12 }, padding: 16 },
           },
           tooltip: {
             rtl,
-            backgroundColor: INK,
+            backgroundColor: pal.tooltipBg,
+            titleColor: pal.tooltipInk,
+            bodyColor: pal.tooltipInk,
             padding: 10,
             titleFont: { family: FONT, size: 12 },
             bodyFont: { family: FONT, size: 12 },
@@ -157,16 +205,17 @@ export class Dashboard {
 
   /** Revenue share by design, with everything past the top few folded into "Other". */
   protected readonly salesMixConfig = computed<ChartConfiguration>(() => {
+    const pal = this.palette();
     const d = this.data();
     const items = d?.topItems ?? [];
     const labels = items.map((i) => i.name);
     const values = items.map((i) => i.revenue);
-    const colors = items.map((_, i) => MIX[i % MIX.length]);
+    const colors = items.map((_, i) => pal.mix[i % pal.mix.length]);
     const other = (d?.sales ?? 0) - values.reduce((a, b) => a + b, 0);
     if (other > 1) {
       labels.push(this.locale.t('dash.mix.other'));
       values.push(other);
-      colors.push(MIX_OTHER);
+      colors.push(pal.mixOther);
     }
     return this.doughnut(labels, values, colors);
   });
@@ -180,10 +229,11 @@ export class Dashboard {
    * top-right and deepen from muted → amber → red as they age.
    */
   protected readonly staleConfig = computed<ChartConfiguration>(() => {
+    const pal = this.palette();
     const parties = this.data()?.staleReceivables ?? [];
     const rtl = this.locale.dir() === 'rtl';
     const maxAmount = Math.max(1, ...parties.map((p) => p.amount));
-    const color = (days: number) => (days >= 60 ? RED : days >= 30 ? AMBER : MUTED);
+    const color = (days: number) => (days >= 60 ? pal.red : days >= 30 ? pal.amber : pal.muted);
     const config: ChartConfiguration<'bubble'> = {
       type: 'bubble',
       data: {
@@ -206,24 +256,26 @@ export class Dashboard {
           x: {
             reverse: rtl,
             beginAtZero: true,
-            title: { display: true, text: this.locale.t('dash.stale.xaxis'), color: MUTED, font: { family: FONT, size: 11 } },
-            grid: { color: LINE },
-            border: { color: LINE },
-            ticks: { color: MUTED, font: { family: FONT, size: 11 }, callback: (v) => `${v}d` },
+            title: { display: true, text: this.locale.t('dash.stale.xaxis'), color: pal.muted, font: { family: FONT, size: 11 } },
+            grid: { color: pal.line },
+            border: { color: pal.line },
+            ticks: { color: pal.muted, font: { family: FONT, size: 11 }, callback: (v) => `${v}d` },
           },
           y: {
             beginAtZero: true,
-            title: { display: true, text: this.locale.t('dash.stale.yaxis'), color: MUTED, font: { family: FONT, size: 11 } },
+            title: { display: true, text: this.locale.t('dash.stale.yaxis'), color: pal.muted, font: { family: FONT, size: 11 } },
             border: { display: false },
-            grid: { color: LINE },
-            ticks: { color: MUTED, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+            grid: { color: pal.line },
+            ticks: { color: pal.muted, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
           },
         },
         plugins: {
           legend: { display: false },
           tooltip: {
             rtl,
-            backgroundColor: INK,
+            backgroundColor: pal.tooltipBg,
+            titleColor: pal.tooltipInk,
+            bodyColor: pal.tooltipInk,
             padding: 10,
             titleFont: { family: FONT, size: 12 },
             bodyFont: { family: FONT, size: 12 },
@@ -247,6 +299,7 @@ export class Dashboard {
 
   /** Shared doughnut config: calm ring, bottom legend, money + percent tooltip. */
   private doughnut(labels: string[], values: number[], colors: string[]): ChartConfiguration {
+    const pal = this.palette();
     const rtl = this.locale.dir() === 'rtl';
     const total = values.reduce((a, b) => a + b, 0) || 1;
     // Built as a doughnut config (for `cutout`), widened to the generic type the
@@ -255,7 +308,7 @@ export class Dashboard {
       type: 'doughnut',
       data: {
         labels,
-        datasets: [{ data: values, backgroundColor: colors, borderColor: '#fff', borderWidth: 2, hoverOffset: 6 }],
+        datasets: [{ data: values, backgroundColor: colors, borderColor: pal.card, borderWidth: 2, hoverOffset: 6 }],
       },
       options: {
         responsive: true,
@@ -266,11 +319,13 @@ export class Dashboard {
           legend: {
             rtl,
             position: 'bottom',
-            labels: { color: INK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { family: FONT, size: 12 }, padding: 12 },
+            labels: { color: pal.ink, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { family: FONT, size: 12 }, padding: 12 },
           },
           tooltip: {
             rtl,
-            backgroundColor: INK,
+            backgroundColor: pal.tooltipBg,
+            titleColor: pal.tooltipInk,
+            bodyColor: pal.tooltipInk,
             padding: 10,
             bodyFont: { family: FONT, size: 12 },
             callbacks: {

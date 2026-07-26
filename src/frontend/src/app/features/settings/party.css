@@ -76,7 +76,7 @@
   font-weight: 600;
 }
 .tbl__row:hover td {
-  background: rgba(31, 92, 77, 0.03);
+  background: var(--kg-hover);
 }
 
 .actions {
@@ -105,7 +105,7 @@
 }
 .openbtn:hover {
   border-color: var(--kg-brand);
-  background: rgba(31, 92, 77, 0.04);
+  background: var(--kg-hover);
 }
 .openbtn:focus-visible {
   outline: none;
@@ -149,11 +149,11 @@
   cursor: pointer;
 }
 .iconbtn:hover {
-  border-color: rgba(35, 32, 28, 0.32);
+  border-color: var(--kg-line-hover);
   color: var(--kg-ink);
 }
 .iconbtn--danger:hover {
-  border-color: rgba(168, 52, 42, 0.4);
+  border-color: var(--kg-tint-out-edge);
   color: var(--kg-out);
 }
 .iconbtn:focus-visible {
@@ -163,16 +163,16 @@
 
 /* ── inline edit row ───────────────────────────────────────────────── */
 .tbl__edit td {
-  background: rgba(31, 92, 77, 0.04);
+  background: var(--kg-hover);
 }
 .tbl__rowmsg td {
   padding-top: 0;
-  background: rgba(31, 92, 77, 0.04);
+  background: var(--kg-hover);
 }
 
 /* ── delete confirm strip ──────────────────────────────────────────── */
 .tbl__confirm td {
-  background: rgba(168, 52, 42, 0.06);
+  background: var(--kg-tint-out);
 }
 .confirm {
   display: flex;
@@ -193,7 +193,7 @@
 
 /* ── opening-balance strip ─────────────────────────────────────────── */
 .tbl__opening td {
-  background: rgba(31, 92, 77, 0.04);
+  background: var(--kg-hover);
 }
 .opening {
   display: flex;
@@ -239,8 +239,8 @@
   border-inline-start: 1px solid var(--kg-line-strong);
 }
 .dirtoggle__btn--on {
-  color: #fff;
-  background: var(--kg-brand);
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
 }
 .dirtoggle__btn:focus-visible {
   outline: none;
@@ -270,7 +270,7 @@
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
 .fld__input::placeholder {
-  color: #b6afa4;
+  color: var(--kg-placeholder);
   font-weight: 400;
 }
 .fld__err {
@@ -304,8 +304,8 @@
   border-radius: 9px;
 }
 .btn--primary {
-  color: #fff;
-  background: var(--kg-brand);
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
   box-shadow: var(--kg-shadow-brand);
   transition: filter 0.15s ease, transform 0.05s ease;
 }
@@ -325,11 +325,11 @@
   border: 1px solid var(--kg-line-strong);
 }
 .btn--ghost:hover {
-  border-color: rgba(35, 32, 28, 0.32);
+  border-color: var(--kg-line-hover);
 }
 .btn--danger {
-  color: #fff;
-  background: var(--kg-out);
+  color: var(--kg-on-out);
+  background: var(--kg-out-solid);
 }
 .btn--danger:hover:not(:disabled) {
   filter: brightness(1.06);
@@ -373,15 +373,15 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--kg-out);
-  background: rgba(168, 52, 42, 0.08);
-  border: 1px solid rgba(168, 52, 42, 0.22);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
   border-radius: 11px;
 }
 
 /* ── loading skeleton ──────────────────────────────────────────────── */
 .skel {
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--kg-line) 25%, rgba(35, 32, 28, 0.05) 37%, var(--kg-line) 63%);
+  background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);
   background-size: 400% 100%;
 }
 .skel--row {
@@ -462,16 +462,16 @@
     padding: 4px 2px;
   }
   .tbl__edit {
-    background: rgba(31, 92, 77, 0.05);
-    border-color: rgba(31, 92, 77, 0.16);
+    background: var(--kg-tint-brand);
+    border-color: var(--kg-tint-brand-line);
   }
   .tbl__confirm {
-    background: rgba(168, 52, 42, 0.06);
-    border-color: rgba(168, 52, 42, 0.2);
+    background: var(--kg-tint-out);
+    border-color: var(--kg-tint-out-line);
   }
   .tbl__opening {
-    background: rgba(31, 92, 77, 0.05);
-    border-color: rgba(31, 92, 77, 0.16);
+    background: var(--kg-tint-brand);
+    border-color: var(--kg-tint-brand-line);
   }
 
   /* a display row with a strip after it drops its bottom seam, and the strip

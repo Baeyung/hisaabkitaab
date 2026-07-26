@@ -23,7 +23,7 @@
   border: 1px solid var(--kg-line);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 18px 50px rgba(35, 32, 28, 0.16);
+  box-shadow: var(--kg-shadow-dialog);
 }
 
 /* ── left: the living-khata hero ─────────────────────────────────── */
@@ -33,10 +33,10 @@
   display: flex;
   flex-direction: column;
   gap: 26px;
-  color: var(--kg-cream);
+  color: var(--kg-hero-ink);
   background:
     radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.08), transparent 60%),
-    linear-gradient(160deg, var(--kg-brand), var(--kg-brand-deep));
+    linear-gradient(160deg, var(--kg-hero), var(--kg-hero-deep));
 }
 
 .auth__brandline {
@@ -55,8 +55,8 @@
   font-weight: 700;
   font-size: 26px;
   line-height: 1;
-  background: var(--kg-cream);
-  color: var(--kg-brand);
+  background: var(--kg-hero-ink);
+  color: var(--kg-hero);
   box-shadow: 0 6px 18px rgba(24, 67, 53, 0.4);
 }
 
@@ -172,8 +172,8 @@
   margin-bottom: 22px;
 }
 .auth__brand--mobile .auth__mark {
-  background: var(--kg-brand);
-  color: var(--kg-cream);
+  background: var(--kg-brand-solid);
+  color: var(--kg-on-brand);
 }
 .auth__brand--mobile .auth__wordmark {
   color: var(--kg-ink);
@@ -225,11 +225,11 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .fld__input::placeholder {
-  color: #b6afa4;
+  color: var(--kg-placeholder);
   font-weight: 400;
 }
 .fld__input:hover {
-  border-color: rgba(35, 32, 28, 0.32);
+  border-color: var(--kg-line-hover);
 }
 .fld__input:focus {
   outline: none;
@@ -315,8 +315,8 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--kg-out);
-  background: rgba(168, 52, 42, 0.08);
-  border: 1px solid rgba(168, 52, 42, 0.22);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
   border-radius: 11px;
 }
 
@@ -333,8 +333,8 @@
   font-family: inherit;
   font-size: 16px;
   font-weight: 700;
-  color: #fff;
-  background: var(--kg-brand);
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
   text-decoration: none;
   cursor: pointer;
   box-shadow: var(--kg-shadow-brand);
@@ -394,7 +394,7 @@
   cursor: pointer;
 }
 .auth .auth__toggle .lang-toggle:hover {
-  border-color: rgba(35, 32, 28, 0.32);
+  border-color: var(--kg-line-hover);
 }
 .auth .auth__toggle .lang-toggle:focus-visible {
   outline: none;

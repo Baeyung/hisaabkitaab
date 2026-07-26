@@ -1,32 +1,93 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
 @import 'tailwindcss';
 
-/* ── HisaabKitaab ledger design tokens ───────────────────────────── */
+/* ── HisaabKitaab ledger design tokens ───────────────────────────────
+   Two themes, one material. Light is ledger paper on a cream desk; dark is
+   that same shop after closing, lit by one bulb — a warm brown-black ramp,
+   never a cool grey inversion. Nothing below is a raw colour at a use site:
+   every fill, hairline, tint, and shadow resolves through a token here so
+   the dark block further down only restates values, never selectors.
+
+   Three roles are easy to conflate and must stay apart:
+     --kg-ink          text. Light in dark mode.
+     --kg-chrome*      the topbar/sidebar frame. Dark in BOTH themes — it
+                       used to borrow --kg-ink as a background, which would
+                       have inverted the chrome the moment ink flipped.
+     --kg-hero*        the auth left pane and store nameplate. Also dark in
+                       both themes, so text on it never follows the theme.
+
+   Likewise --kg-brand is the accent (borders, links, focus, icons) and must
+   contrast against the page, while --kg-brand-solid is the fill under
+   --kg-on-brand. They diverge in dark: the accent lifts to stay readable,
+   the fill stays deep so white type still passes on it. */
 :root {
-  /* Light-only "ledger paper" design — pin native controls (datalist dropdowns,
-     date pickers, autofill, scrollbars) to the light UA theme so a viewer's dark
-     OS setting doesn't repaint them. */
+  /* Paper theme. Native controls (datalist dropdowns, date pickers, autofill,
+     scrollbars) follow this, which is why the dark block sets it too. */
   color-scheme: light;
 
   --kg-desk: #ded9cc; /* backdrop behind the app */
   --kg-surface: #f0ece3; /* form panel */
   --kg-card: #ffffff; /* inputs, ledger card */
-  --kg-cream: #f7f4ee; /* raised cream on dark hero */
+  --kg-cream: #f7f4ee; /* table head + footer strips */
   --kg-ink: #23201c; /* primary text */
   --kg-muted: #6b655c; /* labels */
   --kg-faint: #8a847a; /* hints, captions */
-  --kg-line: rgba(35, 32, 28, 0.14); /* hairlines */
-  --kg-line-strong: rgba(35, 32, 28, 0.2); /* input borders */
+  --kg-placeholder: #b6afa4;
 
-  --kg-brand: #1f5c4d; /* deep pine — logo, primary action */
+  /* Hairlines and inert fills are mixed off ink, so they invert with it. */
+  --kg-line: color-mix(in srgb, var(--kg-ink) 14%, transparent);
+  --kg-line-strong: color-mix(in srgb, var(--kg-ink) 20%, transparent);
+  --kg-line-hover: color-mix(in srgb, var(--kg-ink) 32%, transparent);
+  --kg-fill-subtle: color-mix(in srgb, var(--kg-ink) 5%, transparent);
+
+  --kg-brand: #1f5c4d; /* deep pine — accent: borders, links, focus */
+  --kg-brand-solid: #1f5c4d; /* the same pine as a fill under --kg-on-brand */
   --kg-brand-deep: #184335; /* gradient foot */
+  --kg-on-brand: #ffffff;
   --kg-in: #1f7a4d; /* they owe you (receivable) */
   --kg-out: #a8342a; /* you owe them (payable) */
+  --kg-out-solid: #a8342a; /* destructive fill under --kg-on-out */
+  --kg-on-out: #ffffff;
   --kg-amber: #c98a2b;
   --kg-blue: #1d4e7a;
 
-  --kg-focus: rgba(31, 92, 77, 0.45);
+  /* Frame: topbar + sidebar. Dark in both themes. */
+  --kg-chrome: #23201c;
+  --kg-chrome-ink: #e7e3d8;
+  --kg-chrome-dim: #c4bcae; /* resting nav label */
+  --kg-chrome-locked: #7d766a; /* store-gated nav item */
+
+  /* Auth hero + store nameplate. Dark in both themes. */
+  --kg-hero: #1f5c4d;
+  --kg-hero-deep: #184335;
+  --kg-hero-ink: #f7f4ee;
+
+  /* Semantic tints. Percentages roughly double in dark: a 4% wash that reads
+     as a tint on white is invisible over a near-black card. */
+  --kg-hover: color-mix(in srgb, var(--kg-brand) 4%, transparent);
+  --kg-tint-brand: color-mix(in srgb, var(--kg-brand) 5%, transparent);
+  --kg-tint-brand-line: color-mix(in srgb, var(--kg-brand) 16%, transparent);
+  --kg-tint-in: color-mix(in srgb, var(--kg-in) 7%, transparent);
+  --kg-tint-in-hover: color-mix(in srgb, var(--kg-in) 11%, transparent);
+  --kg-tint-in-strong: color-mix(in srgb, var(--kg-in) 13%, transparent);
+  --kg-tint-out: color-mix(in srgb, var(--kg-out) 7%, transparent);
+  --kg-tint-out-hover: color-mix(in srgb, var(--kg-out) 9%, transparent);
+  --kg-tint-out-line: color-mix(in srgb, var(--kg-out) 24%, transparent);
+  --kg-tint-out-edge: color-mix(in srgb, var(--kg-out) 42%, transparent);
+
+  --kg-focus: color-mix(in srgb, var(--kg-brand) 45%, transparent);
   --kg-shadow-brand: 0 4px 16px rgba(31, 92, 77, 0.34);
+  --kg-shadow-pop: 0 12px 30px rgba(35, 32, 28, 0.16); /* dropdown panels */
+  --kg-shadow-dialog: 0 18px 48px rgba(35, 32, 28, 0.28);
+  --kg-backdrop: rgba(35, 32, 28, 0.42);
+
+  /* The select chevron and date-picker glyph are SVG data URIs, and a stroke
+     colour inside a url() token can't be swapped by var() — so the whole URL
+     is the token and the dark block restates all four. */
+  --kg-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a847a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --kg-chevron-active: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f5c4d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --kg-cal: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a847a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+  --kg-cal-active: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f5c4d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
 
   /* ── Page measure ──────────────────────────────────────────────────
      Every screen caps its width and centres inside the content column.
@@ -52,6 +113,89 @@
   --kg-entry-max: 1520px;
 }
 
+/* ── Lamplight theme ─────────────────────────────────────────────────
+   Values only — no selectors, no layout. Everything above resolves through
+   the tokens, so restating them here retints the whole app.
+
+   The surface ramp climbs in five even warm steps, darkest frame to
+   lightest strip: chrome #16130d → desk #1c1913 → surface #221e18 →
+   card #2b2721 → cream #332e26. The frame being the darkest is what makes
+   the cards read as lit paper on a shadowed desk rather than as boxes
+   floating in soup, and it needs no extra borders to do it.
+
+   Value colours brighten because the originals were tuned against white:
+   the old payable red #a8342a lands at 2.4:1 on a dark card, which is the
+   readability problem in every ledger screen. All of ink/muted/faint/in/out
+   clear 4.5:1 on --kg-card; --kg-faint is the tightest at 4.6:1 and can't be
+   dimmed further because it carries 11px uppercase labels.
+
+   Keyed off one attribute rather than a prefers-color-scheme query: the
+   theme service resolves the "system" preference in JS and stamps a definite
+   light|dark on <html>, so this palette lives in exactly one rule instead of
+   being duplicated for "OS says dark" and "user pinned dark".
+
+   Wrapped in @media screen on purpose: @media print further down repaints
+   the page as white paper, and the light tokens above have to be what it
+   inherits. Without this wrapper a shopkeeper printing a cashbook from a
+   dark device would get near-white text on white. */
+@media screen {
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --kg-desk: #1c1913;
+    --kg-surface: #221e18;
+    --kg-card: #2b2721;
+    --kg-cream: #332e26;
+    --kg-ink: #ece7db;
+    --kg-muted: #a9a294;
+    --kg-faint: #9a9285;
+    --kg-placeholder: #7d766a;
+
+    --kg-brand: #5cb494;
+    --kg-brand-solid: #2c7c64;
+    --kg-brand-deep: #1d5847;
+    --kg-on-brand: #ffffff;
+    --kg-in: #55c08a;
+    --kg-out: #f0776a;
+    --kg-out-solid: #e2695c;
+    --kg-on-out: #2a1310;
+    --kg-amber: #e0a94a;
+    --kg-blue: #7ab0e0;
+
+    --kg-chrome: #16130d;
+    --kg-chrome-ink: #e7e3d8;
+    --kg-chrome-dim: #b8b0a2;
+    --kg-chrome-locked: #857e71;
+
+    --kg-hero: #123a30;
+    --kg-hero-deep: #0d2a23;
+
+    --kg-hover: color-mix(in srgb, var(--kg-brand) 9%, transparent);
+    --kg-tint-brand: color-mix(in srgb, var(--kg-brand) 12%, transparent);
+    --kg-tint-brand-line: color-mix(in srgb, var(--kg-brand) 32%, transparent);
+    --kg-tint-in: color-mix(in srgb, var(--kg-in) 13%, transparent);
+    --kg-tint-in-hover: color-mix(in srgb, var(--kg-in) 19%, transparent);
+    --kg-tint-in-strong: color-mix(in srgb, var(--kg-in) 22%, transparent);
+    --kg-tint-out: color-mix(in srgb, var(--kg-out) 13%, transparent);
+    --kg-tint-out-hover: color-mix(in srgb, var(--kg-out) 18%, transparent);
+    --kg-tint-out-line: color-mix(in srgb, var(--kg-out) 34%, transparent);
+    --kg-tint-out-edge: color-mix(in srgb, var(--kg-out) 52%, transparent);
+
+    --kg-focus: color-mix(in srgb, var(--kg-brand) 55%, transparent);
+    /* Pine-tinted lift reads as a smudge on a dark desk — go to black, and
+       deeper, since a dark card needs more separation to look raised. */
+    --kg-shadow-brand: 0 4px 14px rgba(0, 0, 0, 0.5);
+    --kg-shadow-pop: 0 14px 34px rgba(0, 0, 0, 0.55);
+    --kg-shadow-dialog: 0 20px 54px rgba(0, 0, 0, 0.66);
+    --kg-backdrop: rgba(0, 0, 0, 0.66);
+
+    --kg-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a9285' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    --kg-chevron-active: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235cb494' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    --kg-cal: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a9285' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+    --kg-cal-active: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235cb494' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+  }
+}
+
 html {
   font-size: 16px;
 }
@@ -60,6 +204,10 @@ body {
   margin: 0;
   font-family: 'IBM Plex Sans', system-ui, sans-serif;
   color: var(--kg-ink);
+  /* .layout paints the desk too, but it stops at 100dvh — without this the
+     rubber-band area past the top and bottom of a scroll is the UA's white,
+     which is a bright flash on every overscroll in the lamplight theme. */
+  background: var(--kg-desk);
 }
 
 html[dir='rtl'] {
@@ -151,7 +299,7 @@ html[dir='rtl'] .num {
 }
 .rm-back:hover {
   color: var(--kg-ink);
-  border-color: rgba(35, 32, 28, 0.32);
+  border-color: var(--kg-line-hover);
 }
 .rm-back:focus-visible {
   outline: none;
@@ -282,13 +430,13 @@ html[dir='rtl'] .num {
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
 .rm-input::placeholder {
-  color: #b6afa4;
+  color: var(--kg-placeholder);
   font-weight: 400;
 }
 select.rm-input {
   appearance: none;
   padding-inline-end: 36px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a847a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: var(--kg-chevron);
   background-repeat: no-repeat;
   background-position: right 12px center;
   cursor: pointer;
@@ -296,7 +444,7 @@ select.rm-input {
 /* Chevron turns pine on focus so the active filter reads at a glance, matching
    the combobox's brand-focused border. */
 select.rm-input:focus {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f5c4d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: var(--kg-chevron-active);
 }
 html[dir='rtl'] select.rm-input {
   background-position: left 12px center;
@@ -356,7 +504,7 @@ html[dir='rtl'] select.rm-input {
   cursor: pointer;
 }
 .rm-tbl tr.rm-rowlink:hover td {
-  background: rgba(31, 92, 77, 0.03);
+  background: var(--kg-hover);
 }
 .rm-rowlink a {
   color: inherit;
@@ -370,10 +518,10 @@ html[dir='rtl'] select.rm-input {
 
 /* a bill fully covered by later payments (FIFO) — green tint + a "Paid" badge */
 .rm-tbl tr.rm-row--cleared td {
-  background: rgba(31, 122, 77, 0.06);
+  background: var(--kg-tint-in);
 }
 .rm-tbl tr.rm-row--cleared.rm-rowlink:hover td {
-  background: rgba(31, 122, 77, 0.1);
+  background: var(--kg-tint-in-hover);
 }
 .rm-badge {
   display: inline-block;
@@ -386,7 +534,7 @@ html[dir='rtl'] select.rm-input {
 }
 .rm-badge--paid {
   color: var(--kg-in);
-  background: rgba(31, 122, 77, 0.12);
+  background: var(--kg-tint-in-strong);
 }
 
 /* footer strip (cashbook closing, bill totals) */
@@ -431,8 +579,8 @@ html[dir='rtl'] select.rm-input {
   font-size: 13px;
   font-weight: 500;
   color: var(--kg-out);
-  background: rgba(168, 52, 42, 0.08);
-  border: 1px solid rgba(168, 52, 42, 0.22);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
   border-radius: 11px;
 }
 .rm-btn {
@@ -452,8 +600,8 @@ html[dir='rtl'] select.rm-input {
   white-space: nowrap;
 }
 .rm-btn--primary {
-  color: #fff;
-  background: var(--kg-brand);
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
   box-shadow: var(--kg-shadow-brand);
 }
 .rm-btn--primary:hover {
@@ -465,15 +613,15 @@ html[dir='rtl'] select.rm-input {
   border: 1px solid var(--kg-line-strong);
 }
 .rm-btn--ghost:hover {
-  border-color: rgba(35, 32, 28, 0.32);
+  border-color: var(--kg-line-hover);
 }
 .rm-btn--danger {
   color: var(--kg-out);
   background: var(--kg-card);
-  border: 1px solid rgba(168, 52, 42, 0.4);
+  border: 1px solid var(--kg-tint-out-edge);
 }
 .rm-btn--danger:hover {
-  background: rgba(168, 52, 42, 0.08);
+  background: var(--kg-tint-out-hover);
 }
 .rm-btn--sm {
   height: 36px;
@@ -524,7 +672,7 @@ html[dir='rtl'] select.rm-input {
 .rm-input--date::-webkit-calendar-picker-indicator {
   width: 16px;
   height: 16px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a847a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+  background-image: var(--kg-cal);
   background-repeat: no-repeat;
   background-position: center;
   background-size: 16px 16px;
@@ -532,7 +680,7 @@ html[dir='rtl'] select.rm-input {
 }
 .rm-input--date:hover::-webkit-calendar-picker-indicator,
 .rm-input--date:focus::-webkit-calendar-picker-indicator {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f5c4d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+  background-image: var(--kg-cal-active);
 }
 
 /* row-level icon action (delete a bill) */
@@ -550,8 +698,8 @@ html[dir='rtl'] select.rm-input {
 }
 .rm-iconbtn--danger:hover {
   color: var(--kg-out);
-  border-color: rgba(168, 52, 42, 0.4);
-  background: rgba(168, 52, 42, 0.08);
+  border-color: var(--kg-tint-out-edge);
+  background: var(--kg-tint-out-hover);
 }
 .rm-iconbtn:focus-visible {
   outline: none;
@@ -577,12 +725,12 @@ html[dir='rtl'] select.rm-input {
 .rm-confirm--card {
   padding: 14px 16px;
   margin-bottom: 12px;
-  background: rgba(168, 52, 42, 0.06);
-  border: 1px solid rgba(168, 52, 42, 0.22);
+  background: var(--kg-tint-out);
+  border: 1px solid var(--kg-tint-out-line);
   border-radius: 12px;
 }
 .rm-confirm-row td {
-  background: rgba(168, 52, 42, 0.06);
+  background: var(--kg-tint-out);
 }
 .rm-confirm__msg {
   font-size: 13.5px;
@@ -607,10 +755,10 @@ html[dir='rtl'] select.rm-input {
   background: var(--kg-card);
   border: 1px solid var(--kg-line);
   border-radius: 16px;
-  box-shadow: 0 18px 48px rgba(35, 32, 28, 0.28);
+  box-shadow: var(--kg-shadow-dialog);
 }
 .rm-dialog::backdrop {
-  background: rgba(35, 32, 28, 0.42);
+  background: var(--kg-backdrop);
 }
 .rm-dialog__title {
   margin: 0 0 8px;
@@ -635,7 +783,7 @@ html[dir='rtl'] select.rm-input {
   height: 46px;
   margin: 12px 16px;
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--kg-line) 25%, rgba(35, 32, 28, 0.05) 37%, var(--kg-line) 63%);
+  background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);
   background-size: 400% 100%;
 }
 .rm-skel--short {
@@ -978,13 +1126,13 @@ html[dir='rtl'] select.rm-input {
     background: transparent;
   }
   .rm-tbl tr.rm-rowlink:active {
-    background: rgba(31, 92, 77, 0.05);
+    background: var(--kg-tint-brand);
   }
   .rm-tbl tr.rm-row--cleared {
-    background: rgba(31, 122, 77, 0.06);
+    background: var(--kg-tint-in);
   }
   .rm-tbl tr.rm-confirm-row {
-    background: rgba(168, 52, 42, 0.06);
+    background: var(--kg-tint-out);
   }
 }
 

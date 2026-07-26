@@ -7,11 +7,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#a8342a">
+  <!-- Matches --kg-chrome (the topbar). ThemeService rewrites this on a theme
+       change; the value here is the paper theme, and the inline script below
+       corrects it before paint when the resolved theme is dark. -->
+  <meta name="theme-color" content="#23201c">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hisaab">
+  <script>
+    // Stamp the resolved theme before first paint. ThemeService does the same
+    // thing once Angular boots; without this a dark-theme shopkeeper gets a
+    // flash of cream desk on every load, which is the one thing a dark theme
+    // is meant to prevent. Kept deliberately dumb and dependency-free — the
+    // storage key and attribute must match core/theme/theme.service.ts.
+    (function () {
+      try {
+        var saved = localStorage.getItem('hk.theme');
+        var dark =
+          saved === 'dark' ||
+          (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        if (dark) {
+          document
+            .querySelector('meta[name="theme-color"]')
+            .setAttribute('content', '#16130d');
+        }
+      } catch (e) {
+        /* private mode with storage blocked: fall through to the paper theme */
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

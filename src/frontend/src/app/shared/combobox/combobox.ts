@@ -102,7 +102,7 @@ let uid = 0;
       cursor: not-allowed;
     }
     .cbx__input::placeholder {
-      color: #b6afa4;
+      color: var(--kg-placeholder);
       font-weight: 400;
     }
     .cbx__list {
@@ -118,7 +118,7 @@ let uid = 0;
       background: var(--kg-card);
       border: 1px solid var(--kg-line-strong);
       border-radius: 10px;
-      box-shadow: 0 12px 30px rgba(35, 32, 28, 0.16);
+      box-shadow: var(--kg-shadow-pop);
     }
     .cbx__opt {
       padding: 8px 10px;

@@ -19,8 +19,8 @@
   height: 56px;
   flex: none;
   padding-inline: 14px;
-  background: var(--kg-ink);
-  color: #e7e3d8;
+  background: var(--kg-chrome);
+  color: var(--kg-chrome-ink);
   z-index: 30;
 }
 
@@ -59,8 +59,8 @@
   height: 32px;
   flex: none;
   border-radius: 9px;
-  background: var(--kg-brand);
-  color: #fff;
+  background: var(--kg-brand-solid);
+  color: var(--kg-on-brand);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -78,8 +78,8 @@
 .sidebar {
   width: 236px;
   flex: none;
-  background: var(--kg-ink);
-  color: #e7e3d8;
+  background: var(--kg-chrome);
+  color: var(--kg-chrome-ink);
   display: flex;
   flex-direction: column;
 }
@@ -102,7 +102,7 @@
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: #c4bcae;
+  color: var(--kg-chrome-dim);
   cursor: pointer;
   font: 600 13.5px system-ui;
   text-align: start;
@@ -111,12 +111,12 @@
 
 .nav-item:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.06);
-  color: #e7e3d8;
+  color: var(--kg-chrome-ink);
 }
 
 .nav-item.active {
-  background: var(--kg-brand);
-  color: #fff;
+  background: var(--kg-brand-solid);
+  color: var(--kg-on-brand);
 }
 
 .nav-icon {
@@ -169,10 +169,11 @@
 /* Store-gated items read as inert: muted, no hover (see .nav-item:hover:not(:disabled)),
    not-allowed cursor, and a trailing padlock. `disabled` also drops them from the
    tab order, so the state is conveyed without relying on colour alone.
-   The label keeps its full #7d766a (3.6:1 on --kg-ink) — dimming it further makes
-   it unreadable, and the point is for the user to see what's waiting to unlock. */
+   The label keeps its full --kg-chrome-locked (3.6:1 on the paper theme's
+   frame, 4.5:1 on the darker lamplight one) — dimming it further makes it
+   unreadable, and the point is for the user to see what's waiting to unlock. */
 .nav-item.locked {
-  color: #7d766a;
+  color: var(--kg-chrome-locked);
   cursor: not-allowed;
 }
 
@@ -199,7 +200,7 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
   background: transparent;
-  color: #e7e3d8;
+  color: var(--kg-chrome-ink);
   cursor: pointer;
   font: 600 13px system-ui;
 }
@@ -278,7 +279,7 @@ main {
     position: fixed;
     inset: 0;
     z-index: 40;
-    background: rgba(0, 0, 0, 0.45);
+    background: var(--kg-backdrop);
   }
 }
 

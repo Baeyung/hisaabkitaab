@@ -4,6 +4,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/rou
 import { LocaleService } from '../../core/i18n/locale.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageToggle } from '../../shared/language-toggle/language-toggle';
+import { ThemeToggle } from '../../shared/theme-toggle/theme-toggle';
 import { PrintDetailsDialog } from '../../shared/print-details-dialog';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
@@ -11,7 +12,7 @@ import { NAV, NavGroup, NavLeaf } from './nav';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, LanguageToggle, PrintDetailsDialog],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, LanguageToggle, ThemeToggle, PrintDetailsDialog],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
   host: { '(document:keydown.escape)': 'closeOverlay()' },

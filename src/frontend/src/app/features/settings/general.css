@@ -167,7 +167,7 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .fld__input:hover {
-  border-color: rgba(35, 32, 28, 0.32);
+  border-color: var(--kg-line-hover);
 }
 .fld__input:focus {
   outline: none;
@@ -216,7 +216,7 @@
 .up__drop:hover {
   color: var(--kg-brand);
   border-color: var(--kg-brand);
-  background: rgba(31, 92, 77, 0.04);
+  background: var(--kg-hover);
 }
 .up__drop:focus-visible {
   outline: none;
@@ -259,8 +259,8 @@
   font-weight: 600;
 }
 .btn--primary {
-  color: #fff;
-  background: var(--kg-brand);
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
   box-shadow: var(--kg-shadow-brand);
   transition: filter 0.15s ease, transform 0.05s ease;
 }
@@ -280,7 +280,7 @@
   border: 1px solid var(--kg-line-strong);
 }
 .btn--ghost:hover {
-  border-color: rgba(35, 32, 28, 0.32);
+  border-color: var(--kg-line-hover);
 }
 .btn--text {
   color: var(--kg-out);
@@ -318,8 +318,8 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--kg-out);
-  background: rgba(168, 52, 42, 0.08);
-  border: 1px solid rgba(168, 52, 42, 0.22);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
   border-radius: 11px;
 }
 
@@ -333,7 +333,7 @@
 }
 .skel {
   border-radius: 10px;
-  background: linear-gradient(90deg, var(--kg-line) 25%, rgba(35, 32, 28, 0.05) 37%, var(--kg-line) 63%);
+  background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);
   background-size: 400% 100%;
 }
 @media (prefers-reduced-motion: no-preference) {

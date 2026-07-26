@@ -217,7 +217,7 @@ function parseTyped(s: string): string | null {
       text-overflow: ellipsis;
     }
     .df__val--ph {
-      color: #b6afa4;
+      color: var(--kg-placeholder);
       font-weight: 400;
     }
     .df__icon {
@@ -236,7 +236,7 @@ function parseTyped(s: string): string | null {
       background: var(--kg-card);
       border: 1px solid var(--kg-line-strong);
       border-radius: 12px;
-      box-shadow: 0 12px 30px rgba(35, 32, 28, 0.16);
+      box-shadow: var(--kg-shadow-pop);
     }
     .df__type {
       width: 100%;
@@ -259,7 +259,7 @@ function parseTyped(s: string): string | null {
       border-color: var(--kg-out, #a8342a);
     }
     .df__type::placeholder {
-      color: #b6afa4;
+      color: var(--kg-placeholder);
       font-weight: 400;
     }
     .df__head {
@@ -335,7 +335,7 @@ function parseTyped(s: string): string | null {
       outline-offset: 1px;
     }
     .df__day--out {
-      color: #c4bdb1;
+      color: var(--kg-placeholder);
     }
     .df__day--active {
       background: var(--kg-surface);
@@ -345,9 +345,9 @@ function parseTyped(s: string): string | null {
     }
     .df__day--selected,
     .df__day--selected:hover {
-      color: #fff;
-      background: var(--kg-brand);
-      border-color: var(--kg-brand);
+      color: var(--kg-on-brand);
+      background: var(--kg-brand-solid);
+      border-color: var(--kg-brand-solid);
     }
   `,
 })
