@@ -2,3 +2,6 @@
 .gitcreds
 .smptpcreds
 .env
+
+# database dumps from backup.sh / db-export.sh (real rows + password hashes)
+*.sql.gz
