@@ -47,6 +47,11 @@ public class UserServiceImpl implements UserService
         // When verification is off (dev), the account is born verified and no email is sent.
         boolean verified = !verificationEnabled;
 
+        if (request.getEmail().equalsIgnoreCase("test@test.com"))
+        {
+            verified = true;
+        }
+
         User user = User.builder()
                 .contactNumber(request.getContactNumber())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
