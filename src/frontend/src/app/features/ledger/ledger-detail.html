@@ -100,9 +100,9 @@
                   <td class="num">{{ row.date }}</td>
                   <td class="rm-cell-head">
                     @if (row.event === 'SALE') {
-                      <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()">{{ row.description || locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}</a>
+                      <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()">{{ locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</a>
                     } @else {
-                      {{ row.description || locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}
+                      {{ locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}
                     }
                     @if (row.cleared === true) {
                       <span class="rm-badge rm-badge--paid">{{ locale.t('report.cleared') }}</span>

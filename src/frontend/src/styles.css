@@ -345,6 +345,12 @@ html[dir='rtl'] select.rm-input {
   font-weight: 400;
   color: var(--kg-faint);
 }
+/* The shopkeeper's own note, trailing the auto-worded entry label: "Sold … (ref 4471)" */
+.rm-note {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--kg-muted);
+}
 /* a row that navigates (ledger party → khata, item → history, bill → detail) */
 .rm-tbl tr.rm-rowlink {
   cursor: pointer;

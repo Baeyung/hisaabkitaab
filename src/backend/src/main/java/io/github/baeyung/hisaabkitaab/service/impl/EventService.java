@@ -201,9 +201,9 @@ public class EventService
         return transaction;
     }
 
-    // Only the shopkeeper's own note is stored. An entry saved without one gets its
-    // label rendered by the frontend from the event, party and amount, so it follows
-    // the UI language instead of freezing English into the row.
+    // Only the shopkeeper's own note is stored — never the row's label, which the
+    // frontend renders from the event, party and amount so it follows the UI language
+    // instead of freezing English into the row. The note trails that label in brackets.
     private String cleanDescription(EventRequest eventRequest)
     {
         return StringUtils.hasText(eventRequest.getDescription())

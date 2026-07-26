@@ -46,9 +46,10 @@ export class LocaleService {
   }
 
   /**
-   * Label for an entry the shopkeeper saved without a note. The backend stores
-   * no description in that case, so the row is worded here and re-words itself
-   * when the language is toggled. Item names and the party come from the row;
+   * The label every entry row carries. It is worded here, not stored, so it
+   * re-words itself when the language is toggled; the shopkeeper's own note
+   * (when there is one) trails it in brackets rather than replacing it.
+   * Item names and the party come from the row;
    * whichever the event has no wording for is dropped ("Sold Lawn Print × 12 to
    * Rana" → "Sold Lawn Print × 12" → "Sold to Rana" → "Sale").
    */
