@@ -1,5 +1,6 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { LocaleService } from '../../../core/i18n/locale.service';
+import { BrandMark } from '../../../shared/brand-mark/brand-mark';
 import { LanguageToggle } from '../../../shared/language-toggle/language-toggle';
 
 interface KhataRow {
@@ -18,13 +19,13 @@ interface KhataRow {
  */
 @Component({
   selector: 'app-auth-shell',
-  imports: [LanguageToggle],
+  imports: [BrandMark, LanguageToggle],
   template: `
     <div class="auth">
       <div class="auth__stage">
         <aside class="auth__hero">
           <div class="auth__brandline">
-            <div class="auth__mark" aria-hidden="true">{{ mark() }}</div>
+            <div class="auth__mark"><app-brand-mark /></div>
             <div>
               <div class="auth__wordmark">{{ locale.t('app.name') }}</div>
               <div class="auth__tagline">{{ locale.t('auth.brand.tagline') }}</div>
@@ -64,7 +65,7 @@ interface KhataRow {
           <div class="auth__toggle"><app-language-toggle /></div>
 
           <div class="auth__brand--mobile">
-            <div class="auth__mark" aria-hidden="true">{{ mark() }}</div>
+            <div class="auth__mark"><app-brand-mark /></div>
             <div>
               <div class="auth__wordmark">{{ locale.t('app.name') }}</div>
               <div class="auth__tagline">{{ locale.t('auth.brand.tagline') }}</div>
@@ -79,9 +80,6 @@ interface KhataRow {
 })
 export class AuthShell {
   protected readonly locale = inject(LocaleService);
-
-  /** First letter of the localized app name, set inside the brand mark. */
-  protected readonly mark = computed(() => this.locale.t('app.name').trim().charAt(0));
 
   protected readonly rows: KhataRow[] = [
     { en: 'Rana Cloth House', ur: 'رانا کلاتھ ہاؤس', amount: 82000, dir: 'in' },

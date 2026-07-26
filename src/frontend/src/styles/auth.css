@@ -52,9 +52,6 @@
   border-radius: 15px;
   display: grid;
   place-items: center;
-  font-weight: 700;
-  font-size: 26px;
-  line-height: 1;
   background: var(--kg-hero-ink);
   color: var(--kg-hero);
   box-shadow: 0 6px 18px rgba(24, 67, 53, 0.4);
