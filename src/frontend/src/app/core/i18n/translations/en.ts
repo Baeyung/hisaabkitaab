@@ -28,6 +28,8 @@ export const en = {
   'auth.reset.subtitle': 'Choose a new password for your account.',
   'auth.reset.doneSubtitle': 'Your password has been reset.',
   'auth.reset.password': 'New password',
+  'auth.reset.confirm': 'Confirm new password',
+  'auth.reset.mismatch': 'Both passwords must match',
   'auth.reset.submit': 'Reset password',
   'auth.reset.invalid': 'This reset link is invalid or has expired.',
   'auth.reset.requestNew': 'Request a new link',

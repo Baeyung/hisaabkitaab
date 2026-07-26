@@ -30,6 +30,8 @@ export const ur: Record<TranslationKey, string> = {
   'auth.reset.subtitle': 'اپنے اکاؤنٹ کے لیے نیا پاس ورڈ منتخب کریں۔',
   'auth.reset.doneSubtitle': 'آپ کا پاس ورڈ ری سیٹ ہو گیا ہے۔',
   'auth.reset.password': 'نیا پاس ورڈ',
+  'auth.reset.confirm': 'نئے پاس ورڈ کی تصدیق کریں',
+  'auth.reset.mismatch': 'دونوں پاس ورڈ ایک جیسے ہونے چاہئیں',
   'auth.reset.submit': 'پاس ورڈ ری سیٹ کریں',
   'auth.reset.invalid': 'یہ ری سیٹ لنک غلط ہے یا اس کی میعاد ختم ہو چکی ہے۔',
   'auth.reset.requestNew': 'نیا لنک حاصل کریں',

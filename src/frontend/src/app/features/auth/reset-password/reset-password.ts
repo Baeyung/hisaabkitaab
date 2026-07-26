@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -39,11 +39,25 @@ import { AuthShell } from '../auth-shell/auth-shell';
             />
           </div>
 
+          <div class="fld">
+            <label class="fld__label" for="reset-confirm">{{ locale.t('auth.reset.confirm') }}</label>
+            <input
+              id="reset-confirm"
+              class="fld__input"
+              [formField]="resetForm.confirmPassword"
+              type="password"
+              autocomplete="new-password"
+            />
+            @if (resetForm.confirmPassword().touched() && mismatch()) {
+              <span role="alert" class="fld__err">{{ locale.t('auth.reset.mismatch') }}</span>
+            }
+          </div>
+
           @if (invalidLink()) {
             <p role="alert" class="auth__alert">{{ locale.t('auth.reset.invalid') }}</p>
           }
 
-          <button class="auth__cta" type="submit" [disabled]="submitting() || !token">
+          <button class="auth__cta" type="submit" [disabled]="submitting() || !token || mismatch()">
             {{ locale.t('auth.reset.submit') }}
           </button>
         </form>
@@ -64,9 +78,16 @@ export class ResetPassword {
   protected readonly locale = inject(LocaleService);
 
   protected readonly token = this.route.snapshot.paramMap.get('token');
-  protected readonly model = signal({ password: '' });
+  protected readonly model = signal({ password: '', confirmPassword: '' });
   protected readonly resetForm = form(this.model, (path) => {
     required(path.password);
+    required(path.confirmPassword);
+  });
+
+  /** Both filled and different — a typo in one of them. */
+  protected readonly mismatch = computed(() => {
+    const { password, confirmPassword } = this.model();
+    return password !== '' && confirmPassword !== '' && password !== confirmPassword;
   });
 
   protected readonly submitting = signal(false);
@@ -74,7 +95,7 @@ export class ResetPassword {
   protected readonly invalidLink = signal(false);
 
   async submit(): Promise<void> {
-    if (this.resetForm().invalid() || !this.token) {
+    if (this.resetForm().invalid() || this.mismatch() || !this.token) {
       return;
     }
     this.submitting.set(true);
