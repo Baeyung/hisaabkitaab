@@ -23,5 +23,8 @@ public class ApiError
 
     private String path;
 
+    /** Matches the {@code X-Trace-Id} header and the MDC id on every log line of this request. */
+    private String traceId;
+
     private Map<String, String> fieldErrors;
 }

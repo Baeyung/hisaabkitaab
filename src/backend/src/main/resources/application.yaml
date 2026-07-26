@@ -32,6 +32,29 @@ spring:
           starttls:
             enable: true
 
+# Logging. Every line carries the request's trace id (see RequestLogFilter), which is also
+# returned to the caller as the X-Trace-Id header and in the JSON error body — so a reported
+# failure can be grepped straight out of the log file.
+logging:
+  level:
+    root: INFO
+    # TRACE also prints the stack trace behind every 4xx, not just 5xx.
+    io.github.baeyung.hisaabkitaab: ${LOG_LEVEL:DEBUG}
+    # Flip these on when a request misbehaves before it reaches a controller / when SQL is suspect.
+    org.springframework.web: ${WEB_LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:INFO}
+  pattern:
+    # Slots into Spring Boot's default console/file patterns, so colours and defaults survive.
+    correlation: "[%X{traceId:-        }] "
+  file:
+    name: ${LOG_FILE:logs/hisaabkitaab.log}
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 14
+      total-size-cap: 500MB
+
 # Base URL of the Angular app; used to build the account-verification link in emails.
 app:
   frontend-base-url: ${FRONTEND_BASE_URL:https://aapka.hisaabkitaab.shop}
