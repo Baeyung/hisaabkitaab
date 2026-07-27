@@ -112,6 +112,16 @@ const EN = {
   khataR1: 'Sold Lawn Print × 12',
   khataR2: 'Received on account',
   khataR3: 'Sold Voile × 6',
+  // a second name, written on the same page — only the endpaper shows these
+  khataName2: 'Bilal Traders',
+  khataR4: 'Sold Khaddar × 8',
+  khataR5: 'Received cash',
+  khataName3: 'Nadeem Fabrics',
+  khataR6: 'Sold Cambric × 15',
+  khataR7: 'Received on account',
+  khataName4: 'Shahzad & Sons',
+  khataR8: 'Sold Silk × 3',
+  khataR9: 'Advance received',
 
   roznTitle: "The day's cash, first sale to last",
   roznBody:
@@ -194,6 +204,15 @@ const UR: typeof EN = {
   khataR1: 'لان پرنٹ × 12 فروخت',
   khataR2: 'کھاتے میں وصول',
   khataR3: 'وائل × 6 فروخت',
+  khataName2: 'بلال ٹریڈرز',
+  khataR4: 'کھدر × 8 فروخت',
+  khataR5: 'نقد وصول',
+  khataName3: 'ندیم فیبرکس',
+  khataR6: 'کیمبرک × 15 فروخت',
+  khataR7: 'کھاتے میں وصول',
+  khataName4: 'شہزاد اینڈ سنز',
+  khataR8: 'سلک × 3 فروخت',
+  khataR9: 'بیعانہ وصول',
 
   roznTitle: 'دن کی نقدی، پہلی سے آخری بکری تک',
   roznBody:

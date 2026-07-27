@@ -18,6 +18,10 @@
   --desk: #241b16; /* dusk counter behind the book */
   --desk-deep: #17110d;
   --line: rgba(35, 32, 28, 0.12);
+  /* which way the cover is hinged: -1 opens leftward off a left spine (Latin),
+     1 opens rightward off a right spine (Urdu). The book slides the other way
+     by the same sign, so the crease always lands in the middle of the screen. */
+  --hinge: -1;
 
   display: block;
   /* dir is bound from LocaleService; direction follows the attribute. */
@@ -32,6 +36,7 @@
 :host([dir='rtl']) {
   font-family: 'Noto Nastaliq Urdu', 'IBM Plex Sans', system-ui, sans-serif;
   line-height: 2;
+  --hinge: 1;
 }
 
 /* the bookish display face, shared by the ledes and section titles */
@@ -182,54 +187,37 @@
   perspective-origin: 50% 40%;
 }
 
+/* Sized so the *open* spread still fits the narrowest phone: opening doubles
+   the footprint (cover out one side of the spine, pages the other) and the
+   crease ends up centred, so the page alone takes half the viewport. The floor
+   has to stay under that half — a wider one overhangs the screen edge, which
+   went unnoticed while the page's outer margin was blank and started clipping
+   figures the moment anything was written out there. */
 .book {
   position: relative;
-  width: clamp(230px, 46vw, 360px);
-  height: clamp(300px, 58vw, 470px);
+  width: clamp(148px, 46vw, 360px);
+  height: clamp(248px, 56vw, 470px);
   transform-style: preserve-3d;
   transform: rotateX(6deg);
 }
 
-/* the open pages sit behind the cover */
+/* The open page behind the cover: one clean white sheet, ruled in grey and
+   nothing else. It reads as the fresh page the shopkeeper is about to write on
+   — which is the point, since the app is what fills it in from here. */
 .book__pages {
   position: absolute;
   inset: 0;
-  display: flex;
+  /* keeps the phone's lift off the page a real depth rather than a flattened
+     scale — without it the open cover would sort in front and clip it */
+  transform-style: preserve-3d;
   border-radius: 4px 8px 8px 4px;
-  background: var(--paper);
-  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(35, 32, 28, 0.06);
-}
-.page {
-  flex: 1;
-  position: relative;
-  /* ruled ledger lines */
-  background-image: repeating-linear-gradient(
-    var(--paper) 0 27px,
-    color-mix(in srgb, var(--pine) 12%, transparent) 27px 28px
-  );
+  background-color: #fff;
+  /* one rule per 28px band. Tiled at exactly the band height rather than
+     repeating-gradient-in-an-auto-tile, so the offset can't leave a seam. */
+  background-image: linear-gradient(var(--line) 0 1px, transparent 1px);
+  background-size: 100% 28px;
   background-position: 0 46px;
-}
-.page--left {
-  border-radius: 4px 0 0 4px;
-  box-shadow: inset -14px 0 22px -14px rgba(35, 32, 28, 0.28); /* gutter shade */
-}
-.page--right {
-  border-radius: 0 8px 8px 0;
-}
-/* the red margin rule of a real khaata, on each page */
-.page::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1.5px;
-  background: color-mix(in srgb, var(--red) 55%, transparent);
-}
-.page--left::before {
-  right: 26px;
-}
-.page--right::before {
-  left: 26px;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(35, 32, 28, 0.06);
 }
 
 /* the phone that rises out of the gutter once the book is open — the paper
@@ -253,10 +241,12 @@
   color: var(--pine);
   text-shadow: 0 1px 0 rgba(247, 244, 238, 0.6);
 }
+/* Sized off the book's height, not its width: the phone stands on the crease of
+   a spread that is twice as wide as it is, so height is the scarce dimension —
+   width-sizing overshot the top of the page on a short phone screen. */
 .phone__screen {
   position: relative;
-  width: 55%;
-  max-width: 186px;
+  height: min(76%, 372px);
   aspect-ratio: 186 / 372;
   padding: 9px 8px;
   border-radius: 26px;
@@ -372,31 +362,50 @@
   font-weight: 700;
 }
 
-/* the handwritten khaata on the open cover's endpaper. cover__inside is already
-   flipped (rotateY 180), and the open cover swings the other way (-158°), so the
-   two cancel and writing placed here reads normally — no extra flip needed. */
-.endpaper {
+/* A khaata in the shopkeeper's own hand. The same block sits on the cover's
+   endpaper and on the page facing it, so the open spread reads as one running
+   register instead of one written page beside a blank one. */
+.hand {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 2vh, 16px);
-  padding: 16% 15% 14%;
-  color: #2b3a55; /* fountain-pen ink on the cream endpaper */
+  gap: clamp(14px, 3.4vh, 30px); /* between one name's block and the next */
+  padding-block: 16% 14%;
+  /* rows wrap on a narrow screen and a short book runs out of page before they
+     run out of lines — clip to the paper rather than let ink onto the desk */
+  overflow: hidden;
+  color: #2b3a55; /* fountain-pen ink */
   font-family: 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
 }
-:host([dir='rtl']) .endpaper {
+:host([dir='rtl']) .hand {
   font-family: 'Noto Nastaliq Urdu', serif; /* an Urdu register is written in Urdu */
 }
-.endpaper__name {
+/* Both halves keep clear of the crease, because that is where the phone stands.
+   The crease is the endpaper's outer edge and the facing page's inner one, so
+   the two pad opposite sides to leave the same gap. */
+/* cover__inside is already flipped (rotateY 180) and the open cover swings the
+   other way (-158°), so the two cancel and writing placed here reads normally. */
+.endpaper {
+  padding-inline: 15% 30%;
+}
+.pagenote {
+  padding-inline: 32% 8%;
+}
+.hand__entry {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2vh, 16px);
+}
+.hand__name {
   align-self: flex-start;
   padding-bottom: 3px;
-  font-size: clamp(15px, 2.6vw, 22px);
+  font-size: clamp(13px, 2.2vw, 19px);
   font-weight: 600;
   border-bottom: 2px solid color-mix(in srgb, var(--red) 60%, transparent);
   transform: rotate(-1.4deg);
 }
-.endpaper__rows {
+.hand__rows {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -404,20 +413,20 @@
   flex-direction: column;
   gap: clamp(6px, 1.6vh, 13px);
 }
-.endpaper__rows li {
+.hand__rows li {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 14px;
-  font-size: clamp(12px, 2.1vw, 17px);
+  gap: 10px;
+  font-size: clamp(10px, 1.7vw, 14px);
 }
-.endpaper__rows li:nth-child(2) {
+.hand__rows li:nth-child(2) {
   transform: rotate(0.9deg);
 }
-.endpaper__rows li:nth-child(3) {
+.hand__rows li:nth-child(3) {
   transform: rotate(-0.7deg);
 }
-.endpaper__rows b {
+.hand__rows b {
   font-weight: 600;
 }
 
@@ -889,6 +898,52 @@
 }
 
 /* ── responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* A phone has width to spare in the wrong direction: the open spread has to
+     fit across a narrow screen, which caps the book's width and — at a fixed
+     ratio — flattened it into something too short to read the app on. Height is
+     the free dimension here, so the book stands up into the tall narrow shape a
+     real khaata has anyway. */
+  .book {
+    height: min(46svh, 400px);
+  }
+  .endpaper {
+    padding-inline-end: 26%;
+  }
+  /* The phone is sized off the book's height but stands on a page sized off its
+     width, and those diverge on a tall narrow screen — the phone ends up eating
+     ~45% of the page. Give back a little of its height so the writing beside it
+     keeps a usable column at 320px, the tightest size worth supporting. */
+  .phone__screen {
+    height: min(70%, 372px);
+  }
+  /* The writing starts clear of the phone and gives up the outer margin to buy
+     the room back; rows wrap here, the way the endpaper's already do. The px
+     floor matters: the phone screen can only shrink until its own labels hit
+     min-content (~127px), after which a purely proportional inset creeps back
+     underneath it on the smallest screens. */
+  .pagenote {
+    padding-inline: max(46%, 72px) 4%;
+  }
+}
+
+/* A phone held sideways is wide and very short. Sizing the book off width alone
+   grew it straight through the pinned screen and out under the top rail, so
+   here height leads and the desk closes up around it. Deliberately after the
+   width query: a window that is both narrow and short is short first. */
+@media (max-height: 620px) {
+  .stage__pin {
+    gap: 12px;
+    padding: 58px 20px 24px;
+  }
+  .book {
+    height: min(46svh, 470px);
+  }
+  .stage__lede {
+    font-size: clamp(17px, 2.4vw, 22px);
+  }
+}
+
 @media (max-width: 720px) {
   .chapter {
     grid-template-columns: 1fr;
@@ -925,21 +980,33 @@
      way so it opens the way the reader expects. */
   :host([dir='rtl']) .book__cover {
     transform-origin: right center;
-    --hinge: 1;
   }
 
-  /* the book eases forward and settles as it opens (8%→70%) */
+  /* The book eases forward and settles as it opens (8%→70%), and slides half
+     its own width away from the hinge while it does. A closed book reads best
+     centred, but an open one is read at the crease — and the crease is the
+     spine, sitting on the book's leading edge. Without this the spread creeps
+     off to the hinge side and the cover walks off a phone screen entirely.
+     --open is published (rather than kept in --t) because the phone inside
+     has to cancel exactly this much to stay on the crease. */
   .book {
-    --t: clamp(0, (var(--p, 0) - 0.08) / 0.62, 1);
-    transform: rotateX(calc(9deg - var(--t) * 5deg)) translateY(calc(14px - var(--t) * 14px))
-      scale(calc(0.96 + var(--t) * 0.04));
+    --open: clamp(0, (var(--p, 0) - 0.08) / 0.62, 1);
+    transform: translateX(calc(var(--open) * var(--hinge) * -50%))
+      rotateX(calc(9deg - var(--open) * 5deg)) translateY(calc(14px - var(--open) * 14px))
+      scale(calc(0.96 + var(--open) * 0.04));
   }
 
-  /* the phone rises out of the gutter once the cover is clear (50%→82%) */
+  /* The phone rises out of the gutter once the cover is clear (50%→82%),
+     carrying the Urdu wordmark above it. It cancels the book's slide so it
+     surfaces on the crease itself — the seam of the paper register is where
+     the app comes out of it — and lifts toward the reader so the swung-open
+     cover passes behind rather than through it. */
   .phone {
     --t: clamp(0, (var(--p, 0) - 0.5) / 0.32, 1);
     opacity: clamp(0, var(--t) / 0.55, 1);
-    transform: translateY(calc(40px - var(--t) * 40px)) scale(calc(0.9 + var(--t) * 0.1));
+    transform: translateX(calc(var(--open, 0) * var(--hinge) * 50%))
+      translate3d(0, calc(40px - var(--t) * 40px), calc(var(--t) * 70px))
+      scale(calc(0.9 + var(--t) * 0.1));
   }
 
   /* the cue fades as soon as the reader takes the hint (8%→24%) */

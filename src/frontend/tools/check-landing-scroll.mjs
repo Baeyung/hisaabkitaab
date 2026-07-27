@@ -120,6 +120,101 @@ assert.notEqual(mid.cover, open.cover, 'cover must keep moving between 35% and 6
 assert.equal(mid.phone, 0, 'phone hidden while the cover is still swinging');
 assert.ok(end.phone === 1, `phone fully risen at the end, got ${end.phone}`);
 
+// An open book is read at the crease, so the crease — not the closed cover's
+// middle — is what has to end up in the middle of the screen. The book slides
+// half its own width off the hinge as it opens to put it there, and the phone
+// cancels that slide to surface on the crease itself. Both are easy to break by
+// retuning the book's transform, and neither shows up in the checks above.
+const spread = (frac) =>
+  evaluate(`(async () => {
+    const host = document.querySelector('app-info');
+    const stage = host.querySelector('.stage'), pin = host.querySelector('.stage__pin');
+    window.scrollTo(0, (stage.offsetHeight - pin.offsetHeight) * ${frac});
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const rtl = host.getAttribute('dir') === 'rtl';
+    const book = host.querySelector('.book').getBoundingClientRect();
+    const phone = host.querySelector('.phone').getBoundingClientRect();
+    return {
+      // the hinge is the spine, and the spine is the crease
+      crease: rtl ? book.right : book.left,
+      phoneMid: phone.left + phone.width / 2,
+      screenMid: innerWidth / 2,
+      bookWidth: book.width,
+    };
+  })()`);
+
+const shut = await spread(0);
+const spread1 = await spread(1);
+console.log({ shut, spread1 });
+assert.ok(
+  Math.abs(shut.crease + shut.bookWidth / 2 - shut.screenMid) < 2,
+  `a shut book is centred on itself, got crease ${shut.crease}`,
+);
+assert.ok(
+  Math.abs(spread1.crease - spread1.screenMid) < 3,
+  `an open book is centred on its crease, got ${spread1.crease} vs ${spread1.screenMid}`,
+);
+assert.ok(
+  Math.abs(spread1.phoneMid - spread1.crease) < 3,
+  `the phone surfaces on the crease, got ${spread1.phoneMid} vs ${spread1.crease}`,
+);
+
+// The open spread is roughly twice the closed book and is centred on its crease,
+// so the page alone claims half the screen. On a small phone that ran off the
+// edge — invisible while the page's outer margin was blank, and clipping figures
+// as soon as the register was written out there. Only reproduces narrow, so ask
+// Chrome for a small screen rather than trusting the 1200px window above.
+const narrow = async (width, height) => {
+  await send('Emulation.setDeviceMetricsOverride', {
+    width,
+    height,
+    deviceScaleFactor: 1,
+    mobile: true,
+  });
+  await sleep(300);
+  const r = await evaluate(`(async () => {
+    const host = document.querySelector('app-info');
+    const stage = host.querySelector('.stage'), pin = host.querySelector('.stage__pin');
+    window.scrollTo(0, stage.offsetHeight - pin.offsetHeight);
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const page = host.querySelector('.book').getBoundingClientRect();
+    // .pagenote is inset:0, so its own box is the whole page and proves nothing.
+    // The rows are the written content — the part that gets clipped or buried.
+    const rows = host.querySelector('.pagenote .hand__rows').getBoundingClientRect();
+    const phone = host.querySelector('.phone__screen').getBoundingClientRect();
+    return {
+      pageLeft: +page.left.toFixed(1), pageRight: +page.right.toFixed(1),
+      rowsLeft: +rows.left.toFixed(1), rowsRight: +rows.right.toFixed(1),
+      phoneRight: +phone.right.toFixed(1),
+      viewport: innerWidth,
+    };
+  })()`);
+  await send('Emulation.clearDeviceMetricsOverride');
+  await sleep(300);
+  return r;
+};
+
+for (const [w, h] of [
+  [320, 640],
+  [360, 640],
+  [390, 844],
+]) {
+  const fit = await narrow(w, h);
+  console.log({ [`${w}x${h}`]: fit });
+  assert.ok(
+    fit.pageLeft >= 0 && fit.pageRight <= fit.viewport,
+    `the open page must stay on a ${w}px screen, got ${fit.pageLeft}..${fit.pageRight}`,
+  );
+  assert.ok(
+    fit.rowsRight <= fit.viewport,
+    `the figures written on it must not run off the edge, got ${fit.rowsRight} of ${fit.viewport}`,
+  );
+  assert.ok(
+    fit.rowsLeft >= fit.phoneRight,
+    `nor start under the phone, got ${fit.rowsLeft} against ${fit.phoneRight}`,
+  );
+}
+
 // the desk stays pinned the whole way through
 for (const [name, s] of Object.entries({ closed, mid, open, end }))
   assert.ok(Math.abs(s.pinTop) < 2, `pin should stay stuck at top during ${name}, got ${s.pinTop}`);
@@ -163,5 +258,7 @@ assert.match(rtl.origin, /^36\d(\.\d+)?px/, `RTL cover should hinge on the right
 const m13 = (t) => +t.slice(9, -1).split(', ')[2];
 assert.ok(m13(rtl.cover) * m13(mid.cover) < 0, 'RTL cover must swing the opposite way');
 
-console.log('\nOK — book scrubs, phone rises, pin holds, rail inverts, RTL mirrors.');
+console.log(
+  '\nOK — book scrubs, crease centres, phone rises on it, pin holds, rail inverts, RTL mirrors.',
+);
 process.exit(0); // the exit hook takes the browser down with it

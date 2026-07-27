@@ -32,10 +32,26 @@
 
     <div class="scene" aria-hidden="true">
       <div class="book">
-        <!-- cream ruled pages, revealed as the cover swings open -->
+        <!-- the ruled page, revealed as the cover swings open -->
         <div class="book__pages">
-          <div class="page page--left"></div>
-          <div class="page page--right"></div>
+          <!-- the register carries on across the crease: two more names in the
+               same hand, written on the page facing the endpaper -->
+          <div class="hand pagenote">
+            <div class="hand__entry">
+              <span class="hand__name">{{ c().khataName3 }}</span>
+              <ul class="hand__rows">
+                <li><span>{{ c().khataR6 }}</span><b>5,250</b></li>
+                <li><span>{{ c().khataR7 }}</span><b>2,000</b></li>
+              </ul>
+            </div>
+            <div class="hand__entry">
+              <span class="hand__name">{{ c().khataName4 }}</span>
+              <ul class="hand__rows">
+                <li><span>{{ c().khataR8 }}</span><b>4,200</b></li>
+                <li><span>{{ c().khataR9 }}</span><b>1,800</b></li>
+              </ul>
+            </div>
+          </div>
           <!-- the paper ledger, now a screen: a phone rises from the gutter
                carrying the same khaata, added up. This is the "going digital"
                payoff — the book opens and the register is an app. -->
@@ -77,13 +93,24 @@
                the old way — written out by hand. Paper on the left, app on the
                right, the same numbers in both. -->
           <div class="cover__inside">
-            <div class="endpaper">
-              <span class="endpaper__name">{{ c().khataName }}</span>
-              <ul class="endpaper__rows">
-                <li><span>{{ c().khataR1 }}</span><b>4,800</b></li>
-                <li><span>{{ c().khataR2 }}</span><b>3,000</b></li>
-                <li><span>{{ c().khataR3 }}</span><b>2,700</b></li>
-              </ul>
+            <div class="hand endpaper">
+              <div class="hand__entry">
+                <span class="hand__name">{{ c().khataName }}</span>
+                <ul class="hand__rows">
+                  <li><span>{{ c().khataR1 }}</span><b>4,800</b></li>
+                  <li><span>{{ c().khataR2 }}</span><b>3,000</b></li>
+                  <li><span>{{ c().khataR3 }}</span><b>2,700</b></li>
+                </ul>
+              </div>
+              <!-- a second name below the first: a real khaata page carries the
+                   whole counter's day, not one customer -->
+              <div class="hand__entry">
+                <span class="hand__name">{{ c().khataName2 }}</span>
+                <ul class="hand__rows">
+                  <li><span>{{ c().khataR4 }}</span><b>3,600</b></li>
+                  <li><span>{{ c().khataR5 }}</span><b>1,500</b></li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
