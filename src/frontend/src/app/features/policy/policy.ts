@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, ViewEncapsulation, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
 import { SiteFooter } from '../../shared/site-footer/site-footer';
@@ -16,6 +16,11 @@ import { mdToHtml } from '../../shared/mini-md';
   imports: [RouterLink, SiteFooter],
   templateUrl: './policy.html',
   styleUrl: './policy.css',
+  // The document is rendered via [innerHTML]; those nodes don't carry the
+  // emulated-encapsulation attribute, so scoped styles never reach them. All
+  // selectors here are `.pol-*` / children of `.pol-doc`, so unencapsulating
+  // them styles the rendered doc without leaking into the rest of the app.
+  encapsulation: ViewEncapsulation.None,
 })
 export class Policy {
   /** Bound from route data: the doc slug, matching its file in /policies. */

@@ -1,6 +1,8 @@
 /* Legal prose on ledger paper. Uses the app's global --kg-* tokens so the page
-   follows light/lamplight themes like the rest of the product. */
-:host {
+   follows light/lamplight themes like the rest of the product.
+   Styles are unencapsulated (see policy.ts) so they reach the [innerHTML] doc;
+   every selector is `.pol-*` or a child of `.pol-doc` to stay self-contained. */
+app-policy {
   display: block;
   background: var(--kg-surface);
   color: var(--kg-ink);
@@ -76,46 +78,73 @@
   border-radius: 16px;
   padding: clamp(26px, 5vw, 52px);
   font-size: 15.5px;
-  line-height: 1.72;
+  line-height: 1.75;
   color: var(--kg-ink);
 }
-.pol-doc :first-child {
+.pol-doc > :first-child {
   margin-top: 0;
 }
+
+/* Title block: the heading and the date caption read as one header, set off
+   from the body by a rule so the reader knows where the document proper begins. */
 .pol-doc h1 {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   font-size: clamp(26px, 4vw, 34px);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.01em;
 }
+/* the "Effective Date / Last Updated" paragraph directly under the title */
+.pol-doc h1 + p {
+  margin: 0 0 30px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--kg-line);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--kg-faint);
+}
+.pol-doc h1 + p strong {
+  color: var(--kg-muted);
+}
+
+/* Numbered sections. The underline turns each "1. …" into a titled block, which
+   is what carries the structure — so the source's `---` rules are redundant
+   noise and get dropped below. */
 .pol-doc h2 {
-  margin: 38px 0 12px;
-  font-size: 19px;
+  margin: 46px 0 16px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--kg-line);
+  font-size: 20px;
   font-weight: 700;
+  line-height: 1.3;
   color: var(--kg-ink);
 }
 .pol-doc h3 {
-  margin: 24px 0 8px;
+  margin: 28px 0 10px;
   font-size: 16px;
   font-weight: 700;
-  color: var(--kg-ink);
+  color: var(--kg-brand);
 }
 .pol-doc p {
-  margin: 0 0 16px;
-  color: var(--kg-muted);
+  margin: 0 0 15px;
+  color: var(--kg-ink);
 }
 .pol-doc strong {
   font-weight: 600;
   color: var(--kg-ink);
 }
+
+/* Bullet lists: a clear, consistent indent with the marker in the gutter and
+   wrapped lines hanging under the text, so a long clause stays one visual unit. */
 .pol-doc ul {
-  margin: 0 0 16px;
-  padding-inline-start: 22px;
-  color: var(--kg-muted);
+  margin: 0 0 18px;
+  padding-inline-start: 26px;
+  list-style: disc;
 }
 .pol-doc li {
-  margin-bottom: 7px;
+  margin-bottom: 9px;
+  padding-inline-start: 4px;
+  color: var(--kg-ink);
 }
 .pol-doc li::marker {
   color: var(--kg-brand);
@@ -128,10 +157,8 @@
 .pol-doc a:hover {
   text-decoration: underline;
 }
-/* The rules between sections read as a lot of hairlines; soften them to the
-   ledger's own line colour and give them breathing room. */
+/* Sections separate themselves via the h2 rule and spacing; the source's own
+   `---` dividers on top of that read as clutter, so hide them. */
 .pol-doc hr {
-  margin: 30px 0;
-  border: 0;
-  border-top: 1px solid var(--kg-line);
+  display: none;
 }
