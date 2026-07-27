@@ -1,15 +1,26 @@
-import { Component, computed, inject } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { SiteFooter } from '../../shared/site-footer/site-footer';
 
 /**
  * Public landing page (/info). Self-contained marketing page — no backend.
- * The one moving part is the khaata book that opens on scroll (a pinned CSS
- * scroll-driven animation), after which each feature is revealed as its own
- * ledger page. All motion is progressive enhancement: every element is fully
- * visible by default, so browsers without CSS scroll-timelines and users with
- * prefers-reduced-motion get the whole page statically.
+ * The one moving part is the khaata book that opens on scroll over a pinned
+ * desk, after which each feature is revealed as its own ledger page. Motion is
+ * progressive enhancement: prefers-reduced-motion gets the whole page statically.
+ *
+ * The scroll motion is driven from here rather than by CSS scroll timelines
+ * (animation-timeline/view()), which only Chromium ships in practice — on
+ * Safari, iOS and Android the book stayed shut. `track()` writes two numbers
+ * onto the host and info.css does the rest in calc(), so the animation is the
+ * same whether the reader uses a wheel, a trackpad or a thumb.
  *
  * Bilingual without touching the app dictionary: the marketing copy lives here
  * as two objects and follows LocaleService, so the language toggle at the top
@@ -25,11 +36,60 @@ import { SiteFooter } from '../../shared/site-footer/site-footer';
   host: {
     '[attr.dir]': 'locale.dir()',
     '[attr.lang]': 'locale.locale()',
+    '(window:scroll)': 'track()',
+    '(window:resize)': 'track()',
   },
 })
 export class Info {
   protected readonly locale = inject(LocaleService);
   protected readonly c = computed(() => (this.locale.locale() === 'ur' ? UR : EN));
+
+  private readonly host: HTMLElement = inject(ElementRef).nativeElement;
+  private readonly destroyRef = inject(DestroyRef);
+  private queued = false;
+
+  constructor() {
+    afterNextRender(() => {
+      this.track();
+      // reveal each chapter once, as it comes up the page
+      const seen = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((e) => {
+            if (!e.isIntersecting) return;
+            e.target.classList.add('in');
+            seen.unobserve(e.target);
+          }),
+        { rootMargin: '0px 0px -12% 0px' },
+      );
+      this.host.querySelectorAll('.reveal').forEach((el) => seen.observe(el));
+      this.destroyRef.onDestroy(() => seen.disconnect());
+    });
+  }
+
+  /**
+   * Writes the scroll playhead the stylesheet animates against, one frame at a
+   * time. --p is 0→1 across the desk's scroll (its height minus the pinned
+   * screen, i.e. exactly how far the sticky pin travels); --navp is 0→1 over
+   * the last stretch of desk, flipping the rail's cream to ink just before the
+   * light paper slides under it. Measured in real pixels, so a phone's
+   * collapsing URL bar can't skew it the way vh-based ranges did.
+   */
+  protected track(): void {
+    if (this.queued) return;
+    this.queued = true;
+    requestAnimationFrame(() => {
+      this.queued = false;
+      const stage = this.host.querySelector<HTMLElement>('.stage');
+      const pin = this.host.querySelector<HTMLElement>('.stage__pin');
+      if (!stage || !pin) return;
+      const y = window.scrollY;
+      const travel = Math.max(1, stage.offsetHeight - pin.offsetHeight);
+      const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+      this.host.style.setProperty('--p', `${clamp01(y / travel)}`);
+      // finishes with ~64px of desk left, i.e. as the rail's own height clears it
+      this.host.style.setProperty('--navp', `${clamp01((y - stage.offsetHeight + 184) / 120)}`);
+    });
+  }
 }
 
 // Landing copy. English-primary; Urdu is a full translation so a shopkeeper who

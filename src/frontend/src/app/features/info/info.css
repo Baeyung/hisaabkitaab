@@ -62,35 +62,10 @@
 }
 
 /* ── top rail ─────────────────────────────────────────────────────────── */
-/* The rail is cream over the dark desk, but the desk (.stage) is only 340vh
-   tall — scroll past it onto the light paper and cream text would vanish. So
-   its colours are driven by inherited tokens that flip as the scroll leaves
-   the desk, using the same scroll-timeline the book open already relies on.
-   ponytail: no fallback for browsers without scroll-timeline — the whole hero
-   is static there anyway; add an IntersectionObserver toggle if that matters. */
-@property --nav-fg {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: #f4ede2;
-}
-@property --nav-amber {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: #f0d8a8;
-}
-@property --nav-line {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: rgba(244, 237, 226, 0.32);
-}
-@keyframes nav-invert {
-  to {
-    --nav-fg: #23201c;
-    /* deeper than the desk amber so it clears WCAG AA on the near-white pill */
-    --nav-amber: #875312;
-    --nav-line: rgba(35, 32, 28, 0.22);
-  }
-}
+/* The rail is cream over the dark desk, but the desk (.stage) ends part-way
+   down the page — scroll onto the light paper and cream text would vanish. So
+   its colours are mixed against --navp, the 0→1 the component writes as the
+   desk's bottom edge passes under the rail. */
 .topnav {
   position: fixed;
   inset: 0 0 auto 0;
@@ -99,11 +74,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px clamp(18px, 4vw, 44px);
+  /* the amber end is deeper than the desk's so it clears WCAG AA on the pill */
+  --nav-fg: color-mix(in srgb, #23201c calc(var(--navp, 0) * 100%), #f4ede2);
+  --nav-amber: color-mix(in srgb, #875312 calc(var(--navp, 0) * 100%), #f0d8a8);
+  --nav-line: color-mix(
+    in srgb,
+    rgba(35, 32, 28, 0.22) calc(var(--navp, 0) * 100%),
+    rgba(244, 237, 226, 0.32)
+  );
   color: var(--nav-fg);
-  /* flip finishes just as the desk's bottom clears the rail (stage is 340vh) */
-  animation: nav-invert linear both;
-  animation-timeline: scroll(root block);
-  animation-range: 318vh 338vh;
 }
 .topnav__brand {
   display: inline-flex;
@@ -168,13 +147,15 @@
 /* ── the stage: pinned desk, opening book ─────────────────────────────── */
 .stage {
   position: relative;
-  height: 340vh; /* the scroll distance the book-open plays across */
+  height: 340svh; /* the scroll distance the book-open plays across */
   background: radial-gradient(120% 90% at 50% 12%, var(--desk) 0%, var(--desk-deep) 78%);
 }
 .stage__pin {
   position: sticky;
   top: 0;
-  height: 100vh;
+  /* svh, not vh: on a phone `vh` is the URL-bar-hidden height, so a 100vh pin
+     is taller than the visible scrollport and sticky never pins. */
+  height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -925,105 +906,58 @@
 
 /* ══ motion: progressive enhancement ══════════════════════════════════════
    Everything above renders complete and visible. The rules below only add
-   movement, and only where the browser supports CSS scroll timelines and the
-   reader hasn't asked for less motion. Nothing here is required to read the
-   page. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    /* the cover swings off the spine across the stage scroll, then the
-       wordmark rises. One scroll timeline on the stage drives both. */
-    .stage {
-      view-timeline-name: --stage;
-      view-timeline-axis: block;
-    }
-    .book__cover {
-      animation: cover-open linear both;
-      animation-timeline: --stage;
-      animation-range: contain 8% contain 62%;
-    }
-    /* An Urdu khaata is bound on the right — hinge and swing the cover the
-       other way so it opens the way the reader expects. */
-    :host([dir='rtl']) .book__cover {
-      transform-origin: right center;
-      animation-name: cover-open-rtl;
-    }
-    .phone {
-      opacity: 0;
-      animation: phone-rise linear both;
-      animation-timeline: --stage;
-      animation-range: contain 50% contain 82%;
-    }
-    /* the book eases forward and settles as it opens */
-    .book {
-      animation: book-settle linear both;
-      animation-timeline: --stage;
-      animation-range: contain 8% contain 70%;
-    }
-    .scrollcue {
-      animation: fade-out linear both;
-      animation-timeline: --stage;
-      animation-range: contain 8% contain 24%;
-    }
+   movement, and only when the reader hasn't asked for less of it.
 
-    /* feature leaves and text lift in as they enter view */
-    .reveal {
-      animation: reveal-in ease-out both;
-      animation-timeline: view();
-      animation-range: entry 4% entry 42%;
-    }
+   The book used to run on CSS scroll timelines (animation-timeline: view()).
+   Those are Chromium-only in practice, so the hero opened on desktop Chrome
+   and sat shut in Safari, on iOS and on Android — which read as "works with a
+   mouse, dead on a phone". Now the component writes one number, --p (0→1
+   across the pinned desk), and every transform below is plain calc() off it.
+   No scroll timelines, no keyframes, identical in every browser and for every
+   input device. --sub() convention: clamp(0, (p − start) / length, 1). */
+@media (prefers-reduced-motion: no-preference) {
+  /* the cover swings off the spine (8%→62% of the desk scroll) */
+  .book__cover {
+    --t: clamp(0, (var(--p, 0) - 0.08) / 0.54, 1);
+    transform: rotateY(calc(var(--t) * var(--hinge, -1) * 158deg));
   }
-}
+  /* An Urdu khaata is bound on the right — hinge and swing the cover the other
+     way so it opens the way the reader expects. */
+  :host([dir='rtl']) .book__cover {
+    transform-origin: right center;
+    --hinge: 1;
+  }
 
-@keyframes cover-open-rtl {
-  from {
-    transform: rotateY(0deg);
+  /* the book eases forward and settles as it opens (8%→70%) */
+  .book {
+    --t: clamp(0, (var(--p, 0) - 0.08) / 0.62, 1);
+    transform: rotateX(calc(9deg - var(--t) * 5deg)) translateY(calc(14px - var(--t) * 14px))
+      scale(calc(0.96 + var(--t) * 0.04));
   }
-  to {
-    transform: rotateY(158deg);
+
+  /* the phone rises out of the gutter once the cover is clear (50%→82%) */
+  .phone {
+    --t: clamp(0, (var(--p, 0) - 0.5) / 0.32, 1);
+    opacity: clamp(0, var(--t) / 0.55, 1);
+    transform: translateY(calc(40px - var(--t) * 40px)) scale(calc(0.9 + var(--t) * 0.1));
   }
-}
-@keyframes cover-open {
-  from {
-    transform: rotateY(0deg);
+
+  /* the cue fades as soon as the reader takes the hint (8%→24%) */
+  .scrollcue {
+    --t: clamp(0, (var(--p, 0) - 0.08) / 0.16, 1);
+    opacity: calc(1 - var(--t));
+    transform: translateY(calc(var(--t) * 8px));
   }
-  to {
-    transform: rotateY(-158deg);
-  }
-}
-@keyframes phone-rise {
-  from {
-    opacity: 0;
-    transform: translateY(40px) scale(0.9);
-  }
-  55% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-@keyframes book-settle {
-  from {
-    transform: rotateX(9deg) translateY(14px) scale(0.96);
-  }
-  to {
-    transform: rotateX(4deg) translateY(0) scale(1);
-  }
-}
-@keyframes fade-out {
-  to {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-@keyframes reveal-in {
-  from {
+
+  /* feature leaves and text lift in as they enter view. The component adds
+     .in via IntersectionObserver — supported everywhere, unlike view(). */
+  .reveal {
     opacity: 0;
     transform: translateY(34px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
-  to {
+  .reveal.in {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
