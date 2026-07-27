@@ -62,6 +62,35 @@
 }
 
 /* ── top rail ─────────────────────────────────────────────────────────── */
+/* The rail is cream over the dark desk, but the desk (.stage) is only 340vh
+   tall — scroll past it onto the light paper and cream text would vanish. So
+   its colours are driven by inherited tokens that flip as the scroll leaves
+   the desk, using the same scroll-timeline the book open already relies on.
+   ponytail: no fallback for browsers without scroll-timeline — the whole hero
+   is static there anyway; add an IntersectionObserver toggle if that matters. */
+@property --nav-fg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f4ede2;
+}
+@property --nav-amber {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f0d8a8;
+}
+@property --nav-line {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(244, 237, 226, 0.32);
+}
+@keyframes nav-invert {
+  to {
+    --nav-fg: #23201c;
+    /* deeper than the desk amber so it clears WCAG AA on the near-white pill */
+    --nav-amber: #875312;
+    --nav-line: rgba(35, 32, 28, 0.22);
+  }
+}
 .topnav {
   position: fixed;
   inset: 0 0 auto 0;
@@ -70,7 +99,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px clamp(18px, 4vw, 44px);
-  color: #f4ede2;
+  color: var(--nav-fg);
+  /* flip finishes just as the desk's bottom clears the rail (stage is 340vh) */
+  animation: nav-invert linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 318vh 338vh;
 }
 .topnav__brand {
   display: inline-flex;
@@ -83,7 +116,7 @@
 .topnav__mark {
   width: 22px;
   height: 22px;
-  color: #f4ede2;
+  color: var(--nav-fg);
 }
 .topnav__actions {
   display: flex;
@@ -91,12 +124,12 @@
   gap: 10px;
 }
 .topnav__link {
-  color: #f4ede2;
+  color: var(--nav-fg);
   text-decoration: none;
   font-weight: 500;
   font-size: 15px;
   padding: 8px 16px;
-  border: 1px solid rgba(244, 237, 226, 0.32);
+  border: 1px solid var(--nav-line);
   border-radius: 999px;
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
@@ -114,7 +147,7 @@
   font-family: 'Noto Nastaliq Urdu', 'IBM Plex Sans', sans-serif;
   min-height: 40px;
   padding: 4px 18px;
-  color: #f0d8a8;
+  color: var(--nav-amber);
   font-size: 16px;
   font-weight: 500;
   background: rgba(201, 138, 43, 0.16);
