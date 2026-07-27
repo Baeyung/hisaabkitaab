@@ -3,6 +3,23 @@ import { authGuard, publicOnlyGuard } from './core/auth/auth.guard';
 import { storeGuard } from './core/store/store.guard';
 
 export const routes: Routes = [
+  // Public marketing/landing page. No guard: reachable signed-out.
+  {
+    path: 'info',
+    loadComponent: () => import('./features/info/info').then((m) => m.Info),
+  },
+  // Public policy pages. One component, `doc` bound from route data selects
+  // which Markdown file (shipped as an asset) to render.
+  {
+    path: 'privacy-policy',
+    data: { doc: 'privacy-policy' },
+    loadComponent: () => import('./features/policy/policy').then((m) => m.Policy),
+  },
+  {
+    path: 'terms-and-conditions',
+    data: { doc: 'terms-and-conditions' },
+    loadComponent: () => import('./features/policy/policy').then((m) => m.Policy),
+  },
   {
     path: 'login',
     canActivate: [publicOnlyGuard],

@@ -1,0 +1,650 @@
+/* Fraunces (the display face) and Noto Nastaliq are declared in the global
+   sheet; font files only download once /info actually renders those glyphs. */
+:host {
+  /* The landing's own palette: app tokens for continuity, plus one material
+     the app doesn't own — maroon cloth and a dusk desk to sit the book on. */
+  --paper: #f7f4ee;
+  --paper-edge: #ece6da;
+  --ink: #23201c;
+  --muted: #6b655c;
+  --faint: #8a847a;
+  --pine: #1f5c4d;
+  --pine-deep: #163f34;
+  --amber: #c98a2b;
+  --red: #a8342a; /* the margin rule + payable, straight from the app */
+  --green: #1f7a4d;
+  --cloth: #6e2b25; /* maroon book cover */
+  --cloth-deep: #521e19;
+  --desk: #241b16; /* dusk counter behind the book */
+  --desk-deep: #17110d;
+  --line: rgba(35, 32, 28, 0.12);
+
+  display: block;
+  /* dir is bound from LocaleService; direction follows the attribute. */
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+/* Urdu: Nastaliq needs a taller line, and the page reads right-to-left. */
+:host([dir='rtl']) {
+  font-family: 'Noto Nastaliq Urdu', 'IBM Plex Sans', system-ui, sans-serif;
+  line-height: 2;
+}
+
+/* the bookish display face, shared by the wordmark, ledes and section titles */
+.wordmark__latin,
+.stage__lede,
+.chapters__intro,
+.chapter__title,
+.cta__title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+}
+.stage__lede,
+.chapters__intro {
+  font-weight: 400;
+}
+
+.skip {
+  position: absolute;
+  inset-inline-start: -9999px;
+  top: 0;
+  z-index: 50;
+  padding: 10px 16px;
+  background: var(--pine);
+  color: #fff;
+  border-radius: 0 0 10px 0;
+}
+.skip:focus {
+  inset-inline-start: 0;
+}
+
+/* ── top rail ─────────────────────────────────────────────────────────── */
+.topnav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px clamp(18px, 4vw, 44px);
+  color: #f4ede2;
+}
+.topnav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.01em;
+}
+.topnav__mark {
+  width: 22px;
+  height: 22px;
+  color: #f4ede2;
+}
+.topnav__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topnav__link {
+  color: #f4ede2;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  padding: 8px 16px;
+  border: 1px solid rgba(244, 237, 226, 0.32);
+  border-radius: 999px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.topnav__link:hover {
+  background: rgba(244, 237, 226, 0.12);
+  border-color: rgba(244, 237, 226, 0.6);
+}
+.topnav__link:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+/* The language switch: filled so a shopkeeper who can't read the English page
+   spots it first. The label is always the *other* language, in its own script. */
+.topnav__lang {
+  font-family: 'Noto Nastaliq Urdu', 'IBM Plex Sans', sans-serif;
+  min-height: 40px;
+  padding: 4px 18px;
+  color: #f0d8a8;
+  font-size: 16px;
+  font-weight: 500;
+  background: rgba(201, 138, 43, 0.16);
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.topnav__lang:hover {
+  background: rgba(201, 138, 43, 0.28);
+  border-color: var(--amber);
+}
+.topnav__lang:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* ── the stage: pinned desk, opening book ─────────────────────────────── */
+.stage {
+  position: relative;
+  height: 340vh; /* the scroll distance the book-open plays across */
+  background: radial-gradient(120% 90% at 50% 12%, var(--desk) 0%, var(--desk-deep) 78%);
+}
+.stage__pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 4vh, 40px);
+  padding: 90px 20px 40px;
+  text-align: center;
+  /* the wood grain of the counter, faint under the book */
+  background: radial-gradient(80% 55% at 50% 62%, rgba(0, 0, 0, 0.45), transparent 70%);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--amber);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* perspective container for the 3D book */
+.scene {
+  perspective: 1700px;
+  perspective-origin: 50% 40%;
+}
+
+.book {
+  position: relative;
+  width: clamp(230px, 46vw, 360px);
+  height: clamp(300px, 58vw, 470px);
+  transform-style: preserve-3d;
+  transform: rotateX(6deg);
+}
+
+/* the open pages sit behind the cover */
+.book__pages {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  border-radius: 4px 8px 8px 4px;
+  background: var(--paper);
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(35, 32, 28, 0.06);
+}
+.page {
+  flex: 1;
+  position: relative;
+  /* ruled ledger lines */
+  background-image: repeating-linear-gradient(
+    var(--paper) 0 27px,
+    color-mix(in srgb, var(--pine) 12%, transparent) 27px 28px
+  );
+  background-position: 0 46px;
+}
+.page--left {
+  border-radius: 4px 0 0 4px;
+  box-shadow: inset -14px 0 22px -14px rgba(35, 32, 28, 0.28); /* gutter shade */
+}
+.page--right {
+  border-radius: 0 8px 8px 0;
+}
+/* the red margin rule of a real khaata, on each page */
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: color-mix(in srgb, var(--red) 55%, transparent);
+}
+.page--left::before {
+  right: 26px;
+}
+.page--right::before {
+  left: 26px;
+}
+
+/* the name that rises out of the gutter once the book is open */
+.wordmark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  z-index: 2;
+}
+.wordmark__urdu {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: clamp(30px, 6vw, 52px);
+  line-height: 1.7;
+  color: var(--pine);
+}
+.wordmark__latin {
+  font-size: clamp(19px, 3.4vw, 27px);
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+/* the maroon cloth cover, hinged on the spine (inline-start edge) */
+.book__cover {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  z-index: 3;
+  will-change: transform;
+}
+.cover__face,
+.cover__inside {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px 8px 8px 4px;
+  backface-visibility: hidden;
+}
+.cover__face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: linear-gradient(150deg, var(--cloth) 0%, var(--cloth-deep) 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2), inset 0 2px 30px rgba(0, 0, 0, 0.25),
+    0 30px 60px -20px rgba(0, 0, 0, 0.7);
+}
+/* embossed amber frame + spine band */
+.cover__face::before {
+  content: '';
+  position: absolute;
+  inset: 16px;
+  border: 1px solid color-mix(in srgb, var(--amber) 62%, transparent);
+  border-radius: 3px;
+}
+.cover__face::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0; /* spine shade rides the hinge edge, flips in RTL */
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.4), transparent);
+}
+.cover__rule {
+  width: 46px;
+  height: 2px;
+  background: var(--amber);
+}
+.cover__title {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: clamp(30px, 6vw, 46px);
+  line-height: 1.7;
+  color: #f0d8a8;
+}
+.cover__sub {
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #f0d8a8 70%, transparent);
+}
+/* the endpaper you see on the inside of the swung-open cover */
+.cover__inside {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, #efe7d7, #ded2b8);
+  box-shadow: inset 0 0 40px rgba(110, 43, 37, 0.14);
+}
+
+.stage__lede {
+  max-width: 22ch;
+  margin: 0;
+  color: #efe7db;
+  font-size: clamp(20px, 3.6vw, 30px);
+  line-height: 1.32;
+}
+.scrollcue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(240, 233, 220, 0.7);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.scrollcue__arrow {
+  width: 1px;
+  height: 26px;
+  background: linear-gradient(rgba(240, 233, 220, 0.7), transparent);
+}
+
+/* ── chapters (features) ──────────────────────────────────────────────── */
+.chapters {
+  position: relative;
+  z-index: 2;
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: clamp(70px, 12vh, 130px) clamp(20px, 5vw, 40px) 40px;
+}
+.chapters__intro {
+  max-width: 20ch;
+  margin: 0 auto clamp(60px, 10vh, 110px);
+  text-align: center;
+  font-size: clamp(24px, 4.4vw, 40px);
+  line-height: 1.28;
+  color: var(--ink);
+}
+
+.chapter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(28px, 6vw, 76px);
+  margin-bottom: clamp(70px, 13vh, 150px);
+}
+.chapter--flip .chapter__text {
+  order: 2;
+}
+
+.chapter__kicker {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: 28px;
+  line-height: 1.9;
+  color: var(--pine);
+}
+.chapter__title {
+  margin: 0 0 14px;
+  font-size: clamp(24px, 3.6vw, 36px);
+  line-height: 1.16;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.chapter__body {
+  margin: 0;
+  max-width: 42ch;
+  color: var(--muted);
+  font-size: clamp(15px, 1.7vw, 17px);
+  line-height: 1.62;
+}
+
+/* a feature shown as a torn-out ledger leaf — same material as the book */
+.leaf {
+  position: relative;
+  padding: 22px 24px;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 6px;
+  box-shadow: 0 22px 44px -26px rgba(35, 32, 28, 0.4);
+  /* red margin rule, echoing the book pages */
+  background-image: repeating-linear-gradient(
+    transparent 0 33px,
+    color-mix(in srgb, var(--pine) 8%, transparent) 33px 34px
+  );
+  background-position: 0 52px;
+}
+.leaf::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: 16px; /* the margin rule sits on the reading edge, mirrors in RTL */
+  width: 1.5px;
+  background: color-mix(in srgb, var(--red) 45%, transparent);
+}
+.leaf__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline-start: 14px;
+  padding-bottom: 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+  font-size: 15px;
+}
+.leaf__baqaya {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.leaf__baqaya--in {
+  color: var(--green);
+}
+.leaf__badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+}
+.leaf__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  padding-inline-start: 14px;
+}
+.leaf__rows li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  height: 34px;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+.leaf__rows b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.leaf__total {
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+.amt-in {
+  color: var(--green);
+}
+.amt-out {
+  color: var(--red);
+}
+
+/* ── close: the sign-up ───────────────────────────────────────────────── */
+.cta {
+  position: relative;
+  z-index: 2;
+  padding: clamp(80px, 14vh, 150px) 24px clamp(70px, 12vh, 130px);
+  text-align: center;
+  color: #f4ede2;
+  background: radial-gradient(110% 120% at 50% 0%, var(--pine) 0%, var(--pine-deep) 82%);
+}
+.cta__urdu {
+  margin: 0 0 18px;
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: clamp(22px, 4vw, 34px);
+  line-height: 2;
+  color: #f0d8a8;
+}
+.cta__title {
+  margin: 0 0 12px;
+  font-size: clamp(30px, 6vw, 52px);
+  line-height: 1.08;
+}
+.cta__body {
+  margin: 0 auto 34px;
+  max-width: 34ch;
+  color: rgba(244, 237, 226, 0.82);
+  font-size: clamp(15px, 2vw, 18px);
+  line-height: 1.55;
+}
+.cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 30px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.18s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+.btn--go {
+  color: var(--pine-deep);
+  background: #f0d8a8;
+}
+.btn--go:hover {
+  transform: translateY(-2px);
+  background: #f6e4c2;
+}
+.btn--ghost {
+  color: #f4ede2;
+  border: 1px solid rgba(244, 237, 226, 0.4);
+}
+.btn--ghost:hover {
+  border-color: #f4ede2;
+}
+
+/* ── responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .chapter {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+  /* keep text above its leaf on every row, flip order and all */
+  .chapter--flip .chapter__text {
+    order: 0;
+  }
+}
+
+/* ══ motion: progressive enhancement ══════════════════════════════════════
+   Everything above renders complete and visible. The rules below only add
+   movement, and only where the browser supports CSS scroll timelines and the
+   reader hasn't asked for less motion. Nothing here is required to read the
+   page. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* the cover swings off the spine across the stage scroll, then the
+       wordmark rises. One scroll timeline on the stage drives both. */
+    .stage {
+      view-timeline-name: --stage;
+      view-timeline-axis: block;
+    }
+    .book__cover {
+      animation: cover-open linear both;
+      animation-timeline: --stage;
+      animation-range: contain 8% contain 62%;
+    }
+    /* An Urdu khaata is bound on the right — hinge and swing the cover the
+       other way so it opens the way the reader expects. */
+    :host([dir='rtl']) .book__cover {
+      transform-origin: right center;
+      animation-name: cover-open-rtl;
+    }
+    .wordmark {
+      opacity: 0;
+      animation: wordmark-rise linear both;
+      animation-timeline: --stage;
+      animation-range: contain 52% contain 78%;
+    }
+    /* the book eases forward and settles as it opens */
+    .book {
+      animation: book-settle linear both;
+      animation-timeline: --stage;
+      animation-range: contain 8% contain 70%;
+    }
+    .scrollcue {
+      animation: fade-out linear both;
+      animation-timeline: --stage;
+      animation-range: contain 8% contain 24%;
+    }
+
+    /* feature leaves and text lift in as they enter view */
+    .reveal {
+      animation: reveal-in ease-out both;
+      animation-timeline: view();
+      animation-range: entry 4% entry 42%;
+    }
+  }
+}
+
+@keyframes cover-open-rtl {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(158deg);
+  }
+}
+@keyframes cover-open {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-158deg);
+  }
+}
+@keyframes wordmark-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.94);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes book-settle {
+  from {
+    transform: rotateX(9deg) translateY(14px) scale(0.96);
+  }
+  to {
+    transform: rotateX(4deg) translateY(0) scale(1);
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(34px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

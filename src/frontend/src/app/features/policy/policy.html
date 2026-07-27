@@ -1,0 +1,28 @@
+<header class="pol-top">
+  <a class="pol-brand" routerLink="/info">
+    <svg class="pol-mark" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3.4 2.5h8v19h-8zM12.6 2.5h8v19h-8z" fill="currentColor" />
+      <path d="M3.4 5.1h8v2.6h-8zM12.6 5.1h8v2.6h-8z" fill="#c98a2b" />
+    </svg>
+    HisaabKitaab
+  </a>
+  <a class="pol-back" routerLink="/info">← Back to home</a>
+</header>
+
+<main class="pol-wrap">
+  @if (failed()) {
+    <div class="pol-state">
+      <h1 class="pol-state__title">We couldn't load this page</h1>
+      <p class="pol-state__body">
+        Please try again, or reach us at
+        <a href="mailto:support@hisaabkitaab.shop">support&#64;hisaabkitaab.shop</a>.
+      </p>
+    </div>
+  } @else if (html(); as body) {
+    <article class="pol-doc" [innerHTML]="body"></article>
+  } @else {
+    <p class="pol-loading">Loading…</p>
+  }
+</main>
+
+<app-site-footer />

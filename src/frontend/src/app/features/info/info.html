@@ -1,0 +1,177 @@
+<a class="skip" href="#read-on">Skip to content</a>
+
+<!-- top rail: brand + language + sign-in, pinned over the desk -->
+<header class="topnav">
+  <span class="topnav__brand">
+    <svg class="topnav__mark" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3.4 2.5h8v19h-8zM12.6 2.5h8v19h-8z" fill="currentColor" />
+      <path d="M3.4 5.1h8v2.6h-8zM12.6 5.1h8v2.6h-8z" fill="#c98a2b" />
+    </svg>
+    HisaabKitaab
+  </span>
+  <nav class="topnav__actions">
+    <button
+      type="button"
+      class="topnav__lang"
+      (click)="locale.toggle()"
+      [attr.lang]="locale.locale() === 'ur' ? 'en' : 'ur'"
+      [attr.aria-label]="locale.locale() === 'ur' ? 'Switch to English' : 'اردو میں دیکھیں'"
+    >
+      {{ c().toggle }}
+    </button>
+    <a class="topnav__link" routerLink="/login">{{ c().login }}</a>
+  </nav>
+</header>
+
+<!-- ── Act one: the book opens ─────────────────────────────────────────
+     Tall section; the desk is pinned inside it (sticky). Scroll through the
+     section swings the cover off the spine and lifts the wordmark out. -->
+<section class="stage" aria-label="HisaabKitaab">
+  <div class="stage__pin">
+    <p class="eyebrow">{{ c().eyebrow }}</p>
+
+    <div class="scene" aria-hidden="true">
+      <div class="book">
+        <!-- cream ruled pages, revealed as the cover swings open -->
+        <div class="book__pages">
+          <div class="page page--left"></div>
+          <div class="page page--right"></div>
+          <div class="wordmark">
+            <span class="wordmark__urdu" dir="rtl" lang="ur">حساب کتاب</span>
+            <span class="wordmark__latin">HisaabKitaab</span>
+          </div>
+        </div>
+        <!-- maroon cloth cover, hinged on the spine -->
+        <div class="book__cover">
+          <div class="cover__face">
+            <span class="cover__rule"></span>
+            <span class="cover__title" dir="rtl" lang="ur">حساب</span>
+            <span class="cover__sub" dir="rtl" lang="ur">کھاتہ · بہی کھاتہ</span>
+          </div>
+          <div class="cover__inside"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="stage__lede">{{ c().heroLede }}</p>
+    <span class="scrollcue">{{ c().scrollCue }}<span class="scrollcue__arrow"></span></span>
+  </div>
+</section>
+
+<!-- ── Act two: the ledger, page by page ──────────────────────────────── -->
+<main id="read-on" class="chapters">
+  <p class="chapters__intro reveal">{{ c().intro }}</p>
+
+  <!-- Khata / udhaar -->
+  <section class="chapter reveal">
+    <div class="chapter__text">
+      <span class="chapter__kicker" dir="rtl" lang="ur">کھاتہ</span>
+      <h2 class="chapter__title">{{ c().khataTitle }}</h2>
+      <p class="chapter__body">{{ c().khataBody }}</p>
+    </div>
+    <div class="leaf" aria-hidden="true">
+      <div class="leaf__head">
+        <span>{{ c().khataName }}</span>
+        <span class="leaf__baqaya">{{ c().khataBaqaya }}</span>
+      </div>
+      <ul class="leaf__rows">
+        <li><span>{{ c().khataR1 }}</span><b class="amt-out">Rs 4,800</b></li>
+        <li><span>{{ c().khataR2 }}</span><b class="amt-in">Rs 3,000</b></li>
+        <li><span>{{ c().khataR3 }}</span><b class="amt-out">Rs 2,700</b></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Roznamcha / cashbook -->
+  <section class="chapter chapter--flip reveal">
+    <div class="chapter__text">
+      <span class="chapter__kicker" dir="rtl" lang="ur">روزنامچہ</span>
+      <h2 class="chapter__title">{{ c().roznTitle }}</h2>
+      <p class="chapter__body">{{ c().roznBody }}</p>
+    </div>
+    <div class="leaf" aria-hidden="true">
+      <div class="leaf__head">
+        <span>{{ c().roznDay }}</span>
+        <span class="leaf__baqaya leaf__baqaya--in">{{ c().roznClosing }}</span>
+      </div>
+      <ul class="leaf__rows">
+        <li><span>{{ c().roznR1 }}</span><b>Rs 9,200</b></li>
+        <li><span>{{ c().roznR2 }}</span><b class="amt-in">Rs 5,000</b></li>
+        <li><span>{{ c().roznR3 }}</span><b class="amt-out">Rs 550</b></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Bills -->
+  <section class="chapter reveal">
+    <div class="chapter__text">
+      <span class="chapter__kicker" dir="rtl" lang="ur">بل</span>
+      <h2 class="chapter__title">{{ c().billTitle }}</h2>
+      <p class="chapter__body">{{ c().billBody }}</p>
+    </div>
+    <div class="leaf" aria-hidden="true">
+      <div class="leaf__head">
+        <span>{{ c().billNo }}</span>
+        <span class="leaf__badge">{{ c().billPaid }}</span>
+      </div>
+      <ul class="leaf__rows">
+        <li><span>{{ c().billR1 }}</span><b>Rs 6,000</b></li>
+        <li><span>{{ c().billR2 }}</span><b>Rs 3,200</b></li>
+        <li class="leaf__total"><span>{{ c().billTotal }}</span><b>Rs 9,200</b></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Inventory / stock -->
+  <section class="chapter chapter--flip reveal">
+    <div class="chapter__text">
+      <span class="chapter__kicker" dir="rtl" lang="ur">مال</span>
+      <h2 class="chapter__title">{{ c().stockTitle }}</h2>
+      <p class="chapter__body">{{ c().stockBody }}</p>
+    </div>
+    <div class="leaf" aria-hidden="true">
+      <div class="leaf__head">
+        <span>{{ c().stockHead }}</span>
+        <span class="leaf__baqaya">{{ c().stockCount }}</span>
+      </div>
+      <ul class="leaf__rows">
+        <li><span>{{ c().stockR1 }}</span><b>132 m</b></li>
+        <li><span>{{ c().stockR2 }}</span><b class="amt-out">{{ c().stockR2qty }}</b></li>
+        <li><span>{{ c().stockR3 }}</span><b>88 m</b></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <section class="chapter reveal">
+    <div class="chapter__text">
+      <span class="chapter__kicker" dir="rtl" lang="ur">حساب</span>
+      <h2 class="chapter__title">{{ c().dashTitle }}</h2>
+      <p class="chapter__body">{{ c().dashBody }}</p>
+    </div>
+    <div class="leaf" aria-hidden="true">
+      <div class="leaf__head">
+        <span>{{ c().dashHead }}</span>
+        <span class="leaf__baqaya leaf__baqaya--in">+ Rs 62,300</span>
+      </div>
+      <ul class="leaf__rows">
+        <li><span>{{ c().dashR1 }}</span><b class="amt-in">Rs 2,14,000</b></li>
+        <li><span>{{ c().dashR2 }}</span><b class="amt-out">Rs 1,51,700</b></li>
+        <li><span>{{ c().dashR3 }}</span><b>Rs 38,900</b></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<!-- ── Close the book: sign up ─────────────────────────────────────────── -->
+<section class="cta">
+  <p class="cta__urdu" dir="rtl" lang="ur">لکھا ہوا سب یاد رہتا ہے</p>
+  <h2 class="cta__title">{{ c().ctaTitle }}</h2>
+  <p class="cta__body">{{ c().ctaBody }}</p>
+  <div class="cta__actions">
+    <a class="btn btn--go" routerLink="/signup">{{ c().ctaGo }}</a>
+    <a class="btn btn--ghost" routerLink="/login">{{ c().ctaHave }}</a>
+  </div>
+</section>
+
+<app-site-footer />
