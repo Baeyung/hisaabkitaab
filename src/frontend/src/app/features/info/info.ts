@@ -41,6 +41,7 @@ const EN = {
   eyebrow: 'For the register behind the counter',
   heroLede: 'The khaata book your shop already trusts — now it adds itself up.',
   scrollCue: 'Scroll to open',
+  phoneAdd: 'Add entry',
   intro: 'Five things every shopkeeper keeps in that book. Here they keep themselves.',
 
   khataTitle: "Every customer's udhaar, remembered",
@@ -101,6 +102,7 @@ const UR: typeof EN = {
   eyebrow: 'دکان کے کاؤنٹر والا رجسٹر',
   heroLede: 'وہی کھاتہ کتاب جس پر آپ کی دکان بھروسہ کرتی ہے — اب خود حساب بھی رکھتی ہے۔',
   scrollCue: 'کھولنے کے لیے سکرول کریں',
+  phoneAdd: 'نئی انٹری',
   intro: 'پانچ چیزیں جو ہر دکاندار اُس کتاب میں رکھتا ہے۔ یہاں یہ خود کو سنبھال لیتی ہیں۔',
 
   khataTitle: 'ہر گاہک کا اُدھار، یاد رکھا ہوا',

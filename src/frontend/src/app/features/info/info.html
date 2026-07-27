@@ -36,9 +36,34 @@
         <div class="book__pages">
           <div class="page page--left"></div>
           <div class="page page--right"></div>
-          <div class="wordmark">
-            <span class="wordmark__urdu" dir="rtl" lang="ur">حساب کتاب</span>
-            <span class="wordmark__latin">HisaabKitaab</span>
+          <!-- the paper ledger, now a screen: a phone rises from the gutter
+               carrying the same khaata, added up. This is the "going digital"
+               payoff — the book opens and the register is an app. -->
+          <div class="phone">
+            <span class="phone__title" dir="rtl" lang="ur">حساب کتاب</span>
+            <div class="phone__screen">
+              <div class="phone__inner">
+                <div class="phone__bar">
+                  <svg class="phone__mark" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3.4 2.5h8v19h-8zM12.6 2.5h8v19h-8z" fill="currentColor" />
+                    <path d="M3.4 5.1h8v2.6h-8zM12.6 5.1h8v2.6h-8z" fill="#f0d8a8" />
+                  </svg>
+                  <span class="phone__brand">HisaabKitaab</span>
+                </div>
+                <div class="phone__body">
+                  <div class="phone__khata">
+                    <span class="phone__name">{{ c().khataName }}</span>
+                    <span class="phone__baqaya">{{ c().khataBaqaya }}</span>
+                  </div>
+                  <ul class="phone__rows">
+                    <li><span>{{ c().khataR1 }}</span><b class="amt-out">Rs 4,800</b></li>
+                    <li><span>{{ c().khataR2 }}</span><b class="amt-in">Rs 3,000</b></li>
+                    <li><span>{{ c().khataR3 }}</span><b class="amt-out">Rs 2,700</b></li>
+                  </ul>
+                  <span class="phone__add">{{ c().phoneAdd }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <!-- maroon cloth cover, hinged on the spine -->
@@ -48,7 +73,19 @@
             <span class="cover__title" dir="rtl" lang="ur">حساب</span>
             <span class="cover__sub" dir="rtl" lang="ur">کھاتہ · بہی کھاتہ</span>
           </div>
-          <div class="cover__inside"></div>
+          <!-- the endpaper facing you once the cover is open: the same khaata,
+               the old way — written out by hand. Paper on the left, app on the
+               right, the same numbers in both. -->
+          <div class="cover__inside">
+            <div class="endpaper">
+              <span class="endpaper__name">{{ c().khataName }}</span>
+              <ul class="endpaper__rows">
+                <li><span>{{ c().khataR1 }}</span><b>4,800</b></li>
+                <li><span>{{ c().khataR2 }}</span><b>3,000</b></li>
+                <li><span>{{ c().khataR3 }}</span><b>2,700</b></li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -34,8 +34,7 @@
   line-height: 2;
 }
 
-/* the bookish display face, shared by the wordmark, ledes and section titles */
-.wordmark__latin,
+/* the bookish display face, shared by the ledes and section titles */
 .stage__lede,
 .chapters__intro,
 .chapter__title,
@@ -219,27 +218,193 @@
   left: 26px;
 }
 
-/* the name that rises out of the gutter once the book is open */
-.wordmark {
+/* the phone that rises out of the gutter once the book is open — the paper
+   ledger, now an app. Sits between the pages (z-index 2) and the cover
+   (z-index 3), so the closed cover hides it and the open cover reveals it. */
+.phone {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: clamp(6px, 1.4vh, 14px);
   z-index: 2;
 }
-.wordmark__urdu {
+/* the Urdu name crowns the phone: the register's identity, now on a screen */
+.phone__title {
   font-family: 'Noto Nastaliq Urdu', serif;
-  font-size: clamp(30px, 6vw, 52px);
+  font-size: clamp(22px, 4.4vw, 36px);
   line-height: 1.7;
   color: var(--pine);
+  text-shadow: 0 1px 0 rgba(247, 244, 238, 0.6);
 }
-.wordmark__latin {
-  font-size: clamp(19px, 3.4vw, 27px);
-  letter-spacing: 0.04em;
+.phone__screen {
+  position: relative;
+  width: 55%;
+  max-width: 186px;
+  aspect-ratio: 186 / 372;
+  padding: 9px 8px;
+  border-radius: 26px;
+  background: linear-gradient(155deg, #211b16, #100c09);
+  box-shadow: 0 32px 60px -22px rgba(0, 0, 0, 0.78),
+    inset 0 0 0 1.5px rgba(240, 216, 168, 0.16);
+}
+/* the earpiece speaker slit */
+.phone__screen::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(240, 216, 168, 0.22);
+}
+.phone__inner {
+  height: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  /* text on the phone reads left-to-right unless the page is Urdu, and never
+     needs Nastaliq's tall leading squeezed into a tiny screen */
+  line-height: 1.5;
+}
+.phone__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 11px;
+  background: var(--pine);
+  color: #f4ede2;
+}
+.phone__mark {
+  width: 13px;
+  height: 13px;
+  color: #f4ede2;
+}
+.phone__brand {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif; /* the name is Latin in both locales */
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.phone__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 11px 12px;
+}
+.phone__khata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.phone__name {
+  font-weight: 600;
+  font-size: 11px;
   color: var(--ink);
+}
+.phone__baqaya {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 11%, transparent);
+}
+.phone__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.phone__rows li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 9.5px;
+  color: var(--muted);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+.phone__rows b {
+  font-weight: 600;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.phone__add {
+  margin-top: auto;
+  padding: 8px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #f4ede2;
+  background: var(--pine);
+}
+.phone__add::before {
+  content: '+';
+  margin-inline-end: 5px;
+  font-weight: 700;
+}
+
+/* the handwritten khaata on the open cover's endpaper. cover__inside is already
+   flipped (rotateY 180), and the open cover swings the other way (-158°), so the
+   two cancel and writing placed here reads normally — no extra flip needed. */
+.endpaper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2vh, 16px);
+  padding: 16% 15% 14%;
+  color: #2b3a55; /* fountain-pen ink on the cream endpaper */
+  font-family: 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+}
+:host([dir='rtl']) .endpaper {
+  font-family: 'Noto Nastaliq Urdu', serif; /* an Urdu register is written in Urdu */
+}
+.endpaper__name {
+  align-self: flex-start;
+  padding-bottom: 3px;
+  font-size: clamp(15px, 2.6vw, 22px);
+  font-weight: 600;
+  border-bottom: 2px solid color-mix(in srgb, var(--red) 60%, transparent);
+  transform: rotate(-1.4deg);
+}
+.endpaper__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.6vh, 13px);
+}
+.endpaper__rows li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: clamp(12px, 2.1vw, 17px);
+}
+.endpaper__rows li:nth-child(2) {
+  transform: rotate(0.9deg);
+}
+.endpaper__rows li:nth-child(3) {
+  transform: rotate(-0.7deg);
+}
+.endpaper__rows b {
+  font-weight: 600;
 }
 
 /* the maroon cloth cover, hinged on the spine (inline-start edge) */
@@ -568,11 +733,11 @@
       transform-origin: right center;
       animation-name: cover-open-rtl;
     }
-    .wordmark {
+    .phone {
       opacity: 0;
-      animation: wordmark-rise linear both;
+      animation: phone-rise linear both;
       animation-timeline: --stage;
-      animation-range: contain 52% contain 78%;
+      animation-range: contain 50% contain 82%;
     }
     /* the book eases forward and settles as it opens */
     .book {
@@ -611,12 +776,12 @@
     transform: rotateY(-158deg);
   }
 }
-@keyframes wordmark-rise {
+@keyframes phone-rise {
   from {
     opacity: 0;
-    transform: translateY(26px) scale(0.94);
+    transform: translateY(40px) scale(0.9);
   }
-  60% {
+  55% {
     opacity: 1;
   }
   to {
