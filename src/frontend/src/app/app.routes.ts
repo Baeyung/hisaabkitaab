@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, publicOnlyGuard } from './core/auth/auth.guard';
+import { apexAppRedirectGuard, apexRedirectGuard } from './core/auth/apex.guard';
 import { storeGuard } from './core/store/store.guard';
 
 export const routes: Routes = [
@@ -22,17 +23,17 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    canActivate: [publicOnlyGuard],
+    canActivate: [apexAppRedirectGuard, publicOnlyGuard],
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
   },
   {
     path: 'signup',
-    canActivate: [publicOnlyGuard],
+    canActivate: [apexAppRedirectGuard, publicOnlyGuard],
     loadComponent: () => import('./features/auth/signup/signup').then((m) => m.Signup),
   },
   {
     path: 'forgot-password',
-    canActivate: [publicOnlyGuard],
+    canActivate: [apexAppRedirectGuard, publicOnlyGuard],
     loadComponent: () =>
       import('./features/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
   },
@@ -56,7 +57,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    canActivate: [authGuard],
+    canActivate: [apexRedirectGuard, authGuard],
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: [
       // Outside storeGuard: with no store yet this is where the guard sends the
