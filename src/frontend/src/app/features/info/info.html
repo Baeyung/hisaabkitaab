@@ -211,4 +211,66 @@
   </div>
 </section>
 
+<!-- ── Pricing ──────────────────────────────────────────────────────────── -->
+<section class="pricing reveal">
+  <span class="pricing__kicker">{{ c().pricingKicker }}</span>
+  <h2 class="pricing__title">{{ c().pricingTitle }}</h2>
+  <p class="pricing__subtitle">{{ c().pricingSubtitle }}</p>
+
+  <div class="pricing__grid">
+    <!-- Standard -->
+    <div class="plan">
+      <span class="plan__name">{{ c().planStandard }}</span>
+      <div class="plan__price">
+        <span class="plan__currency">PKR</span>
+        <span class="plan__amount">3,000</span>
+        <span class="plan__period">{{ c().planPeriod }}</span>
+      </div>
+      <p class="plan__trial">{{ c().planTrial }}</p>
+      <ul class="plan__features">
+        <li>{{ c().featKhata }}</li>
+        <li>{{ c().featRozn }}</li>
+        <li>{{ c().featBills }}</li>
+        <li>{{ c().featStock }}</li>
+        <li>{{ c().featDash }}</li>
+      </ul>
+      <a class="plan__cta" routerLink="/signup">{{ c().planCta }}</a>
+    </div>
+
+    <!-- Premium -->
+    <div class="plan plan--featured">
+      <span class="plan__badge">{{ c().planPopular }}</span>
+      <span class="plan__name">{{ c().planPremium }}</span>
+      <div class="plan__price">
+        <span class="plan__currency">PKR</span>
+        <span class="plan__amount">5,000</span>
+        <span class="plan__period">{{ c().planPeriod }}</span>
+      </div>
+      <p class="plan__trial">{{ c().planTrial }}</p>
+      <ul class="plan__features">
+        <li>{{ c().featAllStd }}</li>
+        <li class="plan__feature--highlight">{{ c().featWhatsApp }}</li>
+      </ul>
+      <a class="plan__cta plan__cta--featured" routerLink="/signup">{{ c().planCta }}</a>
+    </div>
+
+    <!-- Corporate -->
+    <div class="plan">
+      <span class="plan__name">{{ c().planCorporate }}</span>
+      <div class="plan__price">
+        <span class="plan__currency">PKR</span>
+        <span class="plan__amount">10,000</span>
+        <span class="plan__period">{{ c().planPeriod }}</span>
+      </div>
+      <p class="plan__trial">{{ c().planTrial }}</p>
+      <ul class="plan__features">
+        <li>{{ c().featAllPrm }}</li>
+        <li>{{ c().featEmail }}</li>
+        <li>{{ c().featMaxWa }}</li>
+      </ul>
+      <a class="plan__cta" routerLink="/signup">{{ c().planCta }}</a>
+    </div>
+  </div>
+</section>
+
 <app-site-footer />

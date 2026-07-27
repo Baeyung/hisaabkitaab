@@ -730,15 +730,196 @@
   border-color: #f4ede2;
 }
 
+/* ── pricing ───────────────────────────────────────────────────────────── */
+.pricing {
+  position: relative;
+  z-index: 2;
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: clamp(70px, 12vh, 130px) clamp(20px, 5vw, 40px);
+  text-align: center;
+}
+.pricing__kicker {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--pine);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.pricing__title {
+  margin: 0 0 12px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(24px, 4.4vw, 40px);
+  line-height: 1.16;
+  color: var(--ink);
+}
+.pricing__subtitle {
+  margin: 0 auto clamp(40px, 6vh, 64px);
+  max-width: 34ch;
+  color: var(--muted);
+  font-size: clamp(15px, 1.7vw, 17px);
+  line-height: 1.55;
+}
+.pricing__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 3vw, 24px);
+  align-items: stretch;
+}
+
+.plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 4vw, 36px);
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px -18px rgba(35, 32, 28, 0.25);
+  text-align: center;
+}
+.plan--featured {
+  border: 2px solid var(--amber);
+  box-shadow: 0 20px 50px -16px rgba(201, 138, 43, 0.25),
+    0 16px 40px -18px rgba(35, 32, 28, 0.25);
+}
+.plan__badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 16px;
+  border-radius: 999px;
+  background: var(--amber);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.plan__name {
+  display: block;
+  margin-bottom: 16px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(18px, 2.4vw, 22px);
+  color: var(--ink);
+}
+.plan__price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.plan__currency {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.plan__amount {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(32px, 5vw, 42px);
+  line-height: 1;
+  color: var(--ink);
+}
+.plan__period {
+  font-size: 14px;
+  color: var(--faint);
+}
+.plan__trial {
+  margin: 0 0 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 500;
+}
+.plan__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  text-align: start;
+}
+.plan__features li {
+  position: relative;
+  padding: 8px 0 8px 28px;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.plan__features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+}
+.plan__feature--highlight {
+  font-weight: 600;
+  color: var(--pine);
+}
+.plan__feature--highlight::before {
+  background: color-mix(in srgb, var(--amber) 18%, transparent);
+  color: var(--amber);
+}
+.plan__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  margin-top: 24px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--pine);
+  border: 1.5px solid var(--pine);
+  background: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.18s ease;
+}
+.plan__cta:hover {
+  background: var(--pine);
+  color: #f4ede2;
+}
+.plan__cta--featured {
+  background: var(--pine);
+  color: #f4ede2;
+  border-color: var(--pine);
+}
+.plan__cta--featured:hover {
+  background: var(--pine-deep);
+  border-color: var(--pine-deep);
+  transform: translateY(-2px);
+}
+
 /* ── responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
   .chapter {
     grid-template-columns: 1fr;
     gap: 26px;
   }
-  /* keep text above its leaf on every row, flip order and all */
   .chapter--flip .chapter__text {
     order: 0;
+  }
+  .pricing__grid {
+    grid-template-columns: 1fr;
+    max-width: 360px;
+    margin-inline: auto;
   }
 }
 
