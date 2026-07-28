@@ -23,8 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService
     @Override
     public UserDetails loadUserByUsername(@NonNull String identifier)
     {
-        User user = userRepository.findByContactNumber(identifier)
-                .or(() -> userRepository.findByEmailIgnoreCase(identifier))
+        User user = userRepository.findByIdentifier(identifier)
                 .orElseThrow(() -> new UsernameNotFoundException("No user found for " + identifier));
 
         return new UserPrincipal(user);

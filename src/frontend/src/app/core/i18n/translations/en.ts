@@ -15,6 +15,7 @@ export const en = {
   'auth.login.toSignup': 'Create an account',
   'auth.login.forgot': 'Forgot password?',
   'auth.login.invalid': 'Invalid credentials',
+  'auth.login.locked': 'Account locked after too many wrong passwords. Reset your password to unlock it.',
   'auth.forgot.title': 'Forgot your password?',
   'auth.forgot.subtitle': "Enter your email and we'll send you a reset link.",
   'auth.forgot.email': 'Email',

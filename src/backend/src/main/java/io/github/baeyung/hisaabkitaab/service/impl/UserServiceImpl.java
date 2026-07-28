@@ -98,7 +98,7 @@ public class UserServiceImpl implements UserService
     @Override
     public boolean verify(String identifier, String otp)
     {
-        Optional<User> match = findByIdentifier(identifier).filter(user -> !user.isVerified());
+        Optional<User> match = userRepository.findByIdentifier(identifier).filter(user -> !user.isVerified());
         if (match.isEmpty())
         {
             return false;
@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService
     @Override
     public void resendVerification(String identifier)
     {
-        findByIdentifier(identifier)
+        userRepository.findByIdentifier(identifier)
                 .filter(user -> !user.isVerified())
                 .ifPresent(user -> {
                     issueVerificationCode(user);
@@ -171,6 +171,9 @@ public class UserServiceImpl implements UserService
                     user.setPasswordHash(passwordEncoder.encode(newPassword));
                     user.setResetToken(null);
                     user.setResetTokenExpiry(null);
+                    // The reset is also the unlock: it's the only way back in once an account
+                    // has been locked out by too many wrong passwords.
+                    user.setFailedLoginAttempts(0);
                     return true;
                 })
                 .orElse(false);
@@ -179,13 +182,6 @@ public class UserServiceImpl implements UserService
     private static String normalizeEmail(String email)
     {
         return email.trim().toLowerCase(Locale.ROOT);
-    }
-
-    /** Email doubles as a login identifier, so verification accepts either one. */
-    private Optional<User> findByIdentifier(String identifier)
-    {
-        return userRepository.findByContactNumber(identifier)
-                .or(() -> userRepository.findByEmailIgnoreCase(identifier));
     }
 
     /** Replaces any existing code with a fresh one, clearing the previous guess count. */

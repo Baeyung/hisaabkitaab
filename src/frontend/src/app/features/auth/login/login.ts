@@ -24,7 +24,9 @@ export class Login {
   });
 
   protected readonly submitting = signal(false);
-  protected readonly errorKey = signal<'auth.login.invalid' | 'error.generic' | null>(null);
+  protected readonly errorKey = signal<
+    'auth.login.invalid' | 'auth.login.locked' | 'error.generic' | null
+  >(null);
 
   async submit(): Promise<void> {
     if (this.loginForm().invalid()) {
@@ -45,7 +47,13 @@ export class Login {
       if (status === 403 && code === 'ACCOUNT_UNVERIFIED') {
         return; // interceptor already routed to /verify-pending
       }
-      this.errorKey.set(status === 401 ? 'auth.login.invalid' : 'error.generic');
+      if (status === 401) {
+        // Too many wrong passwords: only a password reset opens the account again, so say
+        // so rather than leaving them retrying a password that can no longer work.
+        this.errorKey.set(code === 'ACCOUNT_LOCKED' ? 'auth.login.locked' : 'auth.login.invalid');
+        return;
+      }
+      this.errorKey.set('error.generic');
     } finally {
       this.submitting.set(false);
     }

@@ -13,6 +13,9 @@ import lombok.Getter;
 @Getter
 public class UserPrincipal implements UserDetails
 {
+    /** Consecutive wrong passwords that lock the account. */
+    public static final int MAX_FAILED_LOGIN_ATTEMPTS = 4;
+
     private final String id;
 
     private final String username;
@@ -40,5 +43,15 @@ public class UserPrincipal implements UserDetails
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
         return List.of(new SimpleGrantedAuthority(user.isVerified() ? "ROLE_USER" : "ROLE_UNVERIFIED"));
+    }
+
+    /**
+     * Spring checks this <em>before</em> the password, so once locked even the right password
+     * fails with {@code LockedException} — only a password reset clears the count.
+     */
+    @Override
+    public boolean isAccountNonLocked()
+    {
+        return user.getFailedLoginAttempts() < MAX_FAILED_LOGIN_ATTEMPTS;
     }
 }

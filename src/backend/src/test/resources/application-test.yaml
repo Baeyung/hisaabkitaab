@@ -11,6 +11,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
 
+  mail:
+    username: hisaabKitaab@smtp-brevo.com
+    password: password
+
 # Default the general API tests to the dev-like relaxed gate: they exercise CRUD, not
 # the verification flow, so signups are born verified. VerificationApiTest flips this
 # back on via @TestPropertySource to cover the actual gate.

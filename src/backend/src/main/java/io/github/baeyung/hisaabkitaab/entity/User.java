@@ -64,6 +64,16 @@ public class User
     @Column(nullable = false, columnDefinition = "integer not null default 0")
     private int verificationAttempts = 0;
 
+    /**
+     * Consecutive wrong passwords at login. At the cap the account is locked — there is no
+     * separate flag, the count *is* the lock. Cleared by a successful login or a password
+     * reset, the latter being the only way out once locked.
+     */
+    @JsonIgnore
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "integer not null default 0")
+    private int failedLoginAttempts = 0;
+
     /** Single-use random token emailed for password reset; nulled once the password is reset. */
     @JsonIgnore
     private String resetToken;

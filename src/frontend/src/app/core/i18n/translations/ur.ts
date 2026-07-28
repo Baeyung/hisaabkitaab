@@ -17,6 +17,7 @@ export const ur: Record<TranslationKey, string> = {
   'auth.login.toSignup': 'نیا اکاؤنٹ بنائیں',
   'auth.login.forgot': 'پاس ورڈ بھول گئے؟',
   'auth.login.invalid': 'غلط تفصیلات',
+  'auth.login.locked': 'بار بار غلط پاس ورڈ کی وجہ سے اکاؤنٹ بند ہو گیا ہے۔ کھولنے کے لیے پاس ورڈ ری سیٹ کریں۔',
   'auth.forgot.title': 'پاس ورڈ بھول گئے؟',
   'auth.forgot.subtitle': 'اپنا ای میل درج کریں، ہم آپ کو ری سیٹ لنک بھیج دیں گے۔',
   'auth.forgot.email': 'ای میل',
