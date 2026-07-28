@@ -23,14 +23,22 @@ public interface UserService
     void resendVerification(String identifier);
 
     /**
-     * Generates a reset token and emails a reset link to the account matching {@code email}.
+     * Issues a 6-digit reset code and emails it to the account matching {@code email}.
      * Silently no-ops when no account has that email, so callers can't probe for existence.
      */
     void requestPasswordReset(String email);
 
     /**
-     * Sets a new password for the account matching a non-expired {@code token}, then invalidates
-     * the token. Returns false if the token is unknown or expired.
+     * Checks the reset code without consuming it, so the caller can show the new-password
+     * screen only once the code is known good. A wrong guess counts against the code's
+     * attempt cap exactly as it does on {@link #resetPassword}.
      */
-    boolean resetPassword(String token, String newPassword);
+    boolean verifyResetOtp(String email, String otp);
+
+    /**
+     * Sets a new password for the account matching {@code email} against its live reset code,
+     * then invalidates the code. Returns false when the code is wrong, expired, or burned by
+     * too many wrong guesses — the remedy is the same in every case: request a new code.
+     */
+    boolean resetPassword(String email, String otp, String newPassword);
 }

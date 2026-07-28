@@ -14,8 +14,6 @@ public interface UserRepository extends JpaRepository<User, String>
 
     Optional<User> findByEmailIgnoreCase(String email);
 
-    Optional<User> findByResetToken(String resetToken);
-
     /**
      * Resolves a login identifier, which may be either a contact number or an email —
      * the two things a user may type as their username.

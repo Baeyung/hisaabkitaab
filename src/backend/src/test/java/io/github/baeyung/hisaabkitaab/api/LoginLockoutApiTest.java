@@ -134,9 +134,10 @@ class LoginLockoutApiTest extends ApiTest
                         .content("{\"email\":\"u%s@x.com\"}".formatted(contactNumber)))
                 .andExpect(status().isNoContent());
 
-        String token = users.findByIdentifier(contactNumber).orElseThrow().getResetToken();
+        String otp = users.findByIdentifier(contactNumber).orElseThrow().getResetToken();
         mvc.perform(post("/api/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"token\":\"%s\",\"password\":\"brand-new-pw\"}".formatted(token)))
+                        .content("{\"email\":\"u%s@x.com\",\"otp\":\"%s\",\"password\":\"brand-new-pw\"}"
+                                .formatted(contactNumber, otp)))
                 .andExpect(status().isNoContent());
 
         mvc.perform(get("/api/auth/me")

@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -38,11 +37,10 @@ public class UserServiceImpl implements UserService
 
     private final WelcomeEmailService welcomeEmailService;
 
-    private static final Duration RESET_TOKEN_TTL = Duration.ofHours(1);
+    private static final Duration OTP_TTL = Duration.ofMinutes(10);
 
-    private static final Duration VERIFICATION_CODE_TTL = Duration.ofMinutes(10);
-
-    private static final int MAX_VERIFICATION_ATTEMPTS = 5;
+    /** Shared by both codes: 6 digits is only 1M combinations, so guessing has to be capped. */
+    private static final int MAX_OTP_ATTEMPTS = 5;
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -110,7 +108,7 @@ public class UserServiceImpl implements UserService
         if (user.getVerificationToken() == null
                 || user.getVerificationTokenExpiry() == null
                 || user.getVerificationTokenExpiry().isBefore(Instant.now())
-                || user.getVerificationAttempts() >= MAX_VERIFICATION_ATTEMPTS)
+                || user.getVerificationAttempts() >= MAX_OTP_ATTEMPTS)
         {
             return false;
         }
@@ -118,7 +116,7 @@ public class UserServiceImpl implements UserService
         if (!user.getVerificationToken().equals(otp))
         {
             user.setVerificationAttempts(user.getVerificationAttempts() + 1);
-            if (user.getVerificationAttempts() >= MAX_VERIFICATION_ATTEMPTS)
+            if (user.getVerificationAttempts() >= MAX_OTP_ATTEMPTS)
             {
                 user.setVerificationToken(null);
                 user.setVerificationTokenExpiry(null);
@@ -154,23 +152,30 @@ public class UserServiceImpl implements UserService
         userRepository.findByEmailIgnoreCase(email)
                 .filter(user -> user.getEmail() != null && !user.getEmail().isBlank())
                 .ifPresent(user -> {
-                    user.setResetToken(UUID.randomUUID().toString());
-                    user.setResetTokenExpiry(Instant.now().plus(RESET_TOKEN_TTL));
-                    String link = frontendBaseUrl + "/reset-password/" + user.getResetToken();
-                    passwordResetEmailService.sendEmail(user.getEmail(), user.getName(), link);
+                    user.setResetToken(sixDigitCode());
+                    user.setResetTokenExpiry(Instant.now().plus(OTP_TTL));
+                    user.setResetAttempts(0);
+                    passwordResetEmailService.sendEmail(user.getEmail(), user.getName(), user.getResetToken());
                 });
     }
 
     @Override
-    public boolean resetPassword(String token, String newPassword)
+    public boolean verifyResetOtp(String email, String otp)
     {
-        return userRepository.findByResetToken(token)
-                .filter(user -> user.getResetTokenExpiry() != null
-                        && user.getResetTokenExpiry().isAfter(Instant.now()))
+        // Deliberately does not consume the code: the user still has to set a password,
+        // and that call re-checks it.
+        return liveResetCodeHolder(email, otp).isPresent();
+    }
+
+    @Override
+    public boolean resetPassword(String email, String otp, String newPassword)
+    {
+        return liveResetCodeHolder(email, otp)
                 .map(user -> {
                     user.setPasswordHash(passwordEncoder.encode(newPassword));
                     user.setResetToken(null);
                     user.setResetTokenExpiry(null);
+                    user.setResetAttempts(0);
                     // The reset is also the unlock: it's the only way back in once an account
                     // has been locked out by too many wrong passwords.
                     user.setFailedLoginAttempts(0);
@@ -179,16 +184,57 @@ public class UserServiceImpl implements UserService
                 .orElse(false);
     }
 
+    /**
+     * The single place a reset code is judged, so the check step and the set-password step
+     * can never disagree. Empty means "ask for a new code" whatever the reason. A wrong guess
+     * is counted here, and burns the code once it hits the cap.
+     */
+    private Optional<User> liveResetCodeHolder(String email, String otp)
+    {
+        Optional<User> match = userRepository.findByEmailIgnoreCase(email);
+        if (match.isEmpty())
+        {
+            return Optional.empty();
+        }
+        User user = match.get();
+
+        if (user.getResetToken() == null
+                || user.getResetTokenExpiry() == null
+                || user.getResetTokenExpiry().isBefore(Instant.now())
+                || user.getResetAttempts() >= MAX_OTP_ATTEMPTS)
+        {
+            return Optional.empty();
+        }
+
+        if (!user.getResetToken().equals(otp))
+        {
+            user.setResetAttempts(user.getResetAttempts() + 1);
+            if (user.getResetAttempts() >= MAX_OTP_ATTEMPTS)
+            {
+                user.setResetToken(null);
+                user.setResetTokenExpiry(null);
+            }
+            return Optional.empty();
+        }
+
+        return match;
+    }
+
     private static String normalizeEmail(String email)
     {
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
+    private static String sixDigitCode()
+    {
+        return String.format("%06d", RANDOM.nextInt(1_000_000));
+    }
+
     /** Replaces any existing code with a fresh one, clearing the previous guess count. */
     private static void issueVerificationCode(User user)
     {
-        user.setVerificationToken(String.format("%06d", RANDOM.nextInt(1_000_000)));
-        user.setVerificationTokenExpiry(Instant.now().plus(VERIFICATION_CODE_TTL));
+        user.setVerificationToken(sixDigitCode());
+        user.setVerificationTokenExpiry(Instant.now().plus(OTP_TTL));
         user.setVerificationAttempts(0);
     }
 

@@ -74,11 +74,21 @@ public class User
     @Column(nullable = false, columnDefinition = "integer not null default 0")
     private int failedLoginAttempts = 0;
 
-    /** Single-use random token emailed for password reset; nulled once the password is reset. */
+    /** Single-use 6-digit code emailed for password reset; nulled once the password is reset. */
     @JsonIgnore
     private String resetToken;
 
-    /** When {@link #resetToken} stops working. A reset link is only good for a short window. */
+    /** When {@link #resetToken} stops working. A reset code is only good for a short window. */
     @JsonIgnore
     private Instant resetTokenExpiry;
+
+    /**
+     * Wrong codes entered against the current {@link #resetToken}. Same guard as
+     * {@link #verificationAttempts}: the code is burned at the cap and the user has to
+     * request a fresh one. Reset every time a new code is issued.
+     */
+    @JsonIgnore
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "integer not null default 0")
+    private int resetAttempts = 0;
 }

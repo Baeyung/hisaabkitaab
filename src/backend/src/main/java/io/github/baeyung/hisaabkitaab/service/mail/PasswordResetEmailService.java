@@ -14,12 +14,12 @@ public class PasswordResetEmailService
     private static final String EMAIL_SUBJECT = "Reset your HisaabKitaab password";
     private static final String EMAIL_TEMPLATE_NAME = "PasswordReset";
 
-    public void sendEmail(String to, String username, String resetUrl)
+    public void sendEmail(String to, String username, String otp)
     {
         Context context = new Context();
 
         context.setVariable("username", username);
-        context.setVariable("resetUrl", resetUrl);
+        context.setVariable("otp", otp);
 
         mailService.sendTemplatedEmail(
                 to,

@@ -5,6 +5,7 @@ import io.github.baeyung.hisaabkitaab.dto.auth.ResendVerificationRequest;
 import io.github.baeyung.hisaabkitaab.dto.auth.ResetPasswordRequest;
 import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
 import io.github.baeyung.hisaabkitaab.dto.auth.VerifyRequest;
+import io.github.baeyung.hisaabkitaab.dto.auth.VerifyResetOtpRequest;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
 import io.github.baeyung.hisaabkitaab.service.UserService;
@@ -59,10 +60,18 @@ public class AuthController
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<Void> verifyResetOtp(@Valid @RequestBody VerifyResetOtpRequest request)
+    {
+        return userService.verifyResetOtp(request.getEmail(), request.getOtp())
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request)
     {
-        return userService.resetPassword(request.getToken(), request.getPassword())
+        return userService.resetPassword(request.getEmail(), request.getOtp(), request.getPassword())
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
     }

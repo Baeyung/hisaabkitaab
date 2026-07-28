@@ -56,6 +56,7 @@ public class SecurityConfig
                             .requestMatchers(HttpMethod.POST, "/api/auth/verify").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/resend-verification").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/auth/verify-reset-otp").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll();
                     // With verification on, everything else needs a *verified* account:
                     // unverified logins authenticate but hold only ROLE_UNVERIFIED, so they

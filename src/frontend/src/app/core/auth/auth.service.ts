@@ -58,17 +58,27 @@ export class AuthService {
     );
   }
 
-  /** Requests a reset link. Always resolves (backend is deliberately silent to avoid leaking which emails exist). */
+  /** Requests a 6-digit reset code. Always resolves (backend is deliberately silent to avoid leaking which emails exist). */
   async requestPasswordReset(email: string): Promise<void> {
     await firstValueFrom(
       this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email }),
     );
   }
 
-  /** Sets a new password using the token from the reset link. Rejects (404) if the token is unknown/expired. */
-  async resetPassword(token: string, password: string): Promise<void> {
+  /**
+   * Checks the reset code without spending it, so the new-password screen only opens on a
+   * good code. Rejects (404) if it's wrong, expired, or burned by too many wrong guesses.
+   */
+  async verifyResetOtp(email: string, otp: string): Promise<void> {
     await firstValueFrom(
-      this.http.post<void>(`${this.apiUrl}/auth/reset-password`, { token, password }),
+      this.http.post<void>(`${this.apiUrl}/auth/verify-reset-otp`, { email, otp }),
+    );
+  }
+
+  /** Sets a new password against the reset code. Rejects (404) on the same terms as the check above. */
+  async resetPassword(email: string, otp: string, password: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/auth/reset-password`, { email, otp, password }),
     );
   }
 

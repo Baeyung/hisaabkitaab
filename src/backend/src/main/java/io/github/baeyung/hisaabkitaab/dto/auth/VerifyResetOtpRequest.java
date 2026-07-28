@@ -8,19 +8,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ResetPasswordRequest
+public class VerifyResetOtpRequest
 {
     /** Email the reset code was sent to. */
     @NotBlank
     @Email
     private String email;
 
-    /** The 6-digit code from the reset email, re-checked here before the password changes. */
+    /** The 6-digit code from the reset email. */
     @NotBlank
     @Pattern(regexp = "\\d{6}")
     private String otp;
-
-    /** The new password to set. */
-    @NotBlank
-    private String password;
 }

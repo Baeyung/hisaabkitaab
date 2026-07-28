@@ -1,23 +1,12 @@
-import {
-  Component,
-  ElementRef,
-  OnDestroy,
-  computed,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { form, FormField, required, pattern } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { AuthShell } from '../auth-shell/auth-shell';
-import { DigitsOnly } from '../../../shared/digits-only';
+import { OtpBox, OTP_PATTERN } from '../otp-box/otp-box';
 
 const RESEND_COOLDOWN_SECONDS = 40;
-const OTP_LENGTH = 6;
-const OTP_PATTERN = /^\d{6}$/;
 
 /**
  * Landing screen for an account that has signed up but not yet verified its email.
@@ -30,7 +19,7 @@ const OTP_PATTERN = /^\d{6}$/;
  */
 @Component({
   selector: 'app-verify-pending',
-  imports: [FormField, AuthShell, DigitsOnly],
+  imports: [AuthShell, OtpBox],
   template: `
     <app-auth-shell>
       <div class="auth__head">
@@ -48,41 +37,20 @@ const OTP_PATTERN = /^\d{6}$/;
       <form class="auth__form" (submit)="$event.preventDefault(); submit()">
         <div class="fld">
           <label class="fld__label" for="verify-otp">{{ locale.t('auth.verifyPending.otp') }}</label>
-          <!-- One real input, six painted cells. The input keeps paste, native
-               one-time-code autofill and the caret; the cells just mirror it. -->
-          <div class="otp" [class.otp--err]="invalidOtp()">
-            <input
-              #otpInput
-              id="verify-otp"
-              class="otp__input"
-              [formField]="otpForm.otp"
-              [maxDigits]="OTP_LENGTH"
-              type="tel"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              autofocus
-              (input)="invalidOtp.set(false)"
-              (focus)="focused.set(true)"
-              (blur)="focused.set(false)"
-            />
-            @for (digit of cells(); track $index) {
-              <div
-                class="otp__cell"
-                [class.otp__cell--on]="digit"
-                [class.otp__cell--at]="focused() && $index === caret()"
-                aria-hidden="true"
-              >
-                {{ digit }}
-              </div>
-            }
-          </div>
+          <app-otp-box
+            #otpBox
+            inputId="verify-otp"
+            [value]="otp()"
+            [invalid]="invalidOtp()"
+            (valueChange)="onOtpChange($event)"
+          />
         </div>
 
         @if (invalidOtp()) {
           <p role="alert" class="auth__alert">{{ locale.t('auth.verifyPending.otpInvalid') }}</p>
         }
 
-        <button class="auth__cta" type="submit" [disabled]="submitting() || otpForm().invalid()">
+        <button class="auth__cta" type="submit" [disabled]="submitting() || !otpComplete()">
           {{ locale.t('auth.verifyPending.submit') }}
         </button>
       </form>
@@ -116,24 +84,9 @@ export class VerifyPending implements OnDestroy {
   protected readonly locale = inject(LocaleService);
 
   protected readonly identifier = this.store.pendingIdentifier;
-  protected readonly model = signal({ otp: '' });
-  protected readonly otpForm = form(this.model, (path) => {
-    required(path.otp);
-    pattern(path.otp, OTP_PATTERN);
-  });
-
-  protected readonly OTP_LENGTH = OTP_LENGTH;
-  protected readonly focused = signal(false);
-  private readonly otpInput = viewChild.required<ElementRef<HTMLInputElement>>('otpInput');
-  /** One slot per digit; empty string where nothing has been typed yet. */
-  protected readonly cells = computed(() => {
-    const otp = this.model().otp;
-    return Array.from({ length: OTP_LENGTH }, (_, i) => otp[i] ?? '');
-  });
-  /** The cell the real (hidden) caret sits in; parks on the last one when full. */
-  protected readonly caret = computed(() =>
-    Math.min(this.model().otp.length, OTP_LENGTH - 1),
-  );
+  protected readonly otp = signal('');
+  protected readonly otpComplete = computed(() => OTP_PATTERN.test(this.otp()));
+  private readonly otpBox = viewChild.required<OtpBox>('otpBox');
 
   protected readonly submitting = signal(false);
   protected readonly invalidOtp = signal(false);
@@ -153,23 +106,29 @@ export class VerifyPending implements OnDestroy {
     this.startCooldown();
   }
 
+  /** Typing clears the rejection so the red row doesn't linger over a fresh code. */
+  onOtpChange(otp: string): void {
+    this.otp.set(otp);
+    this.invalidOtp.set(false);
+  }
+
   async submit(): Promise<void> {
     const id = this.identifier();
-    if (this.otpForm().invalid() || this.submitting() || !id) {
+    if (!this.otpComplete() || this.submitting() || !id) {
       return;
     }
     this.submitting.set(true);
     this.invalidOtp.set(false);
     this.resent.set(false);
     try {
-      await this.auth.verifyOtp(id, this.model().otp);
+      await this.auth.verifyOtp(id, this.otp());
       // Credentials survive from signup/login, so the app is reachable straight away.
       // Without them (arrived here cold) the user still has to log in.
       this.router.navigate([this.store.isAuthenticated() ? '/' : '/login']);
     } catch {
       this.invalidOtp.set(true);
       // Rejected: put the caret back so the next code can be typed straight away.
-      this.otpInput().nativeElement.focus();
+      this.otpBox().focus();
     } finally {
       this.submitting.set(false);
     }
@@ -189,7 +148,7 @@ export class VerifyPending implements OnDestroy {
     this.resent.set(false);
     this.invalidOtp.set(false);
     // The old code is dead now, so don't leave it sitting in the box.
-    this.model.set({ otp: '' });
+    this.otp.set('');
     await this.auth.resendVerification(id);
     this.resent.set(true);
     this.startCooldown();
