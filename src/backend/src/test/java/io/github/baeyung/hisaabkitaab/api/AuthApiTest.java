@@ -55,6 +55,36 @@ class AuthApiTest extends ApiTest
     }
 
     @Test
+    void signupStoresEmailLowerCased() throws Exception
+    {
+        mvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"name":"Rana","contactNumber":"3001111111","email":"RaNa@X.CoM","password":"secret123"}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("rana@x.com"));
+    }
+
+    @Test
+    void loginAcceptsEmailInAnyCase() throws Exception
+    {
+        signup("3002222222"); // stored as u3002222222@x.com
+        mvc.perform(get("/api/auth/me")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+                                .httpBasic("U3002222222@X.CoM", PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contactNumber").value("3002222222"));
+    }
+
+    @Test
+    void signupRejectsEmailAlreadyRegisteredInAnotherCase() throws Exception
+    {
+        signup("3003333333"); // takes u3003333333@x.com
+        signupExpect("""
+                {"name":"Rana","contactNumber":"3004444444","email":"U3003333333@X.CoM","password":"secret123"}
+                """, status().isConflict());
+    }
+
+    @Test
     void meRequiresAuthentication() throws Exception
     {
         mvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized());

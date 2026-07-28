@@ -2,12 +2,15 @@ package io.github.baeyung.hisaabkitaab.service.impl;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
 import io.github.baeyung.hisaabkitaab.entity.User;
@@ -44,10 +47,21 @@ public class UserServiceImpl implements UserService
     @Override
     public User create(SignupRequest request)
     {
+        // Email doubles as a login identifier, so casing must never be what decides whether
+        // someone gets in: normalise once here, on the only path that writes it.
+        String email = normalizeEmail(request.getEmail());
+
+        // ponytail: check-then-insert, so two simultaneous signups for the same address can
+        // both slip through. Add a unique index on users(lower(email)) if that ever happens.
+        if (userRepository.existsByEmailIgnoreCase(email))
+        {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Account already exists");
+        }
+
         // When verification is off (dev), the account is born verified and no email is sent.
         boolean verified = !verificationEnabled;
 
-        if (request.getEmail().equalsIgnoreCase("test@test.com"))
+        if (email.equals("test@test.com"))
         {
             verified = true;
         }
@@ -56,7 +70,7 @@ public class UserServiceImpl implements UserService
                 .contactNumber(request.getContactNumber())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
-                .email(request.getEmail())
+                .email(email)
                 .verified(verified)
                 .verificationToken(verified ? null : UUID.randomUUID().toString())
                 .build();
@@ -89,7 +103,7 @@ public class UserServiceImpl implements UserService
     public void resendVerification(String identifier)
     {
         userRepository.findByContactNumber(identifier)
-                .or(() -> userRepository.findByEmail(identifier))
+                .or(() -> userRepository.findByEmailIgnoreCase(identifier))
                 .filter(user -> !user.isVerified())
                 .ifPresent(user -> {
                     user.setVerificationToken(UUID.randomUUID().toString());
@@ -100,7 +114,7 @@ public class UserServiceImpl implements UserService
     @Override
     public void requestPasswordReset(String email)
     {
-        userRepository.findByEmail(email)
+        userRepository.findByEmailIgnoreCase(email)
                 .filter(user -> user.getEmail() != null && !user.getEmail().isBlank())
                 .ifPresent(user -> {
                     user.setResetToken(UUID.randomUUID().toString());
@@ -123,6 +137,11 @@ public class UserServiceImpl implements UserService
                     return true;
                 })
                 .orElse(false);
+    }
+
+    private static String normalizeEmail(String email)
+    {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     private void sendVerificationEmail(User user)

@@ -10,6 +10,6 @@ import java.util.List;
 public interface StoreRepository extends JpaRepository<Store, String>
 {
     List<Store> findByOwnerId(String ownerId);
-    List<Store> findAllByOwnerEmail(String email);
+    List<Store> findAllByOwnerEmailIgnoreCase(String email);
     List<Store> findAllByOwnerContactNumber(String contactNumber);
 }
