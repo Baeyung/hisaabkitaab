@@ -1,4 +1,12 @@
-import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { form, FormField, required, pattern } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -8,6 +16,7 @@ import { AuthShell } from '../auth-shell/auth-shell';
 import { DigitsOnly } from '../../../shared/digits-only';
 
 const RESEND_COOLDOWN_SECONDS = 40;
+const OTP_LENGTH = 6;
 const OTP_PATTERN = /^\d{6}$/;
 
 /**
@@ -39,15 +48,34 @@ const OTP_PATTERN = /^\d{6}$/;
       <form class="auth__form" (submit)="$event.preventDefault(); submit()">
         <div class="fld">
           <label class="fld__label" for="verify-otp">{{ locale.t('auth.verifyPending.otp') }}</label>
-          <input
-            id="verify-otp"
-            class="fld__input"
-            [formField]="otpForm.otp"
-            type="tel"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-            autofocus
-          />
+          <!-- One real input, six painted cells. The input keeps paste, native
+               one-time-code autofill and the caret; the cells just mirror it. -->
+          <div class="otp" [class.otp--err]="invalidOtp()">
+            <input
+              #otpInput
+              id="verify-otp"
+              class="otp__input"
+              [formField]="otpForm.otp"
+              [maxDigits]="OTP_LENGTH"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              autofocus
+              (input)="invalidOtp.set(false)"
+              (focus)="focused.set(true)"
+              (blur)="focused.set(false)"
+            />
+            @for (digit of cells(); track $index) {
+              <div
+                class="otp__cell"
+                [class.otp__cell--on]="digit"
+                [class.otp__cell--at]="focused() && $index === caret()"
+                aria-hidden="true"
+              >
+                {{ digit }}
+              </div>
+            }
+          </div>
         </div>
 
         @if (invalidOtp()) {
@@ -94,6 +122,19 @@ export class VerifyPending implements OnDestroy {
     pattern(path.otp, OTP_PATTERN);
   });
 
+  protected readonly OTP_LENGTH = OTP_LENGTH;
+  protected readonly focused = signal(false);
+  private readonly otpInput = viewChild.required<ElementRef<HTMLInputElement>>('otpInput');
+  /** One slot per digit; empty string where nothing has been typed yet. */
+  protected readonly cells = computed(() => {
+    const otp = this.model().otp;
+    return Array.from({ length: OTP_LENGTH }, (_, i) => otp[i] ?? '');
+  });
+  /** The cell the real (hidden) caret sits in; parks on the last one when full. */
+  protected readonly caret = computed(() =>
+    Math.min(this.model().otp.length, OTP_LENGTH - 1),
+  );
+
   protected readonly submitting = signal(false);
   protected readonly invalidOtp = signal(false);
   protected readonly resent = signal(false);
@@ -127,6 +168,8 @@ export class VerifyPending implements OnDestroy {
       this.router.navigate([this.store.isAuthenticated() ? '/' : '/login']);
     } catch {
       this.invalidOtp.set(true);
+      // Rejected: put the caret back so the next code can be typed straight away.
+      this.otpInput().nativeElement.focus();
     } finally {
       this.submitting.set(false);
     }

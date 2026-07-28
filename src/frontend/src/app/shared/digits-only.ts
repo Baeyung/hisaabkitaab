@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, input } from '@angular/core';
 
 /**
  * Keeps phone inputs to digits only — anything else is dropped as it is typed
@@ -21,9 +21,13 @@ export function toDigits(value: string | null | undefined): string {
   host: { '(input)': 'onInput($event)' },
 })
 export class DigitsOnly {
+  /** Hard cap on length, for fixed-width codes. `maxlength` can't do this job —
+   *  it clashes with `[formField]`, which owns validation attributes. */
+  readonly maxDigits = input<number>();
+
   onInput(event: Event): void {
     const el = event.target as HTMLInputElement;
-    const digits = toDigits(el.value);
+    const digits = toDigits(el.value).slice(0, this.maxDigits());
     if (digits === el.value) {
       return;
     }
