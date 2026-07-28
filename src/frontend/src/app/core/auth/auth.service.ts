@@ -22,20 +22,33 @@ export class AuthService {
 
   async login(identifier: string, password: string): Promise<User> {
     const credentials = btoa(`${identifier}:${password}`);
-    const user = await firstValueFrom(
-      this.http.get<User>(`${this.apiUrl}/auth/me`, {
-        headers: new HttpHeaders({ Authorization: `Basic ${credentials}` }),
-      }),
-    );
+    let user: User;
+    try {
+      user = await firstValueFrom(
+        this.http.get<User>(`${this.apiUrl}/auth/me`, {
+          headers: new HttpHeaders({ Authorization: `Basic ${credentials}` }),
+        }),
+      );
+    } catch (err: unknown) {
+      // A 403 ACCOUNT_UNVERIFIED means the password was right — the account just hasn't
+      // verified yet. Keep the credentials so entering the OTP drops the user straight
+      // into the app instead of sending them back to type their password again.
+      const e = err as { status?: number; error?: { error?: string } };
+      if (e.status === 403 && e.error?.error === 'ACCOUNT_UNVERIFIED') {
+        this.store.setCredentials(credentials);
+      }
+      throw err;
+    }
     this.store.setSession(credentials, user);
     return user;
   }
 
-  /** Confirms the account tied to this token. Rejects (404) if the token is unknown/used. */
-  async verifyEmail(token: string): Promise<void> {
-    await firstValueFrom(
-      this.http.post<void>(`${this.apiUrl}/auth/verify/${encodeURIComponent(token)}`, {}),
-    );
+  /**
+   * Confirms the account with the 6-digit code from the verification email.
+   * Rejects (404) if the code is wrong, expired, or burned by too many wrong guesses.
+   */
+  async verifyOtp(identifier: string, otp: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${this.apiUrl}/auth/verify`, { identifier, otp }));
   }
 
   /** Re-sends the verification email. Always resolves (backend is deliberately silent). */

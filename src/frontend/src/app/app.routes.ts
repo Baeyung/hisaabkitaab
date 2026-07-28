@@ -38,16 +38,11 @@ export const routes: Routes = [
       import('./features/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
   },
   // No guard: a signed-up-but-unverified user still holds stored creds (would fail
-  // publicOnlyGuard), yet must reach these to verify or resend.
+  // publicOnlyGuard), yet must reach this to enter their code or resend it.
   {
     path: 'verify-pending',
     loadComponent: () =>
       import('./features/auth/verify-pending/verify-pending').then((m) => m.VerifyPending),
-  },
-  {
-    path: 'verify/:token',
-    loadComponent: () =>
-      import('./features/auth/verify-email/verify-email').then((m) => m.VerifyEmail),
   },
   // No guard: reached from an email link, user may or may not hold a stored session.
   {

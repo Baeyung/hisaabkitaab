@@ -1,8 +1,10 @@
 package io.github.baeyung.hisaabkitaab.service.impl;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +40,12 @@ public class UserServiceImpl implements UserService
 
     private static final Duration RESET_TOKEN_TTL = Duration.ofHours(1);
 
+    private static final Duration VERIFICATION_CODE_TTL = Duration.ofMinutes(10);
+
+    private static final int MAX_VERIFICATION_ATTEMPTS = 5;
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     @Value("${app.frontend-base-url}")
     private String frontendBaseUrl;
 
@@ -72,8 +80,12 @@ public class UserServiceImpl implements UserService
                 .name(request.getName())
                 .email(email)
                 .verified(verified)
-                .verificationToken(verified ? null : UUID.randomUUID().toString())
                 .build();
+
+        if (!verified)
+        {
+            issueVerificationCode(user);
+        }
 
         User saved = userRepository.save(user);
         if (!verified)
@@ -84,29 +96,54 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public boolean verify(String token)
+    public boolean verify(String identifier, String otp)
     {
-        return userRepository.findByVerificationToken(token)
-                .map(user -> {
-                    user.setVerified(true);
-                    user.setVerificationToken(null);
-                    if (user.getEmail() != null && !user.getEmail().isBlank())
-                    {
-                        welcomeEmailService.sendEmail(user.getEmail(), user.getName(), frontendBaseUrl);
-                    }
-                    return true;
-                })
-                .orElse(false);
+        Optional<User> match = findByIdentifier(identifier).filter(user -> !user.isVerified());
+        if (match.isEmpty())
+        {
+            return false;
+        }
+        User user = match.get();
+
+        // No live code: never issued, already used, expired, or burned by too many guesses.
+        // All four mean the same thing to the caller — ask for a new code.
+        if (user.getVerificationToken() == null
+                || user.getVerificationTokenExpiry() == null
+                || user.getVerificationTokenExpiry().isBefore(Instant.now())
+                || user.getVerificationAttempts() >= MAX_VERIFICATION_ATTEMPTS)
+        {
+            return false;
+        }
+
+        if (!user.getVerificationToken().equals(otp))
+        {
+            user.setVerificationAttempts(user.getVerificationAttempts() + 1);
+            if (user.getVerificationAttempts() >= MAX_VERIFICATION_ATTEMPTS)
+            {
+                user.setVerificationToken(null);
+                user.setVerificationTokenExpiry(null);
+            }
+            return false;
+        }
+
+        user.setVerified(true);
+        user.setVerificationToken(null);
+        user.setVerificationTokenExpiry(null);
+        user.setVerificationAttempts(0);
+        if (user.getEmail() != null && !user.getEmail().isBlank())
+        {
+            welcomeEmailService.sendEmail(user.getEmail(), user.getName(), frontendBaseUrl);
+        }
+        return true;
     }
 
     @Override
     public void resendVerification(String identifier)
     {
-        userRepository.findByContactNumber(identifier)
-                .or(() -> userRepository.findByEmailIgnoreCase(identifier))
+        findByIdentifier(identifier)
                 .filter(user -> !user.isVerified())
                 .ifPresent(user -> {
-                    user.setVerificationToken(UUID.randomUUID().toString());
+                    issueVerificationCode(user);
                     sendVerificationEmail(user);
                 });
     }
@@ -144,13 +181,27 @@ public class UserServiceImpl implements UserService
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
+    /** Email doubles as a login identifier, so verification accepts either one. */
+    private Optional<User> findByIdentifier(String identifier)
+    {
+        return userRepository.findByContactNumber(identifier)
+                .or(() -> userRepository.findByEmailIgnoreCase(identifier));
+    }
+
+    /** Replaces any existing code with a fresh one, clearing the previous guess count. */
+    private static void issueVerificationCode(User user)
+    {
+        user.setVerificationToken(String.format("%06d", RANDOM.nextInt(1_000_000)));
+        user.setVerificationTokenExpiry(Instant.now().plus(VERIFICATION_CODE_TTL));
+        user.setVerificationAttempts(0);
+    }
+
     private void sendVerificationEmail(User user)
     {
         if (user.getEmail() == null || user.getEmail().isBlank())
         {
             return;
         }
-        String link = frontendBaseUrl + "/verify/" + user.getVerificationToken();
-        verificationEmailService.sendEmail(user.getEmail(), user.getName(), link);
+        verificationEmailService.sendEmail(user.getEmail(), user.getName(), user.getVerificationToken());
     }
 }

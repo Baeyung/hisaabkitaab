@@ -5,8 +5,8 @@ spring:
   # Database properties
   datasource:
     url: jdbc:postgresql://localhost:5432/hisaabkitaab
-    username: hkadmin
-    password: admin
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -55,11 +55,11 @@ logging:
       max-history: 14
       total-size-cap: 500MB
 
-# Base URL of the Angular app; used to build the account-verification link in emails.
+# Base URL of the Angular app; used to build the links in outgoing emails.
 app:
   frontend-base-url: ${FRONTEND_BASE_URL:https://aapka.hisaabkitaab.shop}
   verification:
     # Set to false (e.g. in dev) to skip email verification entirely: new signups are
     # created already-verified with no email sent, and the "verified" access gate is
     # relaxed to plain authentication so existing unverified accounts get in too.
-    enabled: ${EMAIL_ENABLED:false}
+    enabled: ${EMAIL_ENABLED:true}

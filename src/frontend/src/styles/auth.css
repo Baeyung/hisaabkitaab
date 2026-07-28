@@ -375,6 +375,14 @@
 .auth__foot button:hover {
   text-decoration: underline;
 }
+/* inert while a resend cooldown is counting down */
+.auth__foot button:disabled {
+  color: var(--kg-faint);
+  cursor: default;
+}
+.auth__foot button:disabled:hover {
+  text-decoration: none;
+}
 
 /* ── language toggle (shared button, restyled in this context) ─────
    Higher specificity than the component-scoped `.lang-toggle` so this

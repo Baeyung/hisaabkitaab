@@ -46,9 +46,23 @@ public class User
     @Column(nullable = false, columnDefinition = "boolean not null default false")
     private boolean verified = false;
 
-    /** Single-use random token emailed at signup; nulled once the account verifies. */
+    /** Single-use 6-digit code emailed at signup; nulled once the account verifies. */
     @JsonIgnore
     private String verificationToken;
+
+    /** When {@link #verificationToken} stops working. A code is only good for a short window. */
+    @JsonIgnore
+    private Instant verificationTokenExpiry;
+
+    /**
+     * Wrong codes entered against the current {@link #verificationToken}. A 6-digit code is
+     * only 1M combinations, so the code is burned once this hits the cap and the user has to
+     * request a fresh one. Reset every time a new code is issued.
+     */
+    @JsonIgnore
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "integer not null default 0")
+    private int verificationAttempts = 0;
 
     /** Single-use random token emailed for password reset; nulled once the password is reset. */
     @JsonIgnore

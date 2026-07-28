@@ -18,8 +18,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 /**
  * HTTP Basic auth backed by {@code CustomUserDetailsService}, which resolves the
  * username against either a user's contact number or email. Sessions are stateless
- * since Basic auth re-sends credentials on every request. Signup and the email
- * verify/resend endpoints are public; every other request requires a {@code ROLE_USER}
+ * since Basic auth re-sends credentials on every request. Signup and the verification
+ * code verify/resend endpoints are public; every other request requires a {@code ROLE_USER}
  * authority, which an account only holds once verified — so an authenticated but
  * unverified user is denied by {@link RestAccessDeniedHandler} (403 {@code ACCOUNT_UNVERIFIED}),
  * distinct from a bad-credentials 401 from {@link RestAuthenticationEntryPoint}. CORS is
@@ -53,7 +53,7 @@ public class SecurityConfig
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/auth/verify/*").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/auth/verify").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/resend-verification").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll();

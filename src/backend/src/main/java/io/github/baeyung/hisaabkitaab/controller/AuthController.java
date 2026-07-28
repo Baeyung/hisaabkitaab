@@ -4,6 +4,7 @@ import io.github.baeyung.hisaabkitaab.dto.auth.ForgotPasswordRequest;
 import io.github.baeyung.hisaabkitaab.dto.auth.ResendVerificationRequest;
 import io.github.baeyung.hisaabkitaab.dto.auth.ResetPasswordRequest;
 import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
+import io.github.baeyung.hisaabkitaab.dto.auth.VerifyRequest;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
 import io.github.baeyung.hisaabkitaab.service.UserService;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,10 +37,10 @@ public class AuthController
         return ResponseEntity.ok(principal.getUser());
     }
 
-    @PostMapping("/verify/{token}")
-    public ResponseEntity<Void> verify(@PathVariable String token)
+    @PostMapping("/verify")
+    public ResponseEntity<Void> verify(@Valid @RequestBody VerifyRequest request)
     {
-        return userService.verify(token)
+        return userService.verify(request.getIdentifier(), request.getOtp())
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
     }

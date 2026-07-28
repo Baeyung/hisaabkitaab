@@ -21,9 +21,14 @@ export class AuthStore {
     this._pendingIdentifier.set(identifier);
   }
 
-  setSession(credentials: string, user: User): void {
+  /** Credentials without a user: the password checked out but the account isn't verified yet. */
+  setCredentials(credentials: string): void {
     localStorage.setItem(CREDS_KEY, credentials);
     this._credentials.set(credentials);
+  }
+
+  setSession(credentials: string, user: User): void {
+    this.setCredentials(credentials);
     this._currentUser.set(user);
   }
 
