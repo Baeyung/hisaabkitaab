@@ -220,34 +220,82 @@ volumes:
 ## TICKET-08: Backups + monitoring (don't skip)
 **Estimate:** 20 min
 
-### Tasks
-- [ ] **DB backup cron** — `crontab -e`, add:
-  ```
-  0 3 * * * docker exec myapp-db-1 pg_dump -U myapp myapp | gzip > ~/backups/myapp-$(date +\%F).sql.gz
-  ```
-  ```bash
-  mkdir -p ~/backups
-  ```
-- [ ] **Off-machine copies** — install rclone, configure Google Drive remote, add to the same cron:
-  ```bash
-  sudo apt install -y rclone
-  rclone config    # follow prompts for Google Drive
-  ```
-  ```
-  30 3 * * * rclone copy ~/backups gdrive:server-backups
-  ```
-- [ ] **Uptime Kuma** (optional, nice) — add to compose, expose on `3001`, map `status.yourdomain.com`:
-  ```yaml
+Already done and verified: DB volume persists across `docker compose up -d --build`; `./backup.sh` and `src/backend/scripts/db-import.sh` both work. So this ticket is only: **schedule it, ship it off-box, get alerted.**
+
+Paths assume the repo is at `~/hisaabkitaab` on the server.
+
+### 0. Set the server timezone first
+Ubuntu installs default to UTC, so `3 AM` would fire at 8 AM Pakistan time and filenames would carry the wrong date.
+```bash
+timedatectl                                  # check "Time zone"
+sudo timedatectl set-timezone Asia/Karachi   # if it says UTC
+sudo systemctl restart cron
+```
+
+### 1. Hourly dump + 7-day retention
+```bash
+mkdir -p ~/backups
+crontab -e
+```
+```
+0  * * * * cd $HOME/hisaabkitaab && ./backup.sh $HOME/backups/hisaabkitaab-$(date +\%F-\%H).sql.gz >> $HOME/backups/backup.log 2>&1
+15 3 * * * find $HOME/backups -name 'hisaabkitaab-*.sql.gz' -mtime +7 -delete
+```
+Three gotchas:
+- **Every** `%` must be `\%` in crontab — `\%F-\%H` gives `hisaabkitaab-2026-07-28-14.sql.gz`.
+- The `%H` is what makes hourly work. With date only, all 24 runs overwrite one file.
+- The output path must be **absolute** — `backup.sh` cds to the repo root, so a relative name lands in the working tree and breaks `git pull`.
+
+Cost, measured: 400k `transaction_lines` rows = 44 MB of SQL → **2.1 MB gzipped in 0.5 s** on one core. Hourly is ~50 MB/day, ~350 MB per 7-day window. CPU duty cycle is under 0.02%. `pg_dump` takes only `ACCESS SHARE`, so app reads and writes are never blocked — it conflicts only with DDL, i.e. a Flyway migration during `update.sh`, which just waits a few seconds.
+
+### 2. Off-machine copy → Google Drive
+```bash
+sudo apt install -y rclone
+rclone config          # new remote -> gdrive -> drive -> blank id/secret -> scope 1
+```
+Headless server: answer **N** to *"Use web browser to automatically authenticate?"*, run `rclone authorize "drive"` on your laptop, paste the token back.
+```
+30 * * * * rclone copy $HOME/backups gdrive:hisaabkitaab-backups --include '*.sql.gz' --bwlimit 2M
+```
+`--bwlimit 2M` caps the upload so rclone can't starve the Cloudflare Tunnel serving your users. Home *upload* bandwidth is the one resource hourly backups genuinely compete for.
+
+Drive's free tier is 15 GB; at ~50 MB/day a 7-day window is ~350 MB, so add matching retention there once it's been running a while:
+```
+45 3 * * * rclone delete gdrive:hisaabkitaab-backups --min-age 30d
+```
+
+### 3. Verify now (don't wait for the next hour)
+```bash
+cd ~/hisaabkitaab && ./backup.sh $HOME/backups/manual-$(date +%F-%H).sql.gz
+rclone copy ~/backups gdrive:hisaabkitaab-backups --include '*.sql.gz' -v
+rclone ls gdrive:hisaabkitaab-backups
+crontab -l                    # confirm the lines are actually installed
+```
+Note: run manually in a shell, `%` needs **no** escaping — the `\%` rule is crontab-only.
+
+### 4. Alerting
+Cloudflare Dashboard → Zero Trust → **Notifications** → **Tunnel health** → your email. Free, no containers, covers power cut / laptop dead / tunnel down — which is most real outages.
+
+### 5. Uptime Kuma — only if step 4 isn't enough
+Adds one thing: catching a 502 while the tunnel is healthy. Skip until that actually bites you.
+```yaml
   uptime-kuma:
     image: louislam/uptime-kuma
+    container_name: hisaabkitaab-kuma
     restart: unless-stopped
     ports: ["3001:3001"]
     volumes: [kuma:/app/data]
-  ```
+```
+Add `kuma:` under top-level `volumes:`, tunnel hostname `status` → `http://localhost:3001`, then two HTTP monitors:
+- `https://aapka.hisaabkitaab.shop/` → expect 200
+- `http://backend:8080/api/stores` → **Accepted Status Codes = 401** (no `/health` endpoint exists; a 401 already proves Spring is up, cheaper than adding actuator)
+
+Put it behind Cloudflare Access, or don't expose it — the admin UI is unauthenticated on first boot.
 
 ### Acceptance criteria
-- A backup file appears in Google Drive tomorrow morning
-- You get an alert if an app goes down
+- `~/backups/backup.log` shows `wrote ...`; a fresh `.sql.gz` is in Drive next morning
+- `ls ~/backups` never exceeds ~14 dumps
+- Email arrives when the tunnel drops
 
 ---
 
@@ -267,5 +315,21 @@ volumes:
 - [ ] Laptop runs headless, lid closed, survives power cuts unattended
 - [ ] SSH is key-only, firewall on, auto-updates enabled
 - [ ] Test app + at least one real app publicly reachable over HTTPS
-- [ ] Nightly DB backups land in Google Drive
+- [ ] Nightly DB backups land in Google Drive, with retention
 - [ ] Full reboot requires zero manual steps
+
+# Hourly backup change note
+```shell
+0  * * * * cd $HOME/hisaabkitaab && ./backup.sh $HOME/backups/hisaabkitaab-$(date +\%F-\%H).sql.gz >> $HOME/backups/backup.log 2>&1
+15 3 * * * find $HOME/backups -name 'hisaabkitaab-*.sql.gz' -mtime +7 -delete
+30 * * * * rclone copy $HOME/backups gdrive:hisaabkitaab-backups --include '*.sql.gz' --bwlimit 2M
+
+Before that, two setup commands:
+
+mkdir -p ~/backups
+timedatectl                                  # if it says UTC:
+sudo timedatectl set-timezone Asia/Karachi && sudo systemctl restart cron
+
+Timezone matters more with hourly than it did nightly — the %H in the filename comes from the system clock, so on UTC your -14 file is actually 7 PM local and the date rolls over mid-evening.
+
+```
