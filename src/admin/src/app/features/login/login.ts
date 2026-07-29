@@ -10,55 +10,62 @@ import { AdminService } from '../../core/admin/admin.service';
 @Component({
   selector: 'app-login',
   template: `
-    <main class="grid min-h-dvh place-items-center bg-slate-100 p-6">
-      <form
-        class="w-full max-w-sm space-y-5 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200"
-        (submit)="$event.preventDefault(); submit()"
-      >
-        <div>
-          <h1 class="text-xl font-semibold text-slate-900">HisaabKitaab admin</h1>
-          <p class="mt-1 text-sm text-slate-500">Sign in with your admin account.</p>
-        </div>
-
-        <div class="space-y-1">
-          <label class="block text-sm font-medium text-slate-700" for="identifier">
-            Email or mobile number
-          </label>
-          <input
-            id="identifier"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-900 focus:outline-none"
-            autocomplete="username"
-            [value]="identifier()"
-            (input)="identifier.set($any($event.target).value)"
-          />
-        </div>
-
-        <div class="space-y-1">
-          <label class="block text-sm font-medium text-slate-700" for="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-900 focus:outline-none"
-            autocomplete="current-password"
-            [value]="password()"
-            (input)="password.set($any($event.target).value)"
-          />
-        </div>
-
-        @if (error()) {
-          <p role="alert" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {{ error() }}
+    <main class="grid min-h-dvh place-items-center bg-vault p-6">
+      <div class="w-full max-w-sm">
+        <div class="mb-7">
+          <p class="eyebrow">HisaabKitaab</p>
+          <h1 class="wide mt-1.5 text-[30px] leading-none font-bold text-ink">Back office</h1>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-dim">
+            Sign in with your HisaabKitaab account. Admin rights come from the server's allowlist,
+            not from this screen.
           </p>
-        }
+        </div>
 
-        <button
-          type="submit"
-          class="w-full rounded-lg bg-slate-900 px-4 py-2 font-medium text-white disabled:opacity-50"
-          [disabled]="submitting() || !identifier() || !password()"
+        <form
+          class="space-y-4 rounded-xl border border-rule bg-card p-6"
+          (submit)="$event.preventDefault(); submit()"
         >
-          {{ submitting() ? 'Signing in…' : 'Sign in' }}
-        </button>
-      </form>
+          <div class="space-y-1.5">
+            <label class="eyebrow block" for="identifier">Email or mobile number</label>
+            <input
+              id="identifier"
+              class="w-full rounded-md border border-rule bg-desk px-3 py-2 text-[14px] text-ink transition-colors focus:border-pine"
+              autocomplete="username"
+              [value]="identifier()"
+              (input)="identifier.set($any($event.target).value)"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="eyebrow block" for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              class="w-full rounded-md border border-rule bg-desk px-3 py-2 text-[14px] text-ink transition-colors focus:border-pine"
+              autocomplete="current-password"
+              [value]="password()"
+              (input)="password.set($any($event.target).value)"
+            />
+          </div>
+
+          @if (error()) {
+            <p
+              role="alert"
+              class="rounded-md border-s-2 border-seal bg-seal/10 px-3 py-2 text-[13px] text-ink"
+            >
+              {{ error() }}
+            </p>
+          }
+
+          <button
+            type="submit"
+            class="w-full rounded-md bg-pine px-4 py-2.5 text-[14px] font-semibold text-vault transition-colors hover:opacity-90 disabled:bg-rule disabled:text-faint"
+            [disabled]="submitting() || !identifier() || !password()"
+          >
+            {{ submitting() ? 'Signing in…' : 'Sign in' }}
+          </button>
+        </form>
+      </div>
     </main>
   `,
 })
@@ -83,13 +90,13 @@ export class Login {
       const code = (err as { error?: { error?: string } }).error?.error;
       this.error.set(
         status === 403
-          ? 'That account is not an admin.'
+          ? "Those credentials are right, but the account isn't an admin."
           : code === 'ACCOUNT_LOCKED'
-            ? 'Account locked after too many wrong passwords. Reset it in the main app.'
+            ? 'Locked after too many wrong passwords. Reset the password in the main app.'
             : code === 'ACCOUNT_DISABLED'
               ? 'That account is suspended.'
               : status === 401
-                ? 'Invalid credentials.'
+                ? "That email or number and password don't match."
                 : 'Something went wrong. Please try again.',
       );
     } finally {
