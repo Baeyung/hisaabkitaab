@@ -76,6 +76,11 @@ export const ur: Record<TranslationKey, string> = {
   'theme.system': 'خودکار',
   'theme.light': 'روشن',
   'theme.dark': 'گہرا',
+  'install.button': 'ایپ انسٹال کریں',
+  'install.steps.ios':
+    'سفاری کے نیچے شیئر (Share) کا بٹن دبائیں، پھر ”Add to Home Screen“ منتخب کریں۔',
+  'install.steps.other':
+    'اپنے براؤزر کا مینو کھولیں، پھر ”Install app“ یا ”Add to Home Screen“ منتخب کریں۔',
   'nav.menu': 'مینو',
   'nav.locked': 'پہلے دکان بنائیں',
   'nav.dashboard': 'ڈیش بورڈ',

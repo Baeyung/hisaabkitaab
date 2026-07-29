@@ -72,6 +72,10 @@ export const en = {
   'theme.system': 'System',
   'theme.light': 'Light',
   'theme.dark': 'Dark',
+  'install.button': 'Install app',
+  'install.steps.ios': 'Tap the Share button at the bottom of Safari, then choose “Add to Home Screen”.',
+  'install.steps.other':
+    'Open your browser’s menu, then choose “Install app” or “Add to Home Screen”.',
   'nav.menu': 'Menu',
   'nav.locked': 'Create your store first',
   'nav.dashboard': 'Dashboard',

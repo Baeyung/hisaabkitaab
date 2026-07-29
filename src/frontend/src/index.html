@@ -37,6 +37,17 @@
         /* private mode with storage blocked: fall through to the paper theme */
       }
     })();
+
+    // Stash the install prompt before Angular boots. Chrome fires
+    // beforeinstallprompt as soon as the manifest is parsed and an active
+    // service worker exists — on a repeat visit the worker is already running,
+    // so the event can land before bootstrap and is gone forever if nothing was
+    // listening. Same reason as the theme stamp above: it has to be here.
+    // The key must match core/pwa/install.service.ts.
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.__hkInstallPrompt = e;
+    });
   </script>
 </head>
 <body>
