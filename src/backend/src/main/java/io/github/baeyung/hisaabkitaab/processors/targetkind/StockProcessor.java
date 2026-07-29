@@ -7,6 +7,7 @@ import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
+import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
 import io.github.baeyung.hisaabkitaab.service.TransactionLineService;
 import lombok.RequiredArgsConstructor;
@@ -62,11 +63,23 @@ public class StockProcessor implements KindProcessor
         transactionLineService.upsertAll(lines);
     }
 
+    /**
+     * The line's item: an existing one by id, or a new one created from the typed name. The id
+     * arrives from the client, so it is checked against the entry's store — without that, a line
+     * could name another shop's item, and since the movement history is queried by item alone
+     * the line would surface in <em>their</em> stock. Reported as not-found so we never leak
+     * whether the id exists.
+     */
     private StoreItem resolveItem(EventRequest.Item item, Transaction transaction)
     {
         if (item.getItemId() != null)
         {
-            return storeItemService.findEntity(item.getItemId());
+            StoreItem resolved = storeItemService.findEntity(item.getItemId());
+            if (!resolved.getStore().getId().equals(transaction.getStore().getId()))
+            {
+                throw ResourceNotFoundException.forEntity("StoreItem", item.getItemId());
+            }
+            return resolved;
         }
 
         return storeItemService.create(

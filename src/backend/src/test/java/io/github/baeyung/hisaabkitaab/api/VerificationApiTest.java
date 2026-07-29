@@ -53,6 +53,26 @@ class VerificationApiTest extends ApiTest
         return actual.equals("000000") ? "111111" : "000000";
     }
 
+    /** POSTs a resend without asserting the outcome. */
+    private org.springframework.test.web.servlet.ResultActions resend(String identifier) throws Exception
+    {
+        return mvc.perform(post("/api/auth/resend-verification")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"identifier\":\"%s\"}".formatted(identifier)));
+    }
+
+    /**
+     * Ages the account's current code past the resend cooldown without expiring it, by winding
+     * its expiry back — the code is issued at {@code expiry − OTP_TTL}, so this is the same as
+     * having waited. Lets the resend tests run instantly instead of sleeping.
+     */
+    private void ageOutTheResendCooldown(String contactNumber)
+    {
+        User user = userOf(contactNumber);
+        user.setVerificationTokenExpiry(Instant.now().plusSeconds(60));
+        users.saveAndFlush(user);
+    }
+
     @Test
     void unverifiedUserIsForbiddenFromProtectedEndpoints() throws Exception
     {
@@ -156,16 +176,31 @@ class VerificationApiTest extends ApiTest
         signup("3101000009");
         String before = codeFor("3101000009");
         verify("3101000009", wrongCodeFor(before)).andExpect(status().isNotFound());
+        ageOutTheResendCooldown("3101000009");
 
-        mvc.perform(post("/api/auth/resend-verification")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"3101000009\"}"))
-                .andExpect(status().isNoContent());
+        resend("3101000009").andExpect(status().isNoContent());
 
         User after = userOf("3101000009");
         assertNotEquals(before, after.getVerificationToken());
         assertEquals(0, after.getVerificationAttempts());
         assertFalse(after.isVerified());
+    }
+
+    @Test
+    void resendRightAfterTheLastOneSendsNothing() throws Exception
+    {
+        signup("3101000011");
+        String before = codeFor("3101000011");
+
+        // Both endpoints that mail a code are unauthenticated, so replaying one must not turn
+        // into a mail flood at a known address. Answered 204 either way — a suppressed send
+        // must not become a way to probe which accounts exist.
+        for (int i = 0; i < 5; i++)
+        {
+            resend("3101000011").andExpect(status().isNoContent());
+        }
+
+        assertEquals(before, codeFor("3101000011"));
     }
 
     @Test

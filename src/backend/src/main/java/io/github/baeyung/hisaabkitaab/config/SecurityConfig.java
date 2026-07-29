@@ -85,8 +85,7 @@ public class SecurityConfig
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "http://localhost:4200",
-                "https://aapka.hisaabkitaab.shop",
-                "https://bootleg-phantom-email.ngrok-free.dev"
+                "https://aapka.hisaabkitaab.shop"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "ngrok-skip-browser-warning"));

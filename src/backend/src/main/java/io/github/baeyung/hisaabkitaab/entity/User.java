@@ -74,6 +74,14 @@ public class User
     @Column(nullable = false, columnDefinition = "integer not null default 0")
     private int failedLoginAttempts = 0;
 
+    /**
+     * Fingerprint of the most recent wrong password, so repeating the same one doesn't
+     * accumulate — see {@code LoginAttemptListener}. Not the password itself: a SHA-256 over
+     * the attempt salted with this row's bcrypt hash, which never leaves the database.
+     */
+    @JsonIgnore
+    private String lastFailedCredentialHash;
+
     /** Single-use 6-digit code emailed for password reset; nulled once the password is reset. */
     @JsonIgnore
     private String resetToken;

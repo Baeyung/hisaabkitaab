@@ -39,6 +39,18 @@ public class UserServiceImpl implements UserService
 
     private static final Duration OTP_TTL = Duration.ofMinutes(10);
 
+    /**
+     * How long a freshly issued code blocks another send. Both endpoints that mail a code are
+     * unauthenticated and take an address from the caller, so without this anyone can bomb a
+     * known inbox — and burn the mail quota — by replaying the request.
+     *
+     * <p>Deliberately shorter than the resend button's own countdown on the verify screen
+     * (RESEND_COOLDOWN_SECONDS in verify-pending.ts): the button is the one a real user waits
+     * for, and if this window outlasted it their click would be swallowed with no mail and no
+     * explanation. Keep it under that value if either changes.
+     */
+    private static final Duration RESEND_COOLDOWN = Duration.ofSeconds(30);
+
     /** Shared by both codes: 6 digits is only 1M combinations, so guessing has to be capped. */
     private static final int MAX_OTP_ATTEMPTS = 5;
 
@@ -140,6 +152,7 @@ public class UserServiceImpl implements UserService
     {
         userRepository.findByIdentifier(identifier)
                 .filter(user -> !user.isVerified())
+                .filter(user -> cooledDown(user.getVerificationTokenExpiry()))
                 .ifPresent(user -> {
                     issueVerificationCode(user);
                     sendVerificationEmail(user);
@@ -151,6 +164,7 @@ public class UserServiceImpl implements UserService
     {
         userRepository.findByEmailIgnoreCase(email)
                 .filter(user -> user.getEmail() != null && !user.getEmail().isBlank())
+                .filter(user -> cooledDown(user.getResetTokenExpiry()))
                 .ifPresent(user -> {
                     user.setResetToken(sixDigitCode());
                     user.setResetTokenExpiry(Instant.now().plus(OTP_TTL));
@@ -179,6 +193,7 @@ public class UserServiceImpl implements UserService
                     // The reset is also the unlock: it's the only way back in once an account
                     // has been locked out by too many wrong passwords.
                     user.setFailedLoginAttempts(0);
+                    user.setLastFailedCredentialHash(null);
                     return true;
                 })
                 .orElse(false);
@@ -218,6 +233,18 @@ public class UserServiceImpl implements UserService
         }
 
         return match;
+    }
+
+    /**
+     * Whether a new code may be mailed, given the expiry of the one already on file. A code is
+     * issued at {@code expiry − OTP_TTL}, so the cooldown is measured from there; no expiry at
+     * all (never issued, or already used) means nothing to wait for. The caller is answered the
+     * same either way — a suppressed send must not tell them an account exists.
+     */
+    private static boolean cooledDown(Instant currentCodeExpiry)
+    {
+        return currentCodeExpiry == null
+                || currentCodeExpiry.minus(OTP_TTL).plus(RESEND_COOLDOWN).isBefore(Instant.now());
     }
 
     private static String normalizeEmail(String email)

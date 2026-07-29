@@ -109,7 +109,7 @@ public class EventService
                             .builder()
                             .store(store)
                             .event(eventRequest.getTransactionEvent())
-                            .party(resolveParty(eventRequest, ownerIdentifier))
+                            .party(resolveParty(eventRequest, store, ownerIdentifier))
                             .bill(eventRequest.getBillNumber())
                             .eventDate(eventRequest.getBillDate())
                             .entryDate(LocalDate.now())
@@ -136,7 +136,7 @@ public class EventService
         // orphanRemoval drops the old derived lines; saveAndFlush makes those DELETEs
         // land before the processors insert the fresh ones, so no stale rows survive.
         transaction.getLines().clear();
-        transaction.setParty(resolveParty(eventRequest, ownerIdentifier));
+        transaction.setParty(resolveParty(eventRequest, transaction.getStore(), ownerIdentifier));
         transaction.setBill(eventRequest.getBillNumber());
         transaction.setEventDate(eventRequest.getBillDate());
         transaction.setDescription(cleanDescription(eventRequest));
@@ -263,7 +263,14 @@ public class EventService
         return request;
     }
 
-    private Party resolveParty(EventRequest eventRequest, String ownerIdentifier)
+    /**
+     * The entry's counterparty: an existing party by id, or a new one created from the typed
+     * name. The id arrives from the client, so it is checked against {@code store} — without
+     * that, an entry could name another shop's party, and since the khata statement is queried
+     * by party alone the line would surface in <em>their</em> books. Reported as not-found so
+     * we never leak whether the id exists.
+     */
+    private Party resolveParty(EventRequest eventRequest, Store store, String ownerIdentifier)
     {
         EventRequest.Party party = eventRequest.getParty();
         if (party == null)
@@ -284,6 +291,11 @@ public class EventService
             );
         }
 
-        return partyService.findEntity(party.getPartyId());
+        Party resolved = partyService.findEntity(party.getPartyId());
+        if (!resolved.getStore().getId().equals(store.getId()))
+        {
+            throw ResourceNotFoundException.forEntity("Party", party.getPartyId());
+        }
+        return resolved;
     }
 }

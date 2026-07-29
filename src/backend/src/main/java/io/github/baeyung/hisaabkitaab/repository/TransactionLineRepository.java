@@ -78,15 +78,21 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<PartyBalanceRow> sumPartyBalancesByStore(@Param("storeId") String storeId);
 
-    /** Every PARTY line for one party, chronological by business date — the khata statement rows. */
+    /**
+     * Every PARTY line for one party, chronological by business date — the khata statement rows.
+     * Scoped by store as well as party: the caller already owns the party, but a line is only
+     * this shop's if its <em>transaction</em> is too, so a row posted from another store can
+     * never appear in these books.
+     */
     @Query("""
             select tl from TransactionLine tl
             join fetch tl.transaction t
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.PARTY
               and tl.party.id = :partyId
+              and t.store.id = :storeId
             order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
-    List<TransactionLine> findPartyLedgerLines(@Param("partyId") String partyId);
+    List<TransactionLine> findPartyLedgerLines(@Param("partyId") String partyId, @Param("storeId") String storeId);
 
     /**
      * Every PARTY line for the store, chronological, with party fetched — the raw
@@ -116,15 +122,20 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<ItemStockRow> sumStockByStore(@Param("storeId") String storeId);
 
-    /** Every STOCK line for one item, chronological by business date — the movement history rows. */
+    /**
+     * Every STOCK line for one item, chronological by business date — the movement history rows.
+     * Store-scoped for the same reason as {@link #findPartyLedgerLines}: ownership of the item
+     * doesn't make every line that references it this shop's.
+     */
     @Query("""
             select tl from TransactionLine tl
             join fetch tl.transaction t
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.STOCK
               and tl.item.id = :itemId
+              and t.store.id = :storeId
             order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
-    List<TransactionLine> findItemMovementLines(@Param("itemId") String itemId);
+    List<TransactionLine> findItemMovementLines(@Param("itemId") String itemId, @Param("storeId") String storeId);
 
     /**
      * Every goods-out line of a SALE in {@code from..to}, with transaction and item fetched —

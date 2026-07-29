@@ -126,10 +126,12 @@ public class LedgerQueryService
 
     public PartyStatementResponse getStatement(String ownerId, String partyId)
     {
-        // findByIdForOwner 404s on another owner's party, so the lines query below is safe to scope by party alone.
+        // findByIdForOwner 404s on another owner's party; the lines are then scoped to that
+        // party's own store, so only entries posted in these books can appear in the statement.
         Party party = partyService.findByIdForOwner(partyId, ownerId);
 
-        List<TransactionLine> lines = transactionLineRepository.findPartyLedgerLines(partyId);
+        List<TransactionLine> lines = transactionLineRepository
+                .findPartyLedgerLines(partyId, party.getStore().getId());
 
         // FIFO settlement of charges (IN) by payments (OUT), oldest bill first — the
         // shopkeeper doesn't tie a payment to a bill, so newest money clears oldest dues.

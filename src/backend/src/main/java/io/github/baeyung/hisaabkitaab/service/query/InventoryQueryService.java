@@ -67,10 +67,12 @@ public class InventoryQueryService
 
     public ItemMovementResponse getMovement(String ownerId, String itemId)
     {
-        // findByIdForOwner 404s on another owner's item, so the lines query below is safe to scope by item alone.
+        // findByIdForOwner 404s on another owner's item; the lines are then scoped to that
+        // item's own store, so only entries posted in these books can move this stock.
         StoreItem item = storeItemService.findByIdForOwner(itemId, ownerId);
 
-        List<TransactionLine> lines = transactionLineRepository.findItemMovementLines(itemId);
+        List<TransactionLine> lines = transactionLineRepository
+                .findItemMovementLines(itemId, item.getStore().getId());
 
         List<ItemMovementRowResponse> rows = new ArrayList<>(lines.size());
         BigDecimal running = BigDecimal.ZERO;

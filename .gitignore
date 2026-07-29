@@ -8,3 +8,4 @@
 *.sql.gz
 
 *.log
+*.log.*.gz

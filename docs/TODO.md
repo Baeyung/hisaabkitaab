@@ -6,3 +6,4 @@
 - [x] account verification through otp
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
+- [ ] explicit button to install the app, spa prompt is kinda shady
