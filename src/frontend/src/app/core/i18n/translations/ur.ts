@@ -18,6 +18,8 @@ export const ur: Record<TranslationKey, string> = {
   'auth.login.forgot': 'پاس ورڈ بھول گئے؟',
   'auth.login.invalid': 'غلط تفصیلات',
   'auth.login.locked': 'بار بار غلط پاس ورڈ کی وجہ سے اکاؤنٹ بند ہو گیا ہے۔ کھولنے کے لیے پاس ورڈ ری سیٹ کریں۔',
+  'auth.login.disabled':
+    'یہ اکاؤنٹ معطل کر دیا گیا ہے۔ آپ کا کھاتہ محفوظ ہے — دوبارہ کھلوانے کے لیے ہم سے رابطہ کریں۔',
   'auth.forgot.title': 'پاس ورڈ بھول گئے؟',
   'auth.forgot.subtitle': 'اپنا ای میل درج کریں، ہم آپ کو 6 ہندسوں کا کوڈ بھیج دیں گے۔',
   'auth.forgot.email': 'ای میل',
