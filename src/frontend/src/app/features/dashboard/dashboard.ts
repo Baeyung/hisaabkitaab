@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { ThemeService } from '../../core/theme/theme.service';
@@ -95,6 +95,13 @@ export class Dashboard {
   protected readonly data = signal<DashboardData | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
+
+  /**
+   * Arrived straight out of the guided setup (`?new=1`). The page is empty either
+   * way; this only changes what the empty state says — a shop that was just opened
+   * gets told it is open, instead of being told there is nothing to show.
+   */
+  protected readonly justOpened = inject(ActivatedRoute).snapshot.queryParamMap.has('new');
 
   /** True once loaded with zero activity in the window — the friendly empty state. */
   protected readonly isEmpty = computed(() => {

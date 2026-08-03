@@ -6,10 +6,8 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
 import { StoreDraft } from '../../core/store/store.models';
 import { DigitsOnly, toDigits } from '../../shared/digits-only';
+import { readImageFile } from '../../shared/image-file';
 
-// ponytail: base64-image-in-DB stopgap — this cap keeps a store row and every
-// GET /api/stores payload sane until bucket upload lands (docs/tickets/HK-store-media-object-storage.md).
-const MAX_IMAGE_BYTES = 300 * 1024;
 const EMPTY_DRAFT: StoreDraft = { name: '', address: '', contact: '', logoUri: '', watermarkUri: '' };
 
 type ImageField = 'logoUri' | 'watermarkUri';
@@ -113,25 +111,18 @@ export class SettingsGeneral {
     }
   }
 
-  onFile(event: Event, field: ImageField): void {
+  async onFile(event: Event, field: ImageField): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = ''; // let the user re-pick the same file after a rejection
     if (!file) {
       return;
     }
-    this.imageErrorKey.set(null);
-    if (!file.type.startsWith('image/')) {
-      this.imageErrorKey.set('settings.general.imageType');
-      return;
+    const result = await readImageFile(file);
+    this.imageErrorKey.set(result.error ?? null);
+    if (result.uri) {
+      this.model.update((m) => ({ ...m, [field]: result.uri }));
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      this.imageErrorKey.set('settings.general.imageTooBig');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => this.model.update((m) => ({ ...m, [field]: reader.result as string }));
-    reader.readAsDataURL(file);
   }
 
   removeImage(field: ImageField): void {

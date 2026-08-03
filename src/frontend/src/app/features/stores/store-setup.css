@@ -1,0 +1,720 @@
+/* Guided store setup — opening a new register.
+
+   The screen is one bound object: a cream index rail stitched to the page it
+   opens, with the shop's plate at the head of the spine. The active section's
+   tab takes the page's own background and covers the divider, so it reads as a
+   tab pushed into the book rather than a highlighted list row.
+
+   Everything is the app's own tokens (--kg-*); nothing new is introduced. The
+   one colour used here that the settings screens don't is --kg-amber, and only
+   for the "you can change this later" note — a margin annotation, not a warning.
+   Namespaced: wrap / book / index / plate / step / page / band / quick / row. */
+
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--kg-desk);
+}
+
+/* The trailing control projected into <app-outer-bar>. */
+.exit {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-chrome-ink);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+}
+.exit:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.exit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+.wrap {
+  max-width: 1000px;
+  margin-inline: auto;
+  padding: var(--kg-page-pad);
+}
+
+/* No overflow:hidden here, however tempting for clipping the spine — it would
+   make the rail's sticky contents pin to a non-scrolling box and stop sticking.
+   The rail rounds its own outer corners instead. */
+.book {
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  background: var(--kg-surface);
+  border: 1px solid var(--kg-line);
+  border-radius: 18px;
+}
+
+/* ── the index rail ────────────────────────────────────────────────── */
+/* The binding is the rail's own first background layer: a pine strip with cream
+   stitch marks punched across it. The thread is the minority mark — long runs of
+   pine, short breaks — or the strip reads as a striped progress bar rather than
+   something sewn. Backgrounds take no logical position, hence the RTL rule. */
+.index {
+  border-inline-end: 1px solid var(--kg-line);
+  border-start-start-radius: 17px;
+  border-end-start-radius: 17px;
+  background-color: var(--kg-cream);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 26px,
+      color-mix(in srgb, var(--kg-cream) 55%, transparent) 26px 30px
+    ),
+    linear-gradient(to bottom, var(--kg-brand), var(--kg-brand-deep));
+  background-repeat: no-repeat;
+  background-size: 7px 100%;
+  background-position: 0 0;
+}
+/* :host-context, not a bare `[dir='rtl'] .index` — dir lives on <html>, outside
+   this component, and emulated encapsulation scopes such a selector into one
+   that can never match. */
+:host-context([dir='rtl']) .index {
+  background-position: 100% 0;
+}
+
+.index__inner {
+  position: sticky;
+  top: 0;
+  padding-block: 22px;
+}
+
+.plate {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-inline: 25px 16px;
+  margin-bottom: 20px;
+}
+.plate__mark {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 13px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--kg-cream);
+  background: linear-gradient(160deg, var(--kg-brand), var(--kg-brand-deep));
+  box-shadow: 0 5px 14px rgba(31, 92, 77, 0.26);
+}
+.plate__mark--img {
+  background: var(--kg-card);
+  box-shadow: inset 0 0 0 1px var(--kg-line-strong);
+}
+.plate__mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.plate__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.plate__name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--kg-ink);
+  overflow-wrap: anywhere;
+}
+/* --kg-muted, not --kg-faint: faint is tuned to sit at 4.6:1 on --kg-card, and
+   drops to 3.4:1 on the cream this rail is painted in. Same everywhere below
+   that a quiet label sits on cream. */
+.plate__hint {
+  font-size: 11.5px;
+  color: var(--kg-muted);
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 13px 16px 13px 25px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: start;
+  color: var(--kg-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+/* No dimmed label for a locked section: the badge already says done (pine tint)
+   or not yet (grey), and dimming the word on cream drops it under 4.5:1. */
+.step:disabled {
+  cursor: default;
+}
+.step:not(:disabled):hover {
+  color: var(--kg-ink);
+}
+.step:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--kg-brand);
+}
+
+/* The tab: page background carried into the rail, plus a sliver over the
+   divider so the two surfaces join instead of butting against each other. */
+.step--now {
+  color: var(--kg-ink);
+  background: var(--kg-surface);
+}
+.step--now::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: -1px;
+  width: 1px;
+  background: var(--kg-surface);
+}
+
+.step__no {
+  width: 23px;
+  height: 23px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--kg-muted);
+  background: var(--kg-fill-subtle);
+  box-shadow: inset 0 0 0 1px var(--kg-line);
+}
+.step--now .step__no {
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
+  box-shadow: none;
+}
+.step--done .step__no {
+  color: var(--kg-brand);
+  background: var(--kg-tint-brand);
+  box-shadow: inset 0 0 0 1px var(--kg-tint-brand-line);
+}
+.step__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ── the page ──────────────────────────────────────────────────────── */
+.page {
+  min-width: 0;
+  padding: 26px clamp(18px, 3vw, 30px) 24px;
+}
+.page__title {
+  margin: 0;
+  font-size: clamp(19px, 2.2vw, 22px);
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.page__help {
+  margin: 6px 0 0;
+  max-width: 56ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--kg-muted);
+}
+
+/* A form column, not a full-bleed one: a shop name set 900px wide is a worse
+   target than a short one, and the long line makes the page feel unfinished. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 480px;
+  margin-top: 22px;
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* A banded sub-section, ruled off like a section of the register. */
+.band {
+  padding-top: 18px;
+  border-top: 1px solid var(--kg-line);
+}
+/* The settings screens set this eyebrow in --kg-faint, which lands at 3.2:1 on
+   --kg-surface — under AA for 12px, bold or not. --kg-muted here. */
+.band__eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--kg-muted);
+}
+.band__desc {
+  margin: 5px 0 14px;
+  max-width: 56ch;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--kg-muted);
+}
+
+/* ── fields ────────────────────────────────────────────────────────── */
+.fld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.fld__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+.fld__input {
+  height: 48px;
+  padding: 0 14px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.fld__input::placeholder {
+  color: var(--kg-placeholder);
+  font-weight: 400;
+}
+.fld__input:hover {
+  border-color: var(--kg-line-hover);
+}
+.fld__input:focus {
+  outline: none;
+  border-color: var(--kg-brand);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+.fld__err {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kg-out);
+}
+.fld--money {
+  max-width: 190px;
+}
+
+/* ── logo & watermark ──────────────────────────────────────────────── */
+.media {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 14px;
+}
+.media__item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.up__drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 96px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  background: var(--kg-card);
+  border: 1px dashed var(--kg-line-strong);
+  border-radius: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.up__drop:hover {
+  color: var(--kg-brand);
+  border-color: var(--kg-brand);
+}
+.up__drop:focus-visible {
+  outline: none;
+  border-color: var(--kg-brand);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+.up__preview {
+  height: 96px;
+  object-fit: contain;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 13px;
+}
+.up__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── quick add (goods, khatas) ─────────────────────────────────────── */
+.quick {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 15px;
+}
+.quick__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px;
+}
+.fld--grow {
+  flex: 1 1 190px;
+}
+.fld--unit {
+  flex: 0 1 130px;
+}
+.quick .fld--money {
+  flex: 0 1 150px;
+}
+.btn--add {
+  align-self: flex-start;
+}
+
+/* Which way a baqaya points. Native radios, visually replaced by the pills —
+   arrow keys and screen readers keep working. */
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.seg:disabled {
+  opacity: 0.5;
+}
+.seg__legend {
+  padding: 0;
+  margin-inline-end: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+.seg__opt {
+  cursor: pointer;
+}
+.seg:disabled .seg__opt {
+  cursor: default;
+}
+.seg__opt input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.seg__opt span {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  background: var(--kg-fill-subtle);
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+.seg__opt--in input:checked + span {
+  color: var(--kg-in);
+  background: var(--kg-tint-in-strong);
+  border-color: color-mix(in srgb, var(--kg-in) 32%, transparent);
+}
+.seg__opt--out input:checked + span {
+  color: var(--kg-out);
+  background: var(--kg-tint-out-hover);
+  border-color: var(--kg-tint-out-line);
+}
+.seg__opt input:focus-visible + span {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── what has been written so far ──────────────────────────────────── */
+.rows {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--kg-cream);
+  border-bottom: 1px solid var(--kg-line);
+}
+.row:last-child {
+  border-bottom: 0;
+}
+.row__no {
+  width: 24px;
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kg-faint);
+}
+.row__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  overflow-wrap: anywhere;
+}
+.row__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+.row__meta small {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--kg-muted);
+}
+.row__x {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  color: var(--kg-faint);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.row__x:hover {
+  color: var(--kg-out);
+  background: var(--kg-tint-out);
+}
+.row__x:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+.rows__empty {
+  padding: 18px 14px;
+  font-size: 13px;
+  color: var(--kg-muted);
+  background: var(--kg-cream);
+}
+
+/* ── the margin note ───────────────────────────────────────────────── */
+.note {
+  margin: 20px 0 0;
+  padding-inline-start: 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--kg-muted);
+  border-inline-start: 3px solid var(--kg-amber);
+}
+
+.alert {
+  margin: 14px 0 0;
+  padding: 10px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kg-out);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
+  border-radius: 11px;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+/* ── buttons ───────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  /* min-, not fixed: an Urdu label runs longer than its English twin and wraps
+     on a phone; a fixed height strands the icon between the two lines. */
+  min-height: 48px;
+  padding-block: 9px;
+  padding-inline: 22px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.btn--sm {
+  min-height: 38px;
+  padding-inline: 14px;
+  font-size: 13px;
+}
+.btn--primary {
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
+  box-shadow: var(--kg-shadow-brand);
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.btn--primary:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.btn--primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn--primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.btn--ghost {
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+}
+.btn--ghost:hover:not(:disabled) {
+  border-color: var(--kg-brand);
+  color: var(--kg-brand);
+}
+.btn--ghost:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.btn--text {
+  color: var(--kg-muted);
+  background: transparent;
+}
+.btn--text:hover {
+  text-decoration: underline;
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── phone ─────────────────────────────────────────────────────────
+   No shell around this route, so there is no size container to key off —
+   the viewport is the content column. The rail lifts to the top and the
+   binding moves with it: a book opened flat rather than side-bound. */
+@media (max-width: 860px) {
+  .wrap {
+    padding: 0;
+  }
+  .book {
+    grid-template-columns: 1fr;
+    border: 0;
+    border-radius: 0;
+  }
+  /* Opened flat: the binding runs along the head of the page, not its edge. */
+  .index {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--kg-line);
+    border-radius: 0;
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        transparent 0 26px,
+        color-mix(in srgb, var(--kg-cream) 55%, transparent) 26px 30px
+      ),
+      linear-gradient(to right, var(--kg-brand), var(--kg-brand-deep));
+    background-size: 100% 7px;
+    background-position: 0 0;
+  }
+  :host-context([dir='rtl']) .index {
+    background-position: 0 0;
+  }
+  /* Nothing to ride along with: the rail is only as tall as its own contents. */
+  .index__inner {
+    position: static;
+    padding-block: 20px 0;
+  }
+  .plate {
+    padding-inline: var(--kg-page-pad);
+    margin-bottom: 14px;
+  }
+  /* Sections read as a strip of tabs along the head of the page. */
+  .steps {
+    display: flex;
+    gap: 4px;
+    padding-inline: var(--kg-page-pad);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .steps > li {
+    flex: 1 1 0;
+    min-width: max-content;
+  }
+  .step {
+    justify-content: center;
+    padding: 11px 12px;
+    border-radius: 11px 11px 0 0;
+  }
+  .step--now::after {
+    inset-block: auto -1px;
+    inset-inline: 0;
+    width: auto;
+    height: 1px;
+  }
+  .page {
+    padding-inline: var(--kg-page-pad);
+    padding-bottom: 32px;
+  }
+  .fld--money,
+  .quick .fld--money {
+    max-width: none;
+    flex: 1 1 140px;
+  }
+  .foot .btn--primary {
+    flex: 1;
+  }
+}
+
+/* ── motion ────────────────────────────────────────────────────────
+   One moment only: a written line slides in from the binding edge. */
+.row {
+  /* Which way "in from the binding" points; there is no logical translate. */
+  --setup-write-from: -8px;
+}
+:host-context([dir='rtl']) .row {
+  --setup-write-from: 8px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .row {
+    animation: setup-write 0.18s ease-out both;
+  }
+}
+@keyframes setup-write {
+  from {
+    opacity: 0;
+    transform: translateX(var(--setup-write-from));
+  }
+}

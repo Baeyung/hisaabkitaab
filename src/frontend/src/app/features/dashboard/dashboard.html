@@ -24,6 +24,21 @@
     </div>
   </header>
 
+  <!-- Straight out of setup. Not folded into the empty state below: a shop set up
+       through the wizard usually carries an opening drawer and khata balances, so
+       it is never "empty" — but it still has nothing recorded, which is the thing
+       the shopkeeper needs pointing at. -->
+  @if (justOpened && stores.current(); as store) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('dash.welcome.title', { store: store.name }) }}</h2>
+      <p class="rm-state__body">{{ locale.t('dash.welcome.body') }}</p>
+      <div class="rm-state__acts">
+        <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{ locale.t('dash.empty.cta') }}</a>
+        <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('settings/general')">{{ locale.t('nav.settings') }}</a>
+      </div>
+    </div>
+  }
+
   @if (loading()) {
     <div class="rm-card" aria-hidden="true">
       <div class="rm-skel"></div>
@@ -35,7 +50,7 @@
       <p role="alert" class="rm-alert">{{ locale.t('dash.loadError') }}</p>
       <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
     </div>
-  } @else if (isEmpty()) {
+  } @else if (isEmpty() && !justOpened) {
     <div class="rm-state">
       <h2 class="rm-state__title">{{ locale.t('dash.empty.title') }}</h2>
       <p class="rm-state__body">{{ locale.t('dash.empty.body') }}</p>

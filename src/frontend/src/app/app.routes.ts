@@ -47,6 +47,23 @@ export const routes: Routes = [
   // Every shop the user owns. Always the landing screen after signing in: a store
   // has to be chosen before anything is scoped, and this is also the way between
   // shops. With none yet, it doubles as the create-your-first-store screen.
+  // Opening a shop, section by section. It spans two routes because the first
+  // section is what produces the id the rest are scoped by: `/stores/new` writes
+  // the shop, then it hands off (replacing history) to `/s/:storeId/setup`, where
+  // storeGuard has selected the store and the item/party APIs work as they do
+  // everywhere else. Both sit outside the shell — there is nothing to navigate
+  // to yet, and the wizard carries its own frame. Declared ahead of the routes
+  // they extend so the longer path is matched before the shorter prefix.
+  {
+    path: 'stores/new',
+    canActivate: [apexRedirectGuard, authGuard],
+    loadComponent: () => import('./features/stores/store-setup').then((m) => m.StoreSetup),
+  },
+  {
+    path: 's/:storeId/setup',
+    canActivate: [apexRedirectGuard, authGuard, storeGuard],
+    loadComponent: () => import('./features/stores/store-setup').then((m) => m.StoreSetup),
+  },
   {
     path: 'stores',
     canActivate: [apexRedirectGuard, authGuard],

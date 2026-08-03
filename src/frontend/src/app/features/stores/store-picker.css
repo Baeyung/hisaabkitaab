@@ -1,6 +1,8 @@
 /* Store picker — the doorway screen: every shop the user owns, and the way to add
    one. Reuses the ledger tokens (--kg-*); self-contained, like general.css, so it
-   doesn't lean on another feature's stylesheet. Namespaced topbar / pick / card / new. */
+   doesn't lean on another feature's stylesheet. The frame itself is <app-outer-bar>;
+   only the log-out control projected into it is styled here.
+   Namespaced pick / card. */
 
 :host {
   display: block;
@@ -8,43 +10,6 @@
   background: var(--kg-desk);
 }
 
-/* ── frame: this screen is outside the app shell, so it brings its own ── */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  height: 56px;
-  padding-inline: 14px;
-  background: var(--kg-chrome);
-  color: var(--kg-chrome-ink);
-}
-.topbar__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.topbar__brand b {
-  font: 700 16px system-ui;
-  white-space: nowrap;
-}
-.topbar__logo {
-  width: 32px;
-  height: 32px;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  background: var(--kg-brand-solid);
-  color: var(--kg-on-brand);
-}
-.topbar__tools {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 .topbar__logout {
   height: 34px;
   padding-inline: 12px;
@@ -97,7 +62,7 @@
      minmax(300px) overflows once the viewport drops under ~340px. */
   grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 14px;
-  margin: 0 0 26px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -184,106 +149,6 @@
   color: var(--kg-brand);
 }
 
-/* ── add a shop ────────────────────────────────────────────────────── */
-.new {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  max-width: 520px;
-  padding: 22px;
-  background: var(--kg-surface);
-  border: 1px solid var(--kg-line);
-  border-radius: 16px;
-}
-.new__head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-/* min-width: 0 so the long Urdu help text wraps inside the flex item instead of
-   setting the row's width and pushing the mark off the card's padding. */
-.new__head > div {
-  min-width: 0;
-}
-.new__mark {
-  width: 52px;
-  height: 52px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--kg-cream);
-  background: linear-gradient(160deg, var(--kg-brand), var(--kg-brand-deep));
-  box-shadow: 0 6px 16px rgba(31, 92, 77, 0.28);
-}
-.new__title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--kg-ink);
-}
-.new__help {
-  margin: 4px 0 0;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--kg-muted);
-}
-.new__fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.new__note {
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--kg-faint);
-}
-.new__foot {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* ── fields ────────────────────────────────────────────────────────── */
-.fld {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.fld__label {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--kg-muted);
-}
-.fld__input {
-  height: 50px;
-  padding: 0 15px;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--kg-ink);
-  background: var(--kg-card);
-  border: 1px solid var(--kg-line-strong);
-  border-radius: 12px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.fld__input:hover {
-  border-color: var(--kg-line-hover);
-}
-.fld__input:focus {
-  outline: none;
-  border-color: var(--kg-brand);
-  box-shadow: 0 0 0 3px var(--kg-focus);
-}
-.fld__err {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--kg-out);
-}
-
 /* ── buttons ───────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
@@ -299,25 +164,10 @@
   font: inherit;
   font-size: 15px;
   font-weight: 700;
+  text-decoration: none;
   border: 0;
   border-radius: 12px;
   cursor: pointer;
-}
-.btn--primary {
-  color: var(--kg-on-brand);
-  background: var(--kg-brand-solid);
-  box-shadow: var(--kg-shadow-brand);
-  transition: filter 0.15s ease, transform 0.05s ease;
-}
-.btn--primary:hover:not(:disabled) {
-  filter: brightness(1.07);
-}
-.btn--primary:active:not(:disabled) {
-  transform: translateY(1px);
-}
-.btn--primary:disabled {
-  opacity: 0.6;
-  cursor: progress;
 }
 .btn--ghost {
   color: var(--kg-ink);
@@ -326,13 +176,6 @@
 }
 .btn--ghost:hover {
   border-color: var(--kg-line-hover);
-}
-.btn--text {
-  color: var(--kg-muted);
-  background: transparent;
-}
-.btn--text:hover {
-  text-decoration: underline;
 }
 .btn:focus-visible {
   outline: none;
@@ -383,20 +226,6 @@
   /* Full-bleed on its own row, matching the card stack beneath it. */
   .pick__head .btn {
     width: 100%;
-  }
-  .new {
-    padding: 18px;
-  }
-  /* The mark reads as a label for the title, so it stays beside it rather than
-     centring against a help paragraph that is three lines tall in Urdu. */
-  .new__head {
-    align-items: flex-start;
-  }
-  .new__foot {
-    flex-wrap: wrap;
-  }
-  .new__foot .btn--primary {
-    flex: 1;
   }
 }
 @media (prefers-reduced-motion: no-preference) {

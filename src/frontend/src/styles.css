@@ -592,6 +592,12 @@ html[dir='rtl'] select.rm-input {
   color: var(--kg-muted);
   max-width: 44ch;
 }
+/* A state block's actions sit in a row; the column above them stacks. */
+.rm-state__acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .rm-alert {
   margin: 0;
   padding: 10px 13px;

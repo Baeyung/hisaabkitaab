@@ -7,3 +7,5 @@
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
 - [x] explicit button to install the app, spa prompt is kinda shady
+- [ ] new store screens are a lil buggy get em fixed
+- [ ] fix failing tests and see why they are failing

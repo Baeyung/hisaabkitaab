@@ -1,0 +1,359 @@
+<app-outer-bar>
+  @if (canExit()) {
+    <a class="exit" [routerLink]="exitLink()">{{ locale.t('setup.exit') }}</a>
+  }
+</app-outer-bar>
+
+<div class="wrap">
+  <!-- One bound object: the index rail is stitched to the page it opens. -->
+  <div class="book">
+    <nav class="index" [attr.aria-label]="locale.t('setup.sections')">
+      <!-- The rail runs the full height so the binding does; its contents ride
+           along with the reader instead of scrolling off the top of a long form. -->
+      <div class="index__inner">
+      <!-- The plate fills in as the shop is named — the register being labelled. -->
+      <div class="plate">
+        <span class="plate__mark" [class.plate__mark--img]="plateLogo()">
+          @if (plateLogo()) {
+            <img [src]="plateLogo()" alt="" />
+          } @else if (initial()) {
+            <span aria-hidden="true">{{ initial() }}</span>
+          } @else {
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <path d="M4 9l1-4h14l1 4M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M4 9h16M9 20v-6h6v6" />
+            </svg>
+          }
+        </span>
+        <span class="plate__meta">
+          <span class="plate__name">{{ plateName() || locale.t('setup.plate.untitled') }}</span>
+          <span class="plate__hint">{{ locale.t('setup.plate.hint') }}</span>
+        </span>
+      </div>
+
+      <ol class="steps">
+        @for (s of steps; track s.id; let i = $index) {
+          <li>
+            <button
+              type="button"
+              class="step"
+              [class.step--now]="step() === s.id"
+              [class.step--done]="i < stepIndex()"
+              [attr.aria-current]="step() === s.id ? 'step' : null"
+              [disabled]="locked(s.id)"
+              (click)="goTo(s.id)"
+            >
+              <span class="step__no num" aria-hidden="true">{{ i + 1 }}</span>
+              <span class="step__label">{{ locale.t(s.label) }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+      </div>
+    </nav>
+
+    <div class="page">
+      @switch (step()) {
+        <!-- ── 1 · the shop itself ───────────────────────────────────── -->
+        @case ('shop') {
+          <h1 class="page__title">{{ locale.t('setup.shop.title') }}</h1>
+          <p class="page__help">{{ locale.t('setup.shop.help') }}</p>
+
+          <form class="form" (submit)="$event.preventDefault(); createShop()">
+            <div class="fields">
+              <div class="fld fld--wide">
+                <!-- "Shop", not "Store": this screen says shop throughout, and one
+                     screen switching words mid-form reads as two different things. -->
+                <label class="fld__label" for="setup-name">{{ locale.t('setup.shop.name') }}</label>
+                <input id="setup-name" class="fld__input" [formField]="shopForm.name" type="text" autocomplete="organization" />
+                @if (shopForm.name().touched() && shopForm.name().invalid()) {
+                  <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+                }
+              </div>
+              <div class="fld fld--wide">
+                <label class="fld__label" for="setup-address">{{ locale.t('settings.general.address') }}</label>
+                <input id="setup-address" class="fld__input" [formField]="shopForm.address" type="text" autocomplete="street-address" />
+              </div>
+              <div class="fld fld--wide">
+                <label class="fld__label" for="setup-contact">{{ locale.t('settings.general.contact') }}</label>
+                <input id="setup-contact" class="fld__input" [formField]="shopForm.contact" type="tel" inputmode="numeric" autocomplete="tel" />
+              </div>
+            </div>
+
+            <section class="band" aria-labelledby="setup-branding">
+              <h2 class="band__eyebrow" id="setup-branding">{{ locale.t('settings.general.section.branding') }}</h2>
+              <p class="band__desc">{{ locale.t('settings.general.branding.help') }}</p>
+              <div class="media">
+                @for (m of mediaFields; track m.field) {
+                  <div class="media__item">
+                    <span class="fld__label" [id]="m.field + '-label'">{{ locale.t(m.label) }}</span>
+                    @if (model()[m.field]) {
+                      <img class="up__preview" [src]="model()[m.field]" alt="" />
+                      <div class="up__actions">
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="picker.click()">
+                          {{ locale.t('settings.general.replace') }}
+                        </button>
+                        <button type="button" class="btn btn--text btn--sm" (click)="removeImage(m.field)">
+                          {{ locale.t('settings.general.remove') }}
+                        </button>
+                      </div>
+                    } @else {
+                      <button type="button" class="up__drop" [attr.aria-labelledby]="m.field + '-label'" (click)="picker.click()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                          <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
+                        </svg>
+                        <span>{{ locale.t('settings.general.upload') }}</span>
+                      </button>
+                    }
+                    <input #picker type="file" accept="image/*" hidden (change)="onFile($event, m.field)" />
+                  </div>
+                }
+              </div>
+              @if (imageErrorKey(); as key) {
+                <span role="alert" class="fld__err">{{ locale.t(key) }}</span>
+              }
+            </section>
+
+            <section class="band" aria-labelledby="setup-drawer">
+              <h2 class="band__eyebrow" id="setup-drawer">{{ locale.t('settings.general.section.drawer') }}</h2>
+              <p class="band__desc">{{ locale.t('setup.shop.drawer.help') }}</p>
+              <div class="fld fld--money">
+                <label class="fld__label" for="setup-drawer-amount">{{ locale.t('settings.general.drawer.label') }}</label>
+                <input
+                  id="setup-drawer-amount"
+                  class="fld__input num"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="any"
+                  [value]="openingCash() ?? ''"
+                  (input)="openingCash.set($any($event.target).valueAsNumber || null)"
+                  [attr.placeholder]="locale.t('settings.general.drawer.amountPh')"
+                />
+              </div>
+            </section>
+
+            <p class="note">{{ locale.t('setup.note') }}</p>
+
+            @if (errorKey(); as key) {
+              <p role="alert" class="alert">{{ locale.t(key) }}</p>
+            }
+
+            <div class="foot">
+              <button type="submit" class="btn btn--primary" [disabled]="busy()">
+                {{ busy() ? locale.t('setup.shop.creating') : locale.t('setup.shop.next') }}
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- ── 2 · what the shop sells ───────────────────────────────── -->
+        @case ('goods') {
+          <h1 class="page__title">{{ locale.t('setup.goods.title') }}</h1>
+          <p class="page__help">{{ locale.t('setup.goods.help') }}</p>
+
+          <form class="quick" (submit)="$event.preventDefault(); addItem()">
+            <div class="quick__fields">
+              <div class="fld fld--grow">
+                <label class="fld__label" for="setup-item-name">{{ locale.t('setup.goods.name') }}</label>
+                <input
+                  id="setup-item-name"
+                  class="fld__input"
+                  type="text"
+                  [value]="itemRow().name"
+                  (input)="itemRow.update((r) => ({ ...r, name: $any($event.target).value }))"
+                  [attr.placeholder]="locale.t('setup.goods.namePh')"
+                />
+              </div>
+              <div class="fld fld--unit">
+                <label class="fld__label" for="setup-item-unit">{{ locale.t('setup.goods.unit') }}</label>
+                <input
+                  id="setup-item-unit"
+                  class="fld__input"
+                  type="text"
+                  list="setup-units"
+                  [value]="itemRow().unit"
+                  (input)="itemRow.update((r) => ({ ...r, unit: $any($event.target).value }))"
+                  [attr.placeholder]="locale.t('setup.goods.unitPh')"
+                />
+                <datalist id="setup-units">
+                  @for (u of unitSuggestions; track u) {
+                    <option [value]="u"></option>
+                  }
+                </datalist>
+              </div>
+              <div class="fld fld--money">
+                <label class="fld__label" for="setup-item-price">{{ locale.t('setup.goods.price') }}</label>
+                <input
+                  id="setup-item-price"
+                  class="fld__input num"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="any"
+                  [value]="itemRow().salePrice ?? ''"
+                  (input)="itemRow.update((r) => ({ ...r, salePrice: $any($event.target).valueAsNumber || null }))"
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn--ghost btn--add" [disabled]="!itemRow().name.trim() || busy()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              {{ locale.t('setup.goods.add') }}
+            </button>
+          </form>
+
+          <ol class="rows">
+            @for (it of items(); track it.id; let i = $index) {
+              <li class="row">
+                <span class="row__no num" aria-hidden="true">{{ i + 1 }}</span>
+                <span class="row__name">{{ it.name }}</span>
+                <span class="row__meta num">
+                  @if (it.salePrice != null) {
+                    {{ locale.money(it.salePrice) }}
+                  }
+                  @if (it.unit) {
+                    <small>{{ it.unit }}</small>
+                  }
+                </span>
+                <button type="button" class="row__x" [attr.aria-label]="locale.t('setup.remove')" (click)="removeItem(it.id)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              </li>
+            } @empty {
+              <li class="rows__empty">{{ locale.t('setup.goods.empty') }}</li>
+            }
+          </ol>
+
+          <p class="note">{{ locale.t('setup.note') }}</p>
+
+          @if (errorKey(); as key) {
+            <p role="alert" class="alert">{{ locale.t(key) }}</p>
+          }
+
+          <!-- No skip button beside it: Next already moves on with an empty list,
+               and two controls doing one job reads as a decision the user has to make. -->
+          <div class="foot">
+            <button type="button" class="btn btn--primary" (click)="goTo('khatas')">{{ locale.t('setup.next') }}</button>
+          </div>
+        }
+
+        <!-- ── 3 · who the shop keeps khatas with ────────────────────── -->
+        @case ('khatas') {
+          <h1 class="page__title">{{ locale.t('setup.khatas.title') }}</h1>
+          <p class="page__help">{{ locale.t('setup.khatas.help') }}</p>
+
+          <form class="quick" (submit)="$event.preventDefault(); addParty()">
+            <div class="quick__fields">
+              <div class="fld fld--grow">
+                <label class="fld__label" for="setup-party-name">{{ locale.t('setup.khatas.name') }}</label>
+                <input
+                  id="setup-party-name"
+                  class="fld__input"
+                  type="text"
+                  [value]="partyRow().name"
+                  (input)="partyRow.update((r) => ({ ...r, name: $any($event.target).value }))"
+                  [attr.placeholder]="locale.t('setup.khatas.namePh')"
+                />
+              </div>
+              <div class="fld fld--grow">
+                <label class="fld__label" for="setup-party-contact">{{ locale.t('setup.khatas.contact') }}</label>
+                <input
+                  id="setup-party-contact"
+                  class="fld__input num"
+                  type="tel"
+                  inputmode="numeric"
+                  [value]="partyRow().contact"
+                  (input)="partyRow.update((r) => ({ ...r, contact: $any($event.target).value }))"
+                />
+              </div>
+              <div class="fld fld--money">
+                <label class="fld__label" for="setup-party-amount">{{ locale.t('setup.khatas.baqaya') }}</label>
+                <input
+                  id="setup-party-amount"
+                  class="fld__input num"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="any"
+                  [value]="partyRow().amount ?? ''"
+                  (input)="partyRow.update((r) => ({ ...r, amount: $any($event.target).valueAsNumber || null }))"
+                  [attr.placeholder]="locale.t('settings.general.drawer.amountPh')"
+                />
+              </div>
+            </div>
+
+            <!-- Which way the baqaya points. Only meaningful once there is one. -->
+            <fieldset class="seg" [disabled]="!partyRow().amount">
+              <legend class="seg__legend">{{ locale.t('setup.khatas.direction') }}</legend>
+              <label class="seg__opt seg__opt--in">
+                <input
+                  type="radio"
+                  name="setup-dir"
+                  [checked]="partyRow().direction === 'THEY_OWE_YOU'"
+                  (change)="partyRow.update((r) => ({ ...r, direction: 'THEY_OWE_YOU' }))"
+                />
+                <span>{{ locale.t('setup.khatas.theyOwe') }}</span>
+              </label>
+              <label class="seg__opt seg__opt--out">
+                <input
+                  type="radio"
+                  name="setup-dir"
+                  [checked]="partyRow().direction === 'YOU_OWE_THEM'"
+                  (change)="partyRow.update((r) => ({ ...r, direction: 'YOU_OWE_THEM' }))"
+                />
+                <span>{{ locale.t('setup.khatas.youOwe') }}</span>
+              </label>
+            </fieldset>
+
+            <button type="submit" class="btn btn--ghost btn--add" [disabled]="!partyRow().name.trim() || busy()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              {{ locale.t('setup.khatas.add') }}
+            </button>
+          </form>
+
+          <ol class="rows">
+            @for (p of parties(); track p.id; let i = $index) {
+              <li class="row">
+                <span class="row__no num" aria-hidden="true">{{ i + 1 }}</span>
+                <span class="row__name">{{ p.name }}</span>
+                <span class="row__meta num">
+                  @if (balanceTone(p.openingBalance); as tone) {
+                    <span [class.amt--in]="tone === 'in'" [class.amt--out]="tone === 'out'">
+                      {{ locale.money(p.openingBalance!.amount) }}
+                    </span>
+                  }
+                  @if (p.contact) {
+                    <small>{{ p.contact }}</small>
+                  }
+                </span>
+                <button type="button" class="row__x" [attr.aria-label]="locale.t('setup.remove')" (click)="removeParty(p.id)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              </li>
+            } @empty {
+              <li class="rows__empty">{{ locale.t('setup.khatas.empty') }}</li>
+            }
+          </ol>
+
+          <p class="note">{{ locale.t('setup.note') }}</p>
+
+          @if (errorKey(); as key) {
+            <p role="alert" class="alert">{{ locale.t(key) }}</p>
+          }
+
+          <div class="foot">
+            <button type="button" class="btn btn--primary" (click)="finish()">{{ locale.t('setup.finish') }}</button>
+            <button type="button" class="btn btn--text" (click)="goTo('goods')">{{ locale.t('setup.back') }}</button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>
