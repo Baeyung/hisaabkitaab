@@ -130,11 +130,11 @@ function parseTyped(s: string): string | null {
           />
           <div class="df__head">
             <button type="button" class="df__nav" (click)="shiftMonth(-1)" [attr.aria-label]="locale.t('date.prevMonth')">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+              <svg class="kg-flip" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
             </button>
             <span class="df__title" [attr.id]="gridLabelId" aria-live="polite">{{ monthLabel() }}</span>
             <button type="button" class="df__nav" (click)="shiftMonth(1)" [attr.aria-label]="locale.t('date.nextMonth')">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+              <svg class="kg-flip" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
             </button>
           </div>
           <div class="df__grid" role="grid" [attr.aria-labelledby]="gridLabelId">

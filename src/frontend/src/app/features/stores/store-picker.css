@@ -93,7 +93,9 @@
 /* ── the shops ─────────────────────────────────────────────────────── */
 .pick__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* min() so the 300px floor can't outgrow the column on a small phone — a bare
+     minmax(300px) overflows once the viewport drops under ~340px. */
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 14px;
   margin: 0 0 26px;
   padding: 0;
@@ -198,6 +200,11 @@
   align-items: center;
   gap: 14px;
 }
+/* min-width: 0 so the long Urdu help text wraps inside the flex item instead of
+   setting the row's width and pushing the mark off the card's padding. */
+.new__head > div {
+  min-width: 0;
+}
 .new__mark {
   width: 52px;
   height: 52px;
@@ -283,7 +290,11 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  height: 48px;
+  /* min-, not a fixed height: an Urdu label is longer than its English twin and
+     wraps on a phone, and a fixed height left the icon stranded between the two
+     lines with the text spilling past the pill. */
+  min-height: 48px;
+  padding-block: 9px;
   padding-inline: 22px;
   font: inherit;
   font-size: 15px;
@@ -353,6 +364,40 @@
 }
 .skel--card {
   height: 86px;
+}
+
+/* ── phone ──────────────────────────────────────────────────────────
+   The settings screens use @container for this, but the picker is a
+   top-level route with no shell around it, so there is no size container
+   to key off — here the viewport IS the content column.
+
+   Side by side, the title and the add button each get about half a phone
+   screen; the Urdu label doesn't fit that and wraps mid-button. Stacking
+   gives the button the whole row, which is enough for either script. */
+@media (max-width: 560px) {
+  .pick__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  /* Full-bleed on its own row, matching the card stack beneath it. */
+  .pick__head .btn {
+    width: 100%;
+  }
+  .new {
+    padding: 18px;
+  }
+  /* The mark reads as a label for the title, so it stays beside it rather than
+     centring against a help paragraph that is three lines tall in Urdu. */
+  .new__head {
+    align-items: flex-start;
+  }
+  .new__foot {
+    flex-wrap: wrap;
+  }
+  .new__foot .btn--primary {
+    flex: 1;
+  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .skel {

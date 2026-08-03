@@ -221,6 +221,15 @@ html[dir='rtl'] .num {
   font-variant-numeric: tabular-nums;
 }
 
+/* An icon that means "onward" or "back" points along the reading direction, so
+   in Urdu it has to mirror — otherwise a "next month" chevron points at last
+   month. Opt-in per glyph, because most icons here must NOT flip: the select
+   and nav chevrons point down, and plus/trash/calendar/upload are symmetric or
+   vertical. Tag only the ones that carry a left/right meaning. */
+html[dir='rtl'] .kg-flip {
+  transform: scaleX(-1);
+}
+
 /* ── read-model list/detail primitives (rm-*) ─────────────────────────
    Shared by the four derived-read screens (cashbook, ledger, inventory,
    bills) so they don't become the 4th–7th copy of the .tbl/.state/.btn
@@ -283,6 +292,16 @@ html[dir='rtl'] .num {
   border-radius: 999px;
 }
 
+/* The arrow lives here, not in the four templates that use this: as a text node
+   it was a bidi neutral, so Urdu parked it at the *end* of the label and left it
+   pointing left — "back" aiming forward. As a flex item it sits at inline-start
+   in both scripts, and the glyph itself turns around. */
+.rm-back::before {
+  content: '←';
+}
+html[dir='rtl'] .rm-back::before {
+  content: '→';
+}
 .rm-back {
   display: inline-flex;
   align-items: center;
