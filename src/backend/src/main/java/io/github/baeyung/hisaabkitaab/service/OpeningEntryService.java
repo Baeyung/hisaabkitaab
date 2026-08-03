@@ -35,18 +35,16 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class OpeningEntryService
 {
-    private final StoreService storeService;
     private final PartyService partyService;
     private final StoreItemService storeItemService;
     private final TransactionRepository transactionRepository;
     private final TransactionLineRepository transactionLineRepository;
 
-    /** Current opening balance per party for the owner's store — keyed by party id, absent when none set. */
+    /** Current opening balance per party in the store — keyed by party id, absent when none set. */
     @Transactional(readOnly = true)
-    public Map<String, PartyBalance> openingBalancesByOwner(String ownerId)
+    public Map<String, PartyBalance> openingBalancesByStore(String storeId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        return transactionLineRepository.findOpeningBalancesByStore(store.getId()).stream()
+        return transactionLineRepository.findOpeningBalancesByStore(storeId).stream()
                 .collect(Collectors.toMap(
                         TransactionLineRepository.PartyOpeningRow::getPartyId,
                         row -> {
@@ -55,21 +53,19 @@ public class OpeningEntryService
                         }));
     }
 
-    /** Current opening stock per item for the owner's store — keyed by item id, absent when none set. */
+    /** Current opening stock per item in the store — keyed by item id, absent when none set. */
     @Transactional(readOnly = true)
-    public Map<String, BigDecimal> openingStockByOwner(String ownerId)
+    public Map<String, BigDecimal> openingStockByStore(String storeId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        return transactionLineRepository.findOpeningStockByStore(store.getId()).stream()
+        return transactionLineRepository.findOpeningStockByStore(storeId).stream()
                 .collect(Collectors.toMap(
                         TransactionLineRepository.ItemOpeningRow::getItemId,
                         TransactionLineRepository.ItemOpeningRow::getQuantity));
     }
 
-    public PartyBalance setOpeningBalance(String partyId, String ownerId, double amount, BalanceDirection direction)
+    public PartyBalance setOpeningBalance(String partyId, Store store, double amount, BalanceDirection direction)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        Party party = partyService.findByIdForOwner(partyId, ownerId);
+        Party party = partyService.findByIdForStore(partyId, store.getId());
 
         Optional<Transaction> existing =
                 transactionRepository.findFirstByStoreIdAndEventAndPartyId(store.getId(), TransactionEvent.OPENING_BALANCE, partyId);
@@ -110,12 +106,11 @@ public class OpeningEntryService
         return PartyBalance.of(inOut == InOut.IN ? amount : -amount);
     }
 
-    /** Current opening drawer (cash) balance for the owner's store — 0 when none set. */
+    /** Current opening drawer (cash) balance for the store — 0 when none set. */
     @Transactional(readOnly = true)
-    public double openingCashByOwner(String ownerId)
+    public double openingCashByStore(String storeId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        return transactionRepository.findFirstByStoreIdAndEvent(store.getId(), TransactionEvent.OPENING_CASH)
+        return transactionRepository.findFirstByStoreIdAndEvent(storeId, TransactionEvent.OPENING_CASH)
                 .map(t -> {
                     Double value = t.getLines().getFirst().getValue();
                     return value != null ? value : 0;
@@ -128,10 +123,8 @@ public class OpeningEntryService
      * A single CASH IN line the cashbook folds into its opening figure; dated at
      * store creation so it always sorts before real movements. Zero clears it.
      */
-    public double setOpeningCash(String ownerId, double amount)
+    public double setOpeningCash(Store store, double amount)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-
         Optional<Transaction> existing =
                 transactionRepository.findFirstByStoreIdAndEvent(store.getId(), TransactionEvent.OPENING_CASH);
 
@@ -169,10 +162,9 @@ public class OpeningEntryService
         return amount;
     }
 
-    public BigDecimal setOpeningStock(String itemId, String ownerId, BigDecimal quantity)
+    public BigDecimal setOpeningStock(String itemId, Store store, BigDecimal quantity)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        StoreItem item = storeItemService.findByIdForOwner(itemId, ownerId);
+        StoreItem item = storeItemService.findByIdForStore(itemId, store.getId());
 
         Optional<Transaction> existing =
                 transactionRepository.findFirstByStoreIdAndEventAndLinesItemId(store.getId(), TransactionEvent.OPENING_STOCK, itemId);

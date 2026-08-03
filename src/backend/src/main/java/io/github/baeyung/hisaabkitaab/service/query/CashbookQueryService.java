@@ -1,24 +1,21 @@
 package io.github.baeyung.hisaabkitaab.service.query;
 
-import java.time.LocalDate;
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import io.github.baeyung.hisaabkitaab.dto.cashbook.CashbookDayResponse;
 import io.github.baeyung.hisaabkitaab.dto.cashbook.CashbookRowResponse;
-import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
-import io.github.baeyung.hisaabkitaab.service.StoreService;
 import io.github.baeyung.hisaabkitaab.service.query.support.ItemSummary;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance carried from all prior CASH
@@ -29,16 +26,13 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class CashbookQueryService
 {
-    private final StoreService storeService;
     private final TransactionLineRepository transactionLineRepository;
     private final TransactionRepository transactionRepository;
 
-    public CashbookDayResponse getRange(String ownerId, LocalDate from, LocalDate to)
+    public CashbookDayResponse getRange(String storeId, LocalDate from, LocalDate to)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-
-        double opening = transactionLineRepository.sumCashBefore(store.getId(), from);
-        List<TransactionLine> lines = transactionLineRepository.findCashLinesInRange(store.getId(), from, to);
+        double opening = transactionLineRepository.sumCashBefore(storeId, from);
+        List<TransactionLine> lines = transactionLineRepository.findCashLinesInRange(storeId, from, to);
 
         // The opening drawer balance is a baseline, not a movement. It's dated at the
         // store's opening, so viewing a window that starts on or before that date drops
@@ -46,7 +40,7 @@ public class CashbookQueryService
         // Fold it into the opening figure and drop it from the rows so it isn't lost or
         // double-counted — the cashbook opening always reflects the drawer balance.
         Transaction openingCash = transactionRepository
-                .findFirstByStoreIdAndEvent(store.getId(), TransactionEvent.OPENING_CASH)
+                .findFirstByStoreIdAndEvent(storeId, TransactionEvent.OPENING_CASH)
                 .orElse(null);
         if (openingCash != null && !openingCashDate(openingCash).isBefore(from))
         {

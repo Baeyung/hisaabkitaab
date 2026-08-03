@@ -21,12 +21,6 @@
       <div class="rm-skel"></div>
       <div class="rm-skel rm-skel--short"></div>
     </div>
-  } @else if (noStore()) {
-    <div class="rm-state">
-      <h2 class="rm-state__title">{{ locale.t('ledger.noStore.title') }}</h2>
-      <p class="rm-state__body">{{ locale.t('ledger.noStore.body') }}</p>
-      <a class="rm-btn rm-btn--primary" routerLink="/settings/general">{{ locale.t('ledger.noStore.cta') }}</a>
-    </div>
   } @else if (loadError()) {
     <div class="rm-state">
       <p role="alert" class="rm-alert">{{ locale.t('ledger.loadError') }}</p>
@@ -36,7 +30,7 @@
     <div class="rm-state">
       <h2 class="rm-state__title">{{ locale.t('ledger.empty.title') }}</h2>
       <p class="rm-state__body">{{ locale.t('ledger.empty.body') }}</p>
-      <a class="rm-btn rm-btn--primary" routerLink="/settings/party">{{ locale.t('ledger.empty.cta') }}</a>
+      <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('settings/party')">{{ locale.t('ledger.empty.cta') }}</a>
     </div>
   } @else {
     @if ((parties()?.length ?? 0) > 0) {
@@ -68,7 +62,7 @@
             @for (party of filtered(); track party.partyId) {
               <tr class="rm-rowlink" (click)="open(party.partyId)">
                 <td class="rm-cell-head">
-                  <a [routerLink]="['/ledger', party.partyId]" class="rm-tbl__name">{{ party.name }}</a>
+                  <a [routerLink]="stores.link('ledger', party.partyId)" class="rm-tbl__name">{{ party.name }}</a>
                 </td>
                 <td class="num" [attr.data-label]="locale.t('ledger.col.contact')">{{ party.contact || '—' }}</td>
                 <td class="end rm-cell-amt">
@@ -105,7 +99,7 @@
               @for (group of categories(); track group.category) {
                 <tr class="rm-rowlink" (click)="openCategory(group.category)">
                   <td class="rm-cell-head">
-                    <a [routerLink]="['/ledger/category', group.category]" class="rm-tbl__name">{{ categoryLabel(group.category) }}</a>
+                    <a [routerLink]="stores.link('ledger/category', group.category)" class="rm-tbl__name">{{ categoryLabel(group.category) }}</a>
                   </td>
                   <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">{{ group.count }}</td>
                   <td class="end num amt--out rm-cell-amt">

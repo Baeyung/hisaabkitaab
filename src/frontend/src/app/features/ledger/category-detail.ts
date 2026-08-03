@@ -2,6 +2,7 @@ import { Component, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
+import { StoreService } from '../../core/store/store.service';
 import { ExpenseCategoryGroup } from '../../core/store/ledger.models';
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { PrintHeader } from '../../shared/print-header';
@@ -21,6 +22,8 @@ export class CategoryDetail {
   readonly key = input.required<string>();
 
   protected readonly locale = inject(LocaleService);
+
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(LedgerService);
 
   /** Display label for the spend head: seed tokens translated, custom names shown raw. */

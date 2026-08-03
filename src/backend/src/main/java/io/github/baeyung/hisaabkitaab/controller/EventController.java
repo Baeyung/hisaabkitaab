@@ -1,6 +1,8 @@
 package io.github.baeyung.hisaabkitaab.controller;
 
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
+import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.impl.EventService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.security.Principal;
-
 @RestController
-@RequestMapping("/api/event")
+@RequestMapping("/api/stores/{storeId}/event")
 public class EventController
 {
     private final EventService eventService;
@@ -31,10 +31,10 @@ public class EventController
     @PostMapping
     public ResponseEntity<EventRequest> publishEvent(
             @Valid @RequestBody EventRequest event,
-            Principal principal
+            @CurrentStore Store store
     )
     {
-        this.eventService.publishEvent(event, principal.getName());
+        this.eventService.publishEvent(event, store);
         return ResponseEntity.ok(event);
     }
 
@@ -42,10 +42,10 @@ public class EventController
     @GetMapping("/{id}")
     public ResponseEntity<EventRequest> getEvent(
             @PathVariable String id,
-            Principal principal
+            @CurrentStore Store store
     )
     {
-        return ResponseEntity.ok(this.eventService.getEvent(id, principal.getName()));
+        return ResponseEntity.ok(this.eventService.getEvent(id, store));
     }
 
     /** Correct an entry in place; its lines are re-derived from the new values. */
@@ -53,20 +53,20 @@ public class EventController
     public ResponseEntity<Void> updateEvent(
             @PathVariable String id,
             @Valid @RequestBody EventRequest event,
-            Principal principal
+            @CurrentStore Store store
     )
     {
-        this.eventService.updateEvent(id, event, principal.getName());
+        this.eventService.updateEvent(id, event, store);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(
             @PathVariable String id,
-            Principal principal
+            @CurrentStore Store store
     )
     {
-        this.eventService.deleteEvent(id, principal.getName());
+        this.eventService.deleteEvent(id, store);
         return ResponseEntity.noContent().build();
     }
 }

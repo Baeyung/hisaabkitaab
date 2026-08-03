@@ -1,6 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { form, FormField, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
@@ -28,7 +27,7 @@ const EMPTY_FORM: PartyForm = { name: '', contact: '', address: '' };
  */
 @Component({
   selector: 'app-party',
-  imports: [FormField, RouterLink, NgTemplateOutlet, DigitsOnly],
+  imports: [FormField, NgTemplateOutlet, DigitsOnly],
   templateUrl: './party.html',
   styleUrl: './party.css',
 })
@@ -39,7 +38,6 @@ export class SettingsParty {
   protected readonly parties = signal<Party[] | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
-  protected readonly noStore = signal(false);
 
   protected readonly editingId = signal<string | null>(null);
   protected readonly adding = signal(false);
@@ -60,15 +58,10 @@ export class SettingsParty {
   async load(): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
-    this.noStore.set(false);
     try {
       this.parties.set(await this.api.list());
-    } catch (err) {
-      if ((err as { status?: number }).status === 404) {
-        this.noStore.set(true);
-      } else {
-        this.loadError.set(true);
-      }
+    } catch {
+      this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }

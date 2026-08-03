@@ -10,7 +10,7 @@ import { InstallButton } from '../../shared/install-button/install-button';
 import { PrintDetailsDialog } from '../../shared/print-details-dialog';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
-import { NAV, NavGroup, NavLeaf } from './nav';
+import { NAV } from './nav';
 
 @Component({
   selector: 'app-shell',
@@ -23,27 +23,13 @@ export class Shell {
   protected readonly locale = inject(LocaleService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly stores = inject(StoreService);
+  protected readonly stores = inject(StoreService);
 
   protected readonly nav = NAV;
   // open by default on wide screens, collapsed below the 760px breakpoint
   protected readonly open = signal(this.matches('(min-width: 760px)'));
   // groups start collapsed on load; user expands what they need
   private readonly openGroups = signal(new Set<string>());
-
-  /** Store-gated leaves stay locked until a store exists. */
-  isLocked(child: NavLeaf): boolean {
-    return !!child.locked && !this.stores.hasStore();
-  }
-
-  /**
-   * A group is locked only when it has nothing left to offer — i.e. every child
-   * is locked. Derived rather than flagged so it can't drift from the children:
-   * Settings stays open because General is always reachable.
-   */
-  isGroupLocked(group: NavGroup): boolean {
-    return group.children.every((child) => this.isLocked(child));
-  }
 
   toggle(): void {
     this.open.update((v) => !v);

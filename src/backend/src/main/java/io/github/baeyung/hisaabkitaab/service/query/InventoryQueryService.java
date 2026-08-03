@@ -1,19 +1,8 @@
 package io.github.baeyung.hisaabkitaab.service.query;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import io.github.baeyung.hisaabkitaab.dto.inventory.ItemMovementResponse;
 import io.github.baeyung.hisaabkitaab.dto.inventory.ItemMovementRowResponse;
 import io.github.baeyung.hisaabkitaab.dto.inventory.ItemStockResponse;
-import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
@@ -21,8 +10,16 @@ import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.ItemStockRow;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
-import io.github.baeyung.hisaabkitaab.service.StoreService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Inventory: every item with its current stock (Σ IN − Σ OUT of STOCK-line
@@ -35,23 +32,20 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class InventoryQueryService
 {
-    private final StoreService storeService;
     private final StoreItemService storeItemService;
     private final StoreItemRepository storeItemRepository;
     private final TransactionLineRepository transactionLineRepository;
 
-    public List<ItemStockResponse> listStock(String ownerId)
+    public List<ItemStockResponse> listStock(String storeId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-
-        Map<String, BigDecimal> stock = transactionLineRepository.sumStockByStore(store.getId())
+        Map<String, BigDecimal> stock = transactionLineRepository.sumStockByStore(storeId)
                 .stream()
                 .collect(Collectors.toMap(
                         ItemStockRow::getItemId,
                         row -> row.getStock() != null ? row.getStock() : BigDecimal.ZERO
                 ));
 
-        return storeItemRepository.findByStoreId(store.getId())
+        return storeItemRepository.findByStoreId(storeId)
                 .stream()
                 .sorted(Comparator.comparing(StoreItem::getName, String.CASE_INSENSITIVE_ORDER))
                 .map(item -> new ItemStockResponse(
@@ -65,14 +59,13 @@ public class InventoryQueryService
                 .toList();
     }
 
-    public ItemMovementResponse getMovement(String ownerId, String itemId)
+    public ItemMovementResponse getMovement(String storeId, String itemId)
     {
-        // findByIdForOwner 404s on another owner's item; the lines are then scoped to that
-        // item's own store, so only entries posted in these books can move this stock.
-        StoreItem item = storeItemService.findByIdForOwner(itemId, ownerId);
+        // findByIdForStore 404s on another store's item; the lines are then scoped to the
+        // same store, so only entries posted in these books can move this stock.
+        StoreItem item = storeItemService.findByIdForStore(itemId, storeId);
 
-        List<TransactionLine> lines = transactionLineRepository
-                .findItemMovementLines(itemId, item.getStore().getId());
+        List<TransactionLine> lines = transactionLineRepository.findItemMovementLines(itemId, storeId);
 
         List<ItemMovementRowResponse> rows = new ArrayList<>(lines.size());
         BigDecimal running = BigDecimal.ZERO;

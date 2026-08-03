@@ -5,7 +5,7 @@
       <p class="set__sub">{{ locale.t('settings.items.subtitle') }}</p>
     </div>
 
-    @if (!loading() && !noStore() && !loadError() && (items()?.length ?? 0) > 0) {
+    @if (!loading() && !loadError() && (items()?.length ?? 0) > 0) {
       <button type="button" class="btn btn--primary" (click)="startAdd()" [disabled]="adding()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M12 5v14M5 12h14" />
@@ -20,12 +20,6 @@
       <div class="skel skel--row"></div>
       <div class="skel skel--row"></div>
       <div class="skel skel--row skel--short"></div>
-    </div>
-  } @else if (noStore()) {
-    <div class="state">
-      <h2 class="state__title">{{ locale.t('settings.items.noStore.title') }}</h2>
-      <p class="state__body">{{ locale.t('settings.items.noStore.body') }}</p>
-      <a class="btn btn--primary" routerLink="/settings/general">{{ locale.t('settings.items.noStore.cta') }}</a>
     </div>
   } @else if (loadError()) {
     <div class="state">

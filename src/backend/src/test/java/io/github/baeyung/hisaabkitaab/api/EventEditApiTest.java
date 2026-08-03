@@ -27,15 +27,15 @@ class EventEditApiTest extends ApiTest
     void editAndDeleteRederiveEveryBalance() throws Exception
     {
         signup(USER);
-        createStore(USER, "Rana Cloth");
+        String store = createStore(USER, "Rana Cloth");
 
-        MvcResult itemResult = mvc.perform(post("/api/store-items").with(as(USER))
+        MvcResult itemResult = mvc.perform(post(api(store, "/store-items")).with(as(USER))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Lawn\",\"unit\":\"m\",\"salePrice\":100,\"costPrice\":80}"))
                 .andExpect(status().isOk())
                 .andReturn();
         String itemId = tree(itemResult).get("id").asText();
-        mvc.perform(put("/api/store-items/" + itemId + "/opening-stock").with(as(USER))
+        mvc.perform(put(api(store, "/store-items/" + itemId + "/opening-stock")).with(as(USER))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity\":25}"))
                 .andExpect(status().isOk());
@@ -53,16 +53,16 @@ class EventEditApiTest extends ApiTest
                   "items":[{"itemId":"%s","quantity":5,"itemSoldAt":100}]
                 }
                 """.formatted(today, itemId);
-        mvc.perform(post("/api/event").with(as(USER))
+        mvc.perform(post(api(store, "/event")).with(as(USER))
                         .contentType(MediaType.APPLICATION_JSON).content(sale))
                 .andExpect(status().isOk());
 
-        String entryId = tree(mvc.perform(get("/api/cashbook").with(as(USER)))
+        String entryId = tree(mvc.perform(get(api(store, "/cashbook")).with(as(USER)))
                 .andExpect(status().isOk()).andReturn())
                 .get("rows").get(0).get("transactionId").asText();
 
         // Reverse-map: the entry reads back as the form request that produced it.
-        mvc.perform(get("/api/event/" + entryId).with(as(USER)))
+        mvc.perform(get(api(store, "/event/" + entryId)).with(as(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactionEvent").value("SALE"))
                 .andExpect(jsonPath("$.cashAmount").value(200.0))
@@ -84,29 +84,29 @@ class EventEditApiTest extends ApiTest
                   "items":[{"itemId":"%s","quantity":5,"itemSoldAt":100}]
                 }
                 """.formatted(today, itemId);
-        mvc.perform(put("/api/event/" + entryId).with(as(USER))
+        mvc.perform(put(api(store, "/event/" + entryId)).with(as(USER))
                         .contentType(MediaType.APPLICATION_JSON).content(corrected))
                 .andExpect(status().isNoContent());
 
         // Drawer now reflects the corrected 500 in, and stock is still 5 out (unchanged).
-        mvc.perform(get("/api/cashbook").with(as(USER)))
+        mvc.perform(get(api(store, "/cashbook")).with(as(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalIn").value(500.0))
                 .andExpect(jsonPath("$.rows.length()").value(1));
-        mvc.perform(get("/api/inventory").with(as(USER)))
+        mvc.perform(get(api(store, "/inventory")).with(as(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].currentStock").value(20));
 
         // Delete undoes the entry: no bills, drawer empty, stock back to opening.
-        mvc.perform(delete("/api/event/" + entryId).with(as(USER)))
+        mvc.perform(delete(api(store, "/event/" + entryId)).with(as(USER)))
                 .andExpect(status().isNoContent());
-        mvc.perform(get("/api/transactions/bills").with(as(USER)))
+        mvc.perform(get(api(store, "/transactions/bills")).with(as(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
-        mvc.perform(get("/api/cashbook").with(as(USER)))
+        mvc.perform(get(api(store, "/cashbook")).with(as(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalIn").value(0.0));
-        mvc.perform(get("/api/inventory").with(as(USER)))
+        mvc.perform(get(api(store, "/inventory")).with(as(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].currentStock").value(25));
     }
@@ -115,8 +115,8 @@ class EventEditApiTest extends ApiTest
     void editingAnotherOwnersEntryIs404() throws Exception
     {
         signup(USER + "1");
-        createStore(USER + "1", "Rana Cloth");
-        mvc.perform(get("/api/event/does-not-exist").with(as(USER + "1")))
+        String store = createStore(USER + "1", "Rana Cloth");
+        mvc.perform(get(api(store, "/event/does-not-exist")).with(as(USER + "1")))
                 .andExpect(status().isNotFound());
     }
 }

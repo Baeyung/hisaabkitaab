@@ -1,0 +1,133 @@
+<!-- The picker sits outside the app shell (no store is chosen yet), so it carries
+     its own frame: brand, the session controls, and the way back out. -->
+<header class="topbar">
+  <div class="topbar__brand">
+    <span class="topbar__logo"><app-brand-mark /></span>
+    <b>{{ locale.t('app.name') }}</b>
+  </div>
+  <div class="topbar__tools">
+    <app-language-toggle />
+    <button type="button" class="topbar__logout" (click)="logout()">{{ locale.t('home.logout') }}</button>
+  </div>
+</header>
+
+<section class="pick">
+  <header class="pick__head">
+    <div>
+      <h1 class="pick__title">{{ locale.t('stores.title') }}</h1>
+      <p class="pick__sub">{{ locale.t('stores.subtitle') }}</p>
+    </div>
+
+    @if (!loading() && !loadError() && list().length > 0 && !creating()) {
+      <button type="button" class="btn btn--ghost" (click)="startCreating()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        {{ locale.t('stores.add') }}
+      </button>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="pick__grid" aria-hidden="true">
+      <div class="skel skel--card"></div>
+      <div class="skel skel--card"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="pick__state">
+      <p role="alert" class="pick__alert">{{ locale.t('stores.loadError') }}</p>
+      <button type="button" class="btn btn--ghost" (click)="load()">{{ locale.t('stores.retry') }}</button>
+    </div>
+  } @else {
+    @if (list().length > 0) {
+      <ul class="pick__grid">
+        @for (store of list(); track store.id) {
+          <li>
+            <button type="button" class="card" (click)="open(store)">
+              <span class="card__mark" [class.card__mark--img]="store.logoUri">
+                @if (store.logoUri) {
+                  <img [src]="store.logoUri" alt="" />
+                } @else {
+                  <span aria-hidden="true">{{ markOf(store) }}</span>
+                }
+              </span>
+              <span class="card__meta">
+                <span class="card__name">{{ store.name }}</span>
+                @if (store.address) {
+                  <span class="card__line">{{ store.address }}</span>
+                }
+                @if (store.contact) {
+                  <span class="card__line">{{ store.contact }}</span>
+                }
+              </span>
+              <svg class="card__go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (creating()) {
+      <form class="new" (submit)="$event.preventDefault(); submit()">
+        <div class="new__head">
+          <span class="new__mark">
+            @if (initial()) {
+              <span aria-hidden="true">{{ initial() }}</span>
+            } @else {
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                <path d="M4 9l1-4h14l1 4M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M4 9h16M9 20v-6h6v6" />
+              </svg>
+            }
+          </span>
+          <div>
+            <h2 class="new__title">
+              {{ list().length === 0 ? locale.t('stores.first.title') : locale.t('stores.new.title') }}
+            </h2>
+            <p class="new__help">
+              {{ list().length === 0 ? locale.t('stores.first.help') : locale.t('stores.new.help') }}
+            </p>
+          </div>
+        </div>
+
+        <div class="new__fields">
+          <div class="fld">
+            <label class="fld__label" for="new-store-name">{{ locale.t('settings.general.name') }}</label>
+            <input id="new-store-name" class="fld__input" [formField]="storeForm.name" type="text" autocomplete="organization" />
+            @if (storeForm.name().touched() && storeForm.name().invalid()) {
+              <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+            }
+          </div>
+
+          <div class="fld">
+            <label class="fld__label" for="new-store-address">{{ locale.t('settings.general.address') }}</label>
+            <input id="new-store-address" class="fld__input" [formField]="storeForm.address" type="text" autocomplete="street-address" />
+          </div>
+
+          <div class="fld">
+            <label class="fld__label" for="new-store-contact">{{ locale.t('settings.general.contact') }}</label>
+            <input id="new-store-contact" class="fld__input" [formField]="storeForm.contact" type="tel" inputmode="numeric" autocomplete="tel" />
+          </div>
+        </div>
+
+        @if (createError()) {
+          <p role="alert" class="pick__alert">{{ locale.t('error.generic') }}</p>
+        }
+
+        <p class="new__note">{{ locale.t('stores.new.note') }}</p>
+
+        <div class="new__foot">
+          <button type="submit" class="btn btn--primary" [disabled]="saving()">
+            {{ saving() ? locale.t('settings.general.saving') : locale.t('settings.general.create') }}
+          </button>
+          @if (list().length > 0) {
+            <button type="button" class="btn btn--text" (click)="cancelCreating()">
+              {{ locale.t('common.cancel') }}
+            </button>
+          }
+        </div>
+      </form>
+    }
+  }
+</section>

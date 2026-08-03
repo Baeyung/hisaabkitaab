@@ -3,25 +3,37 @@ import { CanActivateFn, Router } from '@angular/router';
 import { StoreService } from './store.service';
 
 /**
- * Gates the app on the user having set up a store. Settings › General sits
- * outside this guard (see app.routes.ts) so there is somewhere to create one.
+ * Resolves the `:storeId` in the URL into the current store, refusing anything that
+ * isn't one of the user's own — a stale bookmark, a hand-typed id, or a link from
+ * someone else's shop all land back on the picker instead of firing a screen full
+ * of 404s. (The backend refuses them too; this is so the user sees a way forward.)
  *
- * Loads the stores when they haven't been fetched yet, which makes this the
- * single loader for guarded routes — deep links and refreshes resolve correctly
- * instead of racing an in-flight fetch. A failure sends the user to the store
- * page rather than through: the same safe default the nav lock takes.
+ * Loads the store list when it hasn't been fetched yet, which makes this the single
+ * loader for store routes: deep links and refreshes resolve correctly instead of
+ * racing an in-flight fetch.
  */
-export const storeGuard: CanActivateFn = async () => {
+export const storeGuard: CanActivateFn = async (route) => {
   const stores = inject(StoreService);
   const router = inject(Router);
-  const storePage = router.createUrlTree(['/settings/general']);
+  const picker = router.createUrlTree(['/stores']);
+
+  const storeId = route.paramMap.get('storeId');
+  if (!storeId) {
+    return picker;
+  }
 
   if (stores.stores() === null) {
     try {
       await stores.list();
     } catch {
-      return storePage;
+      return picker;
     }
   }
-  return stores.hasStore() ? true : storePage;
+
+  if (!stores.stores()?.some((s) => s.id === storeId)) {
+    return picker;
+  }
+
+  stores.select(storeId);
+  return true;
 };

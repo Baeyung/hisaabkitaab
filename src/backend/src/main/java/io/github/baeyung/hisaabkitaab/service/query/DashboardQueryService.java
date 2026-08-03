@@ -1,49 +1,34 @@
 package io.github.baeyung.hisaabkitaab.service.query;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalLong;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse;
-import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.DailyPoint;
-import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.DeadStockItem;
-import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.ExpenseGroup;
-import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.PartyRef;
-import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.StaleParty;
-import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.TopItem;
+import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse.*;
 import io.github.baeyung.hisaabkitaab.entity.Party;
-import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
+import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.ItemStockRow;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
-import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
-import io.github.baeyung.hisaabkitaab.service.StoreService;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging.Movement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The analytics dashboard: one call rolls the store's transaction lines into
  * the home screen's cards, trend series, and top lists. Everything derives from
  * the same read model the other query services use — nothing new is persisted.
- *
  * ponytail: aggregates in Java over per-window fetches, mirroring
  * {@link LedgerQueryService}. A shop's window-scoped sale/expense line count is
  * small; add a cached read-model only if a real store ever makes this slow.
@@ -59,16 +44,12 @@ public class DashboardQueryService
     private static final int TOP_STALE = 12;
     private static final int TOP_EXPENSES = 6;
 
-    private final StoreService storeService;
     private final PartyRepository partyRepository;
     private final StoreItemRepository storeItemRepository;
     private final TransactionLineRepository transactionLineRepository;
 
-    public DashboardResponse getDashboard(String ownerId, LocalDate from, LocalDate to)
+    public DashboardResponse getDashboard(String storeId, LocalDate from, LocalDate to)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        String storeId = store.getId();
-
         // Cash position as-of `to` inclusive: net cash strictly before the day after.
         double cashPosition = transactionLineRepository.sumCashBefore(storeId, to.plusDays(1));
 

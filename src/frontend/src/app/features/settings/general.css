@@ -28,7 +28,7 @@
   color: var(--kg-muted);
 }
 
-/* disabled "add another store" — cosmetic only, one store for now */
+/* "add another store" — leads to the picker, which is where shops are created. */
 .set__add {
   flex: none;
   display: inline-flex;
@@ -39,11 +39,19 @@
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  color: var(--kg-faint);
+  color: var(--kg-muted);
+  text-decoration: none;
   background: transparent;
   border: 1px dashed var(--kg-line-strong);
   border-radius: 10px;
-  cursor: not-allowed;
+}
+.set__add:hover {
+  color: var(--kg-ink);
+  border-color: var(--kg-line-hover);
+}
+.set__add:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
 }
 
 /* ── body: content sits flat on the page (no box-in-box) ───────────── */

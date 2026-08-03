@@ -14,8 +14,12 @@ export function isEditableEntry(event: TransactionEventKind): boolean {
   return event in EDIT_SCREEN;
 }
 
-/** Router link to an entry's edit screen, or null for a non-editable (opening) event. */
+/**
+ * Route segments to an entry's edit screen, or null for a non-editable (opening) event.
+ * Store-relative: callers pass these through {@code StoreService.link}, which puts the
+ * current shop in front.
+ */
 export function entryEditLink(event: TransactionEventKind, transactionId: string): string[] | null {
   const screen = EDIT_SCREEN[event];
-  return screen ? ['/new-entry', screen, transactionId] : null;
+  return screen ? ['new-entry', screen, transactionId] : null;
 }

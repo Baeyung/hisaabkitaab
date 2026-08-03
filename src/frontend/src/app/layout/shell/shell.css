@@ -66,6 +66,50 @@
   justify-content: center;
 }
 
+/* The shop whose books are open, and the way to another. Sits at the far end of
+   the bar so it reads as context ("you are here"), not as another nav item. */
+.storeswitch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-inline-start: auto;
+  max-width: 46vw;
+  height: 36px;
+  padding-inline: 12px;
+  color: inherit;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+.storeswitch:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.storeswitch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+.storeswitch__name {
+  font-size: 13.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.storeswitch__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-chrome-dim);
+  white-space: nowrap;
+}
+/* On narrow screens the shop's name is what matters; the verb is carried by the
+   swap glyph and the title attribute. */
+@media (max-width: 640px) {
+  .storeswitch__label {
+    display: none;
+  }
+}
+
 /* ── Body: sidebar + content ─────────────────────────────── */
 .body {
   display: flex;
@@ -163,27 +207,6 @@
   padding-block: 7px;
   font-weight: 500;
   font-size: 13px;
-}
-
-/* Store-gated items read as inert: muted, no hover (see .nav-item:hover:not(:disabled)),
-   not-allowed cursor, and a trailing padlock. `disabled` also drops them from the
-   tab order, so the state is conveyed without relying on colour alone.
-   The label keeps its full --kg-chrome-locked (3.6:1 on the paper theme's
-   frame, 4.5:1 on the darker lamplight one) — dimming it further makes it
-   unreadable, and the point is for the user to see what's waiting to unlock. */
-.nav-item.locked {
-  color: var(--kg-chrome-locked);
-  cursor: not-allowed;
-}
-
-/* Only the glyphs recede; the label stays legible. */
-.nav-item.locked .nav-icon,
-.lock-mark {
-  opacity: 0.75;
-}
-
-.lock-mark {
-  flex: none;
 }
 
 .foot {

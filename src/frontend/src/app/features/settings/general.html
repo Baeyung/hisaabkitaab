@@ -5,20 +5,12 @@
       <p class="set__sub">{{ locale.t('settings.general.subtitle') }}</p>
     </div>
 
-    @if (store()) {
-      <button
-        type="button"
-        class="set__add"
-        disabled
-        [attr.title]="locale.t('settings.general.addStoreSoon')"
-        [attr.aria-label]="locale.t('settings.general.addStore') + ' — ' + locale.t('settings.general.addStoreSoon')"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        {{ locale.t('settings.general.addStore') }}
-      </button>
-    }
+    <a class="set__add" routerLink="/stores">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      {{ locale.t('settings.general.addStore') }}
+    </a>
   </header>
 
   @if (loading()) {
@@ -55,13 +47,6 @@
           <div class="plate__hint">{{ locale.t('settings.general.nameplateHint') }}</div>
         </div>
       </div>
-
-      @if (!store()) {
-        <div class="setup">
-          <h2 class="setup__title">{{ locale.t('settings.general.setup.title') }}</h2>
-          <p class="setup__help">{{ locale.t('settings.general.setup.help') }}</p>
-        </div>
-      }
 
       <!-- Details -->
       <section class="sec" aria-labelledby="sec-details">
@@ -195,9 +180,7 @@
 
       <div class="set__foot">
         <button type="submit" class="btn btn--primary" [disabled]="saving()">
-          {{ saving()
-            ? locale.t('settings.general.saving')
-            : (store() ? locale.t('settings.general.save') : locale.t('settings.general.create')) }}
+          {{ saving() ? locale.t('settings.general.saving') : locale.t('settings.general.save') }}
         </button>
         <span class="set__status" role="status" aria-live="polite">
           @if (savedKey(); as key) {

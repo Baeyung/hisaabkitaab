@@ -2,12 +2,8 @@ package io.github.baeyung.hisaabkitaab.api;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -76,19 +72,19 @@ class StoreApiTest extends ApiTest
     void openingCashDefaultsToZeroThenRoundTrips() throws Exception
     {
         signup("3101000005");
-        createStore("3101000005", "Rana Cloth");
+        String store = createStore("3101000005", "Rana Cloth");
 
-        mvc.perform(get("/api/stores/opening-cash").with(as("3101000005")))
+        mvc.perform(get(api(store, "/opening-cash")).with(as("3101000005")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(0.0));
 
-        mvc.perform(put("/api/stores/opening-cash").with(as("3101000005"))
+        mvc.perform(put(api(store, "/opening-cash")).with(as("3101000005"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"amount\":1500.0}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(1500.0));
 
-        mvc.perform(get("/api/stores/opening-cash").with(as("3101000005")))
+        mvc.perform(get(api(store, "/opening-cash")).with(as("3101000005")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(1500.0));
     }
@@ -97,10 +93,49 @@ class StoreApiTest extends ApiTest
     void openingCashRejectsNegative() throws Exception
     {
         signup("3101000006");
-        createStore("3101000006", "Rana Cloth");
-        mvc.perform(put("/api/stores/opening-cash").with(as("3101000006"))
+        String store = createStore("3101000006", "Rana Cloth");
+        mvc.perform(put(api(store, "/opening-cash")).with(as("3101000006"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"amount\":-1.0}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    /** Many shops under one login: each is created, listed and read on its own id. */
+    @Test
+    void oneOwnerCanHoldSeveralStores() throws Exception
+    {
+        signup("3101000007");
+        String cloth = createStore("3101000007", "Rana Cloth");
+        String hardware = createStore("3101000007", "Rana Hardware");
+
+        mvc.perform(get("/api/stores").with(as("3101000007")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+
+        mvc.perform(get("/api/stores/" + cloth).with(as("3101000007")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Rana Cloth"));
+
+        mvc.perform(get("/api/stores/" + hardware).with(as("3101000007")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Rana Hardware"));
+    }
+
+    /** Each store carries its own drawer: setting one leaves the other at zero. */
+    @Test
+    void openingCashIsPerStore() throws Exception
+    {
+        signup("3101000008");
+        String cloth = createStore("3101000008", "Rana Cloth");
+        String hardware = createStore("3101000008", "Rana Hardware");
+
+        mvc.perform(put(api(cloth, "/opening-cash")).with(as("3101000008"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"amount\":1500.0}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get(api(hardware, "/opening-cash")).with(as("3101000008")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(0.0));
     }
 }

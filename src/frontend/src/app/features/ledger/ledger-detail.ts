@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
+import { StoreService } from '../../core/store/store.service';
 import { EventService } from '../../core/store/event.service';
 import { PartyStatement, PartyStatementRow } from '../../core/store/ledger.models';
 import { Balance } from '../../core/store/balance.models';
@@ -32,6 +33,8 @@ export class LedgerDetail {
   readonly partyId = input.required<string>();
 
   protected readonly locale = inject(LocaleService);
+
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(LedgerService);
   private readonly events = inject(EventService);
   private readonly router = inject(Router);
@@ -122,14 +125,14 @@ export class LedgerDetail {
 
   /** A sale row's transactionId is the bill's id — open its detail. */
   openBill(transactionId: string): void {
-    void this.router.navigate(['/bill-management', transactionId]);
+    void this.router.navigate(this.stores.link('bill-management', transactionId));
   }
 
   /** Open the entry's screen in edit mode, prefilled. */
   editEntry(event: TransactionEventKind, transactionId: string): void {
     const link = entryEditLink(event, transactionId);
     if (link) {
-      void this.router.navigate(link);
+      void this.router.navigate(this.stores.link(...link));
     }
   }
 

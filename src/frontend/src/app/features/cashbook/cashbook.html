@@ -39,12 +39,6 @@
       <div class="rm-skel"></div>
       <div class="rm-skel rm-skel--short"></div>
     </div>
-  } @else if (noStore()) {
-    <div class="rm-state">
-      <h2 class="rm-state__title">{{ locale.t('cashbook.noStore.title') }}</h2>
-      <p class="rm-state__body">{{ locale.t('cashbook.noStore.body') }}</p>
-      <a class="rm-btn rm-btn--primary" routerLink="/settings/general">{{ locale.t('cashbook.noStore.cta') }}</a>
-    </div>
   } @else if (loadError()) {
     <div class="rm-state">
       <p role="alert" class="rm-alert">{{ locale.t('cashbook.loadError') }}</p>
@@ -95,7 +89,7 @@
                   <td class="num">{{ time(row.occurredAt) }}</td>
                   <td class="rm-cell-head">
                     @if (row.event === 'SALE') {
-                      <a [routerLink]="['/bill-management', row.transactionId]" (click)="$event.stopPropagation()" class="rm-tbl__name">{{ locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</a>
+                      <a [routerLink]="stores.link('bill-management', row.transactionId)" (click)="$event.stopPropagation()" class="rm-tbl__name">{{ locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</a>
                     } @else {
                       <span class="rm-tbl__name">{{ locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</span>
                     }

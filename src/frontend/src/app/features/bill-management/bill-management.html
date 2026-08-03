@@ -9,7 +9,7 @@
       <h1 class="rm-title">{{ locale.t('nav.billManagement') }}</h1>
       <p class="rm-sub">{{ locale.t('bill.subtitle') }}</p>
     </div>
-    <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('bill.new') }}</a>
+    <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{ locale.t('bill.new') }}</a>
   </header>
 
   @if (loading()) {
@@ -17,12 +17,6 @@
       <div class="rm-skel"></div>
       <div class="rm-skel"></div>
       <div class="rm-skel rm-skel--short"></div>
-    </div>
-  } @else if (noStore()) {
-    <div class="rm-state">
-      <h2 class="rm-state__title">{{ locale.t('bill.noStore.title') }}</h2>
-      <p class="rm-state__body">{{ locale.t('bill.noStore.body') }}</p>
-      <a class="rm-btn rm-btn--primary" routerLink="/settings/general">{{ locale.t('bill.noStore.cta') }}</a>
     </div>
   } @else if (loadError()) {
     <div class="rm-state">
@@ -33,7 +27,7 @@
     <div class="rm-state">
       <h2 class="rm-state__title">{{ locale.t('bill.empty.title') }}</h2>
       <p class="rm-state__body">{{ locale.t('bill.empty.body') }}</p>
-      <a class="rm-btn rm-btn--primary" routerLink="/new-entry/sale">{{ locale.t('bill.empty.cta') }}</a>
+      <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{ locale.t('bill.empty.cta') }}</a>
     </div>
   } @else {
     <!-- The list itself prints only in report layout; invoices print instead. -->
@@ -115,7 +109,7 @@
             @for (bill of filtered(); track bill.id) {
               <tr class="rm-rowlink" (click)="open(bill.id)">
                 <td class="rm-cell-head">
-                  <a [routerLink]="['/bill-management', bill.id]" class="rm-tbl__name num">
+                  <a [routerLink]="stores.link('bill-management', bill.id)" class="rm-tbl__name num">
                     {{ bill.billNumber || '—' }}
                   </a>
                 </td>

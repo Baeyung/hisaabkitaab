@@ -1,27 +1,24 @@
 package io.github.baeyung.hisaabkitaab.service.query;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
 import io.github.baeyung.hisaabkitaab.dto.transaction.BillDetailResponse;
 import io.github.baeyung.hisaabkitaab.dto.transaction.BillLineResponse;
 import io.github.baeyung.hisaabkitaab.dto.transaction.BillSummaryResponse;
-import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
-import io.github.baeyung.hisaabkitaab.service.StoreService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Bills, which are simply SALE transactions read back as invoices. Bill amounts
@@ -34,15 +31,12 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class TransactionQueryService
 {
-    private final StoreService storeService;
     private final TransactionRepository transactionRepository;
 
-    public List<BillSummaryResponse> listBills(String ownerId, String partyId, String itemId)
+    public List<BillSummaryResponse> listBills(String storeId, String partyId, String itemId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-
         return transactionRepository
-                .findBillsFiltered(store.getId(), TransactionEvent.SALE, blankToNull(partyId), blankToNull(itemId))
+                .findBillsFiltered(storeId, TransactionEvent.SALE, blankToNull(partyId), blankToNull(itemId))
                 .stream()
                 .map(transaction -> new BillSummaryResponse(
                         transaction.getId(),
@@ -54,12 +48,10 @@ public class TransactionQueryService
                 .toList();
     }
 
-    public BillDetailResponse getBillDetail(String ownerId, String transactionId)
+    public BillDetailResponse getBillDetail(String storeId, String transactionId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-
         // Scoped by store id, and a non-SALE id is "not found" — bills are only ever sales.
-        Transaction transaction = transactionRepository.findByIdAndStoreId(transactionId, store.getId())
+        Transaction transaction = transactionRepository.findByIdAndStoreId(transactionId, storeId)
                 .filter(t -> t.getEvent() == TransactionEvent.SALE)
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Bill", transactionId));
 
@@ -71,15 +63,14 @@ public class TransactionQueryService
      * SALE bills in this store are silently dropped; the result keeps the caller's id order so the
      * invoices print in the order the list showed them.
      */
-    public List<BillDetailResponse> getBillDetails(String ownerId, List<String> transactionIds)
+    public List<BillDetailResponse> getBillDetails(String storeId, List<String> transactionIds)
     {
         if (transactionIds == null || transactionIds.isEmpty())
         {
             return List.of();
         }
 
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        Map<String, Transaction> byId = transactionRepository.findByIdInAndStoreId(transactionIds, store.getId())
+        Map<String, Transaction> byId = transactionRepository.findByIdInAndStoreId(transactionIds, storeId)
                 .stream()
                 .filter(t -> t.getEvent() == TransactionEvent.SALE)
                 .collect(Collectors.toMap(Transaction::getId, t -> t));

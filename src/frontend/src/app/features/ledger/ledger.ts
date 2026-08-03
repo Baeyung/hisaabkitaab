@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
+import { StoreService } from '../../core/store/store.service';
 import { ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.models';
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
@@ -19,6 +20,7 @@ import { PrintHeader } from '../../shared/print-header';
 })
 export class Ledger {
   protected readonly locale = inject(LocaleService);
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(LedgerService);
   private readonly router = inject(Router);
 
@@ -26,7 +28,6 @@ export class Ledger {
   protected readonly categories = signal<ExpenseCategoryGroup[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
-  protected readonly noStore = signal(false);
   protected readonly query = signal('');
 
   protected readonly filtered = computed(() => {
@@ -49,28 +50,23 @@ export class Ledger {
   async load(): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
-    this.noStore.set(false);
     try {
       const [parties, categories] = await Promise.all([this.api.list(), this.api.listExpenseCategories()]);
       this.parties.set(parties);
       this.categories.set(categories);
-    } catch (err) {
-      if ((err as { status?: number }).status === 404) {
-        this.noStore.set(true);
-      } else {
-        this.loadError.set(true);
-      }
+    } catch {
+      this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }
   }
 
   open(partyId: string): void {
-    void this.router.navigate(['/ledger', partyId]);
+    void this.router.navigate(this.stores.link('ledger', partyId));
   }
 
   openCategory(category: string): void {
-    void this.router.navigate(['/ledger/category', category]);
+    void this.router.navigate(this.stores.link('ledger/category', category));
   }
 
   print(): void {

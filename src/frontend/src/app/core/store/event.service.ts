@@ -1,17 +1,21 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { EventRequest } from './event.models';
+import { StoreService } from './store.service';
 
 /**
- * Posts transaction-entry events (sale, receipt, …) to the backend. The store is
- * derived from the signed-in principal server-side, so nothing here supplies one.
+ * Posts transaction-entry events (sale, receipt, …) into the store the user is
+ * currently in — the store in the path is the set of books the entry lands in.
  */
 @Injectable({ providedIn: 'root' })
 export class EventService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/event`;
+  private readonly stores = inject(StoreService);
+
+  private get url(): string {
+    return this.stores.api('event');
+  }
 
   publishEvent(event: EventRequest): Promise<EventRequest> {
     return firstValueFrom(this.http.post<EventRequest>(this.url, event));

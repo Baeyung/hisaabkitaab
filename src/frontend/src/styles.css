@@ -55,7 +55,7 @@
   --kg-chrome: #23201c;
   --kg-chrome-ink: #e7e3d8;
   --kg-chrome-dim: #c4bcae; /* resting nav label */
-  --kg-chrome-locked: #7d766a; /* store-gated nav item */
+  --kg-chrome-locked: #7d766a; /* inert control on the frame */
 
   /* Auth hero + store nameplate. Dark in both themes. */
   --kg-hero: #1f5c4d;

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { CashbookService } from '../../core/store/cashbook.service';
+import { StoreService } from '../../core/store/store.service';
 import { CashbookDay, TransactionEventKind } from '../../core/store/cashbook.models';
 import { EventService } from '../../core/store/event.service';
 import { todayIso } from '../../shared/date.util';
@@ -23,6 +24,7 @@ import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
 })
 export class Cashbook {
   protected readonly locale = inject(LocaleService);
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(CashbookService);
   private readonly events = inject(EventService);
   private readonly router = inject(Router);
@@ -33,7 +35,6 @@ export class Cashbook {
   protected readonly data = signal<CashbookDay | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
-  protected readonly noStore = signal(false);
 
   /** The row awaiting delete confirmation, and whether a delete is in flight. */
   protected readonly pendingDelete = signal<string | null>(null);
@@ -52,15 +53,10 @@ export class Cashbook {
   async load(): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
-    this.noStore.set(false);
     try {
       this.data.set(await this.api.getRange(this.fromDate(), this.toDate()));
-    } catch (err) {
-      if ((err as { status?: number }).status === 404) {
-        this.noStore.set(true);
-      } else {
-        this.loadError.set(true);
-      }
+    } catch {
+      this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }
@@ -75,14 +71,14 @@ export class Cashbook {
 
   /** A sale row's transactionId is the bill's id — open its detail. */
   openBill(transactionId: string): void {
-    void this.router.navigate(['/bill-management', transactionId]);
+    void this.router.navigate(this.stores.link('bill-management', transactionId));
   }
 
   /** Open the entry's screen in edit mode, prefilled. */
   editEntry(event: TransactionEventKind, transactionId: string): void {
     const link = entryEditLink(event, transactionId);
     if (link) {
-      void this.router.navigate(link);
+      void this.router.navigate(this.stores.link(...link));
     }
   }
 

@@ -84,5 +84,6 @@ import { StoreService } from '../core/store/store.service';
 })
 export class PrintHeader {
   private readonly stores = inject(StoreService);
-  protected readonly store = computed(() => this.stores.stores()?.[0] ?? null);
+  /** The shop whose books are open — a bill must be letterheaded by the shop that issued it. */
+  protected readonly store = this.stores.current;
 }

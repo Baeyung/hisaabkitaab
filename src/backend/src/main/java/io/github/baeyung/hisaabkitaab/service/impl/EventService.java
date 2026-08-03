@@ -12,8 +12,6 @@ import io.github.baeyung.hisaabkitaab.processors.targetkind.KindProcessor;
 import io.github.baeyung.hisaabkitaab.processors.transactionevent.EventProcessor;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
-import io.github.baeyung.hisaabkitaab.service.StoreItemService;
-import io.github.baeyung.hisaabkitaab.service.StoreService;
 import io.github.baeyung.hisaabkitaab.service.TransactionService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -41,9 +39,7 @@ public class EventService
 
     private final Map<TransactionEvent, EventProcessor> eventProcessorMap;
     private final Map<TargetKind, KindProcessor> kindProcessorMap;
-    private final StoreService storeService;
     private final TransactionService transactionService;
-    private final StoreItemService storeItemService;
     private final PartyService partyService;
     private final TransactionRepository transactionRepository;
 
@@ -54,9 +50,7 @@ public class EventService
     public EventService(
             List<EventProcessor> eventProcessors,
             List<KindProcessor> kindProcessors,
-            StoreService storeService,
             TransactionService transactionService,
-            StoreItemService storeItemService,
             PartyService partyService,
             TransactionRepository transactionRepository
     )
@@ -90,26 +84,22 @@ public class EventService
                         )
                 );
 
-        this.storeService = storeService;
         this.transactionService = transactionService;
-        this.storeItemService = storeItemService;
         this.partyService = partyService;
     }
 
-    public void publishEvent(EventRequest eventRequest, String ownerIdentifier)
+    public void publishEvent(EventRequest eventRequest, Store store)
     {
         EventProcessor processor = this.eventProcessorMap.get(eventRequest.getTransactionEvent());
 
         if (processor != null)
         {
-            Store store = requireStore(ownerIdentifier);
-
             Transaction transaction = transactionService.create(
                     Transaction
                             .builder()
                             .store(store)
                             .event(eventRequest.getTransactionEvent())
-                            .party(resolveParty(eventRequest, store, ownerIdentifier))
+                            .party(resolveParty(eventRequest, store))
                             .bill(eventRequest.getBillNumber())
                             .eventDate(eventRequest.getBillDate())
                             .entryDate(LocalDate.now())
@@ -129,14 +119,14 @@ public class EventService
      * re-add. Opening entries belong to Settings, so they read here as "not found".
      */
     @Transactional
-    public void updateEvent(String id, EventRequest eventRequest, String ownerIdentifier)
+    public void updateEvent(String id, EventRequest eventRequest, Store store)
     {
-        Transaction transaction = loadEditable(id, ownerIdentifier);
+        Transaction transaction = loadEditable(id, store);
 
         // orphanRemoval drops the old derived lines; saveAndFlush makes those DELETEs
         // land before the processors insert the fresh ones, so no stale rows survive.
         transaction.getLines().clear();
-        transaction.setParty(resolveParty(eventRequest, transaction.getStore(), ownerIdentifier));
+        transaction.setParty(resolveParty(eventRequest, store));
         transaction.setBill(eventRequest.getBillNumber());
         transaction.setEventDate(eventRequest.getBillDate());
         transaction.setDescription(cleanDescription(eventRequest));
@@ -147,16 +137,16 @@ public class EventService
 
     /** Delete an entry; its lines cascade away and every balance re-derives without them. */
     @Transactional
-    public void deleteEvent(String id, String ownerIdentifier)
+    public void deleteEvent(String id, Store store)
     {
-        transactionRepository.delete(loadEditable(id, ownerIdentifier));
+        transactionRepository.delete(loadEditable(id, store));
     }
 
     /** The entry as an {@link EventRequest}, to prefill the entry screen in edit mode. */
     @Transactional(readOnly = true)
-    public EventRequest getEvent(String id, String ownerIdentifier)
+    public EventRequest getEvent(String id, Store store)
     {
-        return toRequest(loadEditable(id, ownerIdentifier));
+        return toRequest(loadEditable(id, store));
     }
 
     // ── shared machinery ──────────────────────────────────────────────────────
@@ -175,20 +165,9 @@ public class EventService
         });
     }
 
-    private Store requireStore(String ownerIdentifier)
+    /** Load an in-store, non-opening entry (or 404) — the guard shared by get/update/delete. */
+    private Transaction loadEditable(String id, Store store)
     {
-        Store store = storeService.findFirstByOwnerIdentifier(ownerIdentifier);
-        if (store == null)
-        {
-            throw ResourceNotFoundException.forEntity("Store for owner", ownerIdentifier);
-        }
-        return store;
-    }
-
-    /** Load an owned, non-opening entry (or 404) — the guard shared by get/update/delete. */
-    private Transaction loadEditable(String id, String ownerIdentifier)
-    {
-        Store store = requireStore(ownerIdentifier);
         Transaction transaction = transactionRepository.findByIdAndStoreId(id, store.getId())
                 .filter(t -> !OPENING_EVENTS.contains(t.getEvent()))
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Entry", id));
@@ -270,7 +249,7 @@ public class EventService
      * by party alone the line would surface in <em>their</em> books. Reported as not-found so
      * we never leak whether the id exists.
      */
-    private Party resolveParty(EventRequest eventRequest, Store store, String ownerIdentifier)
+    private Party resolveParty(EventRequest eventRequest, Store store)
     {
         EventRequest.Party party = eventRequest.getParty();
         if (party == null)
@@ -287,7 +266,7 @@ public class EventService
                             .contact("090078601")
                             .address("address@HisaabKitaab")
                             .build(),
-                    ownerIdentifier
+                    store
             );
         }
 

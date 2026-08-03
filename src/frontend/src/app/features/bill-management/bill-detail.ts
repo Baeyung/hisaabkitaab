@@ -2,6 +2,7 @@ import { Component, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
+import { StoreService } from '../../core/store/store.service';
 import { BillDetail as BillDetailModel } from '../../core/store/bill.models';
 import { PrintHeader } from '../../shared/print-header';
 import { BillInvoice } from '../../shared/bill-invoice';
@@ -24,6 +25,8 @@ export class BillDetail {
   readonly billId = input.required<string>();
 
   protected readonly locale = inject(LocaleService);
+
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(BillService);
   private readonly router = inject(Router);
 
@@ -73,7 +76,7 @@ export class BillDetail {
     this.deleteError.set(false);
     try {
       await this.api.delete(this.billId());
-      void this.router.navigate(['/bill-management']);
+      void this.router.navigate(this.stores.link('bill-management'));
     } catch {
       this.deleteError.set(true);
       this.deleting.set(false);

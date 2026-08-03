@@ -1,14 +1,18 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { ExpenseCategoryGroup, PartyBalanceRow, PartyStatement } from './ledger.models';
+import { StoreService } from './store.service';
 
-/** Khata reads: party balances and the per-party running-balance statement. */
+/** Khata reads for the current store: party balances and per-party statements. */
 @Injectable({ providedIn: 'root' })
 export class LedgerService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/ledger`;
+  private readonly stores = inject(StoreService);
+
+  private get url(): string {
+    return this.stores.api('ledger');
+  }
 
   list(): Promise<PartyBalanceRow[]> {
     return firstValueFrom(this.http.get<PartyBalanceRow[]>(this.url));

@@ -6,14 +6,13 @@ import io.github.baeyung.hisaabkitaab.entity.Store;
 
 public interface StoreService
 {
-    Store findFirstByOwnerIdentifier(String identifier);
-
-    /** The primary store for an owner (first one found); throws 404 if the owner has none. */
-    Store getPrimaryStoreForOwner(String ownerId);
-
     List<Store> findByOwner(String ownerId);
 
-    /** Load a store, 404-ing if it does not exist or is not owned by {@code ownerId}. */
+    /**
+     * Load a store, 404-ing if it does not exist or is not owned by {@code ownerId}. Every
+     * store-scoped request enters through here (see {@code CurrentStoreArgumentResolver}),
+     * which is what lets everything downstream scope on the store id alone.
+     */
     Store findByIdForOwner(String id, String ownerId);
 
     Store create(Store store, String ownerId);

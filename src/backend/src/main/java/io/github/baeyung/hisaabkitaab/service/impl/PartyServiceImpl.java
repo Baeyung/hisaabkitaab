@@ -15,7 +15,6 @@ import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
-import io.github.baeyung.hisaabkitaab.service.StoreService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -26,7 +25,6 @@ public class PartyServiceImpl implements PartyService
     private final PartyRepository partyRepository;
     private final TransactionRepository transactionRepository;
     private final TransactionLineRepository transactionLineRepository;
-    private final StoreService storeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -38,29 +36,26 @@ public class PartyServiceImpl implements PartyService
 
     @Override
     @Transactional(readOnly = true)
-    public List<Party> findByOwner(String ownerId)
+    public List<Party> findByStore(String storeId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        return partyRepository.findByStoreId(store.getId());
+        return partyRepository.findByStoreId(storeId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Party findByIdForOwner(String id, String ownerId)
+    public Party findByIdForStore(String id, String storeId)
     {
-        // A party in another owner's store is reported as not-found so we never leak its existence.
+        // A party in another store is reported as not-found so we never leak its existence.
         return partyRepository.findById(id)
-                .filter(party -> party.getStore().getOwner().getId().equals(ownerId))
+                .filter(party -> party.getStore().getId().equals(storeId))
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Party", id));
     }
 
     @Override
-    public Party create(Party input, String ownerId)
+    public Party create(Party input, Store store)
     {
-        // ownerId is a user-id from PartyController or an email/contact from EventService's
-        // dynamic-party path — findFirstByOwnerIdentifier resolves the store from any of them.
         Party party = Party.builder()
-                .store(storeService.findFirstByOwnerIdentifier(ownerId))
+                .store(store)
                 .name(input.getName())
                 .contact(input.getContact())
                 .address(input.getAddress())
@@ -70,9 +65,9 @@ public class PartyServiceImpl implements PartyService
     }
 
     @Override
-    public Party update(String id, Party changes, String ownerId)
+    public Party update(String id, Party changes, String storeId)
     {
-        Party party = findByIdForOwner(id, ownerId);
+        Party party = findByIdForStore(id, storeId);
 
         party.setName(changes.getName());
         party.setContact(changes.getContact());
@@ -82,9 +77,9 @@ public class PartyServiceImpl implements PartyService
     }
 
     @Override
-    public void delete(String id, String ownerId)
+    public void delete(String id, String storeId)
     {
-        Party party = findByIdForOwner(id, ownerId);
+        Party party = findByIdForStore(id, storeId);
 
         // Cascade: delete every transaction that references this party, whether as the transaction's
         // counterparty or on one of its lines (their lines go via orphanRemoval).

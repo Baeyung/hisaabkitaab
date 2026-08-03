@@ -1,19 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { Balance } from './balance.models';
 import { OpeningBalanceDraft, Party, PartyDraft } from './party.models';
+import { StoreService } from './store.service';
 
 /**
- * CRUD for the parties in the signed-in user's store. The store is derived from
- * the principal on the backend, so nothing here supplies a store id. A `list`
- * before any store exists comes back 404 (no primary store) — callers handle that.
+ * CRUD for the parties (khata holders) in the store the user is currently in.
+ * The store is named in the path, so switching shops switches these outright.
  */
 @Injectable({ providedIn: 'root' })
 export class PartyService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/parties`;
+  private readonly stores = inject(StoreService);
+
+  private get url(): string {
+    return this.stores.api('parties');
+  }
 
   list(): Promise<Party[]> {
     return firstValueFrom(this.http.get<Party[]>(this.url));

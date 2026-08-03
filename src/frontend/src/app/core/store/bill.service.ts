@@ -2,14 +2,18 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { BillDetail, BillSummary } from './bill.models';
+import { StoreService } from './store.service';
 
-/** Bill reads — every SALE transaction is a bill, served from /transactions/bills. */
+/** Bill reads for the current store — every SALE transaction is a bill. */
 @Injectable({ providedIn: 'root' })
 export class BillService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/transactions/bills`;
+  private readonly stores = inject(StoreService);
+
+  private get url(): string {
+    return this.stores.api('transactions/bills');
+  }
 
   /** Optional party/item filters are applied server-side; blanks are omitted. */
   list(filters?: { partyId?: string; itemId?: string }): Promise<BillSummary[]> {

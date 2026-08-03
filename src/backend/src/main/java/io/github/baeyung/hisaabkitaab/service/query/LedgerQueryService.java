@@ -1,23 +1,8 @@
 package io.github.baeyung.hisaabkitaab.service.query;
 
-import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
-import io.github.baeyung.hisaabkitaab.dto.ledger.ExpenseCategoryGroupResponse;
-import io.github.baeyung.hisaabkitaab.dto.ledger.ExpenseCategoryRowResponse;
-import io.github.baeyung.hisaabkitaab.dto.ledger.PartyBalanceResponse;
-import io.github.baeyung.hisaabkitaab.dto.ledger.PartyStatementResponse;
-import io.github.baeyung.hisaabkitaab.dto.ledger.PartyStatementRowResponse;
+import io.github.baeyung.hisaabkitaab.dto.ledger.*;
 import io.github.baeyung.hisaabkitaab.entity.Party;
-import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
@@ -26,11 +11,19 @@ import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
-import io.github.baeyung.hisaabkitaab.service.StoreService;
 import io.github.baeyung.hisaabkitaab.service.query.support.ItemSummary;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The khata: every party with its net balance and direction, and the per-party
@@ -42,23 +35,20 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class LedgerQueryService
 {
-    private final StoreService storeService;
     private final PartyService partyService;
     private final PartyRepository partyRepository;
     private final TransactionLineRepository transactionLineRepository;
 
-    public List<PartyBalanceResponse> listBalances(String ownerId)
+    public List<PartyBalanceResponse> listBalances(String storeId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-
-        Map<String, Double> balances = transactionLineRepository.sumPartyBalancesByStore(store.getId())
+        Map<String, Double> balances = transactionLineRepository.sumPartyBalancesByStore(storeId)
                 .stream()
                 .collect(Collectors.toMap(
                         PartyBalanceRow::getPartyId,
                         row -> row.getBalance() != null ? row.getBalance() : 0.0
                 ));
 
-        return partyRepository.findByStoreId(store.getId())
+        return partyRepository.findByStoreId(storeId)
                 .stream()
                 .sorted(Comparator.comparing(Party::getName, String.CASE_INSENSITIVE_ORDER))
                 .map(party -> new PartyBalanceResponse(
@@ -78,12 +68,10 @@ public class LedgerQueryService
      * shows, biggest spend first. Lines with no category (older than the feature)
      * fall under UNCATEGORIZED so nothing is lost.
      */
-    public List<ExpenseCategoryGroupResponse> listExpenseCategories(String ownerId)
+    public List<ExpenseCategoryGroupResponse> listExpenseCategories(String storeId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-
         // ponytail: scans full expense history each call; add a cached read-model if a shop's expense count ever makes this slow.
-        Map<String, List<TransactionLine>> groups = transactionLineRepository.findExpenseLinesByStore(store.getId())
+        Map<String, List<TransactionLine>> groups = transactionLineRepository.findExpenseLinesByStore(storeId)
                 .stream()
                 .collect(Collectors.groupingBy(
                         line -> line.getExpenseCategory() != null
@@ -124,14 +112,13 @@ public class LedgerQueryService
         return new ExpenseCategoryGroupResponse(category, rows.size(), total, rows);
     }
 
-    public PartyStatementResponse getStatement(String ownerId, String partyId)
+    public PartyStatementResponse getStatement(String storeId, String partyId)
     {
-        // findByIdForOwner 404s on another owner's party; the lines are then scoped to that
-        // party's own store, so only entries posted in these books can appear in the statement.
-        Party party = partyService.findByIdForOwner(partyId, ownerId);
+        // findByIdForStore 404s on another store's party; the lines are then scoped to the
+        // same store, so only entries posted in these books can appear in the statement.
+        Party party = partyService.findByIdForStore(partyId, storeId);
 
-        List<TransactionLine> lines = transactionLineRepository
-                .findPartyLedgerLines(partyId, party.getStore().getId());
+        List<TransactionLine> lines = transactionLineRepository.findPartyLedgerLines(partyId, storeId);
 
         // FIFO settlement of charges (IN) by payments (OUT), oldest bill first — the
         // shopkeeper doesn't tie a payment to a bill, so newest money clears oldest dues.

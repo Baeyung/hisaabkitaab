@@ -6,11 +6,13 @@ import { AuthStore } from '../auth/auth.store';
 import { Store, StoreDraft } from './store.models';
 
 /**
- * CRUD for the signed-in user's stores. Auth is attached by authInterceptor, so
- * every call here is already scoped to the current owner on the backend.
+ * The signed-in user's stores, and which one they are currently in.
  *
- * Holds the loaded stores as shared state so the shell can gate store-dependent
- * nav (Items, Parties) on whether one exists yet. `null` means "not loaded".
+ * A user can own several shops, so nothing is derived from the principal alone:
+ * the chosen store is named in the URL (`/s/:storeId/…`), `storeGuard` validates
+ * it and calls {@link select}, and every store-scoped API call is built through
+ * {@link api} from that same id. `link` is the routing counterpart — both exist so
+ * the id is threaded from one place instead of being spelled out at each call site.
  */
 @Injectable({ providedIn: 'root' })
 export class StoreService {
@@ -19,8 +21,12 @@ export class StoreService {
   private readonly url = `${environment.apiUrl}/stores`;
 
   private readonly _stores = signal<Store[] | null>(null);
+  private readonly _currentId = signal<string | null>(null);
+
   readonly stores = this._stores.asReadonly();
-  readonly hasStore = computed(() => (this._stores()?.length ?? 0) > 0);
+  readonly currentId = this._currentId.asReadonly();
+  /** The store being viewed, or null outside a store route (e.g. the picker). */
+  readonly current = computed(() => this._stores()?.find((s) => s.id === this._currentId()) ?? null);
 
   constructor() {
     // This cache belongs to one session. Drop it when credentials go away
@@ -29,8 +35,33 @@ export class StoreService {
     effect(() => {
       if (this.auth.credentials() === null) {
         this._stores.set(null);
+        this._currentId.set(null);
       }
     });
+  }
+
+  /** Enter a store. Called by storeGuard once it has checked the id is really the user's. */
+  select(id: string | null): void {
+    this._currentId.set(id);
+  }
+
+  /**
+   * A store-scoped API url: `api('parties')` → `/api/stores/{id}/parties`. Services
+   * read this per call rather than caching it, since the current store changes as
+   * the user switches shops.
+   */
+  api(path: string): string {
+    return `${this.url}/${this.requireId()}/${path}`;
+  }
+
+  /**
+   * A router link into the current store: `link('ledger', partyId)` →
+   * `['/s', id, 'ledger', partyId]`. A segment may itself be a path
+   * (`link('new-entry/sale')`), which is split — one array entry containing a
+   * slash would otherwise be escaped into a single literal segment.
+   */
+  link(...segments: string[]): string[] {
+    return ['/s', this.requireId(), ...segments.flatMap((s) => s.split('/').filter(Boolean))];
   }
 
   async list(): Promise<Store[]> {
@@ -51,13 +82,26 @@ export class StoreService {
     return store;
   }
 
-  /** The store's opening drawer balance — cash on hand at onboarding (0 when none). */
+  /** The current store's opening drawer balance — cash on hand at onboarding (0 when none). */
   getOpeningCash(): Promise<number> {
-    return firstValueFrom(this.http.get<number>(`${this.url}/opening-cash`));
+    return firstValueFrom(this.http.get<number>(this.api('opening-cash')));
   }
 
   /** Upsert the opening drawer balance (0 clears it). Single-sided — one CASH line, not a new entry each time. */
   setOpeningCash(amount: number): Promise<number> {
-    return firstValueFrom(this.http.put<number>(`${this.url}/opening-cash`, { amount }));
+    return firstValueFrom(this.http.put<number>(this.api('opening-cash'), { amount }));
+  }
+
+  /**
+   * The current store id. Throwing beats silently building `/api/stores/null/…`:
+   * every caller runs inside a store route, so a missing id is a routing bug and
+   * should read as one.
+   */
+  private requireId(): string {
+    const id = this._currentId();
+    if (!id) {
+      throw new Error('No store selected — this belongs under an /s/:storeId route.');
+    }
+    return id;
   }
 }

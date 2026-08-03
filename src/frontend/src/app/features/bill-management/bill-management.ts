@@ -2,6 +2,7 @@ import { ApplicationRef, Component, computed, effect, inject, signal } from '@an
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BillService } from '../../core/store/bill.service';
+import { StoreService } from '../../core/store/store.service';
 import { BillDetail, BillSummary } from '../../core/store/bill.models';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
@@ -64,6 +65,7 @@ export function sumBills(bills: BillDetail[]): {
 })
 export class BillManagement {
   protected readonly locale = inject(LocaleService);
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(BillService);
   private readonly ledger = inject(LedgerService);
   private readonly inventory = inject(InventoryService);
@@ -74,7 +76,6 @@ export class BillManagement {
   protected readonly bills = signal<BillSummary[] | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
-  protected readonly noStore = signal(false);
   protected readonly query = signal('');
   protected readonly fromDate = signal(todayIso());
   protected readonly toDate = signal(todayIso());
@@ -151,15 +152,10 @@ export class BillManagement {
   async load(filters?: { partyId?: string; itemId?: string }): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
-    this.noStore.set(false);
     try {
       this.bills.set(await this.api.list(filters));
-    } catch (err) {
-      if ((err as { status?: number }).status === 404) {
-        this.noStore.set(true);
-      } else {
-        this.loadError.set(true);
-      }
+    } catch {
+      this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }
@@ -196,7 +192,7 @@ export class BillManagement {
   }
 
   open(id: string): void {
-    void this.router.navigate(['/bill-management', id]);
+    void this.router.navigate(this.stores.link('bill-management', id));
   }
 
   askDelete(id: string): void {

@@ -2,6 +2,7 @@ import { Component, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { InventoryService } from '../../core/store/inventory.service';
+import { StoreService } from '../../core/store/store.service';
 import { ItemMovement } from '../../core/store/inventory.models';
 
 /**
@@ -17,6 +18,8 @@ export class InventoryDetail {
   readonly itemId = input.required<string>();
 
   protected readonly locale = inject(LocaleService);
+
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(InventoryService);
 
   protected readonly movement = signal<ItemMovement | null>(null);

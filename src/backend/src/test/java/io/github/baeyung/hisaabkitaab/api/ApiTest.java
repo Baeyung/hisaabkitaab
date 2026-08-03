@@ -74,6 +74,16 @@ abstract class ApiTest
         return tree(result).get("id").asText();
     }
 
+    /**
+     * A path inside a store's API namespace: {@code api(storeId, "/parties")} →
+     * {@code /api/stores/{storeId}/parties}. Every store-scoped endpoint names its store
+     * in the path, so tests have to carry the id the same way the client does.
+     */
+    protected static String api(String storeId, String path)
+    {
+        return "/api/stores/" + storeId + path;
+    }
+
     protected JsonNode tree(MvcResult result) throws Exception
     {
         return json.readTree(result.getResponse().getContentAsString());

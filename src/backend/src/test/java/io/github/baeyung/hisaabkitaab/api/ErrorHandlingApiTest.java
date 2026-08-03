@@ -72,8 +72,9 @@ class ErrorHandlingApiTest extends ApiTest
     void errorBodyAndHeaderCarryTheSameTraceId() throws Exception
     {
         signup("3109000001");
+        String store = createStore("3109000001", "Rana Cloth");
 
-        mvc.perform(get("/api/parties/00000000-0000-0000-0000-000000000000").with(as("3109000001")))
+        mvc.perform(get(api(store, "/parties/00000000-0000-0000-0000-000000000000")).with(as("3109000001")))
                 .andExpect(status().isNotFound())
                 .andExpect(header().exists("X-Trace-Id"))
                 .andExpect(jsonPath("$.traceId").isNotEmpty());

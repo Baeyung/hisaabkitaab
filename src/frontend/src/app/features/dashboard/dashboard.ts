@@ -4,6 +4,7 @@ import { ChartConfiguration } from 'chart.js';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { ThemeService } from '../../core/theme/theme.service';
 import { expenseCategoryLabel } from '../../core/store/event.models';
+import { StoreService } from '../../core/store/store.service';
 import { DashboardService } from '../../core/store/dashboard.service';
 import { Dashboard as DashboardData } from '../../core/store/dashboard.models';
 import { daysAgoIso, todayIso } from '../../shared/date.util';
@@ -78,6 +79,7 @@ export const PALETTES: Record<'light' | 'dark', ChartPalette> = {
 })
 export class Dashboard {
   protected readonly locale = inject(LocaleService);
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(DashboardService);
   private readonly theme = inject(ThemeService);
 
@@ -93,7 +95,6 @@ export class Dashboard {
   protected readonly data = signal<DashboardData | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
-  protected readonly noStore = signal(false);
 
   /** True once loaded with zero activity in the window — the friendly empty state. */
   protected readonly isEmpty = computed(() => {
@@ -341,15 +342,10 @@ export class Dashboard {
   async load(): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
-    this.noStore.set(false);
     try {
       this.data.set(await this.api.getRange(this.fromDate(), this.toDate()));
-    } catch (err) {
-      if ((err as { status?: number }).status === 404) {
-        this.noStore.set(true);
-      } else {
-        this.loadError.set(true);
-      }
+    } catch {
+      this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }

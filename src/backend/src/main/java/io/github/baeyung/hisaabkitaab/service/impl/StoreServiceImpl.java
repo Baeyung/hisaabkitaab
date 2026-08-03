@@ -28,25 +28,6 @@ public class StoreServiceImpl implements StoreService
     private final UserRepository userRepository;
     private final ExpenseCategoryService expenseCategoryService;
 
-    @Transactional
-    @Override
-    public Store findFirstByOwnerIdentifier(String identifier)
-    {
-        // A user can log in with either their email or contact number, so try both.
-        return storeRepository.findAllByOwnerEmailIgnoreCase(identifier).stream().findFirst()
-                .or(() -> storeRepository.findAllByOwnerContactNumber(identifier).stream().findFirst())
-                .or(() -> storeRepository.findByOwnerId(identifier).stream().findFirst())
-                .orElse(null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Store getPrimaryStoreForOwner(String ownerId)
-    {
-        return storeRepository.findByOwnerId(ownerId).stream().findFirst()
-                .orElseThrow(() -> ResourceNotFoundException.forEntity("Store for owner", ownerId));
-    }
-
     @Override
     @Transactional(readOnly = true)
     public List<Store> findByOwner(String ownerId)

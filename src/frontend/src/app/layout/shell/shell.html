@@ -17,6 +17,18 @@
       <div class="brand-logo"><app-brand-mark /></div>
       <b>{{ locale.t('app.name') }}</b>
     </div>
+
+    <!-- Which books are open. Also the way out to the others: with several shops
+         under one login, the name alone isn't enough — it has to be switchable. -->
+    @if (stores.current(); as store) {
+      <a class="storeswitch" routerLink="/stores" [attr.title]="locale.t('stores.switch')">
+        <span class="storeswitch__name">{{ store.name }}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M8 7h12l-3-3M16 17H4l3 3" />
+        </svg>
+        <span class="storeswitch__label">{{ locale.t('stores.switch') }}</span>
+      </a>
+    }
   </header>
 
   <div class="body">
@@ -29,48 +41,17 @@
       <nav class="nav" [attr.aria-label]="locale.t('nav.menu')">
       @for (item of nav; track item.key) {
         @if (item.kind === 'link') {
-          @if (isLocked(item)) {
-            <button
-              type="button"
-              class="nav-item locked"
-              disabled
-              [attr.title]="locale.t('nav.locked')"
-              [attr.aria-label]="locale.t(item.key) + ' — ' + locale.t('nav.locked')"
-            >
-              <span class="nav-icon">
-                <ng-container [ngTemplateOutlet]="icon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
-              </span>
-              <span class="nav-label">{{ locale.t(item.key) }}</span>
-              <ng-container [ngTemplateOutlet]="lockMark" />
-            </button>
-          } @else {
-            <a
-              class="nav-item"
-              [routerLink]="item.path"
-              routerLinkActive="active"
-              (click)="closeOverlay()"
-            >
-              <span class="nav-icon">
-                <ng-container [ngTemplateOutlet]="icon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
-              </span>
-              <span class="nav-label">{{ locale.t(item.key) }}</span>
-            </a>
-          }
-        } @else if (isGroupLocked(item)) {
-          <!-- Nothing inside is reachable, so the group doesn't open at all. -->
-          <button
-            type="button"
-            class="nav-item nav-group-toggle locked"
-            disabled
-            [attr.title]="locale.t('nav.locked')"
-            [attr.aria-label]="locale.t(item.key) + ' — ' + locale.t('nav.locked')"
+          <a
+            class="nav-item"
+            [routerLink]="stores.link(item.path)"
+            routerLinkActive="active"
+            (click)="closeOverlay()"
           >
             <span class="nav-icon">
               <ng-container [ngTemplateOutlet]="icon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
             </span>
             <span class="nav-label">{{ locale.t(item.key) }}</span>
-            <ng-container [ngTemplateOutlet]="lockMark" />
-          </button>
+          </a>
         } @else {
           <button
             type="button"
@@ -93,27 +74,14 @@
           <div class="subnav" [class.expanded]="isGroupOpen(item.key)" [attr.aria-hidden]="!isGroupOpen(item.key)">
             <div class="subnav-inner">
               @for (child of item.children; track child.key) {
-                @if (isLocked(child)) {
-                  <button
-                    type="button"
-                    class="nav-item nav-sub locked"
-                    disabled
-                    [attr.title]="locale.t('nav.locked')"
-                    [attr.aria-label]="locale.t(child.key) + ' — ' + locale.t('nav.locked')"
-                  >
-                    <span class="nav-label">{{ locale.t(child.key) }}</span>
-                    <ng-container [ngTemplateOutlet]="lockMark" />
-                  </button>
-                } @else {
-                  <a
-                    class="nav-item nav-sub"
-                    [routerLink]="child.path"
-                    routerLinkActive="active"
-                    (click)="closeOverlay()"
-                  >
-                    <span class="nav-label">{{ locale.t(child.key) }}</span>
-                  </a>
-                }
+                <a
+                  class="nav-item nav-sub"
+                  [routerLink]="stores.link(child.path)"
+                  routerLinkActive="active"
+                  (click)="closeOverlay()"
+                >
+                  <span class="nav-label">{{ locale.t(child.key) }}</span>
+                </a>
               }
             </div>
           </div>
@@ -142,18 +110,6 @@
 
 <app-print-details-dialog />
 
-
-<!-- Trailing padlock on any store-gated item; the label carries the explanation. -->
-<ng-template #lockMark>
-  <svg
-    class="lock-mark"
-    width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-    aria-hidden="true"
-  >
-    <rect x="5" y="11" width="14" height="10" rx="2" />
-    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-  </svg>
-</ng-template>
 
 <!-- Icon set (avoids innerHTML sanitizer stripping SVG) -->
 <ng-template #icon let-name>

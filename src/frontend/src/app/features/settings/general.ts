@@ -1,9 +1,10 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { form, FormField, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
-import { Store, StoreDraft } from '../../core/store/store.models';
+import { StoreDraft } from '../../core/store/store.models';
 import { DigitsOnly, toDigits } from '../../shared/digits-only';
 
 // ponytail: base64-image-in-DB stopgap — this cap keeps a store row and every
@@ -14,20 +15,21 @@ const EMPTY_DRAFT: StoreDraft = { name: '', address: '', contact: '', logoUri: '
 type ImageField = 'logoUri' | 'watermarkUri';
 
 /**
- * Store Settings › General. Loads the owner's first (and, for now, only) store.
- * With none, the card becomes a "set up your store" invitation that creates one;
- * with one, it edits in place. Logo/watermark are read as base64 data URIs — see
- * the object-storage ticket referenced above.
+ * Store Settings › General — edits the shop the user is currently in. Creating one
+ * belongs to the store picker (`/stores`), which is where a user with several shops
+ * chooses between them, so this screen only ever edits; the store is guaranteed to
+ * exist by storeGuard. Logo/watermark are read as base64 data URIs — see the
+ * object-storage ticket referenced above.
  */
 @Component({
   selector: 'app-general',
-  imports: [FormField, DigitsOnly],
+  imports: [FormField, DigitsOnly, RouterLink],
   templateUrl: './general.html',
   styleUrl: './general.css',
 })
 export class SettingsGeneral {
   protected readonly locale = inject(LocaleService);
-  private readonly stores = inject(StoreService);
+  protected readonly stores = inject(StoreService);
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
@@ -35,9 +37,6 @@ export class SettingsGeneral {
   protected readonly savedKey = signal<TranslationKey | null>(null);
   protected readonly errorKey = signal<TranslationKey | null>(null);
   protected readonly imageErrorKey = signal<TranslationKey | null>(null);
-
-  /** The persisted store, or null when the user has none yet (create mode). */
-  protected readonly store = signal<Store | null>(null);
 
   /** Opening drawer balance — cash on hand at onboarding. null = field empty (clears it). */
   protected readonly openingCash = signal<number | null>(null);
@@ -47,7 +46,7 @@ export class SettingsGeneral {
     required(path.name);
   });
 
-  /** First letter of the typed name — fills the nameplate mark live while creating. */
+  /** First letter of the typed name — keeps the nameplate mark in step as it's edited. */
   protected readonly initial = computed(() => this.model().name.trim().charAt(0).toUpperCase());
 
   protected readonly mediaFields: ReadonlyArray<{ field: ImageField; label: TranslationKey }> = [
@@ -69,25 +68,23 @@ export class SettingsGeneral {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      const first = (await this.stores.list())[0] ?? null;
-      this.store.set(first);
-      // Opening drawer balance only exists once a store does; 0 → empty field.
-      const cash = first ? await this.stores.getOpeningCash() : 0;
+      const store = this.stores.current();
+      if (!store) {
+        this.loadError.set(true);
+        return;
+      }
+      const cash = await this.stores.getOpeningCash();
       this.openingCash.set(cash > 0 ? cash : null);
       // Backend nullable columns can arrive as null; forms want strings.
-      this.model.set(
-        first
-          ? {
-              name: first.name ?? '',
-              address: first.address ?? '',
-              // Pre-digits-only rows may hold punctuation; strip so an untouched
-              // contact field can't fail validation on save.
-              contact: toDigits(first.contact),
-              logoUri: first.logoUri ?? '',
-              watermarkUri: first.watermarkUri ?? '',
-            }
-          : { ...EMPTY_DRAFT },
-      );
+      this.model.set({
+        name: store.name ?? '',
+        address: store.address ?? '',
+        // Pre-digits-only rows may hold punctuation; strip so an untouched
+        // contact field can't fail validation on save.
+        contact: toDigits(store.contact),
+        logoUri: store.logoUri ?? '',
+        watermarkUri: store.watermarkUri ?? '',
+      });
     } catch {
       this.loadError.set(true);
     } finally {
@@ -99,18 +96,16 @@ export class SettingsGeneral {
     if (this.storeForm().invalid()) {
       return;
     }
+    const store = this.stores.current();
+    if (!store) {
+      return;
+    }
     this.saving.set(true);
     this.errorKey.set(null);
     try {
-      const current = this.store();
-      const draft = this.model();
-      const saved = current
-        ? await this.stores.update(current.id, draft)
-        : await this.stores.create(draft);
-      this.store.set(saved);
-      // Store must exist before its drawer balance can be set, so this runs after.
+      await this.stores.update(store.id, this.model());
       await this.stores.setOpeningCash(this.openingCash() ?? 0);
-      this.savedKey.set(current ? 'settings.general.saved' : 'settings.general.created');
+      this.savedKey.set('settings.general.saved');
     } catch {
       this.errorKey.set('error.generic');
     } finally {

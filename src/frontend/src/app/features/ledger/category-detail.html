@@ -1,6 +1,6 @@
 <section class="rm-page">
   <app-print-header />
-  <a class="rm-back rm-noprint" routerLink="/ledger">← {{ locale.t('common.back') }}</a>
+  <a class="rm-back rm-noprint" [routerLink]="stores.link('ledger')">← {{ locale.t('common.back') }}</a>
 
   @if (loading()) {
     <div class="rm-card" aria-hidden="true">
@@ -11,7 +11,7 @@
   } @else if (notFound()) {
     <div class="rm-state">
       <h2 class="rm-state__title">{{ locale.t('ledger.category.detail.notFound') }}</h2>
-      <a class="rm-btn rm-btn--ghost" routerLink="/ledger">{{ locale.t('common.back') }}</a>
+      <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('ledger')">{{ locale.t('common.back') }}</a>
     </div>
   } @else if (loadError()) {
     <div class="rm-state">

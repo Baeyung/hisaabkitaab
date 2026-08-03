@@ -44,114 +44,118 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/verify-pending/verify-pending').then((m) => m.VerifyPending),
   },
+  // Every shop the user owns. Always the landing screen after signing in: a store
+  // has to be chosen before anything is scoped, and this is also the way between
+  // shops. With none yet, it doubles as the create-your-first-store screen.
   {
-    path: '',
+    path: 'stores',
     canActivate: [apexRedirectGuard, authGuard],
+    loadComponent: () => import('./features/stores/store-picker').then((m) => m.StorePicker),
+  },
+  // The app proper, always inside one store. The id in the path is what scopes every
+  // API call (StoreService.api) and every in-app link (StoreService.link), so two tabs
+  // can sit in two different shops and a deep link carries its shop with it.
+  {
+    path: 's/:storeId',
+    canActivate: [apexRedirectGuard, authGuard, storeGuard],
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: [
-      // Outside storeGuard: with no store yet this is where the guard sends the
-      // user, and it's where they create one.
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+      },
+      {
+        path: 'cashbook',
+        loadComponent: () => import('./features/cashbook/cashbook').then((m) => m.Cashbook),
+      },
+      {
+        path: 'ledger',
+        loadComponent: () => import('./features/ledger/ledger').then((m) => m.Ledger),
+      },
+      {
+        path: 'ledger/category/:key',
+        loadComponent: () => import('./features/ledger/category-detail').then((m) => m.CategoryDetail),
+      },
+      {
+        path: 'ledger/:partyId',
+        loadComponent: () => import('./features/ledger/ledger-detail').then((m) => m.LedgerDetail),
+      },
+      // Each entry screen doubles as its own editor: with an :entryId it loads
+      // that entry and saves as an update instead of a new record.
+      {
+        path: 'new-entry/sale',
+        loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
+      },
+      {
+        path: 'new-entry/sale/:entryId',
+        loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
+      },
+      {
+        path: 'new-entry/receipt',
+        loadComponent: () => import('./features/new-entry/receipt').then((m) => m.Receipt),
+      },
+      {
+        path: 'new-entry/receipt/:entryId',
+        loadComponent: () => import('./features/new-entry/receipt').then((m) => m.Receipt),
+      },
+      {
+        path: 'new-entry/purchase',
+        loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
+      },
+      {
+        path: 'new-entry/purchase/:entryId',
+        loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
+      },
+      {
+        path: 'new-entry/expense',
+        loadComponent: () => import('./features/new-entry/expense').then((m) => m.Expense),
+      },
+      {
+        path: 'new-entry/expense/:entryId',
+        loadComponent: () => import('./features/new-entry/expense').then((m) => m.Expense),
+      },
+      {
+        path: 'new-entry/payment',
+        loadComponent: () => import('./features/new-entry/payment').then((m) => m.Payment),
+      },
+      {
+        path: 'new-entry/payment/:entryId',
+        loadComponent: () => import('./features/new-entry/payment').then((m) => m.Payment),
+      },
+      {
+        path: 'inventory',
+        loadComponent: () => import('./features/inventory/inventory').then((m) => m.Inventory),
+      },
+      {
+        path: 'inventory/:itemId',
+        loadComponent: () =>
+          import('./features/inventory/inventory-detail').then((m) => m.InventoryDetail),
+      },
+      {
+        path: 'bill-management',
+        loadComponent: () =>
+          import('./features/bill-management/bill-management').then((m) => m.BillManagement),
+      },
+      {
+        path: 'bill-management/:billId',
+        loadComponent: () =>
+          import('./features/bill-management/bill-detail').then((m) => m.BillDetail),
+      },
+      {
+        path: 'settings/items',
+        loadComponent: () => import('./features/settings/items').then((m) => m.SettingsItems),
+      },
+      {
+        path: 'settings/party',
+        loadComponent: () => import('./features/settings/party').then((m) => m.SettingsParty),
+      },
       {
         path: 'settings/general',
         loadComponent: () => import('./features/settings/general').then((m) => m.SettingsGeneral),
       },
-      {
-        path: '',
-        canActivateChild: [storeGuard],
-        children: [
-          { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-          {
-            path: 'dashboard',
-            loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
-          },
-          {
-            path: 'cashbook',
-            loadComponent: () => import('./features/cashbook/cashbook').then((m) => m.Cashbook),
-          },
-          {
-            path: 'ledger',
-            loadComponent: () => import('./features/ledger/ledger').then((m) => m.Ledger),
-          },
-          {
-            path: 'ledger/category/:key',
-            loadComponent: () => import('./features/ledger/category-detail').then((m) => m.CategoryDetail),
-          },
-          {
-            path: 'ledger/:partyId',
-            loadComponent: () => import('./features/ledger/ledger-detail').then((m) => m.LedgerDetail),
-          },
-          // Each entry screen doubles as its own editor: with an :entryId it loads
-          // that entry and saves as an update instead of a new record.
-          {
-            path: 'new-entry/sale',
-            loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
-          },
-          {
-            path: 'new-entry/sale/:entryId',
-            loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
-          },
-          {
-            path: 'new-entry/receipt',
-            loadComponent: () => import('./features/new-entry/receipt').then((m) => m.Receipt),
-          },
-          {
-            path: 'new-entry/receipt/:entryId',
-            loadComponent: () => import('./features/new-entry/receipt').then((m) => m.Receipt),
-          },
-          {
-            path: 'new-entry/purchase',
-            loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
-          },
-          {
-            path: 'new-entry/purchase/:entryId',
-            loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
-          },
-          {
-            path: 'new-entry/expense',
-            loadComponent: () => import('./features/new-entry/expense').then((m) => m.Expense),
-          },
-          {
-            path: 'new-entry/expense/:entryId',
-            loadComponent: () => import('./features/new-entry/expense').then((m) => m.Expense),
-          },
-          {
-            path: 'new-entry/payment',
-            loadComponent: () => import('./features/new-entry/payment').then((m) => m.Payment),
-          },
-          {
-            path: 'new-entry/payment/:entryId',
-            loadComponent: () => import('./features/new-entry/payment').then((m) => m.Payment),
-          },
-          {
-            path: 'inventory',
-            loadComponent: () => import('./features/inventory/inventory').then((m) => m.Inventory),
-          },
-          {
-            path: 'inventory/:itemId',
-            loadComponent: () =>
-              import('./features/inventory/inventory-detail').then((m) => m.InventoryDetail),
-          },
-          {
-            path: 'bill-management',
-            loadComponent: () =>
-              import('./features/bill-management/bill-management').then((m) => m.BillManagement),
-          },
-          {
-            path: 'bill-management/:billId',
-            loadComponent: () =>
-              import('./features/bill-management/bill-detail').then((m) => m.BillDetail),
-          },
-          {
-            path: 'settings/items',
-            loadComponent: () => import('./features/settings/items').then((m) => m.SettingsItems),
-          },
-          {
-            path: 'settings/party',
-            loadComponent: () => import('./features/settings/party').then((m) => m.SettingsParty),
-          },
-        ],
-      },
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '', pathMatch: 'full', redirectTo: 'stores' },
+  { path: '**', redirectTo: 'stores' },
 ];

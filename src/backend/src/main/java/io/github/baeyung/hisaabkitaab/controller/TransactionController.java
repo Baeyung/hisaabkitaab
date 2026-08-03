@@ -3,7 +3,6 @@ package io.github.baeyung.hisaabkitaab.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,13 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.baeyung.hisaabkitaab.dto.transaction.BillDetailResponse;
 import io.github.baeyung.hisaabkitaab.dto.transaction.BillSummaryResponse;
-import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
+import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.TransactionService;
 import io.github.baeyung.hisaabkitaab.service.query.TransactionQueryService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/transactions")
+@RequestMapping("/api/stores/{storeId}/transactions")
 @RequiredArgsConstructor
 public class TransactionController
 {
@@ -32,37 +32,37 @@ public class TransactionController
     public ResponseEntity<List<BillSummaryResponse>> listBills(
             @RequestParam(required = false) String partyId,
             @RequestParam(required = false) String itemId,
-            @AuthenticationPrincipal UserPrincipal principal
+            @CurrentStore Store store
     )
     {
-        return ResponseEntity.ok(transactionQueryService.listBills(principal.getId(), partyId, itemId));
+        return ResponseEntity.ok(transactionQueryService.listBills(store.getId(), partyId, itemId));
     }
 
     @PostMapping("/bills/details")
     public ResponseEntity<List<BillDetailResponse>> getBillDetails(
             @RequestBody List<String> ids,
-            @AuthenticationPrincipal UserPrincipal principal
+            @CurrentStore Store store
     )
     {
-        return ResponseEntity.ok(transactionQueryService.getBillDetails(principal.getId(), ids));
+        return ResponseEntity.ok(transactionQueryService.getBillDetails(store.getId(), ids));
     }
 
     @GetMapping("/bills/{id}")
     public ResponseEntity<BillDetailResponse> getBillDetail(
             @PathVariable String id,
-            @AuthenticationPrincipal UserPrincipal principal
+            @CurrentStore Store store
     )
     {
-        return ResponseEntity.ok(transactionQueryService.getBillDetail(principal.getId(), id));
+        return ResponseEntity.ok(transactionQueryService.getBillDetail(store.getId(), id));
     }
 
     @DeleteMapping("/bills/{id}")
     public ResponseEntity<Void> deleteBill(
             @PathVariable String id,
-            @AuthenticationPrincipal UserPrincipal principal
+            @CurrentStore Store store
     )
     {
-        transactionService.deleteBill(principal.getId(), id);
+        transactionService.deleteBill(store.getId(), id);
         return ResponseEntity.noContent().build();
     }
 }

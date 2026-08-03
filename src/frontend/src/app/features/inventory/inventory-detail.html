@@ -1,5 +1,5 @@
 <section class="rm-page">
-  <a class="rm-back" routerLink="/inventory">← {{ locale.t('common.back') }}</a>
+  <a class="rm-back" [routerLink]="stores.link('inventory')">← {{ locale.t('common.back') }}</a>
 
   @if (loading()) {
     <div class="rm-card" aria-hidden="true">
@@ -10,7 +10,7 @@
   } @else if (notFound()) {
     <div class="rm-state">
       <h2 class="rm-state__title">{{ locale.t('inventory.detail.notFound') }}</h2>
-      <a class="rm-btn rm-btn--ghost" routerLink="/inventory">{{ locale.t('common.back') }}</a>
+      <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('inventory')">{{ locale.t('common.back') }}</a>
     </div>
   } @else if (loadError()) {
     <div class="rm-state">

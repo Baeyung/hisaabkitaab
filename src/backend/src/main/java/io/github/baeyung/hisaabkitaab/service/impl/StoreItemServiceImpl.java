@@ -14,7 +14,6 @@ import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
-import io.github.baeyung.hisaabkitaab.service.StoreService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -25,7 +24,6 @@ public class StoreItemServiceImpl implements StoreItemService
     private final StoreItemRepository storeItemRepository;
     private final TransactionRepository transactionRepository;
     private final TransactionLineRepository transactionLineRepository;
-    private final StoreService storeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,27 +35,26 @@ public class StoreItemServiceImpl implements StoreItemService
 
     @Override
     @Transactional(readOnly = true)
-    public List<StoreItem> findByOwner(String ownerId)
+    public List<StoreItem> findByStore(String storeId)
     {
-        Store store = storeService.getPrimaryStoreForOwner(ownerId);
-        return storeItemRepository.findByStoreId(store.getId());
+        return storeItemRepository.findByStoreId(storeId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public StoreItem findByIdForOwner(String id, String ownerId)
+    public StoreItem findByIdForStore(String id, String storeId)
     {
-        // An item in another owner's store is reported as not-found so we never leak its existence.
+        // An item in another store is reported as not-found so we never leak its existence.
         return storeItemRepository.findById(id)
-                .filter(item -> item.getStore().getOwner().getId().equals(ownerId))
+                .filter(item -> item.getStore().getId().equals(storeId))
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("StoreItem", id));
     }
 
     @Override
-    public StoreItem create(StoreItem input, String ownerId)
+    public StoreItem create(StoreItem input, Store store)
     {
         StoreItem item = StoreItem.builder()
-                .store(storeService.getPrimaryStoreForOwner(ownerId))
+                .store(store)
                 .name(input.getName())
                 .unit(input.getUnit())
                 .salePrice(input.getSalePrice())
@@ -74,9 +71,9 @@ public class StoreItemServiceImpl implements StoreItemService
     }
 
     @Override
-    public StoreItem update(String id, StoreItem changes, String ownerId)
+    public StoreItem update(String id, StoreItem changes, String storeId)
     {
-        StoreItem item = findByIdForOwner(id, ownerId);
+        StoreItem item = findByIdForStore(id, storeId);
 
         item.setName(changes.getName());
         item.setUnit(changes.getUnit());
@@ -87,9 +84,9 @@ public class StoreItemServiceImpl implements StoreItemService
     }
 
     @Override
-    public void delete(String id, String ownerId)
+    public void delete(String id, String storeId)
     {
-        StoreItem item = findByIdForOwner(id, ownerId);
+        StoreItem item = findByIdForStore(id, storeId);
 
         // Cascade: delete every transaction that used this item (their lines go via orphanRemoval).
         List<Transaction> transactions = transactionLineRepository.findByItemId(id).stream()
