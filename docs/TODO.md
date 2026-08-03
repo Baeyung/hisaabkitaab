@@ -7,4 +7,3 @@
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
 - [x] explicit button to install the app, spa prompt is kinda shady
-- [ ] multi store support for a user, to track in a single account
