@@ -29,11 +29,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/verify-pending']);
       } else if (err.status === 401) {
         store.clear();
-        // An account an admin shut looks like any other 401, and the credentials really are
-        // dead — but the user's password is fine, so hand the reason to the login screen
-        // instead of dropping them on a blank form they'll retype correctly and fail again.
-        const disabled = err.error?.error === 'ACCOUNT_DISABLED';
-        router.navigate(['/login'], disabled ? { queryParams: { reason: 'disabled' } } : {});
+        router.navigate(['/login']);
       }
       return throwError(() => err);
     }),

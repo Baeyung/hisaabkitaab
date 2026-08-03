@@ -24,16 +24,12 @@ public class UserPrincipal implements UserDetails
 
     private final User user;
 
-    /** Whether this account's email is listed in {@code app.admin.emails}. */
-    private final boolean admin;
-
-    public UserPrincipal(User user, boolean admin)
+    public UserPrincipal(User user)
     {
         this.id = user.getId();
         this.username = user.getEmail();
         this.password = user.getPasswordHash();
         this.user = user;
-        this.admin = admin;
     }
 
     /**
@@ -42,34 +38,11 @@ public class UserPrincipal implements UserDetails
      * missing role is what makes protected endpoints answer 403 (not 401) for an
      * authenticated-but-unverified user, without leaking verification state on a
      * wrong password.
-     *
-     * <p>A configured admin additionally gets {@code ROLE_ADMIN}, but only once verified:
-     * admin rights ride on a real, confirmed HisaabKitaab account, so claiming the address
-     * is not enough to hold the panel.
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
-        if (!user.isVerified())
-        {
-            return List.of(new SimpleGrantedAuthority("ROLE_UNVERIFIED"));
-        }
-
-        return admin
-                ? List.of(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("ROLE_ADMIN"))
-                : List.of(new SimpleGrantedAuthority("ROLE_USER"));
-    }
-
-    /**
-     * An account an admin has locked out. Spring checks this before the password, so the
-     * block lands on every endpoint at once — Basic auth re-authenticates on each request,
-     * so there is no session to outlive it. Surfaces as {@code ACCOUNT_DISABLED} at
-     * {@link RestAuthenticationEntryPoint}.
-     */
-    @Override
-    public boolean isEnabled()
-    {
-        return !user.isDisabled();
+        return List.of(new SimpleGrantedAuthority(user.isVerified() ? "ROLE_USER" : "ROLE_UNVERIFIED"));
     }
 
     /**

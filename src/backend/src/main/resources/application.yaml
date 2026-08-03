@@ -62,15 +62,6 @@ app:
     # Master switch for outgoing mail. Off (dev) means MailService drops every message
     # instead of dialling the SMTP relay — nothing else in the app changes.
     enabled: ${EMAIL_ENABLED:false}
-  admin:
-    # Verified HisaabKitaab accounts whose email is listed here also hold ROLE_ADMIN and may
-    # use the admin app. Nothing is stored on the user row — moving admin rights between
-    # environments is a config change, and an account listed here can never be locked out.
-    emails: ${ADMIN_EMAILS:ahmadsheikh617@gmail.com}
-  cors:
-    # Browser origins allowed to call this API: the user app (4200) and the admin app (4201)
-    # in dev, plus whatever they are deployed as. Comma-separated.
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:4201,https://aapka.hisaabkitaab.shop}
   verification:
     # Set to false (e.g. in dev) to skip email verification entirely: new signups are
     # created already-verified with no email sent, and the "verified" access gate is

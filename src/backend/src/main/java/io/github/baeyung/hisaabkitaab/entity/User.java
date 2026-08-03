@@ -46,17 +46,6 @@ public class User
     @Column(nullable = false, columnDefinition = "boolean not null default false")
     private boolean verified = false;
 
-    /**
-     * Set by an admin to shut the account out — see the {@code admin} package. Checked before
-     * the password on every request (Basic auth re-authenticates each time), so it takes effect
-     * immediately and everywhere, and the user is told {@code ACCOUNT_DISABLED} at login.
-     * Stored as "disabled", not "enabled", so the column defaults to false like the other flags
-     * here — {@code ddl-auto=update} cannot add a NOT NULL column to a populated table otherwise.
-     */
-    @Builder.Default
-    @Column(nullable = false, columnDefinition = "boolean not null default false")
-    private boolean disabled = false;
-
     /** Single-use 6-digit code emailed at signup; nulled once the account verifies. */
     @JsonIgnore
     private String verificationToken;

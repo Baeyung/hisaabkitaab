@@ -16,8 +16,6 @@ export const en = {
   'auth.login.forgot': 'Forgot password?',
   'auth.login.invalid': 'Invalid credentials',
   'auth.login.locked': 'Account locked after too many wrong passwords. Reset your password to unlock it.',
-  'auth.login.disabled':
-    'This account has been suspended. Your ledger is safe — get in touch with us to restore access.',
   'auth.forgot.title': 'Forgot your password?',
   'auth.forgot.subtitle': "Enter your email and we'll send you a 6-digit code.",
   'auth.forgot.email': 'Email',
