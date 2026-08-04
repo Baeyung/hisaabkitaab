@@ -211,6 +211,31 @@
   text-transform: uppercase;
   color: var(--kg-faint);
 }
+/* the opening balance is a compound control (amount + direction), so it takes
+   the whole row at every size instead of leaving a hole in the grid */
+.efld--open {
+  grid-column: 1 / -1;
+}
+.efld__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* the amount yields, the toggle keeps its natural width; when the row narrows
+   the toggle wraps to its own line */
+.efld__amt {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+/* in the strip the toggle is short against a 44px input; beside the input in
+   the editor it matches the input's height */
+.edit .dirtoggle {
+  align-self: stretch;
+}
+.edit .dirtoggle__btn {
+  height: 44px;
+}
 .edit__foot {
   display: flex;
   align-items: center;
@@ -611,6 +636,15 @@
     flex: 1 1 100%;
   }
   .edit__foot .rowicons .btn {
+    flex: 1;
+  }
+
+  /* opening-balance field: the toggle is the widest control, so it drops below
+     the amount and fills the card, its two options splitting the width */
+  .edit .efld__row .dirtoggle {
+    flex: 1 1 100%;
+  }
+  .edit .efld__row .dirtoggle__btn {
     flex: 1;
   }
 

@@ -1,16 +1,17 @@
 
-- [ ] enhance mobile UI for better UX.
 - [x] account lock on 4 incorrect password attempts -> would need to reset password
 - [x] disable emails in test mode, and also in dev mode
 - [x] forgot password to be otp based
 - [x] account verification through otp
-- [ ] whatsApp integration, sending messages
-- [ ] monthly reports, on email + whatsapp
 - [x] explicit button to install the app, spa prompt is kinda shady
 - [x] new store screens are a lil buggy get em fixed
 - [x] fix failing tests and see why they are failing
+- [x] party screen UI fix
+- [ ] enhance mobile UI for better UX.
+- [ ] whatsApp integration, sending messages
+- [ ] monthly reports, on email + whatsapp
 - [ ] persistent date filters across navigation
 - [ ] multi-user support for same stores
 - [ ] processed goods feature
 - [ ] billing/plan related stuff
-- [ ] party screen UI fix
+- [ ] delete store option

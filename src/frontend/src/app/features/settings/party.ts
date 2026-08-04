@@ -1,8 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { form, FormField, required } from '@angular/forms/signals';
+import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
+import { Balance } from '../../core/store/balance.models';
 import { PartyService } from '../../core/store/party.service';
 import { OpeningDirection, Party, PartyDraft } from '../../core/store/party.models';
 import { DigitsOnly, toDigits } from '../../shared/digits-only';
@@ -12,9 +13,12 @@ interface PartyForm {
   name: string;
   contact: string;
   address: string;
+  /** Saved through its own endpoint after the party itself, not part of the draft. */
+  openingAmount: number | null;
+  openingDir: OpeningDirection;
 }
 
-const EMPTY_FORM: PartyForm = { name: '', contact: '', address: '' };
+const EMPTY_FORM: PartyForm = { name: '', contact: '', address: '', openingAmount: null, openingDir: 'THEY_OWE_YOU' };
 
 /**
  * Store parties (customers/suppliers) CRUD. Same in-place row editing as Items:
@@ -47,9 +51,14 @@ export class SettingsParty {
   protected readonly openingDir = signal<OpeningDirection>('THEY_OWE_YOU');
   protected readonly saving = signal(false);
   protected readonly rowErrorKey = signal<TranslationKey | null>(null);
+  /** What the row's opening balance was when the editor opened — only a change is sent. */
+  private readonly openingBefore = signal<Balance | null>(null);
 
   protected readonly draft = signal<PartyForm>({ ...EMPTY_FORM });
-  protected readonly partyForm = form(this.draft, (p) => required(p.name));
+  protected readonly partyForm = form(this.draft, (p) => {
+    required(p.name);
+    min(p.openingAmount, 0);
+  });
 
   constructor() {
     this.load();
@@ -70,6 +79,7 @@ export class SettingsParty {
   startAdd(): void {
     this.resetRowState();
     this.draft.set({ ...EMPTY_FORM });
+    this.openingBefore.set(null);
     this.adding.set(true);
   }
 
@@ -81,8 +91,16 @@ export class SettingsParty {
       // on load so an untouched contact field can't fail validation on save.
       contact: toDigits(party.contact),
       address: party.address ?? '',
+      openingAmount: party.openingBalance ? party.openingBalance.amount : null,
+      openingDir: party.openingBalance?.direction === 'YOU_OWE_THEM' ? 'YOU_OWE_THEM' : 'THEY_OWE_YOU',
     });
+    this.openingBefore.set(party.openingBalance ?? null);
     this.editingId.set(party.id);
+  }
+
+  /** Flip which way the draft's opening balance points. */
+  protected setOpeningDir(dir: OpeningDirection): void {
+    this.draft.update((d) => ({ ...d, openingDir: dir }));
   }
 
   cancelEdit(): void {
@@ -98,12 +116,14 @@ export class SettingsParty {
     const draft = this.normalized();
     try {
       const editId = this.editingId();
+      const saved = editId ? await this.api.update(editId, draft) : await this.api.create(draft);
+      // Create/update do not carry the opening balance, so it rides its own
+      // endpoint — and only when it actually moved.
+      const withBalance = { ...saved, openingBalance: await this.syncOpening(saved.id) };
       if (editId) {
-        const updated = await this.api.update(editId, draft);
-        this.parties.update((list) => (list ?? []).map((p) => (p.id === editId ? updated : p)));
+        this.parties.update((list) => (list ?? []).map((p) => (p.id === editId ? withBalance : p)));
       } else {
-        const created = await this.api.create(draft);
-        this.parties.update((list) => [created, ...(list ?? [])]);
+        this.parties.update((list) => [withBalance, ...(list ?? [])]);
       }
       this.resetRowState();
     } catch {
@@ -111,6 +131,17 @@ export class SettingsParty {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** Pushes the editor's opening balance if it changed; returns what the row should now show. */
+  private async syncOpening(id: string): Promise<Balance | null> {
+    const d = this.draft();
+    const before = this.openingBefore();
+    if (d.openingAmount === (before?.amount ?? null) && d.openingDir === (before?.direction ?? 'THEY_OWE_YOU')) {
+      return before;
+    }
+    const stored = await this.api.setOpeningBalance(id, { amount: d.openingAmount ?? 0, direction: d.openingDir });
+    return stored.direction === 'SETTLED' ? null : stored;
   }
 
   startOpening(party: Party): void {

@@ -203,6 +203,39 @@
             <span class="efld__lbl">{{ locale.t('settings.party.col.address') }}</span>
             <input class="fld__input" [formField]="partyForm.address" type="text" />
           </label>
+          <div class="efld efld--open">
+            <span class="efld__lbl">{{ locale.t('settings.party.col.opening') }}</span>
+            <div class="efld__row">
+              <input
+                class="fld__input efld__amt"
+                [formField]="partyForm.openingAmount"
+                type="number"
+                inputmode="decimal"
+                [attr.placeholder]="locale.t('settings.party.opening.amountPh')"
+                [attr.aria-label]="locale.t('settings.party.col.opening')"
+              />
+              <div class="dirtoggle" role="group" [attr.aria-label]="locale.t('settings.party.opening.direction')">
+                <button
+                  type="button"
+                  class="dirtoggle__btn"
+                  [class.dirtoggle__btn--on]="draft().openingDir === 'THEY_OWE_YOU'"
+                  [attr.aria-pressed]="draft().openingDir === 'THEY_OWE_YOU'"
+                  (click)="setOpeningDir('THEY_OWE_YOU')"
+                >
+                  {{ locale.t('settings.party.opening.theyOwe') }}
+                </button>
+                <button
+                  type="button"
+                  class="dirtoggle__btn"
+                  [class.dirtoggle__btn--on]="draft().openingDir === 'YOU_OWE_THEM'"
+                  [attr.aria-pressed]="draft().openingDir === 'YOU_OWE_THEM'"
+                  (click)="setOpeningDir('YOU_OWE_THEM')"
+                >
+                  {{ locale.t('settings.party.opening.youOwe') }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="edit__foot">
