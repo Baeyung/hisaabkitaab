@@ -9,3 +9,8 @@
 - [x] explicit button to install the app, spa prompt is kinda shady
 - [x] new store screens are a lil buggy get em fixed
 - [x] fix failing tests and see why they are failing
+- [ ] persistent date filters across navigation
+- [ ] multi-user support for same stores
+- [ ] processed goods feature
+- [ ] billing/plan related stuff
+- [ ] party screen UI fix

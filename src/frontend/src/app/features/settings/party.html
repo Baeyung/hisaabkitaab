@@ -184,43 +184,37 @@
 
 <!-- Reused for both the "add" row and an in-place edit; binds the single draft form. -->
 <ng-template #editRow>
+  <!-- One cell, not five: a stacked form with its own labels, so nothing has
+       to line up with the column headers above it. -->
   <tr class="tbl__edit">
-    <td>
-      <input
-        class="fld__input fld__input--sm"
-        [formField]="partyForm.name"
-        type="text"
-        [attr.placeholder]="locale.t('settings.party.col.name')"
-        [attr.aria-label]="locale.t('settings.party.col.name')"
-      />
-    </td>
-    <td>
-      <input
-        class="fld__input fld__input--sm"
-        [formField]="partyForm.contact"
-        type="tel"
-        [attr.placeholder]="locale.t('settings.party.col.contact')"
-        [attr.aria-label]="locale.t('settings.party.col.contact')"
-      />
-    </td>
-    <td>
-      <input
-        class="fld__input fld__input--sm"
-        [formField]="partyForm.address"
-        type="text"
-        [attr.placeholder]="locale.t('settings.party.col.address')"
-        [attr.aria-label]="locale.t('settings.party.col.address')"
-      />
-    </td>
-    <td aria-hidden="true"></td>
-    <td class="actions">
-      <div class="rowicons">
-        <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEdit()">
-          {{ locale.t('settings.party.editRow.cancel') }}
-        </button>
-        <button type="button" class="btn btn--primary btn--sm" (click)="save()" [disabled]="saving() || partyForm().invalid()">
-          {{ locale.t('settings.party.editRow.save') }}
-        </button>
+    <td colspan="5">
+      <div class="edit">
+        <div class="edit__fields">
+          <label class="efld">
+            <span class="efld__lbl">{{ locale.t('settings.party.col.name') }}</span>
+            <input class="fld__input" [formField]="partyForm.name" type="text" />
+          </label>
+          <label class="efld">
+            <span class="efld__lbl">{{ locale.t('settings.party.col.contact') }}</span>
+            <!-- type=tel also picks up the DigitsOnly directive -->
+            <input class="fld__input" [formField]="partyForm.contact" type="tel" />
+          </label>
+          <label class="efld">
+            <span class="efld__lbl">{{ locale.t('settings.party.col.address') }}</span>
+            <input class="fld__input" [formField]="partyForm.address" type="text" />
+          </label>
+        </div>
+
+        <div class="edit__foot">
+          <div class="rowicons">
+            <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEdit()">
+              {{ locale.t('settings.party.editRow.cancel') }}
+            </button>
+            <button type="button" class="btn btn--primary btn--sm" (click)="save()" [disabled]="saving() || partyForm().invalid()">
+              {{ locale.t('settings.party.editRow.save') }}
+            </button>
+          </div>
+        </div>
       </div>
     </td>
   </tr>

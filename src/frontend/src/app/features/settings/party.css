@@ -165,6 +165,58 @@
 .tbl__edit td {
   background: var(--kg-hover);
 }
+.edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* 1 field per row on phones, 2 mid, 3 on wide. Keyed off @container, not the
+   grid's own width: the table is as wide as its min-width makes it, which is
+   wider than the screen on a tablet, so auto-fit would count columns that are
+   not actually visible. Capped so inputs stay form-sized. */
+.edit__fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@container (min-width: 560px) {
+  .edit__fields {
+    grid-template-columns: 1fr 1fr;
+    max-width: 560px;
+  }
+  /* three fields into two columns: the name takes the row on its own rather
+     than leaving a hole beside the address */
+  .efld:first-child {
+    grid-column: 1 / -1;
+  }
+}
+@container (min-width: 1000px) {
+  .edit__fields {
+    grid-template-columns: 1fr 1fr 1fr;
+    max-width: 860px;
+  }
+  /* all three fit one row now, so the name stops claiming it */
+  .efld:first-child {
+    grid-column: auto;
+  }
+}
+.efld {
+  display: grid;
+  gap: 5px;
+}
+.efld__lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.edit__foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 .tbl__rowmsg td {
   padding-top: 0;
   background: var(--kg-hover);
@@ -421,8 +473,12 @@
    A horizontally-scrolling table hides the action buttons off-screen on a
    phone, so each row reflows into a card: name as the heading, contact/address
    as labelled lines (the hidden column headers move into ::before chips), and
-   the actions on their own row. */
-@container (max-width: 640px) {
+   the actions on their own row.
+
+   720px, not 640: the table holds a 640px min-width and .set adds up to 2×34px
+   of padding, so anything under ~710 still scrolls sideways as a table. Card
+   mode has to start before that, with a little slack. */
+@container (max-width: 720px) {
   .set {
     padding: 16px;
   }
@@ -549,22 +605,12 @@
     border-top: 1px solid var(--kg-line);
   }
 
-  /* edit-row: inputs go full width, Cancel/Save split the row */
-  .tbl__edit td {
-    width: auto;
-  }
-  .tbl__edit .fld__input--sm {
-    min-width: 0;
-  }
-  .tbl__edit .actions {
-    width: auto;
-    padding-top: 8px;
-    text-align: start;
-  }
-  .tbl__edit .rowicons {
+  /* edit-row: Cancel/Save split the width below the fields */
+  .edit__foot .rowicons {
     display: flex;
+    flex: 1 1 100%;
   }
-  .tbl__edit .rowicons .btn {
+  .edit__foot .rowicons .btn {
     flex: 1;
   }
 
