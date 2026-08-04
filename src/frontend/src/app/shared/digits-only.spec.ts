@@ -1,12 +1,14 @@
+import { TestBed } from '@angular/core/testing';
 import { DigitsOnly, PHONE_PATTERN } from './digits-only';
 
-/** Runs the directive over a `tel` input holding `value`, caret at `caret`. */
+/** Runs the directive over a `tel` input holding `value`, caret at `caret`.
+ *  Constructed in an injection context — `maxDigits` is an `input()`. */
 function type(value: string, caret = value.length): { value: string; caret: number | null } {
   const el = document.createElement('input');
   el.type = 'tel';
   el.value = value;
   el.setSelectionRange(caret, caret);
-  new DigitsOnly().onInput({ target: el } as unknown as Event);
+  TestBed.runInInjectionContext(() => new DigitsOnly()).onInput({ target: el } as unknown as Event);
   return { value: el.value, caret: el.selectionStart };
 }
 
