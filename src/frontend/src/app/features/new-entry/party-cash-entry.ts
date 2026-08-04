@@ -1,4 +1,13 @@
-import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -84,6 +93,9 @@ export class PartyCashEntry {
 
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
+
+  /** Bill-number box — where the cursor goes after a Save + Next. */
+  private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
 
   protected readonly toast = new ToastState();
 
@@ -205,6 +217,9 @@ export class PartyCashEntry {
     this.billNumber.set('');
     this.description.set('');
     this.amount.set(null);
+    // Save + Next rhythm: land back on the first field so the next entry starts
+    // typing straight away instead of reaching for the mouse.
+    this.firstField()?.nativeElement.focus();
   }
 
   private matchParty(name: string): Party | undefined {

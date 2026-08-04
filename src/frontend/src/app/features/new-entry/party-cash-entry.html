@@ -17,6 +17,7 @@
             {{ locale.t(config().labels.billNumber) }}
           </label>
           <input
+            #firstField
             class="fld__input"
             type="text"
             [attr.id]="config().idPrefix + '-bill'"

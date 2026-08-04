@@ -172,9 +172,10 @@ export class Combobox {
       if (!this.open() || i < 0) {
         return;
       }
-      this.list()
-        ?.nativeElement.querySelector<HTMLElement>(`#${CSS.escape(this.optionId(i))}`)
-        ?.scrollIntoView({ block: 'nearest' });
+      // The <li>s are the ul's only children, in `filtered()` order.
+      (this.list()?.nativeElement.children[i] as HTMLElement | undefined)?.scrollIntoView({
+        block: 'nearest',
+      });
     });
   }
 
@@ -185,7 +186,10 @@ export class Combobox {
   protected onInput(v: string): void {
     this.valueChange.emit(v);
     this.open.set(true);
-    this.active.set(-1);
+    // Pre-highlight the top match so Enter takes it without arrowing down first.
+    // Nothing typed = nothing presumed; no match leaves the raw string alone
+    // (the Enter branch bails when the list is empty).
+    this.active.set(v.trim() ? 0 : -1);
   }
 
   protected onFocus(): void {
@@ -215,7 +219,7 @@ export class Combobox {
         this.active.set(items.length ? (this.active() - 1 + items.length) % items.length : -1);
         break;
       case 'Enter':
-        if (this.open() && this.active() >= 0) {
+        if (this.open() && this.active() >= 0 && this.active() < items.length) {
           e.preventDefault();
           this.select(items[this.active()]);
         }

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -50,6 +50,9 @@ export class Expense {
 
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
+
+  /** Bill-number box — where the cursor goes after a Save + Next. */
+  private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
 
   protected readonly toast = new ToastState();
   protected readonly recent = new RecentLog();
@@ -193,5 +196,8 @@ export class Expense {
     this.billNumber.set('');
     this.category.set('UNCATEGORIZED');
     this.newCategory.set('');
+    // Save + Next rhythm: land back on the first field so the next entry starts
+    // typing straight away instead of reaching for the mouse.
+    this.firstField()?.nativeElement.focus();
   }
 }

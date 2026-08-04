@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -124,6 +124,9 @@ export class GoodsEntry {
 
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
+
+  /** Bill-number box — where the cursor goes after a Save + Next. */
+  private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
 
   // Declared before `lines` below, whose initializer calls blankLine() → keySeq++.
   // Class fields init top-to-bottom, so it must already be a real number here
@@ -381,6 +384,9 @@ export class GoodsEntry {
     this.cashTouched.set(false);
     this.lines.set([this.blankLine()]);
     this.errorKey.set(null);
+    // Save + Next rhythm: land back on the first field so the next entry starts
+    // typing straight away instead of reaching for the mouse.
+    this.firstField()?.nativeElement.focus();
   }
 
   // ── effect panel view ───────────────────────────────────────────────────
