@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
@@ -67,9 +67,18 @@ export class StoreSetup {
   private readonly partyApi = inject(PartyService);
   private readonly router = inject(Router);
 
+  /**
+   * The shop this run is filling in — read from the route, not from whichever shop
+   * happens to be selected. A user who came here from the picker still has their
+   * last shop selected; without the route as the source of truth the wizard would
+   * open on goods, lock the shop section, and write items into that other shop.
+   */
+  private readonly routeStoreId = inject(ActivatedRoute).snapshot.paramMap.get('storeId');
+  private readonly shop = computed(() => (this.routeStoreId ? this.stores.current() : null));
+
   protected readonly steps = STEPS;
-  /** Goods when a store is already selected — the shop section is what created it. */
-  protected readonly step = signal<Step>(this.stores.current() ? 'goods' : 'shop');
+  /** Goods when the route already carries a store — the shop section is what created it. */
+  protected readonly step = signal<Step>(this.shop() ? 'goods' : 'shop');
   protected readonly stepIndex = computed(() => STEPS.findIndex((s) => s.id === this.step()));
 
   protected readonly busy = signal(false);
@@ -98,17 +107,13 @@ export class StoreSetup {
   protected readonly partyRow = signal<PartyRow>({ ...EMPTY_PARTY });
 
   /** The plate on the spine: the saved shop once there is one, the typed name before that. */
-  protected readonly plateName = computed(
-    () => this.stores.current()?.name ?? this.model().name.trim(),
-  );
-  protected readonly plateLogo = computed(
-    () => this.stores.current()?.logoUri || this.model().logoUri,
-  );
+  protected readonly plateName = computed(() => this.shop()?.name ?? this.model().name.trim());
+  protected readonly plateLogo = computed(() => this.shop()?.logoUri || this.model().logoUri);
   protected readonly initial = computed(() => this.plateName().charAt(0).toUpperCase());
 
-  /** Leaving early is allowed: into the shop if it exists, else back to the picker. */
+  /** Leaving early is allowed: into this shop once it exists, else back to the picker. */
   protected readonly exitLink = computed(() => {
-    const id = this.stores.currentId();
+    const id = this.shop()?.id;
     return id ? ['/s', id, 'dashboard'] : ['/stores'];
   });
 
@@ -120,11 +125,11 @@ export class StoreSetup {
    * working way out beats hiding one.
    */
   protected readonly canExit = computed(
-    () => !!this.stores.currentId() || (this.stores.stores()?.length ?? 1) > 0,
+    () => !!this.shop() || (this.stores.stores()?.length ?? 1) > 0,
   );
 
   constructor() {
-    if (this.stores.current()) {
+    if (this.shop()) {
       void this.loadExisting();
     }
   }
@@ -146,7 +151,7 @@ export class StoreSetup {
    * behind us — its edits belong to Settings › General from then on.
    */
   protected locked(step: Step): boolean {
-    return this.stores.current() ? step === 'shop' : step !== 'shop';
+    return this.shop() ? step === 'shop' : step !== 'shop';
   }
 
   goTo(step: Step): void {
@@ -262,7 +267,7 @@ export class StoreSetup {
 
   /** Into the shop, flagged as freshly opened so the dashboard greets rather than shrugs. */
   finish(): void {
-    const id = this.stores.currentId();
+    const id = this.shop()?.id;
     if (id) {
       void this.router.navigate(['/s', id, 'dashboard'], { queryParams: { new: 1 } });
     }
