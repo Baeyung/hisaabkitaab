@@ -142,6 +142,7 @@ export const ur: Record<TranslationKey, string> = {
   'setup.khatas.empty': 'ابھی کچھ شامل نہیں کیا گیا۔',
   'setup.note':
     'یہ سب کچھ حتمی نہیں۔ آئٹمز، پارٹیاں، برانڈنگ اور ابتدائی رقوم سب ترتیبات میں موجود ہیں — جب چاہیں بدل یا بڑھا سکتے ہیں۔',
+  'setup.written': 'اب تک درج',
   'setup.remove': 'ہٹائیں',
   'setup.back': 'واپس',
   'setup.next': 'آگے',

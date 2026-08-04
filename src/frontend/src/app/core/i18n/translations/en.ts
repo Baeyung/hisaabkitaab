@@ -137,6 +137,7 @@ export const en = {
   'setup.khatas.empty': 'Nothing added yet.',
   'setup.note':
     'None of this is locked in. Items, parties, branding, and the opening balances all live in Store Settings — change or add to them whenever you like.',
+  'setup.written': 'Written so far',
   'setup.remove': 'Remove',
   'setup.back': 'Back',
   'setup.next': 'Next',
