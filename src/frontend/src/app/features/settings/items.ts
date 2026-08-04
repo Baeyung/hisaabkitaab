@@ -12,9 +12,10 @@ interface ItemForm {
   unit: string;
   salePrice: number | null;
   costPrice: number | null;
+  service: boolean;
 }
 
-const EMPTY_FORM: ItemForm = { name: '', unit: '', salePrice: null, costPrice: null };
+const EMPTY_FORM: ItemForm = { name: '', unit: '', salePrice: null, costPrice: null, service: false };
 
 /**
  * Store catalog CRUD. Rows edit in place: "Add item" opens a blank editable row,
@@ -82,6 +83,7 @@ export class SettingsItems {
       unit: item.unit ?? '',
       salePrice: item.salePrice,
       costPrice: item.costPrice,
+      service: item.service,
     });
     this.editingId.set(item.id);
   }
@@ -202,6 +204,12 @@ export class SettingsItems {
   private normalized(): StoreItemDraft {
     const d = this.draft();
     const unit = d.unit?.trim();
-    return { name: d.name.trim(), unit: unit ? unit : null, salePrice: d.salePrice, costPrice: d.costPrice };
+    return {
+      name: d.name.trim(),
+      unit: unit ? unit : null,
+      salePrice: d.salePrice,
+      costPrice: d.costPrice,
+      service: d.service,
+    };
   }
 }

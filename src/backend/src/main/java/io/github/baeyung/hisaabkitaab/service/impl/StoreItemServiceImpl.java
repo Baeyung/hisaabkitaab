@@ -59,6 +59,7 @@ public class StoreItemServiceImpl implements StoreItemService
                 .unit(input.getUnit())
                 .salePrice(input.getSalePrice())
                 .costPrice(input.getCostPrice())
+                .service(input.isService())
                 .build();
 
         return storeItemRepository.save(item);
@@ -79,6 +80,7 @@ public class StoreItemServiceImpl implements StoreItemService
         item.setUnit(changes.getUnit());
         item.setSalePrice(changes.getSalePrice());
         item.setCostPrice(changes.getCostPrice());
+        item.setService(changes.isService());
 
         return storeItemRepository.save(item);
     }

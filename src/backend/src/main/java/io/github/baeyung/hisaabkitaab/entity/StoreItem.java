@@ -47,4 +47,13 @@ public class StoreItem
     private BigDecimal salePrice;
 
     private BigDecimal costPrice;
+
+    /**
+     * Work sold rather than goods — a dry-clean, a stitching job. Nothing leaves a
+     * shelf when it is given, so it carries no stock: its lines still record what was
+     * sold and for how much, but the inventory screens show no on-hand quantity
+     * instead of a number that only ever counts down.
+     */
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    private boolean service;
 }

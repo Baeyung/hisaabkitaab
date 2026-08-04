@@ -15,12 +15,13 @@ public record StoreItemResponse(
         String unit,
         BigDecimal salePrice,
         BigDecimal costPrice,
-        BigDecimal openingStock
+        BigDecimal openingStock,
+        boolean service
 )
 {
     public static StoreItemResponse of(StoreItem item, BigDecimal openingStock)
     {
         return new StoreItemResponse(item.getId(), item.getName(), item.getUnit(),
-                item.getSalePrice(), item.getCostPrice(), openingStock);
+                item.getSalePrice(), item.getCostPrice(), openingStock, item.isService());
     }
 }

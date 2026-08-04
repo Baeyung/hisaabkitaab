@@ -201,6 +201,7 @@ export class StoreSetup {
         unit: unit || null,
         salePrice: row.salePrice,
         costPrice: null,
+        service: false,
       });
       this.items.update((list) => [...list, created]);
       this.itemRow.set({ ...EMPTY_ITEM });

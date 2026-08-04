@@ -11,6 +11,8 @@ export interface StoreItem {
   costPrice: number | null;
   /** Opening stock on hand at onboarding; `null` when none is set (list only). */
   openingStock?: number | null;
+  /** Work sold rather than goods (a dry-clean, a stitching job) — carries no stock. */
+  service: boolean;
 }
 
 /** The editable shape sent on create/update — the catalog fields only. */

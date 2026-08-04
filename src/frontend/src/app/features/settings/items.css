@@ -79,6 +79,32 @@
   background: var(--kg-hover);
 }
 
+/* "Service" marker on a row, and its checkbox in the edit row */
+.tag {
+  margin-inline-start: 8px;
+  padding: 1px 8px;
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--kg-muted);
+}
+.chk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.chk input {
+  accent-color: var(--kg-brand);
+}
+.chk__hint {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--kg-faint);
+}
+
 /* right-aligned tabular figures for money columns */
 .num {
   text-align: end;

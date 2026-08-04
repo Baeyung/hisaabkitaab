@@ -54,7 +54,8 @@ public class InventoryQueryService
                         item.getUnit(),
                         item.getSalePrice(),
                         item.getCostPrice(),
-                        stock.getOrDefault(item.getId(), BigDecimal.ZERO)
+                        item.isService() ? null : stock.getOrDefault(item.getId(), BigDecimal.ZERO),
+                        item.isService()
                 ))
                 .toList();
     }
@@ -66,6 +67,10 @@ public class InventoryQueryService
         StoreItem item = storeItemService.findByIdForStore(itemId, storeId);
 
         List<TransactionLine> lines = transactionLineRepository.findItemMovementLines(itemId, storeId);
+
+        // A service keeps no stock, so there is no running quantity to carry: the rows
+        // stay as a record of when it was given, without a count winding down.
+        boolean service = item.isService();
 
         List<ItemMovementRowResponse> rows = new ArrayList<>(lines.size());
         BigDecimal running = BigDecimal.ZERO;
@@ -81,11 +86,12 @@ public class InventoryQueryService
                     transaction.getDescription(),
                     line.getInOut(),
                     quantity(line),
-                    running
+                    service ? null : running
             ));
         }
 
-        return new ItemMovementResponse(item.getId(), item.getName(), item.getUnit(), running, rows);
+        return new ItemMovementResponse(item.getId(), item.getName(), item.getUnit(),
+                service ? null : running, service, rows);
     }
 
     private BigDecimal signedQuantity(TransactionLine line)

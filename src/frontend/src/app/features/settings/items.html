@@ -56,7 +56,12 @@
               <ng-container [ngTemplateOutlet]="editRow" />
             } @else {
               <tr class="tbl__row">
-                <td class="tbl__name">{{ item.name }}</td>
+                <td class="tbl__name">
+                  {{ item.name }}
+                  @if (item.service) {
+                    <span class="tag">{{ locale.t('settings.items.service') }}</span>
+                  }
+                </td>
                 <td [attr.data-label]="locale.t('settings.items.col.unit')">{{ item.unit || '—' }}</td>
                 <td class="num" [attr.data-label]="locale.t('settings.items.col.sale')">{{ money(item.salePrice) }}</td>
                 <td class="num" [attr.data-label]="locale.t('settings.items.col.cost')">{{ money(item.costPrice) }}</td>
@@ -68,6 +73,10 @@
                   }
                 </td>
                 <td class="opening-cell" [attr.data-label]="locale.t('settings.items.col.opening')">
+                  @if (item.service) {
+                    <!-- Nothing sits on a shelf, so there is no opening quantity to set. -->
+                    <span class="mgn__none">—</span>
+                  } @else {
                   <button
                     type="button"
                     class="openbtn"
@@ -81,6 +90,7 @@
                       <span class="openbtn__set">{{ locale.t('settings.items.opening.set') }}</span>
                     }
                   </button>
+                  }
                 </td>
                 <td class="actions">
                   <div class="rowicons">
@@ -185,6 +195,11 @@
         [attr.placeholder]="locale.t('settings.items.col.name')"
         [attr.aria-label]="locale.t('settings.items.col.name')"
       />
+      <label class="chk">
+        <input type="checkbox" [formField]="itemForm.service" />
+        <span>{{ locale.t('settings.items.service') }}</span>
+      </label>
+      <p class="chk__hint">{{ locale.t('settings.items.service.hint') }}</p>
     </td>
     <td>
       <input

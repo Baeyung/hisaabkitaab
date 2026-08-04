@@ -2,6 +2,10 @@ spring:
   application:
     name: hisaabkitaab
 
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false
+
   # Database properties
   datasource:
     url: jdbc:postgresql://localhost:5432/hisaabkitaab

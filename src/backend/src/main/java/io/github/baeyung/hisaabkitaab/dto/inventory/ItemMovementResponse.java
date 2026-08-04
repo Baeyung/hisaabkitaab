@@ -8,6 +8,7 @@ public record ItemMovementResponse(
         String name,
         String unit,
         BigDecimal currentStock,
+        boolean service,
         List<ItemMovementRowResponse> rows
 )
 {

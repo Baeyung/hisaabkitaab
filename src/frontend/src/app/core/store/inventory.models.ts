@@ -7,7 +7,9 @@ export interface ItemStockRow {
   unit: string | null;
   salePrice: number | null;
   costPrice: number | null;
-  currentStock: number;
+  /** Null for a service — work sold has no on-hand quantity. */
+  currentStock: number | null;
+  service: boolean;
 }
 
 export interface ItemMovementRow {
@@ -18,13 +20,15 @@ export interface ItemMovementRow {
   description: string | null;
   inOut: 'IN' | 'OUT';
   quantity: number;
-  runningStock: number;
+  /** Null for a service — no stock winds up or down. */
+  runningStock: number | null;
 }
 
 export interface ItemMovement {
   itemId: string;
   name: string;
   unit: string | null;
-  currentStock: number;
+  currentStock: number | null;
+  service: boolean;
   rows: ItemMovementRow[];
 }

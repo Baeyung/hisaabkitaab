@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -99,6 +100,49 @@ class StoreItemApiTest extends ApiTest
         mvc.perform(get(api(store, "/inventory")).with(as("3103000005")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].currentStock").value(25));
+    }
+
+    /**
+     * A service is sold like anything else, but nothing leaves a shelf: the inventory
+     * screens must show no on-hand quantity rather than a count going negative.
+     */
+    @Test
+    void sellingAServiceLeavesNoStock() throws Exception
+    {
+        signup("3103000007");
+        String store = createStore("3103000007", "Rana Dry Cleaners");
+
+        MvcResult created = mvc.perform(post(api(store, "/store-items")).with(as("3103000007"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Dry clean\",\"salePrice\":300,\"service\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.service").value(true))
+                .andReturn();
+        String id = tree(created).get("id").asText();
+
+        mvc.perform(post(api(store, "/event")).with(as("3103000007"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "transactionEvent":"SALE",
+                                  "cashAmount":300,
+                                  "billAmount":300,
+                                  "items":[{"itemId":"%s","quantity":1,"itemSoldAt":300}]
+                                }
+                                """.formatted(id)))
+                .andExpect(status().isOk());
+
+        mvc.perform(get(api(store, "/inventory")).with(as("3103000007")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].service").value(true))
+                .andExpect(jsonPath("$[0].currentStock").value(nullValue()));
+
+        // The movement is still recorded — only the running quantity is dropped.
+        mvc.perform(get(api(store, "/inventory/" + id)).with(as("3103000007")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStock").value(nullValue()))
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].runningStock").value(nullValue()));
     }
 
     /** One owner, two shops: each keeps its own catalogue. */

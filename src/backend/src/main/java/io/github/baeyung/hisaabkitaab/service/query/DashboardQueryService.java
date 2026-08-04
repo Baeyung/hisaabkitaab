@@ -161,6 +161,8 @@ public class DashboardQueryService
 
         return storeItemRepository.findByStoreId(storeId)
                 .stream()
+                // Services hold no stock, so they can never be sitting on a shelf unsold.
+                .filter(item -> !item.isService())
                 .filter(item -> !soldItemIds.contains(item.getId()))
                 .map(item -> {
                     BigDecimal qty = stock.getOrDefault(item.getId(), BigDecimal.ZERO);
