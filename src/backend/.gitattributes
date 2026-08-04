@@ -3,3 +3,4 @@
 # fail on the stray \r ("syntax error near unexpected token $'{\r'").
 *.sh text eol=lf
 *.cmd text eol=crlf
+*.bat text eol=crlf
