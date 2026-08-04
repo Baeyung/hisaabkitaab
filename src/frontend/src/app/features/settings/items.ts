@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { form, FormField, required } from '@angular/forms/signals';
+import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreItemService } from '../../core/store/store-item.service';
@@ -13,9 +13,11 @@ interface ItemForm {
   salePrice: number | null;
   costPrice: number | null;
   service: boolean;
+  /** Saved through its own endpoint after the item itself, not part of the draft. */
+  openingStock: number | null;
 }
 
-const EMPTY_FORM: ItemForm = { name: '', unit: '', salePrice: null, costPrice: null, service: false };
+const EMPTY_FORM: ItemForm = { name: '', unit: '', salePrice: null, costPrice: null, service: false, openingStock: null };
 
 /**
  * Store catalog CRUD. Rows edit in place: "Add item" opens a blank editable row,
@@ -45,11 +47,16 @@ export class SettingsItems {
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly openingId = signal<string | null>(null);
   protected readonly openingQty = signal<number | null>(null);
+  /** What the row's opening stock was when the editor opened — only a change is sent. */
+  private readonly openingBefore = signal<number | null>(null);
   protected readonly saving = signal(false);
   protected readonly rowErrorKey = signal<TranslationKey | null>(null);
 
   protected readonly draft = signal<ItemForm>({ ...EMPTY_FORM });
-  protected readonly itemForm = form(this.draft, (p) => required(p.name));
+  protected readonly itemForm = form(this.draft, (p) => {
+    required(p.name);
+    min(p.openingStock, 0);
+  });
 
   /** Common cloth units as free-text datalist hints; the shopkeeper can type any. */
   protected readonly unitSuggestions = ['Meter', 'Than', 'Gaz', 'Piece', 'Roll'];
@@ -73,6 +80,7 @@ export class SettingsItems {
   startAdd(): void {
     this.resetRowState();
     this.draft.set({ ...EMPTY_FORM });
+    this.openingBefore.set(null);
     this.adding.set(true);
   }
 
@@ -84,7 +92,9 @@ export class SettingsItems {
       salePrice: item.salePrice,
       costPrice: item.costPrice,
       service: item.service,
+      openingStock: item.openingStock ?? null,
     });
+    this.openingBefore.set(item.openingStock ?? null);
     this.editingId.set(item.id);
   }
 
@@ -101,12 +111,14 @@ export class SettingsItems {
     const draft = this.normalized();
     try {
       const editId = this.editingId();
+      const saved = editId ? await this.api.update(editId, draft) : await this.api.create(draft);
+      // Create/update do not carry opening stock, so it rides its own endpoint —
+      // and only when it actually moved. A service holds none, so it clears.
+      const withOpening = { ...saved, openingStock: await this.syncOpening(saved.id, draft.service) };
       if (editId) {
-        const updated = await this.api.update(editId, draft);
-        this.items.update((list) => (list ?? []).map((it) => (it.id === editId ? updated : it)));
+        this.items.update((list) => (list ?? []).map((it) => (it.id === editId ? withOpening : it)));
       } else {
-        const created = await this.api.create(draft);
-        this.items.update((list) => [created, ...(list ?? [])]);
+        this.items.update((list) => [withOpening, ...(list ?? [])]);
       }
       this.resetRowState();
     } catch {
@@ -114,6 +126,16 @@ export class SettingsItems {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** Pushes the editor's opening stock if it changed; returns what the row should now show. */
+  private async syncOpening(id: string, service: boolean): Promise<number | null> {
+    const wanted = service ? null : this.draft().openingStock;
+    if (wanted === this.openingBefore()) {
+      return this.openingBefore();
+    }
+    const stored = await this.api.setOpeningStock(id, wanted ?? 0);
+    return stored > 0 ? stored : null;
   }
 
   startOpening(item: StoreItem): void {

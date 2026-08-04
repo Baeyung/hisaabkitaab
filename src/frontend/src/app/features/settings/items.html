@@ -186,67 +186,59 @@
 
 <!-- Reused for both the "add" row and an in-place edit; binds the single draft form. -->
 <ng-template #editRow>
+  <!-- One cell, not seven: a stacked form with its own labels, so nothing has
+       to line up with the column headers above it. -->
   <tr class="tbl__edit">
-    <td>
-      <input
-        class="fld__input fld__input--sm"
-        [formField]="itemForm.name"
-        type="text"
-        [attr.placeholder]="locale.t('settings.items.col.name')"
-        [attr.aria-label]="locale.t('settings.items.col.name')"
-      />
-      <label class="chk">
-        <input type="checkbox" [formField]="itemForm.service" />
-        <span>{{ locale.t('settings.items.service') }}</span>
-      </label>
-      <p class="chk__hint">{{ locale.t('settings.items.service.hint') }}</p>
-    </td>
-    <td>
-      <input
-        class="fld__input fld__input--sm"
-        [formField]="itemForm.unit"
-        type="text"
-        list="unit-suggestions"
-        [attr.placeholder]="locale.t('settings.items.col.unit')"
-        [attr.aria-label]="locale.t('settings.items.col.unit')"
-      />
-    </td>
-    <td class="num">
-      <input
-        class="fld__input fld__input--sm num"
-        [formField]="itemForm.salePrice"
-        type="number"
-        inputmode="decimal"
-        [attr.placeholder]="locale.t('settings.items.col.sale')"
-        [attr.aria-label]="locale.t('settings.items.col.sale')"
-      />
-    </td>
-    <td class="num">
-      <input
-        class="fld__input fld__input--sm num"
-        [formField]="itemForm.costPrice"
-        type="number"
-        inputmode="decimal"
-        [attr.placeholder]="locale.t('settings.items.col.cost')"
-        [attr.aria-label]="locale.t('settings.items.col.cost')"
-      />
-    </td>
-    <td class="num" [attr.data-label]="locale.t('settings.items.col.margin')">
-      @if (marginView(draft().salePrice, draft().costPrice); as m) {
-        <span class="mgn mgn--{{ m.tone }}">{{ m.amount }}@if (m.pct) {<small class="mgn__pct">{{ m.pct }}</small>}</span>
-      } @else {
-        <span class="mgn__none">—</span>
-      }
-    </td>
-    <td aria-hidden="true"></td>
-    <td class="actions">
-      <div class="rowicons">
-        <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEdit()">
-          {{ locale.t('settings.items.editRow.cancel') }}
-        </button>
-        <button type="button" class="btn btn--primary btn--sm" (click)="save()" [disabled]="saving() || itemForm().invalid()">
-          {{ locale.t('settings.items.editRow.save') }}
-        </button>
+    <td colspan="7">
+      <div class="edit">
+        <div class="edit__fields">
+          <label class="efld">
+            <span class="efld__lbl">{{ locale.t('settings.items.col.name') }}</span>
+            <input class="fld__input" [formField]="itemForm.name" type="text" />
+          </label>
+          <label class="efld">
+            <span class="efld__lbl">{{ locale.t('settings.items.col.unit') }}</span>
+            <input class="fld__input" [formField]="itemForm.unit" type="text" list="unit-suggestions" />
+          </label>
+          <label class="efld">
+            <span class="efld__lbl">{{ locale.t('settings.items.col.sale') }}</span>
+            <input class="fld__input" [formField]="itemForm.salePrice" type="number" inputmode="decimal" />
+          </label>
+          <label class="efld">
+            <span class="efld__lbl">{{ locale.t('settings.items.col.cost') }}</span>
+            <input class="fld__input" [formField]="itemForm.costPrice" type="number" inputmode="decimal" />
+          </label>
+          @if (!draft().service) {
+            <!-- A service keeps no stock, so the field has nothing to fill in. -->
+            <label class="efld">
+              <span class="efld__lbl">{{ locale.t('settings.items.col.opening') }}</span>
+              <input class="fld__input" [formField]="itemForm.openingStock" type="number" inputmode="decimal" />
+            </label>
+          }
+        </div>
+
+        <div class="edit__foot">
+          <label class="svc">
+            <input class="svc__box" type="checkbox" [formField]="itemForm.service" />
+            {{ locale.t('settings.items.service') }}
+          </label>
+          <span class="edit__margin">
+            <span class="edit__marginlbl">{{ locale.t('settings.items.col.margin') }}</span>
+            @if (marginView(draft().salePrice, draft().costPrice); as m) {
+              <span class="mgn mgn--{{ m.tone }}">{{ m.amount }}@if (m.pct) {<small class="mgn__pct">{{ m.pct }}</small>}</span>
+            } @else {
+              <span class="mgn__none">—</span>
+            }
+          </span>
+          <div class="rowicons">
+            <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEdit()">
+              {{ locale.t('settings.items.editRow.cancel') }}
+            </button>
+            <button type="button" class="btn btn--primary btn--sm" (click)="save()" [disabled]="saving() || itemForm().invalid()">
+              {{ locale.t('settings.items.editRow.save') }}
+            </button>
+          </div>
+        </div>
       </div>
     </td>
   </tr>

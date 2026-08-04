@@ -79,7 +79,7 @@
   background: var(--kg-hover);
 }
 
-/* "Service" marker on a row, and its checkbox in the edit row */
+/* "Service" marker on a row */
 .tag {
   margin-inline-start: 8px;
   padding: 1px 8px;
@@ -87,22 +87,6 @@
   border-radius: 999px;
   font-size: 11px;
   color: var(--kg-muted);
-}
-.chk {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  font-size: 13px;
-  cursor: pointer;
-}
-.chk input {
-  accent-color: var(--kg-brand);
-}
-.chk__hint {
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: var(--kg-faint);
 }
 
 /* right-aligned tabular figures for money columns */
@@ -223,6 +207,83 @@ th.num {
 .tbl__edit td {
   background: var(--kg-hover);
 }
+.edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* 1 field per row on phones, 2 mid, 3 on wide. Keyed off @container, not the
+   grid's own width: the table is as wide as its seven headers make it, which
+   is wider than the screen on a tablet, so auto-fit would count columns that
+   are not actually visible. Capped so inputs stay form-sized. */
+.edit__fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@container (min-width: 560px) {
+  .edit__fields {
+    grid-template-columns: 1fr 1fr;
+    max-width: 560px;
+  }
+}
+@container (min-width: 1000px) {
+  .edit__fields {
+    grid-template-columns: 1fr 1fr 1fr;
+    max-width: 860px;
+  }
+}
+/* the name is the one field that wants the full width */
+.efld:first-child {
+  grid-column: 1 / -1;
+}
+.efld {
+  display: grid;
+  gap: 5px;
+}
+.efld__lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.edit__foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.svc {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  cursor: pointer;
+}
+.svc__box {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--kg-brand);
+  cursor: pointer;
+}
+/* the margin readout loses its column header here, so it carries its own */
+.edit__margin {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-inline-start: auto;
+}
+.edit__marginlbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
 .tbl__rowmsg td {
   padding-top: 0;
   background: var(--kg-hover);
@@ -296,6 +357,7 @@ th.num {
   border-radius: 10px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+/* only the opening-stock input left; it is capped by .opening__amt */
 .fld__input--sm {
   min-width: 96px;
 }
@@ -456,8 +518,13 @@ th.num {
    A horizontally-scrolling table pushes the action buttons off-screen on a
    phone, so each row reflows into a card: name as the heading, the other
    columns as labelled lines (the hidden headers move into ::before chips),
-   and the actions on their own row. Mirrors the Parties screen. */
-@container (max-width: 640px) {
+   and the actions on their own row. Mirrors the Parties screen.
+
+   740px, not 640: the seven headers plus the "+ Set" and action buttons need
+   ~650px and .set eats another ~40 in padding, so anything under this still
+   scrolls sideways as a table. Card mode has to start before that, with a bit
+   of slack for item names longer than the samples. */
+@container (max-width: 740px) {
   .set {
     padding: 16px;
   }
@@ -585,19 +652,12 @@ th.num {
     border-top: 1px solid var(--kg-line);
   }
 
-  /* edit-row: inputs go full width, Cancel/Save split the row */
-  .tbl__edit .fld__input--sm {
-    min-width: 0;
-  }
-  .tbl__edit .actions {
-    width: auto;
-    padding-top: 8px;
-    text-align: start;
-  }
-  .tbl__edit .rowicons {
+  /* edit-row: Cancel/Save split the width below the fields */
+  .edit__foot .rowicons {
     display: flex;
+    flex: 1 1 100%;
   }
-  .tbl__edit .rowicons .btn {
+  .edit__foot .rowicons .btn {
     flex: 1;
   }
 
