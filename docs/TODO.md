@@ -15,3 +15,4 @@
 - [ ] processed goods feature
 - [ ] billing/plan related stuff
 - [ ] delete store option
+- [ ] goods and khatas on guided UI looks very conjested we need to fix it
