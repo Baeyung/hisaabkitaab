@@ -152,15 +152,59 @@
   max-width: 520px;
 }
 
-/* ── danger zone + its confirmation dialog ─────────────────────────── */
-.sec__eyebrow--danger {
-  color: var(--kg-out);
+/* ── deleting the store ────────────────────────────────────────────────
+   A panel, not a fourth section. Everything above it is a label/field rail for
+   editing; this is the one control on the page that can't be taken back, so it
+   sits outside that grammar on its own surface. The rule down the inline-start
+   edge is the red pen a shopkeeper strikes a closed account with — logical, so
+   it moves to the right-hand margin under Urdu. */
+.danger {
+  display: grid;
+  /* Same action column as .set__foot: 24 + 216 + 48 = 288. */
+  grid-template-columns: 216px minmax(0, 1fr);
+  gap: 10px 48px;
+  align-items: start;
+  /* 240 rail + 48 gap + the 520 field measure — the panel ends on the same edge
+     as every input above it, so it reads as part of the form's column, not as a
+     band stretched across the page. */
+  max-width: 808px;
+  margin-top: 38px;
+  padding: 22px 24px;
+  /* The rule spends 3 of those 24, so content still starts on the 24px edge. */
+  padding-inline-start: 21px;
+  background: var(--kg-tint-out);
+  border: 1px solid var(--kg-tint-out-line);
+  border-inline-start: 3px solid var(--kg-out);
+  border-radius: 14px;
 }
+.danger__eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  /* Same neutral as every other eyebrow on the page. The rule, the wash and the
+     button already say "red"; a fourth red would make this a warning banner. */
+  color: var(--kg-faint);
+}
+.danger__desc {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--kg-muted);
+  max-width: 34ch;
+}
+.danger__action {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* ── the confirmation dialog ───────────────────────────────────────── */
 .del__fld {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 .del__alert {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .fld {
@@ -403,6 +447,15 @@
   }
   .set__foot {
     padding-inline-start: 0;
+  }
+  .danger {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 20px;
+    padding-inline-start: 17px;
+  }
+  .danger__desc {
+    max-width: none;
   }
 }
 @container (max-width: 560px) {

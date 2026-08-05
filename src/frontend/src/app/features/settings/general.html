@@ -193,22 +193,21 @@
       </div>
     </form>
 
-    <!-- Danger zone. A sibling of the form, not a section inside it, so this
-         button can never read as (or be triggered as) a save. -->
-    <section class="sec" aria-labelledby="sec-danger">
+    <!-- Its own panel, and a sibling of the form rather than a section inside it:
+         this button must never read as (or be triggered as) a save, and the
+         label/field rail above is the grammar of editing, not of erasing. -->
+    <section class="danger" aria-labelledby="sec-danger">
       <div>
-        <h2 class="sec__eyebrow sec__eyebrow--danger" id="sec-danger">
+        <h2 class="danger__eyebrow" id="sec-danger">
           {{ locale.t('settings.general.section.danger') }}
         </h2>
-        <p class="sec__desc">{{ locale.t('settings.general.danger.help') }}</p>
+        <p class="danger__desc">{{ locale.t('settings.general.danger.help') }}</p>
       </div>
 
-      <div class="sec__fields">
-        <div>
-          <button type="button" class="btn btn--danger" (click)="openDelete()">
-            {{ locale.t('settings.general.danger.delete') }}
-          </button>
-        </div>
+      <div class="danger__action">
+        <button type="button" class="btn btn--danger" (click)="openDelete()">
+          {{ locale.t('settings.general.danger.delete') }}
+        </button>
       </div>
     </section>
   }
@@ -242,13 +241,13 @@
       <div class="rm-dialog__actions">
         <button
           type="button"
-          class="btn btn--ghost btn--sm"
+          class="btn btn--ghost"
           [disabled]="deleting()"
           (click)="confirmingDelete.set(false)"
         >
           {{ locale.t('settings.general.danger.cancel') }}
         </button>
-        <button type="submit" class="btn btn--danger btn--sm" [disabled]="!canDelete() || deleting()">
+        <button type="submit" class="btn btn--danger" [disabled]="!canDelete() || deleting()">
           {{ deleting() ? locale.t('settings.general.danger.deleting') : locale.t('settings.general.danger.confirm') }}
         </button>
       </div>
