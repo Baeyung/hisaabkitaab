@@ -12,9 +12,13 @@ spring:
     username: hkadmin
     password: admin
     driver-class-name: org.postgresql.Driver
+  flyway:
+    locations: classpath:migrations
+    baseline-on-migrate: true
+    baseline-version: 1
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     properties:
@@ -59,16 +63,9 @@ logging:
       max-history: 14
       total-size-cap: 500MB
 
-# Base URL of the Angular app; used to build the links in outgoing emails.
 app:
   frontend-base-url: ${FRONTEND_BASE_URL:https://aapka.hisaabkitaab.shop}
   email:
-    # Master switch for outgoing mail. Off (dev) means MailService drops every message
-    # instead of dialling the SMTP relay — nothing else in the app changes.
     enabled: ${EMAIL_ENABLED:false}
   verification:
-    # Set to false (e.g. in dev) to skip email verification entirely: new signups are
-    # created already-verified with no email sent, and the "verified" access gate is
-    # relaxed to plain authentication so existing unverified accounts get in too.
-    # Tracks the mail switch: gating access on a code we can't deliver locks everyone out.
     enabled: ${app.email.enabled}

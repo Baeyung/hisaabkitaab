@@ -95,7 +95,7 @@ Two problems on four lines:
   which `GlobalExceptionHandler` already turns into a 400 with field errors) is both
   smaller and correct.
 - **`System.out.println` for an error condition**, when slf4j is already a dependency and
-  used elsewhere in the tree (`ExpenseCategoryBackfill`). On the home-server deployment
+  used everywhere else in the tree. On the home-server deployment
   this goes to the container's stdout unstructured and unleveled, so it is invisible to
   any log filter. Two more copies sit in `converters/ValueMetaDataConverter.java:24,44` —
   those die with HK-DEAD-01, leaving this one.
