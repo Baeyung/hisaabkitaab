@@ -192,5 +192,66 @@
         </span>
       </div>
     </form>
+
+    <!-- Danger zone. A sibling of the form, not a section inside it, so this
+         button can never read as (or be triggered as) a save. -->
+    <section class="sec" aria-labelledby="sec-danger">
+      <div>
+        <h2 class="sec__eyebrow sec__eyebrow--danger" id="sec-danger">
+          {{ locale.t('settings.general.section.danger') }}
+        </h2>
+        <p class="sec__desc">{{ locale.t('settings.general.danger.help') }}</p>
+      </div>
+
+      <div class="sec__fields">
+        <div>
+          <button type="button" class="btn btn--danger" (click)="openDelete()">
+            {{ locale.t('settings.general.danger.delete') }}
+          </button>
+        </div>
+      </div>
+    </section>
   }
+
+  <!-- Confirmation. The shop's name is typed out in full: this erases every
+       party, item and transaction in it, and there is no undo. -->
+  <dialog #deleteDialog class="rm-dialog" (close)="confirmingDelete.set(false)">
+    <h2 class="rm-dialog__title">{{ locale.t('settings.general.danger.title', { name: storeName() }) }}</h2>
+    <p class="rm-dialog__body">{{ locale.t('settings.general.danger.body') }}</p>
+
+    <form (submit)="$event.preventDefault(); confirmDelete()">
+      <div class="fld del__fld">
+        <label class="fld__label" for="delete-confirm">
+          {{ locale.t('settings.general.danger.prompt', { name: storeName() }) }}
+        </label>
+        <input
+          id="delete-confirm"
+          class="fld__input"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          [value]="typedName()"
+          (input)="typedName.set($any($event.target).value)"
+        />
+      </div>
+
+      @if (deleteErrorKey(); as key) {
+        <p role="alert" class="set__alert del__alert">{{ locale.t(key) }}</p>
+      }
+
+      <div class="rm-dialog__actions">
+        <button
+          type="button"
+          class="btn btn--ghost btn--sm"
+          [disabled]="deleting()"
+          (click)="confirmingDelete.set(false)"
+        >
+          {{ locale.t('settings.general.danger.cancel') }}
+        </button>
+        <button type="submit" class="btn btn--danger btn--sm" [disabled]="!canDelete() || deleting()">
+          {{ deleting() ? locale.t('settings.general.danger.deleting') : locale.t('settings.general.danger.confirm') }}
+        </button>
+      </div>
+    </form>
+  </dialog>
 </section>

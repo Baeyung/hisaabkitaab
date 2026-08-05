@@ -176,6 +176,17 @@ export const en = {
   'settings.general.retry': 'Try again',
   'settings.general.imageType': 'Choose an image file.',
   'settings.general.imageTooBig': 'Image must be under 300 KB. Pick a smaller file.',
+  'settings.general.section.danger': 'Danger zone',
+  'settings.general.danger.help':
+    'Closing this shop for good. Everything in its books goes with it, and none of it can be brought back.',
+  'settings.general.danger.delete': 'Delete this store',
+  'settings.general.danger.title': "Delete '{{name}}'?",
+  'settings.general.danger.body':
+    'Every khata, item, bill, and cashbook entry in this shop will be deleted permanently. This cannot be undone.',
+  'settings.general.danger.prompt': "Type '{{name}}' to confirm",
+  'settings.general.danger.cancel': 'Cancel',
+  'settings.general.danger.confirm': 'Delete store',
+  'settings.general.danger.deleting': 'Deleting…',
   'settings.items.subtitle': 'The cloth you stock and sell.',
   'settings.items.add': 'Add item',
   'settings.items.col.name': 'Item',

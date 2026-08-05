@@ -82,6 +82,17 @@ export class StoreService {
     return store;
   }
 
+  /**
+   * Erase a store and everything booked in it — the backend cascades to its
+   * parties, items and transactions. `_currentId` is deliberately left alone:
+   * the shell builds its nav through {@link link}, which throws without an id,
+   * so it must survive until the caller has navigated out of the store route.
+   */
+  async delete(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`${this.url}/${id}`));
+    this._stores.update((s) => (s ?? []).filter((x) => x.id !== id));
+  }
+
   /** The current store's opening drawer balance — cash on hand at onboarding (0 when none). */
   getOpeningCash(): Promise<number> {
     return firstValueFrom(this.http.get<number>(this.api('opening-cash')));

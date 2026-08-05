@@ -1,5 +1,5 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { form, FormField, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
@@ -28,6 +28,8 @@ type ImageField = 'logoUri' | 'watermarkUri';
 export class SettingsGeneral {
   protected readonly locale = inject(LocaleService);
   protected readonly stores = inject(StoreService);
+  private readonly router = inject(Router);
+  private readonly deleteDialog = viewChild<ElementRef<HTMLDialogElement>>('deleteDialog');
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
@@ -47,6 +49,23 @@ export class SettingsGeneral {
   /** First letter of the typed name — keeps the nameplate mark in step as it's edited. */
   protected readonly initial = computed(() => this.model().name.trim().charAt(0).toUpperCase());
 
+  // ── deleting the shop ───────────────────────────────────────────────
+  protected readonly confirmingDelete = signal(false);
+  protected readonly typedName = signal('');
+  protected readonly deleting = signal(false);
+  protected readonly deleteErrorKey = signal<TranslationKey | null>(null);
+
+  /** The saved name, not the edited one — an unsaved rename must not move the target. */
+  protected readonly storeName = computed(() => this.stores.current()?.name ?? '');
+
+  /**
+   * Deleting erases the shop's whole history, so the name is typed out exactly —
+   * no trimming, no case folding. Nothing to match against means nothing to delete.
+   */
+  protected readonly canDelete = computed(
+    () => this.storeName().length > 0 && this.typedName() === this.storeName(),
+  );
+
   protected readonly mediaFields: ReadonlyArray<{ field: ImageField; label: TranslationKey }> = [
     { field: 'logoUri', label: 'settings.general.logo' },
     { field: 'watermarkUri', label: 'settings.general.watermark' },
@@ -59,6 +78,23 @@ export class SettingsGeneral {
       this.model();
       this.openingCash();
       this.savedKey.set(null);
+    });
+    // A native <dialog> so focus-trap, Escape and the backdrop come for free.
+    // Both signals are read before the guard: the query resolves a tick after the
+    // first run, and an early return that skipped them would never re-run.
+    effect(() => {
+      const el = this.deleteDialog()?.nativeElement;
+      const wanted = this.confirmingDelete();
+      if (!el) {
+        return;
+      }
+      if (wanted) {
+        if (!el.open) {
+          el.showModal();
+        }
+      } else if (el.open) {
+        el.close();
+      }
     });
   }
 
@@ -128,5 +164,30 @@ export class SettingsGeneral {
   removeImage(field: ImageField): void {
     this.imageErrorKey.set(null);
     this.model.update((m) => ({ ...m, [field]: '' }));
+  }
+
+  openDelete(): void {
+    this.typedName.set('');
+    this.deleteErrorKey.set(null);
+    this.confirmingDelete.set(true);
+  }
+
+  async confirmDelete(): Promise<void> {
+    const store = this.stores.current();
+    // Re-checked here, not just on the button: the dialog can be submitted by Enter.
+    if (!store || !this.canDelete() || this.deleting()) {
+      return;
+    }
+    this.deleting.set(true);
+    this.deleteErrorKey.set(null);
+    try {
+      await this.stores.delete(store.id);
+      // Out of the store route before anything re-reads the store that no longer
+      // exists. If that was the user's last shop the picker sends them to setup.
+      await this.router.navigate(['/stores']);
+    } catch {
+      this.deleteErrorKey.set('error.generic');
+      this.deleting.set(false);
+    }
   }
 }

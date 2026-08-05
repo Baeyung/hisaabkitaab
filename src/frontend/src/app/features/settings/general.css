@@ -152,6 +152,17 @@
   max-width: 520px;
 }
 
+/* ── danger zone + its confirmation dialog ─────────────────────────── */
+.sec__eyebrow--danger {
+  color: var(--kg-out);
+}
+.del__fld {
+  margin-bottom: 18px;
+}
+.del__alert {
+  margin-bottom: 18px;
+}
+
 .fld {
   display: flex;
   flex-direction: column;
@@ -289,6 +300,17 @@
 }
 .btn--ghost:hover {
   border-color: var(--kg-line-hover);
+}
+.btn--danger {
+  color: var(--kg-on-out);
+  background: var(--kg-out-solid);
+}
+.btn--danger:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.btn--danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .btn--text {
   color: var(--kg-out);

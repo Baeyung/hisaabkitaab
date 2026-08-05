@@ -181,6 +181,17 @@ export const ur: Record<TranslationKey, string> = {
   'settings.general.retry': 'دوبارہ کوشش کریں',
   'settings.general.imageType': 'تصویر کی فائل منتخب کریں۔',
   'settings.general.imageTooBig': 'تصویر 300 کلوبائٹ سے کم ہونی چاہیے۔ چھوٹی فائل منتخب کریں۔',
+  'settings.general.section.danger': 'خطرے کا حصہ',
+  'settings.general.danger.help':
+    'یہ دکان ہمیشہ کے لیے بند کرنا۔ اس کے کھاتے کی ہر چیز ساتھ ختم ہو جائے گی، اور کچھ بھی واپس نہیں لایا جا سکے گا۔',
+  'settings.general.danger.delete': 'یہ دکان حذف کریں',
+  'settings.general.danger.title': "'{{name}}' حذف کریں؟",
+  'settings.general.danger.body':
+    'اس دکان کا ہر کھاتہ، آئٹم، بل اور روزنامچہ اندراج ہمیشہ کے لیے حذف ہو جائے گا۔ اسے واپس نہیں لایا جا سکتا۔',
+  'settings.general.danger.prompt': "تصدیق کے لیے '{{name}}' لکھیں",
+  'settings.general.danger.cancel': 'منسوخ',
+  'settings.general.danger.confirm': 'دکان حذف کریں',
+  'settings.general.danger.deleting': 'حذف ہو رہی ہے…',
   'settings.items.subtitle': 'وہ کپڑا جو آپ رکھتے اور بیچتے ہیں۔',
   'settings.items.add': 'آئٹم شامل کریں',
   'settings.items.col.name': 'آئٹم',
