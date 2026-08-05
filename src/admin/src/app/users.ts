@@ -1,8 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { AdminApi, AdminUser, PlanTier, PlanTierInfo } from './admin-api';
+import { AdminApi, AdminUser, Plan, PlanTier, PlanTierInfo } from './admin-api';
 
 /** The assign-plan form, as the row currently being edited holds it. */
 interface PlanForm {
@@ -34,6 +34,16 @@ export class Users {
   protected readonly query = signal('');
   protected readonly loading = signal(false);
   protected readonly error = signal('');
+
+  /** What the search turned up, as a line: the total, and the two states worth acting on. */
+  protected readonly counts = computed(() => {
+    const users = this.users();
+    return {
+      total: users.length,
+      expired: users.filter((user) => user.plan?.expired).length,
+      unplanned: users.filter((user) => !user.plan).length,
+    };
+  });
 
   /** Id of the account whose plan is being edited, or null when the form is closed. */
   protected readonly editing = signal<string | null>(null);
@@ -77,10 +87,6 @@ export class Users {
       return;
     }
     this.error.set(describe(failure));
-  }
-
-  protected signOut(): void {
-    this.api.signOut();
   }
 
   protected edit(user: AdminUser): void {
@@ -134,10 +140,23 @@ export class Users {
     }
   }
 
+  /** What the plan actually grants, as one line — overrides already folded in by the server. */
+  protected limits(plan: Plan): string {
+    return [
+      count(plan.limits.maxStores, 'store'),
+      count(plan.limits.maxUsers, 'user'),
+      count(plan.limits.whatsappQuota, 'msg'),
+    ].join(' · ');
+  }
+
   /** The tier's own numbers, shown as placeholders so a blank box says what it will mean. */
   protected defaultsFor(tier: PlanTier): PlanTierInfo | undefined {
     return this.tiers().find((info) => info.tier === tier);
   }
+}
+
+function count(value: number | null, noun: string): string {
+  return `${value} ${noun}${value === 1 ? '' : 's'}`;
 }
 
 /** An empty number input arrives as an empty string; the backend wants a null. */

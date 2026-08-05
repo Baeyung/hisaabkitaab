@@ -16,3 +16,4 @@
 - [ ] monthly reports, on email + whatsapp
 - [ ] processed goods feature
 - [ ] billing/plan related stuff
+- [ ] numbers with country code
