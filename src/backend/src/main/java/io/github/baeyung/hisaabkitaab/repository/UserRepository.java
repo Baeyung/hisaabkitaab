@@ -1,5 +1,6 @@
 package io.github.baeyung.hisaabkitaab.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,6 +30,22 @@ public interface UserRepository extends JpaRepository<User, String>
     boolean existsByContactNumber(String contactNumber);
 
     boolean existsByEmailIgnoreCase(String email);
+
+    /**
+     * Admin user search across the three things an admin would have to hand — a name, an email,
+     * a phone number. An empty query matches everyone, since {@code like '%%'} is true of any
+     * string; the {@code coalesce} is what keeps that true of a row whose email is null.
+     */
+    // ponytail: unpaged, so this returns the whole user table. Add a Pageable when the admin
+    // list gets long enough to notice.
+    @Query("""
+            select u from User u
+             where lower(coalesce(u.name, '')) like lower(concat('%', :query, '%'))
+                or lower(coalesce(u.email, '')) like lower(concat('%', :query, '%'))
+                or coalesce(u.contactNumber, '') like concat('%', :query, '%')
+             order by u.name
+            """)
+    List<User> search(@Param("query") String query);
 
     /**
      * Counts one failed login, unless the same wrong password was already the last one counted.

@@ -69,3 +69,9 @@ app:
     enabled: ${EMAIL_ENABLED:false}
   verification:
     enabled: ${app.email.enabled}
+  plans:
+    # Gates plan *enforcement* only — nothing reads it yet. Plans are always recorded (every
+    # signup gets a trial), so switching this on later applies to the accounts already there.
+    enabled: ${PLANS_ENABLED:true}
+  admin:
+    emails: ${ADMIN_EMAILS:t@t.com}

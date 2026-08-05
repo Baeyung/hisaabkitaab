@@ -24,12 +24,16 @@ public class UserPrincipal implements UserDetails
 
     private final User user;
 
-    public UserPrincipal(User user)
+    /** Whether this account is named in {@code app.admin.emails}; see {@link #getAuthorities()}. */
+    private final boolean admin;
+
+    public UserPrincipal(User user, boolean admin)
     {
         this.id = user.getId();
         this.username = user.getEmail();
         this.password = user.getPasswordHash();
         this.user = user;
+        this.admin = admin;
     }
 
     /**
@@ -38,11 +42,20 @@ public class UserPrincipal implements UserDetails
      * missing role is what makes protected endpoints answer 403 (not 401) for an
      * authenticated-but-unverified user, without leaking verification state on a
      * wrong password.
+     *
+     * <p>A listed admin additionally gets {@code ROLE_ADMIN}, and only ever alongside
+     * {@code ROLE_USER} — {@code CustomUserDetailsService} withholds it from an unverified
+     * account, so the back office cannot be reached from an address someone merely claimed.
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
-        return List.of(new SimpleGrantedAuthority(user.isVerified() ? "ROLE_USER" : "ROLE_UNVERIFIED"));
+        SimpleGrantedAuthority role =
+                new SimpleGrantedAuthority(user.isVerified() ? "ROLE_USER" : "ROLE_UNVERIFIED");
+
+        return admin
+                ? List.of(role, new SimpleGrantedAuthority("ROLE_ADMIN"))
+                : List.of(role);
     }
 
     /**

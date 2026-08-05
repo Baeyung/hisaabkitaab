@@ -1,0 +1,198 @@
+<div class="min-h-dvh bg-slate-100">
+  <header class="bg-white border-b border-slate-200">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-4">
+      <h1 class="text-lg font-semibold text-slate-900">HisaabKitaab Admin</h1>
+      <button
+        type="button"
+        (click)="signOut()"
+        class="ml-auto text-sm text-slate-600 hover:text-slate-900"
+      >
+        Sign out
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6 space-y-4">
+    <form class="flex gap-2" (ngSubmit)="load()">
+      <input
+        name="query"
+        placeholder="Search by name, email or number"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        class="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+      />
+      <button
+        type="submit"
+        class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+      >
+        Search
+      </button>
+    </form>
+
+    @if (error()) {
+      <p class="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700" role="alert">
+        {{ error() }}
+      </p>
+    }
+
+    @if (loading()) {
+      <p class="text-sm text-slate-500">Loading…</p>
+    } @else if (users().length === 0) {
+      <p class="text-sm text-slate-500">No accounts match that search.</p>
+    }
+
+    <ul class="space-y-2">
+      @for (user of users(); track user.id) {
+        <li class="bg-white rounded-lg border border-slate-200">
+          <div class="p-4 flex flex-wrap items-start gap-4">
+            <div class="min-w-0 flex-1">
+              <p class="font-medium text-slate-900 truncate">{{ user.name }}</p>
+              <p class="text-sm text-slate-500 truncate">
+                {{ user.email || '—' }} · {{ user.contactNumber }}
+              </p>
+              <p class="text-xs mt-1">
+                @if (user.status === 'INVITED') {
+                  <span class="text-amber-700">Invited — never signed up</span>
+                } @else if (!user.verified) {
+                  <span class="text-amber-700">Unverified</span>
+                } @else {
+                  <span class="text-slate-400">Verified</span>
+                }
+              </p>
+            </div>
+
+            <div class="text-sm">
+              @if (user.plan; as plan) {
+                <p class="font-medium text-slate-900">
+                  {{ plan.tier }}
+                  @if (plan.expired) {
+                    <span class="ml-1 text-red-600">expired</span>
+                  }
+                </p>
+                @if (plan.expiresAt) {
+                  <p class="text-slate-500">until {{ plan.expiresAt }}</p>
+                } @else {
+                  <p class="text-slate-400">not started</p>
+                }
+                <p class="text-slate-500">
+                  {{ plan.limits.maxStores }} stores · {{ plan.limits.maxUsers }} users ·
+                  {{ plan.limits.whatsappQuota }} msgs
+                </p>
+              } @else {
+                <p class="text-slate-400">No plan</p>
+              }
+            </div>
+
+            <button
+              type="button"
+              (click)="editing() === user.id ? cancel() : edit(user)"
+              class="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              {{ editing() === user.id ? 'Cancel' : 'Change plan' }}
+            </button>
+          </div>
+
+          @if (editing() === user.id && form(); as plan) {
+            <form
+              class="border-t border-slate-200 p-4 bg-slate-50 rounded-b-lg space-y-4"
+              (ngSubmit)="save()"
+            >
+              <div class="grid gap-4 sm:grid-cols-2">
+                <label class="block">
+                  <span class="text-sm font-medium text-slate-700">Plan</span>
+                  <select
+                    name="tier"
+                    [ngModel]="plan.tier"
+                    (ngModelChange)="update('tier', $event)"
+                    class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  >
+                    @for (info of tiers(); track info.tier) {
+                      <option [value]="info.tier">{{ info.tier }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="block">
+                  <span class="text-sm font-medium text-slate-700">Expires after</span>
+                  <input
+                    name="expiresAt"
+                    type="date"
+                    required
+                    [ngModel]="plan.expiresAt"
+                    (ngModelChange)="update('expiresAt', $event)"
+                    class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  />
+                </label>
+              </div>
+
+              <div>
+                <p class="text-sm font-medium text-slate-700">Custom limits</p>
+                <p class="text-xs text-slate-500">
+                  Leave blank to use what {{ plan.tier }} grants. Anything set here overrides it.
+                </p>
+
+                <div class="mt-2 grid gap-4 sm:grid-cols-3">
+                  <label class="block">
+                    <span class="text-xs text-slate-600">Stores</span>
+                    <input
+                      name="maxStores"
+                      type="number"
+                      min="1"
+                      [placeholder]="defaultsFor(plan.tier)?.maxStores ?? ''"
+                      [ngModel]="plan.maxStores"
+                      (ngModelChange)="update('maxStores', $event)"
+                      class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                    />
+                  </label>
+
+                  <label class="block">
+                    <span class="text-xs text-slate-600">Users</span>
+                    <input
+                      name="maxUsers"
+                      type="number"
+                      min="1"
+                      [placeholder]="defaultsFor(plan.tier)?.maxUsers ?? ''"
+                      [ngModel]="plan.maxUsers"
+                      (ngModelChange)="update('maxUsers', $event)"
+                      class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                    />
+                  </label>
+
+                  <label class="block">
+                    <span class="text-xs text-slate-600">WhatsApp messages</span>
+                    <input
+                      name="whatsappQuota"
+                      type="number"
+                      min="0"
+                      [placeholder]="defaultsFor(plan.tier)?.whatsappQuota ?? ''"
+                      [ngModel]="plan.whatsappQuota"
+                      (ngModelChange)="update('whatsappQuota', $event)"
+                      class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  type="submit"
+                  [disabled]="saving()"
+                  class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {{ saving() ? 'Saving…' : 'Assign plan' }}
+                </button>
+                <button
+                  type="button"
+                  (click)="cancel()"
+                  class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          }
+        </li>
+      }
+    </ul>
+  </main>
+</div>

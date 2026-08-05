@@ -1,12 +1,18 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
 
+import { AdminApi } from './admin-api';
+import { Login } from './login';
+import { Users } from './users';
+
+/**
+ * Two screens and no router: signed out you get the login, signed in you get the user list.
+ * There is nowhere else to navigate to, so there is no URL worth owning.
+ */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [Login, Users],
   templateUrl: './app.html',
-  styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('admin');
+  protected readonly api = inject(AdminApi);
 }

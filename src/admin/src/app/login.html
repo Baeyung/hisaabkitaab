@@ -1,0 +1,48 @@
+<div class="min-h-dvh flex items-center justify-center bg-slate-100 px-4">
+  <form
+    class="w-full max-w-sm bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4"
+    (ngSubmit)="submit()"
+  >
+    <div>
+      <h1 class="text-xl font-semibold text-slate-900">HisaabKitaab Admin</h1>
+      <p class="text-sm text-slate-500 mt-1">Sign in with your admin account.</p>
+    </div>
+
+    <label class="block">
+      <span class="text-sm font-medium text-slate-700">Email or contact number</span>
+      <input
+        name="username"
+        autocomplete="username"
+        required
+        [ngModel]="username()"
+        (ngModelChange)="username.set($event)"
+        class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+      />
+    </label>
+
+    <label class="block">
+      <span class="text-sm font-medium text-slate-700">Password</span>
+      <input
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        required
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+        class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+      />
+    </label>
+
+    @if (error()) {
+      <p class="text-sm text-red-600" role="alert">{{ error() }}</p>
+    }
+
+    <button
+      type="submit"
+      [disabled]="busy()"
+      class="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+    >
+      {{ busy() ? 'Signing in…' : 'Sign in' }}
+    </button>
+  </form>
+</div>
