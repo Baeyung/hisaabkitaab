@@ -9,10 +9,10 @@
 - [x] party screen UI fix
 - [x] goods and khatas on guided UI looks very conjested we need to fix it
 - [x] delete store option
+- [x] multi-user support for same stores
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
 - [ ] persistent date filters across navigation
-- [ ] multi-user support for same stores
 - [ ] processed goods feature
 - [ ] billing/plan related stuff
