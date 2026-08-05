@@ -1,5 +1,6 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -67,4 +68,18 @@ public class Transaction
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TransactionLine> lines = new ArrayList<>();
+
+    /**
+     * How long after booking an entry a non-owner may still delete it. A rolling window
+     * rather than "today", so an entry typed at 11:58pm can still be taken back at midnight.
+     * Measured on {@link #createdAt}, not {@code entryDate} or {@code eventDate}, since
+     * those are typed into the form and would otherwise reopen the window at will.
+     */
+    public static final Duration DELETE_WINDOW = Duration.ofHours(24);
+
+    /** Whether this entry is still inside {@link #DELETE_WINDOW}. */
+    public boolean isRecent()
+    {
+        return createdAt != null && createdAt.isAfter(Instant.now().minus(DELETE_WINDOW));
+    }
 }

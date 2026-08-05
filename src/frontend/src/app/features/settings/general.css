@@ -229,7 +229,15 @@
   border-radius: 12px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.fld__input:hover {
+/* A shared user reads these but cannot move them. It has to look inert, or the
+   editable drawer balance below reads as equally locked (and vice versa). */
+.fld__input:disabled {
+  color: var(--kg-muted);
+  background: var(--kg-fill-subtle);
+  border-color: var(--kg-line);
+  cursor: not-allowed;
+}
+.fld__input:hover:not(:disabled) {
   border-color: var(--kg-line-hover);
 }
 .fld__input:focus {

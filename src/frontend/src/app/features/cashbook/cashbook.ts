@@ -11,6 +11,8 @@ import { PrintItemsSummary } from '../../shared/print-items-summary';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { DateField } from '../../shared/date-field/date-field';
 import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
+import { TranslationKey } from '../../core/i18n/translations/en';
+import { deleteErrorKey } from '../../core/store/delete-error';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -39,9 +41,16 @@ export class Cashbook {
   /** The row awaiting delete confirmation, and whether a delete is in flight. */
   protected readonly pendingDelete = signal<string | null>(null);
   protected readonly deleting = signal(false);
-  protected readonly deleteError = signal(false);
+  protected readonly deleteError = signal<TranslationKey | null>(null);
 
-  protected readonly canEdit = isEditableEntry;
+  /**
+   * Whether a row offers edit/delete at all: the entry has to be one of the editable
+   * kinds (openings belong to Settings), and this user has to be allowed to write here.
+   * A viewer sees the cashbook with no controls on it.
+   */
+  protected canEdit(event: TransactionEventKind): boolean {
+    return this.stores.canEdit() && isEditableEntry(event);
+  }
 
   /** The bills fetched for this printout — empty unless "with details" was chosen. */
   protected readonly printedBills = computed(() => [...this.printer.bills().values()]);
@@ -83,7 +92,7 @@ export class Cashbook {
   }
 
   askDelete(transactionId: string): void {
-    this.deleteError.set(false);
+    this.deleteError.set(null);
     this.pendingDelete.set(transactionId);
   }
 
@@ -97,13 +106,13 @@ export class Cashbook {
       return;
     }
     this.deleting.set(true);
-    this.deleteError.set(false);
+    this.deleteError.set(null);
     try {
       await this.events.deleteEvent(id);
       this.pendingDelete.set(null);
       await this.load();
-    } catch {
-      this.deleteError.set(true);
+    } catch (err) {
+      this.deleteError.set(deleteErrorKey(err, 'entry.delete.error'));
     } finally {
       this.deleting.set(false);
     }

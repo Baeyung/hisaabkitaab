@@ -12,6 +12,7 @@ import io.github.baeyung.hisaabkitaab.dto.ledger.ExpenseCategoryGroupResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyBalanceResponse;
 import io.github.baeyung.hisaabkitaab.dto.ledger.PartyStatementResponse;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.query.LedgerQueryService;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +25,13 @@ public class LedgerController
     private final LedgerQueryService ledgerQueryService;
 
     @GetMapping
-    public ResponseEntity<List<PartyBalanceResponse>> listBalances(@CurrentStore Store store)
+    public ResponseEntity<List<PartyBalanceResponse>> listBalances(@CurrentStore(StoreRole.VIEWER) Store store)
     {
         return ResponseEntity.ok(ledgerQueryService.listBalances(store.getId()));
     }
 
     @GetMapping("/expense-categories")
-    public ResponseEntity<List<ExpenseCategoryGroupResponse>> listExpenseCategories(@CurrentStore Store store)
+    public ResponseEntity<List<ExpenseCategoryGroupResponse>> listExpenseCategories(@CurrentStore(StoreRole.VIEWER) Store store)
     {
         return ResponseEntity.ok(ledgerQueryService.listExpenseCategories(store.getId()));
     }
@@ -38,7 +39,7 @@ public class LedgerController
     @GetMapping("/{partyId}")
     public ResponseEntity<PartyStatementResponse> getStatement(
             @PathVariable String partyId,
-            @CurrentStore Store store
+            @CurrentStore(StoreRole.VIEWER) Store store
     )
     {
         return ResponseEntity.ok(ledgerQueryService.getStatement(store.getId(), partyId));

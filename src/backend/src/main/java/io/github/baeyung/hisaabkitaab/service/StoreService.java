@@ -2,23 +2,39 @@ package io.github.baeyung.hisaabkitaab.service;
 
 import java.util.List;
 
+import io.github.baeyung.hisaabkitaab.dto.store.StoreSummary;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 
+/**
+ * Stores are handed back as {@link StoreSummary}, never as the entity: the summary carries
+ * the owner's name, which is a lazy association and would blow up once the entity is detached.
+ * Methods taking a bare {@code storeId} are the ones called after {@code @CurrentStore} has
+ * already vetted access — they re-check nothing, by design.
+ */
 public interface StoreService
 {
-    List<Store> findByOwner(String ownerId);
+    /** Every store the user can reach — the ones they own and the ones shared with them. */
+    List<StoreSummary> listForUser(String userId);
 
     /**
-     * Load a store, 404-ing if it does not exist or is not owned by {@code ownerId}. Every
-     * store-scoped request enters through here (see {@code CurrentStoreArgumentResolver}),
-     * which is what lets everything downstream scope on the store id alone.
+     * Load a store, 404-ing if it does not exist or the user has no access to it, 403-ing if
+     * their role is weaker than {@code required}. Every store-scoped request enters through
+     * here (see {@code CurrentStoreArgumentResolver}), which is what lets everything
+     * downstream scope on the store id alone.
      */
-    Store findByIdForOwner(String id, String ownerId);
+    Store findByIdForUser(String id, String userId, StoreRole required);
 
-    Store create(Store store, String ownerId);
+    /** One store as {@code userId} sees it, role included. */
+    StoreSummary summaryOf(String storeId, String userId);
 
-    Store update(String id, Store changes, String ownerId);
+    StoreSummary create(Store store, String ownerId);
 
-    /** Cascade-deletes the store's transactions, items, and parties, then the store itself. */
-    void delete(String id, String ownerId);
+    StoreSummary update(String storeId, Store changes);
+
+    /**
+     * Cascade-deletes the store's transactions, items, parties and shared access, then the
+     * store itself.
+     */
+    void delete(String storeId);
 }

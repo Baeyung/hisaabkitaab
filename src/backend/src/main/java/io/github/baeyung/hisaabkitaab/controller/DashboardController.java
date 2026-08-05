@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.baeyung.hisaabkitaab.dto.dashboard.DashboardResponse;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.query.DashboardQueryService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class DashboardController
     public ResponseEntity<DashboardResponse> getDashboard(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @CurrentStore Store store
+            @CurrentStore(StoreRole.VIEWER) Store store
     )
     {
         // Default window: the last 7 days (today inclusive).

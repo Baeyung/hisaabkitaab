@@ -3,8 +3,11 @@ package io.github.baeyung.hisaabkitaab.entity;
 import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.github.baeyung.hisaabkitaab.enums.UserStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -39,6 +42,17 @@ public class User
     private String name;
 
     private String email;
+
+    /**
+     * Whether anyone has actually signed up as this account — see {@link UserStatus}. Same
+     * DB-default trick as {@link #verified}, so {@code ddl-auto=update} can add the column
+     * to a table that already has rows.
+     */
+    @JsonIgnore
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) not null default 'ACTIVE'")
+    private UserStatus status = UserStatus.ACTIVE;
 
     // DB default lets ddl-auto=update add this NOT NULL column to a table that already
     // has rows (Postgres rejects adding a NOT NULL column with no default otherwise).

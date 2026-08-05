@@ -91,8 +91,8 @@
       @if (printError()) {
         <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t('bill.printError') }}</p>
       }
-      @if (deleteError()) {
-        <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t('bill.delete.error') }}</p>
+      @if (deleteError(); as key) {
+        <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t(key) }}</p>
       }
       <div class="rm-tablewrap">
         <table class="rm-tbl">
@@ -117,6 +117,7 @@
                 <td [attr.data-label]="locale.t('bill.col.party')">{{ bill.partyName || locale.t('bill.cashSale') }}</td>
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(bill.amount) }}</td>
                 <td class="end rm-noprint">
+                  @if (stores.canEdit()) {
                   <button
                     type="button"
                     class="rm-iconbtn rm-iconbtn--danger"
@@ -127,6 +128,7 @@
                       <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
                     </svg>
                   </button>
+                  }
                 </td>
               </tr>
 

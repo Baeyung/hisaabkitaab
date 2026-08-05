@@ -6,6 +6,8 @@ import { StoreService } from '../../core/store/store.service';
 import { BillDetail as BillDetailModel } from '../../core/store/bill.models';
 import { PrintHeader } from '../../shared/print-header';
 import { BillInvoice } from '../../shared/bill-invoice';
+import { TranslationKey } from '../../core/i18n/translations/en';
+import { deleteErrorKey } from '../../core/store/delete-error';
 
 /**
  * One bill, derived from its SALE transaction: line items, goods total, cash
@@ -37,7 +39,7 @@ export class BillDetail {
 
   protected readonly confirming = signal(false);
   protected readonly deleting = signal(false);
-  protected readonly deleteError = signal(false);
+  protected readonly deleteError = signal<TranslationKey | null>(null);
 
   constructor() {
     effect(() => {
@@ -63,7 +65,7 @@ export class BillDetail {
   }
 
   askDelete(): void {
-    this.deleteError.set(false);
+    this.deleteError.set(null);
     this.confirming.set(true);
   }
 
@@ -73,12 +75,12 @@ export class BillDetail {
 
   async confirmDelete(): Promise<void> {
     this.deleting.set(true);
-    this.deleteError.set(false);
+    this.deleteError.set(null);
     try {
       await this.api.delete(this.billId());
       void this.router.navigate(this.stores.link('bill-management'));
-    } catch {
-      this.deleteError.set(true);
+    } catch (err) {
+      this.deleteError.set(deleteErrorKey(err, 'bill.delete.error'));
       this.deleting.set(false);
     }
   }

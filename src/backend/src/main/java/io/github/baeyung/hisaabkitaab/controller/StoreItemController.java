@@ -18,6 +18,7 @@ import java.util.Map;
 import io.github.baeyung.hisaabkitaab.dto.opening.OpeningStockRequest;
 import io.github.baeyung.hisaabkitaab.dto.storeitem.StoreItemResponse;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
@@ -39,7 +40,7 @@ public class StoreItemController
     private final OpeningEntryService openingEntryService;
 
     @GetMapping
-    public ResponseEntity<List<StoreItemResponse>> list(@CurrentStore Store store)
+    public ResponseEntity<List<StoreItemResponse>> list(@CurrentStore(StoreRole.VIEWER) Store store)
     {
         List<StoreItem> items = storeItemService.findByStore(store.getId());
         Map<String, BigDecimal> openings = openingEntryService.openingStockByStore(store.getId());
@@ -49,26 +50,26 @@ public class StoreItemController
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StoreItem> get(@PathVariable String id, @CurrentStore Store store)
+    public ResponseEntity<StoreItem> get(@PathVariable String id, @CurrentStore(StoreRole.VIEWER) Store store)
     {
         return ResponseEntity.ok(storeItemService.findByIdForStore(id, store.getId()));
     }
 
     @PostMapping
-    public ResponseEntity<StoreItem> create(@Valid @RequestBody StoreItem item, @CurrentStore Store store)
+    public ResponseEntity<StoreItem> create(@Valid @RequestBody StoreItem item, @CurrentStore(StoreRole.EDITOR) Store store)
     {
         return ResponseEntity.ok(storeItemService.create(item, store));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<StoreItem> update(@PathVariable String id, @Valid @RequestBody StoreItem item,
-            @CurrentStore Store store)
+            @CurrentStore(StoreRole.EDITOR) Store store)
     {
         return ResponseEntity.ok(storeItemService.update(id, item, store.getId()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id, @CurrentStore Store store)
+    public ResponseEntity<Void> delete(@PathVariable String id, @CurrentStore(StoreRole.OWNER) Store store)
     {
         storeItemService.delete(id, store.getId());
         return ResponseEntity.noContent().build();
@@ -77,7 +78,7 @@ public class StoreItemController
     @PutMapping("/{id}/opening-stock")
     public ResponseEntity<BigDecimal> setOpeningStock(@PathVariable String id,
             @Valid @RequestBody OpeningStockRequest request,
-            @CurrentStore Store store)
+            @CurrentStore(StoreRole.EDITOR) Store store)
     {
         return ResponseEntity.ok(openingEntryService.setOpeningStock(id, store, request.quantity()));
     }

@@ -1,13 +1,19 @@
 package io.github.baeyung.hisaabkitaab.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import io.github.baeyung.hisaabkitaab.dto.store.StoreSummary;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
+import io.github.baeyung.hisaabkitaab.repository.StoreAccessRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
@@ -26,27 +32,52 @@ public class StoreServiceImpl implements StoreService
     private final PartyRepository partyRepository;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final StoreAccessRepository storeAccessRepository;
     private final ExpenseCategoryService expenseCategoryService;
 
     @Override
     @Transactional(readOnly = true)
-    public List<Store> findByOwner(String ownerId)
+    public List<StoreSummary> listForUser(String userId)
     {
-        return storeRepository.findByOwnerId(ownerId);
+        List<StoreSummary> summaries = new ArrayList<>(
+                storeRepository.findByOwnerId(userId).stream()
+                        .map(store -> StoreSummary.of(store, StoreRole.OWNER))
+                        .toList());
+
+        storeAccessRepository.findByUserId(userId).stream()
+                .map(access -> StoreSummary.of(access.getStore(), access.getRole()))
+                .forEach(summaries::add);
+
+        return summaries;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Store findByIdForOwner(String id, String ownerId)
+    public Store findByIdForUser(String id, String userId, StoreRole required)
     {
-        // A store owned by someone else is reported as not-found so we never leak its existence.
-        return storeRepository.findById(id)
-                .filter(store -> store.getOwner().getId().equals(ownerId))
-                .orElseThrow(() -> ResourceNotFoundException.forEntity("Store", id));
+        Store store = load(id);
+
+        // 404 for no access at all, so we never leak a store's existence. 403 once they *do*
+        // have access is a different answer on purpose: "this is yours to see, but the owner
+        // has to be the one to do it" is what the UI needs to say.
+        if (!roleOf(store, userId).atLeast(required))
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the shop owner can do this");
+        }
+
+        return store;
     }
 
     @Override
-    public Store create(Store input, String ownerId)
+    @Transactional(readOnly = true)
+    public StoreSummary summaryOf(String storeId, String userId)
+    {
+        Store store = load(storeId);
+        return StoreSummary.of(store, roleOf(store, userId));
+    }
+
+    @Override
+    public StoreSummary create(Store input, String ownerId)
     {
         Store store = Store.builder()
                 .owner(userRepository.getReferenceById(ownerId))
@@ -59,13 +90,13 @@ public class StoreServiceImpl implements StoreService
 
         Store saved = storeRepository.save(store);
         expenseCategoryService.seedDefaults(saved);
-        return saved;
+        return StoreSummary.of(saved, StoreRole.OWNER);
     }
 
     @Override
-    public Store update(String id, Store changes, String ownerId)
+    public StoreSummary update(String storeId, Store changes)
     {
-        Store store = findByIdForOwner(id, ownerId);
+        Store store = load(storeId);
 
         store.setName(changes.getName());
         store.setAddress(changes.getAddress());
@@ -73,20 +104,42 @@ public class StoreServiceImpl implements StoreService
         store.setLogoUri(changes.getLogoUri());
         store.setWatermarkUri(changes.getWatermarkUri());
 
-        return storeRepository.save(store);
+        // Only ever reached through @CurrentStore(OWNER), so the caller is the owner.
+        return StoreSummary.of(storeRepository.save(store), StoreRole.OWNER);
     }
 
     @Override
-    public void delete(String id, String ownerId)
+    public void delete(String storeId)
     {
-        Store store = findByIdForOwner(id, ownerId);
+        Store store = load(storeId);
 
         // Cascade: transactions first (their lines are removed via orphanRemoval), which clears the
-        // references from items, parties and expense categories, then those, then the store itself.
-        transactionRepository.deleteAll(transactionRepository.findByStoreId(id));
-        storeItemRepository.deleteAll(storeItemRepository.findByStoreId(id));
-        partyRepository.deleteAll(partyRepository.findByStoreId(id));
-        expenseCategoryService.deleteByStore(id);
+        // references from items, parties and expense categories, then those, the shared access
+        // rows, and finally the store itself.
+        transactionRepository.deleteAll(transactionRepository.findByStoreId(storeId));
+        storeItemRepository.deleteAll(storeItemRepository.findByStoreId(storeId));
+        partyRepository.deleteAll(partyRepository.findByStoreId(storeId));
+        expenseCategoryService.deleteByStore(storeId);
+        storeAccessRepository.deleteByStoreId(storeId);
         storeRepository.delete(store);
+    }
+
+    private Store load(String id)
+    {
+        return storeRepository.findById(id)
+                .orElseThrow(() -> ResourceNotFoundException.forEntity("Store", id));
+    }
+
+    /** Ownership beats the access table and costs no query; anything else has to be granted. */
+    private StoreRole roleOf(Store store, String userId)
+    {
+        if (store.isOwnedBy(userId))
+        {
+            return StoreRole.OWNER;
+        }
+
+        return storeAccessRepository.findByStoreIdAndUserId(store.getId(), userId)
+                .orElseThrow(() -> ResourceNotFoundException.forEntity("Store", store.getId()))
+                .getRole();
     }
 }

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
+import { StoreService } from '../../core/store/store.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { Balance } from '../../core/store/balance.models';
 import { PartyService } from '../../core/store/party.service';
@@ -38,6 +39,8 @@ const EMPTY_FORM: PartyForm = { name: '', contact: '', address: '', openingAmoun
 export class SettingsParty {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(PartyService);
+  /** Deleting a khata is the owner's — it erases every transaction with them. */
+  protected readonly stores = inject(StoreService);
 
   protected readonly parties = signal<Party[] | null>(null);
   protected readonly loading = signal(true);

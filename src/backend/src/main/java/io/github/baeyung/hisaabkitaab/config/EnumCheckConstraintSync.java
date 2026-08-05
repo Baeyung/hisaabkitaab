@@ -17,8 +17,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import io.github.baeyung.hisaabkitaab.enums.InOut;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
+import io.github.baeyung.hisaabkitaab.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -48,7 +50,9 @@ public class EnumCheckConstraintSync
     private static final List<EnumColumn> COLUMNS = List.of(
             new EnumColumn("transactions", "event", TransactionEvent.class),
             new EnumColumn("transaction_lines", "target_kind", TargetKind.class),
-            new EnumColumn("transaction_lines", "in_out", InOut.class));
+            new EnumColumn("transaction_lines", "in_out", InOut.class),
+            new EnumColumn("user_access_store", "role", StoreRole.class),
+            new EnumColumn("users", "status", UserStatus.class));
 
     private final JdbcTemplate jdbc;
 

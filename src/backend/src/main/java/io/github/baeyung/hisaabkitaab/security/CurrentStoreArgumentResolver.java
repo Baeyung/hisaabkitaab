@@ -13,16 +13,19 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.HandlerMapping;
 
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
 import lombok.RequiredArgsConstructor;
 
 /**
  * Resolves {@code @CurrentStore Store} from the {@code {storeId}} path variable, refusing
- * (404) anything the caller does not own. This is the single tenant boundary for every
- * store-scoped endpoint: past it, services scope on the store id alone and never re-check
- * the owner. Being the only way to obtain a {@code Store} in a controller, it cannot be
- * forgotten on a new endpoint the way a hand-written check can.
+ * (404) anything the caller has no access to and (403) anything their role is too weak for.
+ * This is the single tenant boundary for every store-scoped endpoint: past it, services
+ * scope on the store id alone and never re-check who is asking. Being the only way to obtain
+ * a {@code Store} in a controller, it cannot be forgotten on a new endpoint the way a
+ * hand-written check can — and since {@link CurrentStore#value()} defaults to
+ * {@code OWNER}, forgetting to state a level fails closed.
  */
 @Component
 @RequiredArgsConstructor
@@ -61,7 +64,8 @@ public class CurrentStoreArgumentResolver implements HandlerMethodArgumentResolv
             throw ResourceNotFoundException.forEntity("Store", storeId);
         }
 
-        return storeService.findByIdForOwner(storeId, principal.getId());
+        StoreRole required = parameter.getParameterAnnotation(CurrentStore.class).value();
+        return storeService.findByIdForUser(storeId, principal.getId(), required);
     }
 
     @SuppressWarnings("unchecked")

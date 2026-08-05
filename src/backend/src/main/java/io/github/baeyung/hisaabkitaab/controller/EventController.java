@@ -2,11 +2,14 @@ package io.github.baeyung.hisaabkitaab.controller;
 
 import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
+import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
 import io.github.baeyung.hisaabkitaab.service.impl.EventService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +34,7 @@ public class EventController
     @PostMapping
     public ResponseEntity<EventRequest> publishEvent(
             @Valid @RequestBody EventRequest event,
-            @CurrentStore Store store
+            @CurrentStore(StoreRole.EDITOR) Store store
     )
     {
         this.eventService.publishEvent(event, store);
@@ -42,7 +45,7 @@ public class EventController
     @GetMapping("/{id}")
     public ResponseEntity<EventRequest> getEvent(
             @PathVariable String id,
-            @CurrentStore Store store
+            @CurrentStore(StoreRole.VIEWER) Store store
     )
     {
         return ResponseEntity.ok(this.eventService.getEvent(id, store));
@@ -53,7 +56,7 @@ public class EventController
     public ResponseEntity<Void> updateEvent(
             @PathVariable String id,
             @Valid @RequestBody EventRequest event,
-            @CurrentStore Store store
+            @CurrentStore(StoreRole.EDITOR) Store store
     )
     {
         this.eventService.updateEvent(id, event, store);
@@ -63,10 +66,11 @@ public class EventController
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(
             @PathVariable String id,
-            @CurrentStore Store store
+            @CurrentStore(StoreRole.EDITOR) Store store,
+            @AuthenticationPrincipal UserPrincipal principal
     )
     {
-        this.eventService.deleteEvent(id, store);
+        this.eventService.deleteEvent(id, store, !store.isOwnedBy(principal.getId()));
         return ResponseEntity.noContent().build();
     }
 }

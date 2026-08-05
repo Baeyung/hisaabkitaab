@@ -1,6 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
+import { TranslationKey } from '../../core/i18n/translations/en';
 import { AuthService } from '../../core/auth/auth.service';
 import { StoreService } from '../../core/store/store.service';
 import { Store } from '../../core/store/store.models';
@@ -20,7 +22,7 @@ import { OuterBar } from '../../shared/outer-bar/outer-bar';
  */
 @Component({
   selector: 'app-store-picker',
-  imports: [RouterLink, OuterBar],
+  imports: [RouterLink, OuterBar, NgTemplateOutlet],
   templateUrl: './store-picker.html',
   styleUrl: './store-picker.css',
 })
@@ -34,6 +36,14 @@ export class StorePicker {
   protected readonly loadError = signal(false);
 
   protected readonly list = signal<Store[]>([]);
+
+  /**
+   * Own shops and shared ones are shown as two sections rather than one mixed list: what a
+   * user may do differs between them, so which is which has to be answered before they pick,
+   * not discovered when a button is missing.
+   */
+  protected readonly owned = computed(() => this.list().filter((s) => s.role === 'OWNER'));
+  protected readonly shared = computed(() => this.list().filter((s) => s.role !== 'OWNER'));
 
   constructor() {
     this.load();
@@ -67,6 +77,11 @@ export class StorePicker {
   /** The mark shown on a card: the store's logo, else the first letter of its name. */
   markOf(store: Store): string {
     return (store.name ?? '').trim().charAt(0).toUpperCase();
+  }
+
+  /** What a shared card says the user may do there. */
+  roleKey(store: Store): TranslationKey {
+    return store.role === 'EDITOR' ? 'members.role.editor' : 'members.role.viewer';
   }
 
   logout(): void {

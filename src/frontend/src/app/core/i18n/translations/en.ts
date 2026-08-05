@@ -90,6 +90,7 @@ export const en = {
   'nav.billManagement': 'Bill Management',
   'nav.settings': 'Store Settings',
   'nav.settings.general': 'General',
+  'nav.settings.users': 'Manage Users',
   'nav.settings.items': 'Items',
   'nav.settings.party': 'Parties',
   'common.comingSoon': 'Coming soon',
@@ -576,6 +577,43 @@ export const en = {
   'auto.OPENING_STOCK': 'Opening stock',
   'auto.OPENING_STOCK.items': 'Opening stock {{items}}',
   'auto.OPENING_CASH': 'Opening drawer balance',
+
+  // ── multi-user: sharing a shop ──────────────────────────────────────
+  'members.role.editor': 'Editor',
+  'members.role.viewer': 'Viewer',
+  'members.pending': 'Invite sent',
+  'members.pendingNote': "Hasn't joined yet",
+  'members.error.duplicate': 'They already have access to this shop.',
+  'members.error.self': "That's your own address — this shop is already yours.",
+
+  'stores.shared': 'Shared with me',
+  'stores.sharedBy': 'Shared by',
+
+  'settings.users.subtitle': 'People you have let into this shop, and what each of them can do.',
+  'settings.users.add': 'Add person',
+  'settings.users.col.person': 'Person',
+  'settings.users.col.role': 'Can do',
+  'settings.users.col.actions': 'Actions',
+  'settings.users.emailLabel': 'Their email',
+  'settings.users.emailPh': 'name@example.com',
+  'settings.users.hint.editor':
+    'Records sales, purchases, receipts, payments, items and khatas. Cannot change shop settings, and can only delete an entry within a day of making it.',
+  'settings.users.hint.viewer':
+    'Sees the ledgers, cashbook, stock and dashboard. Cannot record or change anything.',
+  'settings.users.invite.send': 'Give access',
+  'settings.users.invite.cancel': 'Cancel',
+  'settings.users.removeAction': 'Remove',
+  'settings.users.remove.confirm': "Remove {{email}} from this shop? They lose access straight away; their own account stays.",
+  'settings.users.remove.cancel': 'Cancel',
+  'settings.users.remove.confirmBtn': 'Remove',
+  'settings.users.empty.title': "You're the only one here",
+  'settings.users.empty.body':
+    "Give someone their own way in and the shop shows up in their app. They work in the books; deleting the shop, changing its settings and erasing old entries stay with you.",
+  'settings.users.empty.cta': 'Add someone',
+  'settings.users.loadError': "Couldn't load this shop's people. Please try again.",
+  'settings.general.viewerNote': 'Only the shop owner can change these.',
+  'error.ownerOnly': 'Only the shop owner can do this.',
+  'error.deleteWindow': 'Only the shop owner can delete entries older than 24 hours.',
 } as const;
 
 export type TranslationKey = keyof typeof en;

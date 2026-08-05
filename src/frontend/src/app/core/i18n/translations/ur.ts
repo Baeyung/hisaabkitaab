@@ -95,6 +95,7 @@ export const ur: Record<TranslationKey, string> = {
   'nav.billManagement': 'بل مینجمنٹ',
   'nav.settings': 'ترتیبات',
   'nav.settings.general': 'عام',
+  'nav.settings.users': 'صارفین',
   'nav.settings.items': 'آئٹمز',
   'nav.settings.party': 'پارٹیاں',
   'common.comingSoon': 'جلد آ رہا ہے',
@@ -578,4 +579,41 @@ export const ur: Record<TranslationKey, string> = {
   'auto.OPENING_STOCK': 'ابتدائی اسٹاک',
   'auto.OPENING_STOCK.items': 'ابتدائی اسٹاک {{items}}',
   'auto.OPENING_CASH': 'ابتدائی گلہ',
+
+  // ── multi-user: sharing a shop ──────────────────────────────────────
+  'members.role.editor': 'لکھ سکتا ہے',
+  'members.role.viewer': 'صرف دیکھ سکتا ہے',
+  'members.pending': 'دعوت بھیجی گئی',
+  'members.pendingNote': 'ابھی شامل نہیں ہوئے',
+  'members.error.duplicate': 'انہیں پہلے سے اس دکان تک رسائی حاصل ہے۔',
+  'members.error.self': 'یہ آپ کا اپنا پتہ ہے — یہ دکان پہلے ہی آپ کی ہے۔',
+
+  'stores.shared': 'میرے ساتھ شیئر کی گئی',
+  'stores.sharedBy': 'شیئر کرنے والے',
+
+  'settings.users.subtitle': 'وہ لوگ جنہیں آپ نے اس دکان تک رسائی دی، اور ہر ایک کیا کر سکتا ہے۔',
+  'settings.users.add': 'فرد شامل کریں',
+  'settings.users.col.person': 'فرد',
+  'settings.users.col.role': 'کیا کر سکتے ہیں',
+  'settings.users.col.actions': 'اعمال',
+  'settings.users.emailLabel': 'ان کا ای میل',
+  'settings.users.emailPh': 'name@example.com',
+  'settings.users.hint.editor':
+    'فروخت، خرید، وصولی، ادائیگی، آئٹمز اور کھاتے لکھ سکتے ہیں۔ دکان کی ترتیبات نہیں بدل سکتے، اور کوئی انٹری صرف لکھنے کے ایک دن کے اندر حذف کر سکتے ہیں۔',
+  'settings.users.hint.viewer':
+    'کھاتے، روزنامچہ، اسٹاک اور ڈیش بورڈ دیکھ سکتے ہیں۔ کچھ لکھ یا بدل نہیں سکتے۔',
+  'settings.users.invite.send': 'رسائی دیں',
+  'settings.users.invite.cancel': 'منسوخ',
+  'settings.users.removeAction': 'ہٹا دیں',
+  'settings.users.remove.confirm': '{{email}} کو اس دکان سے ہٹا دیں؟ ان کی رسائی فوراً ختم ہو جائے گی؛ ان کا اپنا اکاؤنٹ باقی رہے گا۔',
+  'settings.users.remove.cancel': 'منسوخ',
+  'settings.users.remove.confirmBtn': 'ہٹا دیں',
+  'settings.users.empty.title': 'یہاں صرف آپ ہیں',
+  'settings.users.empty.body':
+    'کسی کو اپنا الگ راستہ دیں اور دکان ان کی ایپ میں آ جائے گی۔ وہ کھاتوں میں کام کریں گے؛ دکان حذف کرنا، ترتیبات بدلنا اور پرانی انٹریاں مٹانا آپ کے پاس رہے گا۔',
+  'settings.users.empty.cta': 'کسی کو شامل کریں',
+  'settings.users.loadError': 'اس دکان کے افراد لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔',
+  'settings.general.viewerNote': 'صرف دکان کا مالک انہیں بدل سکتا ہے۔',
+  'error.ownerOnly': 'یہ صرف دکان کا مالک کر سکتا ہے۔',
+  'error.deleteWindow': 'صرف دکان کا مالک 24 گھنٹے سے پرانی انٹریاں حذف کر سکتا ہے۔',
 };

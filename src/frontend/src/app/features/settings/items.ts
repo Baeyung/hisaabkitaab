@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
+import { StoreService } from '../../core/store/store.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreItemService } from '../../core/store/store-item.service';
 import { StoreItem, StoreItemDraft } from '../../core/store/store-item.models';
@@ -37,6 +38,8 @@ const EMPTY_FORM: ItemForm = { name: '', unit: '', salePrice: null, costPrice: n
 export class SettingsItems {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(StoreItemService);
+  /** Deleting an item is the owner's — it erases everything booked against it. */
+  protected readonly stores = inject(StoreService);
 
   protected readonly items = signal<StoreItem[] | null>(null);
   protected readonly loading = signal(true);

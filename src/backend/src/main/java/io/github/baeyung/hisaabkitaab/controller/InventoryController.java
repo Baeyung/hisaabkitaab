@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.baeyung.hisaabkitaab.dto.inventory.ItemMovementResponse;
 import io.github.baeyung.hisaabkitaab.dto.inventory.ItemStockResponse;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.query.InventoryQueryService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class InventoryController
     private final InventoryQueryService inventoryQueryService;
 
     @GetMapping
-    public ResponseEntity<List<ItemStockResponse>> listStock(@CurrentStore Store store)
+    public ResponseEntity<List<ItemStockResponse>> listStock(@CurrentStore(StoreRole.VIEWER) Store store)
     {
         return ResponseEntity.ok(inventoryQueryService.listStock(store.getId()));
     }
@@ -31,7 +32,7 @@ public class InventoryController
     @GetMapping("/{itemId}")
     public ResponseEntity<ItemMovementResponse> getMovement(
             @PathVariable String itemId,
-            @CurrentStore Store store
+            @CurrentStore(StoreRole.VIEWER) Store store
     )
     {
         return ResponseEntity.ok(inventoryQueryService.getMovement(store.getId(), itemId));

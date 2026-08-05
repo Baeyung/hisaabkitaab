@@ -1,0 +1,92 @@
+/* Store Settings › Manage Users — only what this screen adds on top of
+   settings-table.css: the role switch, and the person cell. */
+
+/* The role is the whole point of a row, so it is a control in the row rather than
+   something behind an edit mode: two options, one press to move between them. */
+.roletoggle {
+  display: inline-flex;
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.roletoggle__btn {
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  background: var(--kg-card);
+  border: 0;
+  cursor: pointer;
+}
+.roletoggle__btn + .roletoggle__btn {
+  border-inline-start: 1px solid var(--kg-line-strong);
+}
+.roletoggle__btn--on {
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
+}
+.roletoggle__btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.roletoggle__btn:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--kg-focus);
+}
+.roletoggle--sm .roletoggle__btn {
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+/* In the invite editor the toggle sits under a label beside a 44px input. */
+.edit .roletoggle {
+  justify-self: start;
+}
+.edit .roletoggle__btn {
+  height: 44px;
+}
+
+/* ── the person cell ───────────────────────────────────────────────── */
+/* Name over address: the address is what access was granted against, so it stays
+   visible even once there is a real name to show. */
+.person__name {
+  display: block;
+}
+.person__email {
+  display: block;
+  margin-top: 1px;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--kg-faint);
+}
+/* An outstanding invite is a state, not a warning — quiet, but on the row. */
+.pending {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--kg-amber);
+  background: var(--kg-fill-subtle);
+  border: 1px solid var(--kg-line);
+  border-radius: 999px;
+}
+
+.edit__hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-muted);
+  max-width: 60ch;
+}
+
+@container (max-width: 720px) {
+  .roletoggle,
+  .edit .roletoggle {
+    width: 100%;
+  }
+  .roletoggle__btn {
+    flex: 1;
+  }
+}

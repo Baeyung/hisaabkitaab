@@ -54,4 +54,14 @@ public class Store
 
     @Column(columnDefinition = "text")
     private String watermarkUri;
+
+    /**
+     * Whether this store is {@code userId}'s own, as opposed to one shared with them. Reads
+     * the owner's id off the lazy proxy, which needs no query. The single definition of
+     * ownership — everything that treats owners differently asks here.
+     */
+    public boolean isOwnedBy(String userId)
+    {
+        return owner != null && owner.getId().equals(userId);
+    }
 }

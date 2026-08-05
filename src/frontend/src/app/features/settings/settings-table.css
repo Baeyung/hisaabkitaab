@@ -1,0 +1,470 @@
+/* The primitives every Store Settings list screen is built from: page frame, table,
+   inline edit row, confirm strip, buttons, fields, empty/error blocks, skeleton — and
+   the container query that turns rows into cards on a phone.
+
+   Lifted verbatim from party.css, which carries a ponytail note asking for exactly this
+   once a fourth screen needed them (Manage Users did). Only Manage Users includes it so
+   far; General, Items and Parties still hold their own copies.
+   ponytail: migrate those three onto this file and delete their duplicates — a mechanical
+   change, kept out of the multi-user feature so a CSS refactor can't regress it. */
+
+/* Capped at the shared measure, centred so the leftover splits evenly. */
+.set {
+  max-width: var(--kg-page-max);
+  margin-inline: auto;
+  padding: var(--kg-page-pad);
+}
+
+.set__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.set__title {
+  margin: 0;
+  font-size: clamp(21px, 2.4vw, 25px);
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.set__sub {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--kg-muted);
+}
+
+/* ── table ─────────────────────────────────────────────────────────── */
+.tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+  background: var(--kg-card);
+}
+.tbl {
+  width: 100%;
+  /* below this the .tablewrap scrolls horizontally rather than crushing the
+     columns — keeps the data columns legible on narrow screens */
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 14px;
+  table-layout: fixed;
+}
+.tbl thead th {
+  padding: 12px 16px;
+  text-align: start;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+  border-bottom: 1px solid var(--kg-line);
+  white-space: nowrap;
+}
+.tbl td {
+  padding: 12px 16px;
+  color: var(--kg-ink);
+  border-bottom: 1px solid var(--kg-line);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+.tbl tbody tr:last-child td {
+  border-bottom: 0;
+}
+.tbl__name {
+  font-weight: 600;
+}
+.tbl__row:hover td {
+  background: var(--kg-hover);
+}
+
+.actions {
+  width: 120px;
+  white-space: nowrap;
+  text-align: end;
+}
+
+.rowicons {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.iconbtn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 9px;
+  background: var(--kg-card);
+  color: var(--kg-muted);
+  cursor: pointer;
+}
+.iconbtn:hover {
+  border-color: var(--kg-line-hover);
+  color: var(--kg-ink);
+}
+.iconbtn--danger:hover {
+  border-color: var(--kg-tint-out-edge);
+  color: var(--kg-out);
+}
+.iconbtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── inline edit row ───────────────────────────────────────────────── */
+.tbl__edit td {
+  background: var(--kg-hover);
+}
+.edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* 1 field per row on phones, 2 mid, 3 on wide. Keyed off @container, not the
+   grid's own width: the table is as wide as its min-width makes it, which is
+   wider than the screen on a tablet, so auto-fit would count columns that are
+   not actually visible. Capped so inputs stay form-sized. */
+.edit__fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@container (min-width: 560px) {
+  .edit__fields {
+    grid-template-columns: 1fr 1fr;
+    max-width: 560px;
+  }
+}
+@container (min-width: 1000px) {
+  .edit__fields {
+    grid-template-columns: 1fr 1fr 1fr;
+    max-width: 860px;
+  }
+}
+.efld {
+  display: grid;
+  gap: 5px;
+}
+.efld__lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.edit__foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.tbl__rowmsg td {
+  padding-top: 0;
+  background: var(--kg-hover);
+}
+
+/* ── delete confirm strip ──────────────────────────────────────────── */
+.tbl__confirm td {
+  background: var(--kg-tint-out);
+}
+.confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.confirm__msg {
+  font-size: 13px;
+  color: var(--kg-ink);
+}
+.confirm__actions {
+  display: inline-flex;
+  gap: 8px;
+  flex: none;
+}
+
+/* ── fields ────────────────────────────────────────────────────────── */
+.fld__input {
+  height: 44px;
+  padding: 0 13px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.fld__input:focus {
+  outline: none;
+  border-color: var(--kg-brand);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+.fld__input::placeholder {
+  color: var(--kg-placeholder);
+  font-weight: 400;
+}
+.fld__err {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kg-out);
+}
+
+/* ── buttons ───────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  padding-inline: 18px;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn--sm {
+  height: 36px;
+  padding-inline: 13px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+}
+.btn--primary {
+  color: var(--kg-on-brand);
+  background: var(--kg-brand-solid);
+  box-shadow: var(--kg-shadow-brand);
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.btn--primary:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.btn--primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn--primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn--ghost {
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+}
+.btn--ghost:hover {
+  border-color: var(--kg-line-hover);
+}
+.btn--danger {
+  color: var(--kg-on-out);
+  background: var(--kg-out-solid);
+}
+.btn--danger:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.btn--danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── empty / error blocks ──────────────────────────────────────────── */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 40px 28px;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+}
+.state__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.state__body {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--kg-muted);
+  max-width: 44ch;
+}
+.alert {
+  margin: 0;
+  padding: 10px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kg-out);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
+  border-radius: 11px;
+}
+
+/* ── loading skeleton ──────────────────────────────────────────────── */
+.skel {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);
+  background-size: 400% 100%;
+}
+.skel--row {
+  height: 46px;
+  margin: 12px 16px;
+}
+.skel--short {
+  width: 55%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skel {
+    animation: settingsshimmer 1.4s ease infinite;
+  }
+}
+@keyframes settingsshimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── responsive: below the table's min-width, rows become stacked cards ─
+   A horizontally-scrolling table hides the action buttons off-screen on a
+   phone, so each row reflows into a card: the name as the heading, values as
+   labelled lines (hidden column headers move into ::before chips), and the
+   actions on their own row.
+
+   720px, not 640: the table holds a 640px min-width and .set adds up to 2×34px
+   of padding, so anything under ~710 still scrolls sideways as a table. */
+@container (max-width: 720px) {
+  .set {
+    padding: 16px;
+  }
+  .set__head {
+    flex-direction: column;
+  }
+
+  .tablewrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .tbl {
+    display: block;
+    min-width: 0;
+    table-layout: auto;
+  }
+  .tbl thead {
+    display: none;
+  }
+  .tbl tbody,
+  .tbl tr {
+    display: block;
+  }
+
+  .tbl__row,
+  .tbl__edit,
+  .tbl__confirm {
+    border: 1px solid var(--kg-line);
+    border-radius: 12px;
+    background: var(--kg-card);
+    margin-bottom: 12px;
+    padding: 4px 2px;
+  }
+  .tbl__edit {
+    background: var(--kg-tint-brand);
+    border-color: var(--kg-tint-brand-line);
+  }
+  .tbl__confirm {
+    background: var(--kg-tint-out);
+    border-color: var(--kg-tint-out-line);
+  }
+
+  /* a display row with a strip after it drops its bottom seam, and the strip
+     drops its top seam, so the pair reads as one continuous card */
+  .tbl__row:has(+ .tbl__confirm) {
+    margin-bottom: 0;
+    border-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .tbl__confirm {
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  .tbl td {
+    display: block;
+    padding: 6px 12px;
+    border: 0;
+    background: transparent;
+  }
+  .tbl__row:hover td {
+    background: transparent;
+  }
+
+  .tbl__name {
+    font-size: 16px;
+    font-weight: 700;
+    padding-top: 10px;
+  }
+  .tbl td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 1px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--kg-faint);
+  }
+
+  .tbl__row .actions {
+    width: auto;
+    margin-top: 4px;
+    padding-top: 10px;
+    text-align: end;
+    border-top: 1px solid var(--kg-line);
+  }
+
+  .edit__foot .rowicons {
+    display: flex;
+    flex: 1 1 100%;
+  }
+  .edit__foot .rowicons .btn {
+    flex: 1;
+  }
+
+  .tbl__rowmsg td {
+    padding: 0 12px 6px;
+  }
+}

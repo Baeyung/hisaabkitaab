@@ -16,9 +16,11 @@ import io.github.baeyung.hisaabkitaab.service.TransactionService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -135,11 +137,25 @@ public class EventService
         fanOut(eventRequest, transaction);
     }
 
-    /** Delete an entry; its lines cascade away and every balance re-derives without them. */
+    /**
+     * Delete an entry; its lines cascade away and every balance re-derives without them.
+     *
+     * @param recentOnly the caller is not the shop's owner, so they may only take back what
+     *                   they booked within {@link Transaction#DELETE_WINDOW} — erasing older
+     *                   history is the owner's call. Editing it is not restricted; only the
+     *                   irreversible part is.
+     */
     @Transactional
-    public void deleteEvent(String id, Store store)
+    public void deleteEvent(String id, Store store, boolean recentOnly)
     {
-        transactionRepository.delete(loadEditable(id, store));
+        Transaction transaction = loadEditable(id, store);
+        if (recentOnly && !transaction.isRecent())
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the shop owner can delete entries older than 24 hours");
+        }
+
+        transactionRepository.delete(transaction);
     }
 
     /** The entry as an {@link EventRequest}, to prefill the entry screen in edit mode. */

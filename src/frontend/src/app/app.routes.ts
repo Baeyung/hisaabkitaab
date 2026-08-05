@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, publicOnlyGuard } from './core/auth/auth.guard';
 import { apexAppRedirectGuard, apexRedirectGuard } from './core/auth/apex.guard';
-import { storeGuard } from './core/store/store.guard';
+import { editorGuard, ownerGuard, storeGuard } from './core/store/store.guard';
 
 export const routes: Routes = [
   // Public marketing/landing page. No guard: reachable signed-out.
@@ -61,7 +61,7 @@ export const routes: Routes = [
   },
   {
     path: 's/:storeId/setup',
-    canActivate: [apexRedirectGuard, authGuard, storeGuard],
+    canActivate: [apexRedirectGuard, authGuard, storeGuard, editorGuard],
     loadComponent: () => import('./features/stores/store-setup').then((m) => m.StoreSetup),
   },
   {
@@ -102,42 +102,52 @@ export const routes: Routes = [
       // that entry and saves as an update instead of a new record.
       {
         path: 'new-entry/sale',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
       },
       {
         path: 'new-entry/sale/:entryId',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/sale').then((m) => m.Sale),
       },
       {
         path: 'new-entry/receipt',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/receipt').then((m) => m.Receipt),
       },
       {
         path: 'new-entry/receipt/:entryId',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/receipt').then((m) => m.Receipt),
       },
       {
         path: 'new-entry/purchase',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
       },
       {
         path: 'new-entry/purchase/:entryId',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
       },
       {
         path: 'new-entry/expense',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/expense').then((m) => m.Expense),
       },
       {
         path: 'new-entry/expense/:entryId',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/expense').then((m) => m.Expense),
       },
       {
         path: 'new-entry/payment',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/payment').then((m) => m.Payment),
       },
       {
         path: 'new-entry/payment/:entryId',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/payment').then((m) => m.Payment),
       },
       {
@@ -161,14 +171,22 @@ export const routes: Routes = [
       },
       {
         path: 'settings/items',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/settings/items').then((m) => m.SettingsItems),
       },
       {
         path: 'settings/party',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/settings/party').then((m) => m.SettingsParty),
       },
       {
+        path: 'settings/users',
+        canActivate: [ownerGuard],
+        loadComponent: () => import('./features/settings/users').then((m) => m.SettingsUsers),
+      },
+      {
         path: 'settings/general',
+        canActivate: [editorGuard],
         loadComponent: () => import('./features/settings/general').then((m) => m.SettingsGeneral),
       },
     ],

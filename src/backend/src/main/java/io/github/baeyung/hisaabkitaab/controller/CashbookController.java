@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.baeyung.hisaabkitaab.dto.cashbook.CashbookDayResponse;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.query.CashbookQueryService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class CashbookController
     public ResponseEntity<CashbookDayResponse> getRange(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @CurrentStore Store store
+            @CurrentStore(StoreRole.VIEWER) Store store
     )
     {
         LocalDate start = from != null ? from : LocalDate.now();

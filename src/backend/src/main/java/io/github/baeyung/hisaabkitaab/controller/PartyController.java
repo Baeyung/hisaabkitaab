@@ -19,6 +19,7 @@ import io.github.baeyung.hisaabkitaab.dto.opening.OpeningBalanceRequest;
 import io.github.baeyung.hisaabkitaab.dto.party.PartyResponse;
 import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
@@ -34,7 +35,7 @@ public class PartyController
     private final OpeningEntryService openingEntryService;
 
     @GetMapping
-    public ResponseEntity<List<PartyResponse>> list(@CurrentStore Store store)
+    public ResponseEntity<List<PartyResponse>> list(@CurrentStore(StoreRole.VIEWER) Store store)
     {
         List<Party> parties = partyService.findByStore(store.getId());
         Map<String, PartyBalance> openings = openingEntryService.openingBalancesByStore(store.getId());
@@ -44,26 +45,26 @@ public class PartyController
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Party> get(@PathVariable String id, @CurrentStore Store store)
+    public ResponseEntity<Party> get(@PathVariable String id, @CurrentStore(StoreRole.VIEWER) Store store)
     {
         return ResponseEntity.ok(partyService.findByIdForStore(id, store.getId()));
     }
 
     @PostMapping
-    public ResponseEntity<Party> create(@Valid @RequestBody Party party, @CurrentStore Store store)
+    public ResponseEntity<Party> create(@Valid @RequestBody Party party, @CurrentStore(StoreRole.EDITOR) Store store)
     {
         return ResponseEntity.ok(partyService.create(party, store));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Party> update(@PathVariable String id, @Valid @RequestBody Party party,
-            @CurrentStore Store store)
+            @CurrentStore(StoreRole.EDITOR) Store store)
     {
         return ResponseEntity.ok(partyService.update(id, party, store.getId()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id, @CurrentStore Store store)
+    public ResponseEntity<Void> delete(@PathVariable String id, @CurrentStore(StoreRole.OWNER) Store store)
     {
         partyService.delete(id, store.getId());
         return ResponseEntity.noContent().build();
@@ -72,7 +73,7 @@ public class PartyController
     @PutMapping("/{id}/opening-balance")
     public ResponseEntity<PartyBalance> setOpeningBalance(@PathVariable String id,
             @Valid @RequestBody OpeningBalanceRequest request,
-            @CurrentStore Store store)
+            @CurrentStore(StoreRole.EDITOR) Store store)
     {
         return ResponseEntity.ok(
                 openingEntryService.setOpeningBalance(id, store, request.amount(), request.direction()));

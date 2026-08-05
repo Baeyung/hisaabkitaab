@@ -1,0 +1,192 @@
+<section class="set">
+  <header class="set__head">
+    <div class="set__titles">
+      <h1 class="set__title">{{ locale.t('nav.settings.users') }}</h1>
+      <p class="set__sub">{{ locale.t('settings.users.subtitle') }}</p>
+    </div>
+
+    @if (!loading() && !loadError() && (members()?.length ?? 0) > 0) {
+      <button type="button" class="btn btn--primary" (click)="startInvite()" [disabled]="inviting()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        {{ locale.t('settings.users.add') }}
+      </button>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="tablewrap" aria-hidden="true">
+      <div class="skel skel--row"></div>
+      <div class="skel skel--row skel--short"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="state">
+      <p role="alert" class="alert">{{ locale.t('settings.users.loadError') }}</p>
+      <button type="button" class="btn btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
+    </div>
+  } @else if ((members()?.length ?? 0) === 0 && !inviting()) {
+    <div class="state">
+      <h2 class="state__title">{{ locale.t('settings.users.empty.title') }}</h2>
+      <p class="state__body">{{ locale.t('settings.users.empty.body') }}</p>
+      <button type="button" class="btn btn--primary" (click)="startInvite()">{{ locale.t('settings.users.empty.cta') }}</button>
+    </div>
+  } @else {
+    <div class="tablewrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th scope="col">{{ locale.t('settings.users.col.person') }}</th>
+            <th scope="col">{{ locale.t('settings.users.col.role') }}</th>
+            <th scope="col" class="actions"><span class="sr-only">{{ locale.t('settings.users.col.actions') }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (inviting()) {
+            <tr class="tbl__edit">
+              <td colspan="3">
+                <div class="edit">
+                  <div class="edit__fields">
+                    <label class="efld">
+                      <span class="efld__lbl">{{ locale.t('settings.users.emailLabel') }}</span>
+                      <input
+                        class="fld__input"
+                        [formField]="inviteForm.email"
+                        type="email"
+                        autocomplete="off"
+                        [attr.placeholder]="locale.t('settings.users.emailPh')"
+                      />
+                    </label>
+                    <div class="efld">
+                      <span class="efld__lbl">{{ locale.t('settings.users.col.role') }}</span>
+                      <div class="roletoggle" role="group" [attr.aria-label]="locale.t('settings.users.col.role')">
+                        <button
+                          type="button"
+                          class="roletoggle__btn"
+                          [class.roletoggle__btn--on]="draft().role === 'EDITOR'"
+                          [attr.aria-pressed]="draft().role === 'EDITOR'"
+                          (click)="setDraftRole('EDITOR')"
+                        >
+                          {{ locale.t('members.role.editor') }}
+                        </button>
+                        <button
+                          type="button"
+                          class="roletoggle__btn"
+                          [class.roletoggle__btn--on]="draft().role === 'VIEWER'"
+                          [attr.aria-pressed]="draft().role === 'VIEWER'"
+                          (click)="setDraftRole('VIEWER')"
+                        >
+                          {{ locale.t('members.role.viewer') }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p class="edit__hint">
+                    {{ locale.t(draft().role === 'EDITOR' ? 'settings.users.hint.editor' : 'settings.users.hint.viewer') }}
+                  </p>
+
+                  <div class="edit__foot">
+                    <div class="rowicons">
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="cancelInvite()">
+                        {{ locale.t('settings.users.invite.cancel') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--primary btn--sm"
+                        (click)="invite()"
+                        [disabled]="saving() || inviteForm().invalid()"
+                      >
+                        {{ locale.t('settings.users.invite.send') }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+            @if (inviteForm.email().touched() && inviteForm.email().invalid()) {
+              <tr class="tbl__rowmsg">
+                <td colspan="3"><span role="alert" class="fld__err">{{ locale.t('validation.email') }}</span></td>
+              </tr>
+            }
+          }
+
+          @for (member of members(); track member.userId) {
+            <tr class="tbl__row">
+              <td class="tbl__name">
+                <span class="person__name">{{ displayName(member) }}</span>
+                <span class="person__email">{{ member.email }}</span>
+                @if (member.status === 'INVITED') {
+                  <span class="pending">{{ locale.t('members.pendingNote') }}</span>
+                }
+              </td>
+              <td [attr.data-label]="locale.t('settings.users.col.role')">
+                <div class="roletoggle roletoggle--sm" role="group" [attr.aria-label]="locale.t('settings.users.col.role') + ' — ' + member.email">
+                  <button
+                    type="button"
+                    class="roletoggle__btn"
+                    [class.roletoggle__btn--on]="member.role === 'EDITOR'"
+                    [attr.aria-pressed]="member.role === 'EDITOR'"
+                    [disabled]="saving()"
+                    (click)="changeRole(member, 'EDITOR')"
+                  >
+                    {{ locale.t('members.role.editor') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="roletoggle__btn"
+                    [class.roletoggle__btn--on]="member.role === 'VIEWER'"
+                    [attr.aria-pressed]="member.role === 'VIEWER'"
+                    [disabled]="saving()"
+                    (click)="changeRole(member, 'VIEWER')"
+                  >
+                    {{ locale.t('members.role.viewer') }}
+                  </button>
+                </div>
+              </td>
+              <td class="actions">
+                <div class="rowicons">
+                  <button
+                    type="button"
+                    class="iconbtn iconbtn--danger"
+                    (click)="askRemove(member.userId)"
+                    [attr.aria-label]="locale.t('settings.users.removeAction') + ' — ' + member.email"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            @if (confirmingId() === member.userId) {
+              <tr class="tbl__confirm">
+                <td colspan="3">
+                  <div class="confirm">
+                    <span class="confirm__msg">{{ locale.t('settings.users.remove.confirm', { email: member.email }) }}</span>
+                    <span class="confirm__actions">
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="cancelRemove()">
+                        {{ locale.t('settings.users.remove.cancel') }}
+                      </button>
+                      <button type="button" class="btn btn--danger btn--sm" (click)="confirmRemove(member.userId)" [disabled]="saving()">
+                        {{ locale.t('settings.users.remove.confirmBtn') }}
+                      </button>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+
+          @if (errorKey(); as key) {
+            <tr class="tbl__rowmsg">
+              <td colspan="3"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

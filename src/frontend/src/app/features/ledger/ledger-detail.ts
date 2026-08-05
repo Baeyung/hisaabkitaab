@@ -9,6 +9,7 @@ import { Balance } from '../../core/store/balance.models';
 import { TransactionEventKind } from '../../core/store/cashbook.models';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
+import { deleteErrorKey } from '../../core/store/delete-error';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
@@ -43,9 +44,12 @@ export class LedgerDetail {
   /** The row awaiting delete confirmation, and whether a delete is in flight. */
   protected readonly pendingDelete = signal<string | null>(null);
   protected readonly deleting = signal(false);
-  protected readonly deleteError = signal(false);
+  protected readonly deleteError = signal<TranslationKey | null>(null);
 
-  protected readonly canEdit = isEditableEntry;
+  /** Editable kind, and this user may write here — a viewer gets the statement, no controls. */
+  protected canEdit(event: TransactionEventKind): boolean {
+    return this.stores.canEdit() && isEditableEntry(event);
+  }
 
   protected readonly statement = signal<PartyStatement | null>(null);
   protected readonly loading = signal(true);
@@ -137,7 +141,7 @@ export class LedgerDetail {
   }
 
   askDelete(transactionId: string): void {
-    this.deleteError.set(false);
+    this.deleteError.set(null);
     this.pendingDelete.set(transactionId);
   }
 
@@ -151,13 +155,13 @@ export class LedgerDetail {
       return;
     }
     this.deleting.set(true);
-    this.deleteError.set(false);
+    this.deleteError.set(null);
     try {
       await this.events.deleteEvent(id);
       this.pendingDelete.set(null);
       await this.load(this.partyId());
-    } catch {
-      this.deleteError.set(true);
+    } catch (err) {
+      this.deleteError.set(deleteErrorKey(err, 'entry.delete.error'));
     } finally {
       this.deleting.set(false);
     }

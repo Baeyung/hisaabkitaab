@@ -6,7 +6,11 @@ import { AuthStore } from '../auth/auth.store';
 import { Store, StoreDraft } from './store.models';
 
 /**
- * The signed-in user's stores, and which one they are currently in.
+ * The stores the signed-in user can reach, and which one they are currently in.
+ *
+ * "Reach" covers both the shops they own and the ones another owner has shared with
+ * them — {@link list} returns them together, each carrying the role it grants (see
+ * {@link role}, {@link isOwner}, {@link canEdit}).
  *
  * A user can own several shops, so nothing is derived from the principal alone:
  * the chosen store is named in the URL (`/s/:storeId/…`), `storeGuard` validates
@@ -27,6 +31,17 @@ export class StoreService {
   readonly currentId = this._currentId.asReadonly();
   /** The store being viewed, or null outside a store route (e.g. the picker). */
   readonly current = computed(() => this._stores()?.find((s) => s.id === this._currentId()) ?? null);
+
+  /**
+   * What this user may do in the store they are in. Null outside a store route — never
+   * assume a role there. Every screen that hides a control reads one of these; the
+   * backend refuses the same call anyway, so this is about not offering what would fail.
+   */
+  readonly role = computed(() => this.current()?.role ?? null);
+  /** Their own shop: settings, the user list, and deleting things are all theirs. */
+  readonly isOwner = computed(() => this.role() === 'OWNER');
+  /** May record work — entries, items, khatas, opening balances. Owners included. */
+  readonly canEdit = computed(() => this.role() === 'OWNER' || this.role() === 'EDITOR');
 
   constructor() {
     // This cache belongs to one session. Drop it when credentials go away

@@ -33,31 +33,52 @@
     </div>
   } @else {
     <ul class="pick__grid">
-      @for (store of list(); track store.id) {
-        <li>
-          <button type="button" class="card" (click)="open(store)">
-            <span class="card__mark" [class.card__mark--img]="store.logoUri">
-              @if (store.logoUri) {
-                <img [src]="store.logoUri" alt="" />
-              } @else {
-                <span aria-hidden="true">{{ markOf(store) }}</span>
-              }
-            </span>
-            <span class="card__meta">
-              <span class="card__name">{{ store.name }}</span>
-              @if (store.address) {
-                <span class="card__line">{{ store.address }}</span>
-              }
-              @if (store.contact) {
-                <span class="card__line">{{ store.contact }}</span>
-              }
-            </span>
-            <svg class="card__go kg-flip" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M9 6l6 6-6 6" />
-            </svg>
-          </button>
-        </li>
+      @for (store of owned(); track store.id) {
+        <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: store }" />
       }
     </ul>
+
+    <!-- Shops belonging to someone else. Kept apart from the user's own, and labelled
+         with whose they are and what this user may do in them. -->
+    @if (shared().length > 0) {
+      <h2 class="pick__section">{{ locale.t('stores.shared') }}</h2>
+      <ul class="pick__grid">
+        @for (store of shared(); track store.id) {
+          <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: store }" />
+        }
+      </ul>
+    }
   }
 </section>
+
+<ng-template #card let-store>
+  <li>
+    <button type="button" class="card" (click)="open(store)">
+      <span class="card__mark" [class.card__mark--img]="store.logoUri">
+        @if (store.logoUri) {
+          <img [src]="store.logoUri" alt="" />
+        } @else {
+          <span aria-hidden="true">{{ markOf(store) }}</span>
+        }
+      </span>
+      <span class="card__meta">
+        <span class="card__name">{{ store.name }}</span>
+        @if (store.role !== 'OWNER') {
+          <span class="card__shared">
+            {{ locale.t('stores.sharedBy') }} {{ store.ownerName }}
+            <span class="card__role">{{ locale.t(roleKey(store)) }}</span>
+          </span>
+        }
+        @if (store.address) {
+          <span class="card__line">{{ store.address }}</span>
+        }
+        @if (store.contact) {
+          <span class="card__line">{{ store.contact }}</span>
+        }
+      </span>
+      <svg class="card__go kg-flip" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </button>
+  </li>
+</ng-template>

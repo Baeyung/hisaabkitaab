@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -10,7 +10,7 @@ import { InstallButton } from '../../shared/install-button/install-button';
 import { PrintDetailsDialog } from '../../shared/print-details-dialog';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
-import { NAV } from './nav';
+import { navFor } from './nav';
 
 @Component({
   selector: 'app-shell',
@@ -25,7 +25,8 @@ export class Shell {
   private readonly router = inject(Router);
   protected readonly stores = inject(StoreService);
 
-  protected readonly nav = NAV;
+  /** Recomputes when the user switches shops — the same login can be owner in one, viewer in another. */
+  protected readonly nav = computed(() => navFor(this.stores.role()));
   // open by default on wide screens, collapsed below the 760px breakpoint
   protected readonly open = signal(this.matches('(min-width: 760px)'));
   // groups start collapsed on load; user expands what they need

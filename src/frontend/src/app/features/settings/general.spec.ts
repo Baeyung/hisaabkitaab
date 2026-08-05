@@ -21,6 +21,8 @@ function setup() {
   const navigated: unknown[][] = [];
   const fakeStores = {
     current: signal<Store | null>(SHOP),
+    // The component reads this to decide which of its sections it may offer.
+    isOwner: signal(true),
     getOpeningCash: () => Promise.resolve(0),
     delete: (id: string) => {
       deleted.push(id);

@@ -1,6 +1,6 @@
 import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { form, FormField, required } from '@angular/forms/signals';
+import { disabled, form, FormField, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
@@ -41,9 +41,19 @@ export class SettingsGeneral {
   /** Opening drawer balance — cash on hand at onboarding. null = field empty (clears it). */
   protected readonly openingCash = signal<number | null>(null);
 
+  /**
+    * A shared user reaches this screen for the opening drawer balance, which is theirs to
+    * set — the shop's own details and branding are not. The fields are shown rather than
+    * hidden so they can still read what the shop is called; they just cannot move them.
+    */
+  protected readonly isOwner = this.stores.isOwner;
+
   protected readonly model = signal<StoreDraft>({ ...EMPTY_DRAFT });
   protected readonly storeForm = form(this.model, (path) => {
     required(path.name);
+    disabled(path.name, () => !this.stores.isOwner());
+    disabled(path.address, () => !this.stores.isOwner());
+    disabled(path.contact, () => !this.stores.isOwner());
   });
 
   /** First letter of the typed name — keeps the nameplate mark in step as it's edited. */
@@ -137,7 +147,11 @@ export class SettingsGeneral {
     this.saving.set(true);
     this.errorKey.set(null);
     try {
-      await this.stores.update(store.id, this.model());
+      // A shared user's save carries only the drawer balance — the store fields are
+      // disabled for them, and the backend would refuse the update anyway.
+      if (this.isOwner()) {
+        await this.stores.update(store.id, this.model());
+      }
       await this.stores.setOpeningCash(this.openingCash() ?? 0);
       this.savedKey.set('settings.general.saved');
     } catch {

@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
 import io.github.baeyung.hisaabkitaab.entity.User;
+import io.github.baeyung.hisaabkitaab.enums.UserStatus;
 import io.github.baeyung.hisaabkitaab.repository.UserRepository;
 import io.github.baeyung.hisaabkitaab.service.UserService;
 import io.github.baeyung.hisaabkitaab.service.mail.AccountVerificationEmailService;
@@ -71,7 +72,8 @@ public class UserServiceImpl implements UserService
 
         // ponytail: check-then-insert, so two simultaneous signups for the same address can
         // both slip through. Add a unique index on users(lower(email)) if that ever happens.
-        if (userRepository.existsByEmailIgnoreCase(email))
+        Optional<User> existing = userRepository.findByEmailIgnoreCase(email);
+        if (existing.filter(user -> user.getStatus() == UserStatus.ACTIVE).isPresent())
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Account already exists");
         }
@@ -84,13 +86,16 @@ public class UserServiceImpl implements UserService
             verified = true;
         }
 
-        User user = User.builder()
-                .contactNumber(request.getContactNumber())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
-                .email(email)
-                .verified(verified)
-                .build();
+        // An INVITED row is a placeholder a shop owner created when they shared a store with
+        // this address. Adopting it — same row, same id — is what carries that access through
+        // signup; a fresh account would leave the shop stranded on an id nobody logs in as.
+        User user = existing.orElseGet(User::new);
+        user.setContactNumber(request.getContactNumber());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setName(request.getName());
+        user.setEmail(email);
+        user.setVerified(verified);
+        user.setStatus(UserStatus.ACTIVE);
 
         if (!verified)
         {
@@ -164,6 +169,9 @@ public class UserServiceImpl implements UserService
     {
         userRepository.findByEmailIgnoreCase(email)
                 .filter(user -> user.getEmail() != null && !user.getEmail().isBlank())
+                // An INVITED placeholder has no password to reset — letting one through would
+                // hand the shop access waiting on that address to whoever asked for the code.
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
                 .filter(user -> cooledDown(user.getResetTokenExpiry()))
                 .ifPresent(user -> {
                     user.setResetToken(sixDigitCode());

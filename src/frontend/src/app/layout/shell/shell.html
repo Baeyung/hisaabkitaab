@@ -39,7 +39,7 @@
     <!-- Sidebar -->
     <aside id="app-sidebar" class="sidebar" [class.open]="open()">
       <nav class="nav" [attr.aria-label]="locale.t('nav.menu')">
-      @for (item of nav; track item.key) {
+      @for (item of nav(); track item.key) {
         @if (item.kind === 'link') {
           <a
             class="nav-item"
