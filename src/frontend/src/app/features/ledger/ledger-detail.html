@@ -67,18 +67,18 @@
         <div class="rm-toolbar rm-toolbar--filters rm-noprint">
           <div class="rm-field">
             <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
-            <app-date-field [value]="fromDate()" (valueChange)="fromDate.set($event)" [ariaLabel]="locale.t('bill.filter.from')" />
+            <app-date-field [value]="filters.from()" (valueChange)="filters.set('from', $event)" [ariaLabel]="locale.t('bill.filter.from')" />
           </div>
           <div class="rm-field">
             <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
-            <app-date-field [value]="toDate()" (valueChange)="toDate.set($event)" [ariaLabel]="locale.t('bill.filter.to')" />
+            <app-date-field [value]="filters.to()" (valueChange)="filters.set('to', $event)" [ariaLabel]="locale.t('bill.filter.to')" />
           </div>
           <label class="rm-field">
             <span class="rm-field__label">{{ locale.t('report.filter.event') }}</span>
             <app-select
               [options]="eventOptions()"
-              [value]="eventFilter()"
-              (valueChange)="eventFilter.set($event)"
+              [value]="filters.event()"
+              (valueChange)="filters.set('event', $event)"
               [ariaLabel]="locale.t('report.filter.event')"
             />
           </label>

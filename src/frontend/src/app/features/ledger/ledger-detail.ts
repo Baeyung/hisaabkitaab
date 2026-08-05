@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
 import { StoreService } from '../../core/store/store.service';
@@ -13,6 +13,7 @@ import { deleteErrorKey } from '../../core/store/delete-error';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
+import { urlFilters } from '../../shared/url-filters';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { Select } from '../../shared/select/select';
 import { DateField } from '../../shared/date-field/date-field';
@@ -39,6 +40,7 @@ export class LedgerDetail {
   private readonly api = inject(LedgerService);
   private readonly events = inject(EventService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   protected readonly printer = inject(PrintDetailsService);
 
   /** The row awaiting delete confirmation, and whether a delete is in flight. */
@@ -56,12 +58,11 @@ export class LedgerDetail {
   protected readonly loadError = signal(false);
   protected readonly notFound = signal(false);
 
-  // Report filters — client-side over the already-loaded rows. Seeded from the
-  // statement's own span on load (see `load`) so the range reads as "everything
-  // so far" instead of rendering as two blank, collapsed date fields.
-  protected readonly fromDate = signal(todayIso());
-  protected readonly toDate = signal(todayIso());
-  protected readonly eventFilter = signal('');
+  // Report filters — client-side over the already-loaded rows, and carried in
+  // the URL so Back walks them back. The range is seeded from the statement's
+  // own span on load (see `load`) so it reads as "everything so far" instead of
+  // rendering as two blank, collapsed date fields.
+  protected readonly filters = urlFilters({ from: todayIso(), to: todayIso(), event: '' });
 
   /** Event kinds actually present, for the filter dropdown (statement order preserved). */
   protected readonly eventKinds = computed(() => [
@@ -74,9 +75,9 @@ export class LedgerDetail {
   ]);
 
   protected readonly filteredRows = computed<PartyStatementRow[]>(() => {
-    const from = this.fromDate();
-    const to = this.toDate();
-    const event = this.eventFilter();
+    const from = this.filters.from();
+    const to = this.filters.to();
+    const event = this.filters.event();
     // row.date is an ISO `YYYY-MM-DD` string, so lexical comparison is a date comparison.
     return (this.statement()?.rows ?? []).filter(
       (row) =>
@@ -178,11 +179,19 @@ export class LedgerDetail {
       // of the list are the range. Today is the floor for `to` so a party with
       // no entries yet — or one whose last entry is old — still reads sanely;
       // ISO dates compare lexically, so a future-dated row wins over today.
-      const rows = statement.rows;
-      const today = todayIso();
-      const last = rows.at(-1)?.date ?? '';
-      this.fromDate.set(rows[0]?.date ?? today);
-      this.toDate.set(last > today ? last : today);
+      // A URL naming a range already wins: it is a shared link, or a Back that
+      // landed here, and re-seeding would throw away what it asked for. The
+      // seed replaces rather than pushes — nobody chose it, so Back shouldn't
+      // step through it.
+      if (!this.route.snapshot.queryParamMap.has('from')) {
+        const rows = statement.rows;
+        const today = todayIso();
+        const last = rows.at(-1)?.date ?? '';
+        this.filters.replace({
+          from: rows[0]?.date ?? today,
+          to: last > today ? last : today,
+        });
+      }
     } catch (err) {
       if ((err as { status?: number }).status === 404) {
         this.notFound.set(true);

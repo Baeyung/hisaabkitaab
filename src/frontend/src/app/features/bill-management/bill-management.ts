@@ -16,6 +16,7 @@ import { InventoryService } from '../../core/store/inventory.service';
 import { PartyBalanceRow } from '../../core/store/ledger.models';
 import { ItemStockRow } from '../../core/store/inventory.models';
 import { todayIso } from '../../shared/date.util';
+import { urlFilters } from '../../shared/url-filters';
 import { PrintDetailsService, PrintPromptKeys } from '../../shared/print-details.service';
 
 /** Print prompt wording: "yes" is the report, "no" keeps the per-bill invoices. */
@@ -78,16 +79,26 @@ export class BillManagement {
   protected readonly bills = signal<BillSummary[] | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
-  protected readonly query = signal('');
-  protected readonly fromDate = signal(todayIso());
-  protected readonly toDate = signal(todayIso());
+  /**
+   * Every filter on the screen, carried in the URL: Back walks the list back
+   * through the views it was narrowed to, and the link is worth sharing.
+   * `party` and `item` are server-side — changing either re-fetches; the rest
+   * sieve the loaded rows.
+   */
+  protected readonly filters = urlFilters({
+    from: todayIso(),
+    to: todayIso(),
+    q: '',
+    party: '',
+    item: '',
+  });
 
-  /** Server-side filters — changing either re-fetches; the dropdowns are populated once on init. */
-  protected readonly partyFilter = signal('');
-  protected readonly itemFilter = signal('');
+  /** Dropdown contents for the server-side filters, populated once on init. */
   protected readonly parties = signal<PartyBalanceRow[]>([]);
   protected readonly items = signal<ItemStockRow[]>([]);
-  protected readonly hasServerFilter = computed(() => !!this.partyFilter() || !!this.itemFilter());
+  protected readonly hasServerFilter = computed(
+    () => !!this.filters.party() || !!this.filters.item(),
+  );
 
   protected readonly partyOptions = computed(() => [
     { value: '', label: this.locale.t('bill.filter.allParties') },
@@ -118,9 +129,9 @@ export class BillManagement {
   protected readonly printTotals = computed(() => sumBills(this.printBills()));
 
   protected readonly filtered = computed(() => {
-    const q = this.query().trim().toLowerCase();
-    const from = this.fromDate();
-    const to = this.toDate();
+    const q = this.filters.q().trim().toLowerCase();
+    const from = this.filters.from();
+    const to = this.filters.to();
     // bill.date is an ISO `YYYY-MM-DD` string, so lexical comparison is a date comparison.
     return (this.bills() ?? []).filter(
       (bill) =>
@@ -134,10 +145,10 @@ export class BillManagement {
 
   constructor() {
     void this.loadFilterOptions();
-    // Re-fetch whenever a server-side filter changes; runs once on init too.
+    // Re-fetch whenever a server-side filter changes — including a Back/Forward
+    // that restored an earlier one. Runs once on init too.
     effect(() => {
-      const filters = { partyId: this.partyFilter(), itemId: this.itemFilter() };
-      void this.load(filters);
+      void this.load({ partyId: this.filters.party(), itemId: this.filters.item() });
     });
   }
 

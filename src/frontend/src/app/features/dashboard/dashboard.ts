@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -10,6 +10,7 @@ import { Dashboard as DashboardData } from '../../core/store/dashboard.models';
 import { daysAgoIso, todayIso } from '../../shared/date.util';
 import { ChartView } from '../../shared/chart/chart';
 import { DateField } from '../../shared/date-field/date-field';
+import { urlFilters } from '../../shared/url-filters';
 
 // A canvas can't read a CSS custom property, so the palette is mirrored here —
 // once per theme, keyed the same way styles.css is. Chart colours are picked
@@ -90,8 +91,8 @@ export class Dashboard {
   protected readonly categoryLabel = (name: string): string =>
     expenseCategoryLabel(name, (k) => this.locale.t(k));
 
-  protected readonly fromDate = signal(daysAgoIso(6));
-  protected readonly toDate = signal(todayIso());
+  /** The window every widget is read over, carried in the URL so Back walks it back. */
+  protected readonly filters = urlFilters({ from: daysAgoIso(6), to: todayIso() });
   protected readonly data = signal<DashboardData | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
@@ -302,7 +303,11 @@ export class Dashboard {
   });
 
   constructor() {
-    void this.load();
+    // Fetch whenever the window changes — a picked date, or a Back/Forward that
+    // restored an earlier one. Runs once on init.
+    effect(() => {
+      void this.load(this.filters.from(), this.filters.to());
+    });
   }
 
   /** Shared doughnut config: calm ring, bottom legend, money + percent tooltip. */
@@ -346,32 +351,16 @@ export class Dashboard {
     return config as ChartConfiguration;
   }
 
-  async load(): Promise<void> {
+  async load(from = this.filters.from(), to = this.filters.to()): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      this.data.set(await this.api.getRange(this.fromDate(), this.toDate()));
+      this.data.set(await this.api.getRange(from, to));
     } catch {
       this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }
-  }
-
-  setFrom(value: string): void {
-    if (!value || value === this.fromDate()) {
-      return;
-    }
-    this.fromDate.set(value);
-    void this.load();
-  }
-
-  setTo(value: string): void {
-    if (!value || value === this.toDate()) {
-      return;
-    }
-    this.toDate.set(value);
-    void this.load();
   }
 
   /** Bar-fill width for a list row, as a percentage of the column's largest value. */

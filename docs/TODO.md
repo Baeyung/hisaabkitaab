@@ -10,9 +10,9 @@
 - [x] goods and khatas on guided UI looks very conjested we need to fix it
 - [x] delete store option
 - [x] multi-user support for same stores
+- [x] persistent date filters across navigation
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
-- [ ] persistent date filters across navigation
 - [ ] processed goods feature
 - [ ] billing/plan related stuff

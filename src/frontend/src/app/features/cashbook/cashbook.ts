@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { CashbookService } from '../../core/store/cashbook.service';
@@ -6,6 +6,7 @@ import { StoreService } from '../../core/store/store.service';
 import { CashbookDay, TransactionEventKind } from '../../core/store/cashbook.models';
 import { EventService } from '../../core/store/event.service';
 import { todayIso } from '../../shared/date.util';
+import { urlFilters } from '../../shared/url-filters';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
 import { PrintDetailsService } from '../../shared/print-details.service';
@@ -32,8 +33,8 @@ export class Cashbook {
   private readonly router = inject(Router);
   protected readonly printer = inject(PrintDetailsService);
 
-  protected readonly fromDate = signal(todayIso());
-  protected readonly toDate = signal(todayIso());
+  /** The day (or span) being read, carried in the URL so Back walks it back. */
+  protected readonly filters = urlFilters({ from: todayIso(), to: todayIso() });
   protected readonly data = signal<CashbookDay | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
@@ -56,14 +57,18 @@ export class Cashbook {
   protected readonly printedBills = computed(() => [...this.printer.bills().values()]);
 
   constructor() {
-    void this.load();
+    // Fetch whenever the range changes — a picked date, or a Back/Forward that
+    // restored an earlier one. Runs once on init.
+    effect(() => {
+      void this.load(this.filters.from(), this.filters.to());
+    });
   }
 
-  async load(): Promise<void> {
+  async load(from = this.filters.from(), to = this.filters.to()): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      this.data.set(await this.api.getRange(this.fromDate(), this.toDate()));
+      this.data.set(await this.api.getRange(from, to));
     } catch {
       this.loadError.set(true);
     } finally {
@@ -116,22 +121,6 @@ export class Cashbook {
     } finally {
       this.deleting.set(false);
     }
-  }
-
-  setFrom(value: string): void {
-    if (!value || value === this.fromDate()) {
-      return;
-    }
-    this.fromDate.set(value);
-    void this.load();
-  }
-
-  setTo(value: string): void {
-    if (!value || value === this.toDate()) {
-      return;
-    }
-    this.toDate.set(value);
-    void this.load();
   }
 
   /** "12 Jul, 14:05" from the row's entry timestamp — the range spans days, so the date matters. */

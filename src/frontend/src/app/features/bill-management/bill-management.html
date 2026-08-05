@@ -2,7 +2,7 @@
   <!-- Report layout only — each invoice carries its own letterhead. -->
   @if (reportMode()) {
     <app-print-header />
-    <p class="rm-sub rm-printonly">{{ locale.t('cashbook.print.period', { from: fromDate(), to: toDate() }) }}</p>
+    <p class="rm-sub rm-printonly">{{ locale.t('cashbook.print.period', { from: filters.from(), to: filters.to() }) }}</p>
   }
   <header class="rm-head rm-noprint">
     <div>
@@ -21,7 +21,7 @@
   } @else if (loadError()) {
     <div class="rm-state">
       <p role="alert" class="rm-alert">{{ locale.t('bill.loadError') }}</p>
-      <button type="button" class="rm-btn rm-btn--ghost" (click)="load({ partyId: partyFilter(), itemId: itemFilter() })">{{ locale.t('settings.general.retry') }}</button>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load({ partyId: filters.party(), itemId: filters.item() })">{{ locale.t('settings.general.retry') }}</button>
     </div>
   } @else if ((bills()?.length ?? 0) === 0 && !hasServerFilter()) {
     <div class="rm-state">
@@ -36,8 +36,8 @@
         <input
           class="rm-input"
           type="search"
-          [value]="query()"
-          (input)="query.set(searchInput.value)"
+          [value]="filters.q()"
+          (input)="filters.replace({ q: searchInput.value })"
           #searchInput
           [attr.placeholder]="locale.t('bill.search.ph')"
           [attr.aria-label]="locale.t('bill.search.ph')"
@@ -45,16 +45,16 @@
         <div class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
           <app-date-field
-            [value]="fromDate()"
-            (valueChange)="fromDate.set($event)"
+            [value]="filters.from()"
+            (valueChange)="filters.set('from', $event)"
             [ariaLabel]="locale.t('bill.filter.from')"
           />
         </div>
         <div class="rm-field">
           <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
           <app-date-field
-            [value]="toDate()"
-            (valueChange)="toDate.set($event)"
+            [value]="filters.to()"
+            (valueChange)="filters.set('to', $event)"
             [ariaLabel]="locale.t('bill.filter.to')"
           />
         </div>
@@ -62,8 +62,8 @@
           <span class="rm-field__label">{{ locale.t('bill.filter.party') }}</span>
           <app-select
             [options]="partyOptions()"
-            [value]="partyFilter()"
-            (valueChange)="partyFilter.set($event)"
+            [value]="filters.party()"
+            (valueChange)="filters.set('party', $event)"
             [ariaLabel]="locale.t('bill.filter.party')"
           />
         </label>
@@ -71,8 +71,8 @@
           <span class="rm-field__label">{{ locale.t('bill.filter.item') }}</span>
           <app-select
             [options]="itemOptions()"
-            [value]="itemFilter()"
-            (valueChange)="itemFilter.set($event)"
+            [value]="filters.item()"
+            (valueChange)="filters.set('item', $event)"
             [ariaLabel]="locale.t('bill.filter.item')"
           />
         </label>

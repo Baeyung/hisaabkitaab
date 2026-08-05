@@ -8,16 +8,16 @@
       <div class="rm-field">
         <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
         <app-date-field
-          [value]="fromDate()"
-          (valueChange)="setFrom($event)"
+          [value]="filters.from()"
+          (valueChange)="filters.set('from', $event)"
           [ariaLabel]="locale.t('bill.filter.from')"
         />
       </div>
       <div class="rm-field">
         <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
         <app-date-field
-          [value]="toDate()"
-          (valueChange)="setTo($event)"
+          [value]="filters.to()"
+          (valueChange)="filters.set('to', $event)"
           [ariaLabel]="locale.t('bill.filter.to')"
         />
       </div>
