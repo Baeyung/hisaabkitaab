@@ -513,6 +513,9 @@
 .fld--grow {
   flex: 1 1 150px;
 }
+.fld--full {
+  flex: 1 1 100%;
+}
 .fld--unit {
   flex: 0 1 112px;
 }
@@ -523,37 +526,128 @@
   align-self: flex-start;
 }
 
-/* Which way a baqaya points. Native radios, visually replaced by the pills —
-   arrow keys and screen readers keep working. */
-.seg {
+/* ── the fold ──────────────────────────────────────────────────────
+   What only some items carry — a cost price, stock on hand, whether it is work
+   rather than cloth. Ruled off from the line above it and shut by default, so
+   the common case is three boxes and the full case is still one click away. */
+.fold {
+  padding-top: 13px;
+  border-top: 1px solid var(--kg-line);
+}
+/* Closed on both sides once it is open, so "Add item" below reads as the card's
+   button rather than the last control inside the fold. */
+.fold[open] {
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--kg-line);
+}
+.fold__sum {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  padding: 4px 6px;
+  margin-inline-start: -6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  /* Both are needed to drop the native triangle; the pseudo-element is what
+     Safari and older WebKit actually read. */
+  list-style: none;
+}
+.fold__sum::-webkit-details-marker {
+  display: none;
+}
+.fold__sum:hover {
+  color: var(--kg-brand);
+}
+.fold__sum:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+/* A chevron that turns rather than points: a caret swinging right would have to
+   be flipped again for Urdu, and down-to-up is the same gesture in both. */
+.fold__chev {
+  flex: none;
+  transition: transform 0.18s ease;
+}
+.fold[open] .fold__chev {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fold__chev {
+    transition: none;
+  }
+}
+.fold__body {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding-top: 13px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kg-ink);
+  cursor: pointer;
+}
+.check__box {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--kg-brand);
+  cursor: pointer;
+}
+.check__box:focus-visible {
+  outline: none;
+  border-radius: 5px;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── the baqaya ────────────────────────────────────────────────────
+   The amount and the way it points are one decision, so they share a row of
+   their own rather than trailing the name and number fields above. */
+.baqaya {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+/* Which way a baqaya points. Native radios, visually replaced by the pills —
+   arrow keys and screen readers keep working. Block, not flex: a <legend> in a
+   flex fieldset lays out inconsistently across browsers. */
+.seg {
+  min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
-  /* Sits in the field row, so it hangs off the same edge the inputs do — the
-     pills are shorter than a 48px input and would otherwise float mid-row. */
-  flex: 1 1 190px;
-  align-self: flex-end;
-  min-height: 48px;
-}
-.seg:disabled {
-  opacity: 0.5;
 }
 .seg__legend {
+  /* Set as a field label, aligned with "Baqaya today" beside it. */
   padding: 0;
-  margin-inline-end: 4px;
+  margin-bottom: 6px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--kg-muted);
 }
+.seg__opts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  /* The pills are shorter than a 48px input; matching its height keeps them on
+     the same line as the amount instead of floating up. */
+  min-height: 48px;
+}
 .seg__opt {
   cursor: pointer;
-}
-.seg:disabled .seg__opt {
-  cursor: default;
 }
 .seg__opt input {
   position: absolute;
@@ -625,6 +719,7 @@
 .row__meta {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 8px;
   flex: none;
   font-size: 13.5px;
@@ -635,6 +730,15 @@
   font-size: 11.5px;
   font-weight: 500;
   color: var(--kg-muted);
+}
+/* What the fold captured, tagged on the written line so opening a shop with
+   stock counted reads back as counted. */
+.row__meta .tag {
+  padding: 2px 7px;
+  font-weight: 600;
+  color: var(--kg-brand);
+  background: var(--kg-tint-brand);
+  border-radius: 6px;
 }
 .row__x {
   display: grid;
@@ -840,6 +944,12 @@
   .quick .fld--money {
     max-width: none;
     flex: 1 1 140px;
+  }
+  /* At this width a name field sharing its line ends up the narrowest box on the
+     card. The named thing takes the line; the short numeric boxes pair off under
+     it — Unit with Sale price, Cost price with Opening stock. */
+  .quick .fld--grow {
+    flex: 1 1 100%;
   }
   .foot .btn--primary {
     flex: 1;

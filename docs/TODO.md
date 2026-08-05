@@ -7,6 +7,7 @@
 - [x] new store screens are a lil buggy get em fixed
 - [x] fix failing tests and see why they are failing
 - [x] party screen UI fix
+- [x] goods and khatas on guided UI looks very conjested we need to fix it
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
@@ -15,4 +16,3 @@
 - [ ] processed goods feature
 - [ ] billing/plan related stuff
 - [ ] delete store option
-- [ ] goods and khatas on guided UI looks very conjested we need to fix it

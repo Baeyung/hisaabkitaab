@@ -168,11 +168,14 @@
 
           <div class="spread">
             <div class="leaf leaf--work">
+              <!-- The line a shopkeeper always writes stays on the line; what only
+                   some items carry folds away underneath it. -->
               <form class="quick" (submit)="$event.preventDefault(); addItem()">
                 <div class="quick__fields">
                   <div class="fld fld--grow">
                     <label class="fld__label" for="setup-item-name">{{ locale.t('setup.goods.name') }}</label>
                     <input
+                      #firstField
                       id="setup-item-name"
                       class="fld__input"
                       type="text"
@@ -212,7 +215,64 @@
                     />
                   </div>
                 </div>
-                <button type="submit" class="btn btn--ghost btn--add" [disabled]="!itemRow().name.trim() || busy()">
+
+                <details class="fold" [open]="moreOpen()" (toggle)="moreOpen.set($any($event.target).open)">
+                  <summary class="fold__sum">
+                    <svg class="fold__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                    {{ locale.t('setup.goods.more') }}
+                  </summary>
+                  <div class="fold__body">
+                    <div class="quick__fields">
+                      <div class="fld fld--money">
+                        <label class="fld__label" for="setup-item-cost">{{ locale.t('settings.items.col.cost') }}</label>
+                        <input
+                          id="setup-item-cost"
+                          class="fld__input num"
+                          type="number"
+                          inputmode="decimal"
+                          min="0"
+                          step="any"
+                          [value]="itemRow().costPrice ?? ''"
+                          (input)="itemRow.update((r) => ({ ...r, costPrice: $any($event.target).valueAsNumber || null }))"
+                        />
+                      </div>
+                      <!-- A service keeps no stock, so the box has nothing to fill in. -->
+                      @if (!itemRow().service) {
+                        <div class="fld fld--money">
+                          <label class="fld__label" for="setup-item-stock">{{ locale.t('settings.items.col.opening') }}</label>
+                          <input
+                            id="setup-item-stock"
+                            class="fld__input num"
+                            type="number"
+                            inputmode="decimal"
+                            min="0"
+                            step="any"
+                            [value]="itemRow().openingStock ?? ''"
+                            (input)="itemRow.update((r) => ({ ...r, openingStock: $any($event.target).valueAsNumber || null }))"
+                            [attr.placeholder]="locale.t('settings.items.opening.qtyPh')"
+                          />
+                        </div>
+                      }
+                    </div>
+                    <label class="check">
+                      <input
+                        class="check__box"
+                        type="checkbox"
+                        [checked]="itemRow().service"
+                        (change)="setService($any($event.target).checked)"
+                      />
+                      <span>{{ locale.t('setup.goods.service') }}</span>
+                    </label>
+                  </div>
+                </details>
+
+                @if (itemNegative()) {
+                  <span role="alert" class="fld__err">{{ locale.t('setup.negative') }}</span>
+                }
+
+                <button type="submit" class="btn btn--ghost btn--add" [disabled]="!canAddItem() || busy()">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
@@ -246,6 +306,13 @@
                       @if (it.unit) {
                         <small>{{ it.unit }}</small>
                       }
+                      <!-- Only what was actually captured earns a tag; a plain item
+                           with neither shows nothing rather than two empty slots. -->
+                      @if (it.service) {
+                        <small class="tag">{{ locale.t('settings.items.service') }}</small>
+                      } @else if (stockLabel(it); as stock) {
+                        <small class="tag">{{ stock }}</small>
+                      }
                     </span>
                     <button type="button" class="row__x" [attr.aria-label]="locale.t('setup.remove')" (click)="removeItem(it.id)">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -276,11 +343,17 @@
 
           <div class="spread">
             <div class="leaf leaf--work">
+              <!-- Who they are on the first line; what they owe on its own, because
+                   the amount and its direction are one decision and were being read
+                   as two more fields crammed onto the end of the row. -->
               <form class="quick" (submit)="$event.preventDefault(); addParty()">
                 <div class="quick__fields">
-                  <div class="fld fld--grow">
+                  <!-- The name takes the whole line: shop names run long, and left to
+                       wrap with the other two it ended up the narrowest box of the three. -->
+                  <div class="fld fld--full">
                     <label class="fld__label" for="setup-party-name">{{ locale.t('setup.khatas.name') }}</label>
                     <input
+                      #firstField
                       id="setup-party-name"
                       class="fld__input"
                       type="text"
@@ -300,6 +373,21 @@
                       (input)="partyRow.update((r) => ({ ...r, contact: $any($event.target).value }))"
                     />
                   </div>
+                  <div class="fld fld--grow">
+                    <label class="fld__label" for="setup-party-address">{{ locale.t('setup.khatas.address') }}</label>
+                    <input
+                      id="setup-party-address"
+                      class="fld__input"
+                      type="text"
+                      autocomplete="street-address"
+                      [value]="partyRow().address"
+                      (input)="partyRow.update((r) => ({ ...r, address: $any($event.target).value }))"
+                      [attr.placeholder]="locale.t('setup.khatas.addressPh')"
+                    />
+                  </div>
+                </div>
+
+                <div class="baqaya">
                   <div class="fld fld--money">
                     <label class="fld__label" for="setup-party-amount">{{ locale.t('setup.khatas.baqaya') }}</label>
                     <input
@@ -315,33 +403,38 @@
                     />
                   </div>
 
-                  <!-- Which way the baqaya points, on the same line as the amount:
-                       they are one decision, and split across lines the row left a
-                       hole beside the amount on a wide leaf. -->
-                  <fieldset class="seg" [disabled]="!partyRow().amount">
-                  <legend class="seg__legend">{{ locale.t('setup.khatas.direction') }}</legend>
-                  <label class="seg__opt seg__opt--in">
-                    <input
-                      type="radio"
-                      name="setup-dir"
-                      [checked]="partyRow().direction === 'THEY_OWE_YOU'"
-                      (change)="partyRow.update((r) => ({ ...r, direction: 'THEY_OWE_YOU' }))"
-                    />
-                    <span>{{ locale.t('setup.khatas.theyOwe') }}</span>
-                  </label>
-                  <label class="seg__opt seg__opt--out">
-                    <input
-                      type="radio"
-                      name="setup-dir"
-                      [checked]="partyRow().direction === 'YOU_OWE_THEM'"
-                      (change)="partyRow.update((r) => ({ ...r, direction: 'YOU_OWE_THEM' }))"
-                    />
-                    <span>{{ locale.t('setup.khatas.youOwe') }}</span>
-                  </label>
+                  <!-- Left enabled with no amount typed: the pills carry the default
+                       the balance will use, and greyed out they read as broken. -->
+                  <fieldset class="seg">
+                    <legend class="seg__legend">{{ locale.t('setup.khatas.direction') }}</legend>
+                    <div class="seg__opts">
+                      <label class="seg__opt seg__opt--in">
+                        <input
+                          type="radio"
+                          name="setup-dir"
+                          [checked]="partyRow().direction === 'THEY_OWE_YOU'"
+                          (change)="partyRow.update((r) => ({ ...r, direction: 'THEY_OWE_YOU' }))"
+                        />
+                        <span>{{ locale.t('setup.khatas.theyOwe') }}</span>
+                      </label>
+                      <label class="seg__opt seg__opt--out">
+                        <input
+                          type="radio"
+                          name="setup-dir"
+                          [checked]="partyRow().direction === 'YOU_OWE_THEM'"
+                          (change)="partyRow.update((r) => ({ ...r, direction: 'YOU_OWE_THEM' }))"
+                        />
+                        <span>{{ locale.t('setup.khatas.youOwe') }}</span>
+                      </label>
+                    </div>
                   </fieldset>
                 </div>
 
-                <button type="submit" class="btn btn--ghost btn--add" [disabled]="!partyRow().name.trim() || busy()">
+                @if (partyNegative()) {
+                  <span role="alert" class="fld__err">{{ locale.t('setup.negative') }}</span>
+                }
+
+                <button type="submit" class="btn btn--ghost btn--add" [disabled]="!canAddParty() || busy()">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M12 5v14M5 12h14" />
                   </svg>

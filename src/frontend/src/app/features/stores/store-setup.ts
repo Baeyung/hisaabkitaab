@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -28,17 +28,27 @@ interface ItemRow {
   name: string;
   unit: string;
   salePrice: number | null;
+  costPrice: number | null;
+  /** Saved through its own endpoint after the item itself, not part of the draft. */
+  openingStock: number | null;
+  service: boolean;
 }
 interface PartyRow {
   name: string;
   contact: string;
+  address: string;
   amount: number | null;
   direction: OpeningDirection;
 }
 
 const EMPTY_DRAFT: StoreDraft = { name: '', address: '', contact: '', logoUri: '', watermarkUri: '' };
-const EMPTY_ITEM: ItemRow = { name: '', unit: '', salePrice: null };
-const EMPTY_PARTY: PartyRow = { name: '', contact: '', amount: null, direction: 'THEY_OWE_YOU' };
+const EMPTY_ITEM: ItemRow = { name: '', unit: '', salePrice: null, costPrice: null, openingStock: null, service: false };
+const EMPTY_PARTY: PartyRow = { name: '', contact: '', address: '', amount: null, direction: 'THEY_OWE_YOU' };
+
+/** A figure typed into a money/quantity box is only usable if it isn't negative. */
+function negative(...values: Array<number | null>): boolean {
+  return values.some((v) => v != null && v < 0);
+}
 
 /**
  * Opening a new shop, one section at a time — the screen a shopkeeper lands on
@@ -96,15 +106,38 @@ export class StoreSetup {
     { field: 'watermarkUri', label: 'settings.general.watermark' },
   ];
 
+  /**
+   * The first box of whichever section is open. Adding a row empties the form,
+   * and a shopkeeper entering twenty items should never have to reach for the
+   * mouse between them — so the caret goes back where they type next.
+   */
+  private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
+
   /* ── the goods ── */
   protected readonly items = signal<StoreItem[]>([]);
   protected readonly itemRow = signal<ItemRow>({ ...EMPTY_ITEM });
+  /**
+   * Whether the cost/stock fold is open. A signal rather than the element's own
+   * state: a shopkeeper who tracks cost on item one tracks it on all twenty, so
+   * the fold has to survive the reset that follows each add.
+   */
+  protected readonly moreOpen = signal(false);
   /** Common cloth units as free-text hints; the shopkeeper can type any. */
   protected readonly unitSuggestions = ['Meter', 'Than', 'Gaz', 'Piece', 'Roll'];
 
   /* ── the khatas ── */
   protected readonly parties = signal<Party[]>([]);
   protected readonly partyRow = signal<PartyRow>({ ...EMPTY_PARTY });
+
+  /* A row is addable once it is named and carries no negative figure. The name
+     alone gates the button; a bad figure gets a message, because a button that
+     greys out the moment a minus lands says nothing about why. */
+  protected readonly itemNegative = computed(() =>
+    negative(this.itemRow().salePrice, this.itemRow().costPrice, this.itemRow().openingStock),
+  );
+  protected readonly partyNegative = computed(() => negative(this.partyRow().amount));
+  protected readonly canAddItem = computed(() => !!this.itemRow().name.trim() && !this.itemNegative());
+  protected readonly canAddParty = computed(() => !!this.partyRow().name.trim() && !this.partyNegative());
 
   /** The plate on the spine: the saved shop once there is one, the typed name before that. */
   protected readonly plateName = computed(() => this.shop()?.name ?? this.model().name.trim());
@@ -138,8 +171,15 @@ export class StoreSetup {
   private async loadExisting(): Promise<void> {
     try {
       const [items, parties] = await Promise.all([this.itemApi.list(), this.partyApi.list()]);
-      this.items.set(items);
-      this.parties.set(parties);
+      // Only fill a list that is still untouched. On a slow connection the user
+      // can add a row before this lands, and setting it outright would wipe that
+      // row off the leaf — saved on the server, invisible on the page.
+      if (!this.items().length) {
+        this.items.set(items);
+      }
+      if (!this.parties().length) {
+        this.parties.set(parties);
+      }
     } catch {
       // A brand-new shop has nothing to list; the sections still work empty.
     }
@@ -154,12 +194,34 @@ export class StoreSetup {
     return this.shop() ? step === 'shop' : step !== 'shop';
   }
 
-  goTo(step: Step): void {
-    if (this.locked(step)) {
+  async goTo(step: Step): Promise<void> {
+    if (this.locked(step) || step === this.step()) {
+      return;
+    }
+    // A row that is typed but not yet added is still the user's work. Leaving
+    // used to drop it silently — the one place this screen could lose data.
+    if (!(await this.commitPending())) {
       return;
     }
     this.errorKey.set(null);
     this.step.set(step);
+  }
+
+  /**
+   * Writes whatever is sitting half-typed in the open section's add row. Returns
+   * false only when that write was attempted and failed, which is the signal to
+   * stay put — moving on would strand the error message on a section the user
+   * can no longer see.
+   */
+  private async commitPending(): Promise<boolean> {
+    switch (this.step()) {
+      case 'goods':
+        return this.itemRow().name.trim() ? this.addItem() : true;
+      case 'khatas':
+        return this.partyRow().name.trim() ? this.addParty() : true;
+      default:
+        return true;
+    }
   }
 
   async createShop(): Promise<void> {
@@ -186,11 +248,15 @@ export class StoreSetup {
     }
   }
 
-  async addItem(): Promise<void> {
+  async addItem(): Promise<boolean> {
     const row = this.itemRow();
     const name = row.name.trim();
     if (!name || this.busy()) {
-      return;
+      return !name;
+    }
+    if (this.itemNegative()) {
+      this.errorKey.set('setup.negative');
+      return false;
     }
     this.busy.set(true);
     this.errorKey.set(null);
@@ -200,13 +266,24 @@ export class StoreSetup {
         name,
         unit: unit || null,
         salePrice: row.salePrice,
-        costPrice: null,
-        service: false,
+        costPrice: row.costPrice,
+        service: row.service,
       });
-      this.items.update((list) => [...list, created]);
+      // Create does not carry opening stock, so it rides its own endpoint — and
+      // only when there is one. A service holds no stock, so it never sends.
+      let openingStock: number | null = null;
+      if (!row.service && row.openingStock && row.openingStock > 0) {
+        const stored = await this.itemApi.setOpeningStock(created.id, row.openingStock);
+        openingStock = stored > 0 ? stored : null;
+      }
+      this.items.update((list) => [...list, { ...created, openingStock }]);
+      // The fold's open/closed state is deliberately left alone here.
       this.itemRow.set({ ...EMPTY_ITEM });
+      this.focusFirstField();
+      return true;
     } catch {
       this.errorKey.set('error.generic');
+      return false;
     } finally {
       this.busy.set(false);
     }
@@ -225,17 +302,26 @@ export class StoreSetup {
     }
   }
 
-  async addParty(): Promise<void> {
+  async addParty(): Promise<boolean> {
     const row = this.partyRow();
     const name = row.name.trim();
     if (!name || this.busy()) {
-      return;
+      return !name;
+    }
+    if (this.partyNegative()) {
+      this.errorKey.set('setup.negative');
+      return false;
     }
     this.busy.set(true);
     this.errorKey.set(null);
     try {
       const contact = row.contact.trim();
-      const created = await this.partyApi.create({ name, contact: contact || null, address: null });
+      const address = row.address.trim();
+      const created = await this.partyApi.create({
+        name,
+        contact: contact || null,
+        address: address || null,
+      });
       // The baqaya is a second call — the party has to exist to carry one.
       let openingBalance: Balance | null = null;
       if (row.amount && row.amount > 0) {
@@ -246,11 +332,19 @@ export class StoreSetup {
       }
       this.parties.update((list) => [...list, { ...created, openingBalance }]);
       this.partyRow.set({ ...EMPTY_PARTY });
+      this.focusFirstField();
+      return true;
     } catch {
       this.errorKey.set('error.generic');
+      return false;
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** Back to the top of the form, once the emptied row has actually rendered. */
+  private focusFirstField(): void {
+    requestAnimationFrame(() => this.firstField()?.nativeElement.focus());
   }
 
   async removeParty(id: string): Promise<void> {
@@ -267,11 +361,12 @@ export class StoreSetup {
   }
 
   /** Into the shop, flagged as freshly opened so the dashboard greets rather than shrugs. */
-  finish(): void {
+  async finish(): Promise<void> {
     const id = this.shop()?.id;
-    if (id) {
-      void this.router.navigate(['/s', id, 'dashboard'], { queryParams: { new: 1 } });
+    if (!id || !(await this.commitPending())) {
+      return;
     }
+    await this.router.navigate(['/s', id, 'dashboard'], { queryParams: { new: 1 } });
   }
 
   async onFile(event: Event, field: ImageField): Promise<void> {
@@ -291,6 +386,22 @@ export class StoreSetup {
   removeImage(field: ImageField): void {
     this.imageErrorKey.set(null);
     this.model.update((m) => ({ ...m, [field]: '' }));
+  }
+
+  /**
+   * Ticking "service" empties the stock box rather than only hiding it — a
+   * quantity typed before the tick would otherwise be sent for something that
+   * cannot hold stock.
+   */
+  protected setService(on: boolean): void {
+    this.itemRow.update((r) => ({ ...r, service: on, openingStock: on ? null : r.openingStock }));
+  }
+
+  /** The stock tag on a written line; nothing to say when no opening was entered. */
+  protected stockLabel(item: StoreItem): string | null {
+    return item.openingStock
+      ? this.locale.t('setup.goods.inStock', { qty: this.locale.formatNumber(item.openingStock) })
+      : null;
   }
 
   protected balanceTone(balance: Balance | null | undefined): 'in' | 'out' | null {
