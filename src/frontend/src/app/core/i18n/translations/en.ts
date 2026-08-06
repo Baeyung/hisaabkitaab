@@ -102,6 +102,23 @@ export const en = {
   'stores.addLimit': 'Your plan is full. Upgrade to add another shop.',
   'plan.endingSoon': 'Your plan ends on {{date}}. Renew it to keep your books open.',
   'plan.ended': 'Your plan has ended. Renew it to open shops of your own again.',
+
+  // The plan strip in the sidebar. It answers "what am I on, and how much of it is left"
+  // in a glance, so every line is short enough to read without stopping.
+  'plan.badge.label': 'Plan',
+  'plan.tier.TRIAL': 'Trial',
+  'plan.tier.BASIC': 'Basic',
+  'plan.tier.PREMIUM': 'Premium',
+  'plan.tier.PREMIUM_PLUS': 'Premium Plus',
+  'plan.tier.ENTERPRISE': 'Enterprise',
+  'plan.badge.shops': '{{used}} of {{max}} shops',
+  // "Seats", not "users": it counts the owner too, so "3 of 3 users" reads as three other
+  // people to someone who has invited two.
+  'plan.badge.seats': '{{used}} of {{max}} seats',
+  'plan.badge.daysLeft': '{{days}} days left',
+  'plan.badge.oneDayLeft': '1 day left',
+  'plan.badge.lastDay': 'Last day',
+  'plan.badge.ended': 'Ended',
   'stores.suspendedBadge': 'Closed',
   'stores.suspendedNote': 'Your plan no longer covers every shop. Choose which stay open.',
   'stores.suspendedSettled':
