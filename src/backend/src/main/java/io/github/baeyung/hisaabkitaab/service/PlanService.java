@@ -74,8 +74,12 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class PlanService
 {
-    /** How long a trial runs once its clock starts. */
-    static final Period TRIAL_LENGTH = Period.ofDays(15);
+    /**
+     * How long a trial runs once its clock starts. A calendar month rather than a fixed number
+     * of days, because that is what the product is sold as on the public page — a trial started
+     * on the 31st ends on the 28th, and matching the wording beats matching an arithmetic.
+     */
+    static final Period TRIAL_LENGTH = Period.ofMonths(1);
 
     private final UserPlanRepository userPlanRepository;
 

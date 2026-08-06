@@ -241,8 +241,16 @@ export class StoreSetup {
       // replaceUrl: Back from the goods section must land on the picker, not on
       // the create form again — that path ends in a second, accidental shop.
       await this.router.navigate(['/s', created.id, 'setup'], { replaceUrl: true });
-    } catch {
-      this.errorKey.set('error.generic');
+    } catch (err) {
+      // The plan's shop ceiling is the one failure here the user can act on, and this is where
+      // they meet it: the picker greys its button out, but this route is reachable directly and
+      // deliberately still offers itself when the plan could not be read.
+      //
+      // ponytail: a 403 is worded as the ceiling, though it can also mean the plan has ended —
+      // reachable only for a user let in on someone else's shop, whom the picker's own notice
+      // has already told. Ask PlanService here if that stops being the only case.
+      const status = (err as { status?: number } | null)?.status;
+      this.errorKey.set(status === 403 ? 'stores.addLimit' : 'error.generic');
     } finally {
       this.busy.set(false);
     }

@@ -18,6 +18,25 @@ export interface PlanStatus {
 }
 
 /**
+ * How close to the end a plan has to be before the user is told. A week: long enough that a
+ * shopkeeper who only opens the app on market days still sees it before being locked out,
+ * short enough not to be background noise for the other three weeks.
+ */
+const WARN_WITHIN_DAYS = 7;
+
+/**
+ * Whole days from today to an ISO `yyyy-MM-dd`. Both ends are pinned to local midnight, so
+ * this counts calendar days the way the backend's `LocalDate` comparison does rather than
+ * 24-hour blocks — the answer must not depend on what time of day the user opened the app.
+ */
+export function daysUntil(iso: string): number {
+  const end = new Date(`${iso}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((end.getTime() - today.getTime()) / 86_400_000);
+}
+
+/**
  * The signed-in user's plan and what they have spent against it.
  *
  * Read by the screens that would rather grey a control out than let someone find a ceiling by
@@ -60,6 +79,35 @@ export class PlanService {
     const status = this._status();
     return status !== null && status.enforced && status.usage[used] >= status.limits[ceiling];
   }
+
+  /**
+   * Whether the plan has run out. Normally unreachable — an expired account cannot sign in —
+   * but a user whose own plan lapsed is still let in on a shop shared by a paid-up owner, and
+   * for them this is true while everything of their own is refused.
+   */
+  readonly expired = computed(() => {
+    const status = this._status();
+    return status !== null && status.enforced && status.expired;
+  });
+
+  /**
+   * Whether the plan runs out within the week, so a screen can say so before the lockout
+   * rather than after it. False while the trial's clock has not started, and false once it has
+   * already run out — that is {@link expired}, which is a different thing to say.
+   */
+  readonly endingSoon = computed(() => {
+    const status = this._status();
+    if (status === null || !status.enforced || status.expired || status.expiresAt === null) {
+      return false;
+    }
+    return daysUntil(status.expiresAt) <= WARN_WITHIN_DAYS;
+  });
+
+  /** The last day the plan covers, or null when nothing is being enforced or no clock runs. */
+  readonly expiresOn = computed(() => {
+    const status = this._status();
+    return status !== null && status.enforced ? status.expiresAt : null;
+  });
 
   /** Fetches the plan, caching it for the session. Call {@link refresh} after changing usage. */
   async load(): Promise<PlanStatus> {

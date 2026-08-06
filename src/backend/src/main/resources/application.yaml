@@ -74,9 +74,9 @@ app:
     # Plans are always recorded — every signup gets a trial — so switching this on later
     # applies to the accounts already there.
     #
-    # Off by default, and deliberately so: switching it on starts a 15-day clock on every
+    # Off by default, and deliberately so: switching it on starts a one-month clock on every
     # existing account, at the end of which they can no longer sign in. That is a decision to
     # take on a date you picked, not one to inherit from a default on the next deploy.
-    enabled: ${PLANS_ENABLED:false}
+    enabled: ${PLANS_ENABLED:true}
   admin:
     emails: ${ADMIN_EMAILS:t@t.com}

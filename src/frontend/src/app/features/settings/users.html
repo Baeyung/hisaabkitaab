@@ -6,12 +6,18 @@
     </div>
 
     @if (!loading() && !loadError() && (members()?.length ?? 0) > 0) {
-      <button type="button" class="btn btn--primary" (click)="startInvite()" [disabled]="inviting()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        {{ locale.t('settings.users.add') }}
-      </button>
+      <!-- At the plan's seat ceiling the control gives way to the reason, as the store picker
+           does: the server refuses either way, so offering it would only waste the typing. -->
+      @if (atUserLimit()) {
+        <p class="set__sub">{{ locale.t('members.error.planLimit') }}</p>
+      } @else {
+        <button type="button" class="btn btn--primary" (click)="startInvite()" [disabled]="inviting()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          {{ locale.t('settings.users.add') }}
+        </button>
+      }
     }
   </header>
 
@@ -29,7 +35,13 @@
     <div class="state">
       <h2 class="state__title">{{ locale.t('settings.users.empty.title') }}</h2>
       <p class="state__body">{{ locale.t('settings.users.empty.body') }}</p>
-      <button type="button" class="btn btn--primary" (click)="startInvite()">{{ locale.t('settings.users.empty.cta') }}</button>
+      <!-- A trial covers the owner alone, so this empty state is exactly where that is met:
+           the invitation has to be withdrawn here too, or the first click is a refusal. -->
+      @if (atUserLimit()) {
+        <p class="state__body">{{ locale.t('members.error.planLimit') }}</p>
+      } @else {
+        <button type="button" class="btn btn--primary" (click)="startInvite()">{{ locale.t('settings.users.empty.cta') }}</button>
+      }
     </div>
   } @else {
     <div class="tablewrap">

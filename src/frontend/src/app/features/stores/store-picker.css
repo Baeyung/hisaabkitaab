@@ -211,6 +211,12 @@
   border-radius: 11px;
 }
 
+/* The plan notice wears the alert's own styling — it is the same kind of news — and needs
+   only the gap the state block would otherwise have given it. */
+.pick__notice {
+  margin-bottom: 18px;
+}
+
 .skel {
   border-radius: 16px;
   background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);

@@ -100,6 +100,8 @@ export const en = {
   'stores.subtitle': 'Pick the shop whose books you want to open.',
   'stores.add': 'Add a shop',
   'stores.addLimit': 'Your plan is full. Upgrade to add another shop.',
+  'plan.endingSoon': 'Your plan ends on {{date}}. Renew it to keep your books open.',
+  'plan.ended': 'Your plan has ended. Renew it to open shops of your own again.',
   'stores.switch': 'Switch shop',
   'stores.loadError': "Couldn't load your shops. Please try again.",
   'stores.retry': 'Try again',

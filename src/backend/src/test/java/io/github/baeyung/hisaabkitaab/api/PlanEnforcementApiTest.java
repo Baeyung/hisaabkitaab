@@ -175,8 +175,8 @@ class PlanEnforcementApiTest extends ApiTest
 
     /**
      * The clock starts on the account's own next request, not when the plan row was written —
-     * so the trial someone gets is fifteen days of the product, not fifteen days of whenever
-     * the feature happened to be switched on.
+     * so the trial someone gets is a month of the product, not a month of whenever the feature
+     * happened to be switched on.
      */
     @Test
     void trialClockStartsOnTheAccountsNextRequest() throws Exception
@@ -187,7 +187,7 @@ class PlanEnforcementApiTest extends ApiTest
 
         mvc.perform(get("/api/stores").with(as("3500000008"))).andExpect(status().isOk());
 
-        assertEquals(LocalDate.now().plusDays(15),
+        assertEquals(LocalDate.now().plusMonths(1),
                 userPlanRepository.findById(user).orElseThrow().getExpiresAt());
     }
 

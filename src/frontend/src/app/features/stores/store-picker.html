@@ -5,6 +5,12 @@
 </app-outer-bar>
 
 <section class="pick">
+  <!-- Above the shops, because it is about the account rather than any one of them. Held back
+       until the list has loaded so it never lands next to a skeleton or a load error. -->
+  @if (!loading() && !loadError() && planNoticeKey(); as key) {
+    <p role="status" class="pick__alert pick__notice">{{ locale.t(key, { date: endsOn() }) }}</p>
+  }
+
   <header class="pick__head">
     <div>
       <h1 class="pick__title">{{ locale.t('stores.title') }}</h1>
