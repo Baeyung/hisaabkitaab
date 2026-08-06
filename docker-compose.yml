@@ -42,5 +42,14 @@ services:
     ports:
       - "80:80"
 
+  admin:
+    build: ./src/admin
+    container_name: hisaabkitaab-admin
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "81:80"
+
 volumes:
   postgres-data-hk:

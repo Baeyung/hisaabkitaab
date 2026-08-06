@@ -1,6 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { SwUpdate } from '@angular/service-worker';
+import { EMPTY } from 'rxjs';
 
 import { App } from './app';
 import { AdminApi } from './admin-api';
@@ -10,7 +12,13 @@ describe('App', () => {
     sessionStorage.clear();
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        // The real SwUpdate is only provided when a service worker is registered,
+        // which never happens under test.
+        { provide: SwUpdate, useValue: { versionUpdates: EMPTY } },
+      ],
     }).compileComponents();
   });
 

@@ -1,4 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
+import { SwUpdate } from '@angular/service-worker';
+import { filter } from 'rxjs';
 
 import { AdminApi } from './admin-api';
 import { Login } from './login';
@@ -16,6 +18,17 @@ import { Users } from './users';
 })
 export class App {
   protected readonly api = inject(AdminApi);
+
+  constructor() {
+    // ngsw keeps serving the cached build to already-open tabs until every one is
+    // closed, so a deployed fix can sit live but never reach a tab you left open.
+    // Reload as soon as the new version has finished downloading. Unprompted,
+    // same as the customer app: sign-in lives in sessionStorage and survives it,
+    // and this only fires on a deploy, so at worst an open plan edit is dropped.
+    inject(SwUpdate)
+      .versionUpdates.pipe(filter((e) => e.type === 'VERSION_READY'))
+      .subscribe(() => location.reload());
+  }
 
   /** Whoever is signed in, read back out of the basic-auth token the API holds. */
   protected readonly admin = computed(() => {
