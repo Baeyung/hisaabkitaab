@@ -10,4 +10,7 @@ import java.util.List;
 public interface StoreRepository extends JpaRepository<Store, String>
 {
     List<Store> findByOwnerId(String ownerId);
+
+    /** How many shops count against this account's {@code maxStores}. Shared ones do not. */
+    long countByOwnerId(String ownerId);
 }

@@ -14,8 +14,9 @@ import io.github.baeyung.hisaabkitaab.enums.PlanTier;
  *
  * @param expiresAt null while the trial's clock has not started — see {@code UserPlan}.
  * @param expired   whether {@link #expiresAt()} has passed. False for a plan whose clock has
- *                  not started: nothing has been used up yet. Reported for the admin screen,
- *                  not acted on — {@link #limits()} ignores expiry until enforcement lands.
+ *                  not started: nothing has been used up yet. An expired plan cannot sign in
+ *                  and cannot create anything — see {@code PlanService} — so this is the one
+ *                  field on the admin screen that says whether an account is shut out.
  */
 public record PlanResponse(
         PlanTier tier,
@@ -32,15 +33,7 @@ public record PlanResponse(
                 plan.getAssignedAt(),
                 plan.getExpiresAt(),
                 plan.getExpiresAt() != null && plan.getExpiresAt().isBefore(today),
-                new PlanLimits(
-                        orDefault(plan.getMaxStores(), plan.getTier().getMaxStores()),
-                        orDefault(plan.getMaxUsers(), plan.getTier().getMaxUsers()),
-                        orDefault(plan.getWhatsappQuota(), plan.getTier().getWhatsappQuota())),
-                new PlanLimits(plan.getMaxStores(), plan.getMaxUsers(), plan.getWhatsappQuota()));
-    }
-
-    private static int orDefault(Integer override, int tierDefault)
-    {
-        return override != null ? override : tierDefault;
+                PlanLimits.effectiveFor(plan),
+                PlanLimits.overridesOf(plan));
     }
 }

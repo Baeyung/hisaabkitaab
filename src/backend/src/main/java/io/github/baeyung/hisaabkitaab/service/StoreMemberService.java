@@ -41,6 +41,7 @@ public class StoreMemberService
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final StoreInviteEmailService inviteEmailService;
+    private final PlanService planService;
 
     @Transactional(readOnly = true)
     public List<MemberResponse> list(String storeId)
@@ -70,6 +71,11 @@ public class StoreMemberService
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "They already have access to this shop");
         }
+
+        // Asked once the invitee is known, because whether they cost a seat depends on whether
+        // this owner already has them somewhere. Reads the owner's id off the lazy proxy, which
+        // needs no query — the same trick Store.isOwnedBy relies on.
+        planService.requireRoomForMember(store.getOwner().getId(), user.getId());
 
         StoreAccess access = storeAccessRepository.save(StoreAccess.builder()
                 .store(store)

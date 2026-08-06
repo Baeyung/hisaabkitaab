@@ -70,8 +70,13 @@ app:
   verification:
     enabled: ${app.email.enabled}
   plans:
-    # Gates plan *enforcement* only — nothing reads it yet. Plans are always recorded (every
-    # signup gets a trial), so switching this on later applies to the accounts already there.
-    enabled: ${PLANS_ENABLED:true}
+    # Gates plan *enforcement* only, and is read in exactly one place (PlanService.enabled).
+    # Plans are always recorded — every signup gets a trial — so switching this on later
+    # applies to the accounts already there.
+    #
+    # Off by default, and deliberately so: switching it on starts a 15-day clock on every
+    # existing account, at the end of which they can no longer sign in. That is a decision to
+    # take on a date you picked, not one to inherit from a default on the next deploy.
+    enabled: ${PLANS_ENABLED:false}
   admin:
     emails: ${ADMIN_EMAILS:t@t.com}

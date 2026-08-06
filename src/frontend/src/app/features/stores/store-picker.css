@@ -54,6 +54,17 @@
   font-size: 13.5px;
   color: var(--kg-muted);
 }
+/* Stands where "Add a shop" would, so the answer is where the question was asked.
+   Sized to the button's own line height to keep the header from shifting. */
+.pick__limit {
+  flex-shrink: 0;
+  max-width: 260px;
+  padding: 8px 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--kg-muted);
+  text-align: end;
+}
 
 /* ── the shops ─────────────────────────────────────────────────────── */
 .pick__grid {
@@ -226,6 +237,11 @@
   /* Full-bleed on its own row, matching the card stack beneath it. */
   .pick__head .btn {
     width: 100%;
+  }
+  .pick__limit {
+    max-width: none;
+    padding: 0;
+    text-align: start;
   }
 }
 @media (prefers-reduced-motion: no-preference) {

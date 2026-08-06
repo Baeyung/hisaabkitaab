@@ -16,6 +16,8 @@ export const en = {
   'auth.login.forgot': 'Forgot password?',
   'auth.login.invalid': 'Invalid credentials',
   'auth.login.locked': 'Account locked after too many wrong passwords. Reset your password to unlock it.',
+  'auth.login.planExpired':
+    'Your plan has ended, so this account is closed for now. Renew it to get back in.',
   'auth.forgot.title': 'Forgot your password?',
   'auth.forgot.subtitle': "Enter your email and we'll send you a 6-digit code.",
   'auth.forgot.email': 'Email',
@@ -97,6 +99,7 @@ export const en = {
   'stores.title': 'Your shops',
   'stores.subtitle': 'Pick the shop whose books you want to open.',
   'stores.add': 'Add a shop',
+  'stores.addLimit': 'Your plan is full. Upgrade to add another shop.',
   'stores.switch': 'Switch shop',
   'stores.loadError': "Couldn't load your shops. Please try again.",
   'stores.retry': 'Try again',
@@ -585,6 +588,8 @@ export const en = {
   'members.pendingNote': "Hasn't joined yet",
   'members.error.duplicate': 'They already have access to this shop.',
   'members.error.self': "That's your own address — this shop is already yours.",
+  'members.error.planLimit':
+    'Your plan is full. Upgrade to give more people access, or remove someone first.',
 
   'stores.shared': 'Shared with me',
   'stores.sharedBy': 'Shared by',

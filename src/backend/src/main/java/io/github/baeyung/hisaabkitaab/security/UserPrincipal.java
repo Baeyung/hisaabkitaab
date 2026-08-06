@@ -27,13 +27,17 @@ public class UserPrincipal implements UserDetails
     /** Whether this account is named in {@code app.admin.emails}; see {@link #getAuthorities()}. */
     private final boolean admin;
 
-    public UserPrincipal(User user, boolean admin)
+    /** Whether a live plan covers this account; see {@link #isAccountNonExpired()}. */
+    private final boolean planActive;
+
+    public UserPrincipal(User user, boolean admin, boolean planActive)
     {
         this.id = user.getId();
         this.username = user.getEmail();
         this.password = user.getPasswordHash();
         this.user = user;
         this.admin = admin;
+        this.planActive = planActive;
     }
 
     /**
@@ -66,5 +70,22 @@ public class UserPrincipal implements UserDetails
     public boolean isAccountNonLocked()
     {
         return user.getFailedLoginAttempts() < MAX_FAILED_LOGIN_ATTEMPTS;
+    }
+
+    /**
+     * False once the account's plan has run out, which Spring turns into
+     * {@code AccountExpiredException} and {@link RestAuthenticationEntryPoint} reports as 401
+     * {@code PLAN_EXPIRED}. Decided by {@code PlanService.isLoginAllowed} — including whether a
+     * shop shared by a paid-up owner covers a user whose own plan lapsed — and merely carried
+     * here, because this is the hook Spring Security already asks.
+     *
+     * <p>Checked before the password, like {@link #isAccountNonLocked()}, so a lapsed account is
+     * told so even on a wrong password. That is the same trade already accepted for a locked
+     * account: the alternative is a user retrying a password that was never the problem.
+     */
+    @Override
+    public boolean isAccountNonExpired()
+    {
+        return planActive;
     }
 }

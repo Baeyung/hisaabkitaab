@@ -68,8 +68,12 @@ class AdminPlanApiTest extends ApiTest
     }
 
     /**
-     * A signup gets a trial, but not a running one: until something enforces plans, the clock
-     * would only burn down a trial nobody could renew or pay out of.
+     * A signup gets a trial, but not a running one — the clock starts on the account's own next
+     * request (see {@code PlanEnforcementApiTest}), and 3400000902 has not made one.
+     *
+     * <p>Which is the sharper point here: an admin reading someone's plan must not start it.
+     * Otherwise merely opening the user list would set fifteen days running on every account on
+     * the screen.
      */
     @Test
     void signupStartsATrialWithNoWhatsappAndNoClock() throws Exception

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.enums.UserStatus;
 import io.github.baeyung.hisaabkitaab.repository.UserRepository;
+import io.github.baeyung.hisaabkitaab.service.PlanService;
 
 /**
  * Resolves login credentials against either {@link User#getContactNumber()} or
@@ -28,19 +29,27 @@ import io.github.baeyung.hisaabkitaab.repository.UserRepository;
  * {@code app.admin.emails} <em>and</em> which is verified is marked as an admin. There is no
  * admin flag in the database on purpose — the list is deployment configuration, so revoking
  * access is a restart rather than a migration, and a compromised database cannot mint one.
+ *
+ * <p>And it is where an account's plan is checked, via {@code PlanService.isLoginAllowed}. Auth
+ * is stateless Basic, so this runs on every request rather than once at sign-in — which costs
+ * one keyed lookup per request, and in exchange is what makes a lapsed plan take effect on the
+ * account's very next call instead of whenever it next happens to log in.
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService
 {
     private final UserRepository userRepository;
 
+    private final PlanService planService;
+
     /** Lower-cased once at construction, since {@code users.email} casing is not guaranteed. */
     private final Set<String> adminEmails;
 
-    public CustomUserDetailsService(UserRepository userRepository,
+    public CustomUserDetailsService(UserRepository userRepository, PlanService planService,
             @Value("${app.admin.emails:}") List<String> adminEmails)
     {
         this.userRepository = userRepository;
+        this.planService = planService;
         this.adminEmails = adminEmails.stream()
                 .map(email -> email.trim().toLowerCase(Locale.ROOT))
                 .filter(email -> !email.isEmpty())
@@ -54,7 +63,9 @@ public class CustomUserDetailsService implements UserDetailsService
                 .filter(match -> match.getStatus() == UserStatus.ACTIVE)
                 .orElseThrow(() -> new UsernameNotFoundException("No user found for " + identifier));
 
-        return new UserPrincipal(user, isAdmin(user));
+        boolean admin = isAdmin(user);
+
+        return new UserPrincipal(user, admin, planService.isLoginAllowed(user, admin));
     }
 
     private boolean isAdmin(User user)

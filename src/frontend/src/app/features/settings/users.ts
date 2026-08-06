@@ -149,6 +149,11 @@ export class SettingsUsers {
     if (status === 409) {
       return 'members.error.duplicate';
     }
-    return status === 400 ? 'members.error.self' : 'error.generic';
+    if (status === 400) {
+      return 'members.error.self';
+    }
+    // Only the owner reaches this screen at all, so a 403 here is the plan's user ceiling
+    // rather than an access refusal — nothing else on this call can produce one.
+    return status === 403 ? 'members.error.planLimit' : 'error.generic';
   }
 }

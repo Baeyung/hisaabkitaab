@@ -18,6 +18,8 @@ export const ur: Record<TranslationKey, string> = {
   'auth.login.forgot': 'پاس ورڈ بھول گئے؟',
   'auth.login.invalid': 'غلط تفصیلات',
   'auth.login.locked': 'بار بار غلط پاس ورڈ کی وجہ سے اکاؤنٹ بند ہو گیا ہے۔ کھولنے کے لیے پاس ورڈ ری سیٹ کریں۔',
+  'auth.login.planExpired':
+    'آپ کا پلان ختم ہو چکا ہے، اس لیے فی الحال یہ اکاؤنٹ بند ہے۔ دوبارہ کھولنے کے لیے پلان تجدید کریں۔',
   'auth.forgot.title': 'پاس ورڈ بھول گئے؟',
   'auth.forgot.subtitle': 'اپنا ای میل درج کریں، ہم آپ کو 6 ہندسوں کا کوڈ بھیج دیں گے۔',
   'auth.forgot.email': 'ای میل',
@@ -102,6 +104,7 @@ export const ur: Record<TranslationKey, string> = {
   'stores.title': 'آپ کی دکانیں',
   'stores.subtitle': 'وہ دکان چنیں جس کا کھاتہ کھولنا ہے۔',
   'stores.add': 'نئی دکان شامل کریں',
+  'stores.addLimit': 'آپ کے پلان کی گنجائش پوری ہو چکی ہے۔ مزید دکان کے لیے پلان بڑھائیں۔',
   'stores.switch': 'دکان بدلیں',
   'stores.loadError': 'آپ کی دکانیں لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
   'stores.retry': 'دوبارہ کوشش کریں',
@@ -587,6 +590,8 @@ export const ur: Record<TranslationKey, string> = {
   'members.pendingNote': 'ابھی شامل نہیں ہوئے',
   'members.error.duplicate': 'انہیں پہلے سے اس دکان تک رسائی حاصل ہے۔',
   'members.error.self': 'یہ آپ کا اپنا پتہ ہے — یہ دکان پہلے ہی آپ کی ہے۔',
+  'members.error.planLimit':
+    'آپ کے پلان کی گنجائش پوری ہو چکی ہے۔ مزید افراد کو رسائی دینے کے لیے پلان بڑھائیں یا کسی کو ہٹا دیں۔',
 
   'stores.shared': 'میرے ساتھ شیئر کی گئی',
   'stores.sharedBy': 'شیئر کرنے والے',

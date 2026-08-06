@@ -5,6 +5,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { AuthService } from '../../core/auth/auth.service';
 import { StoreService } from '../../core/store/store.service';
+import { PlanService } from '../../core/plan/plan.service';
 import { Store } from '../../core/store/store.models';
 import { OuterBar } from '../../shared/outer-bar/outer-bar';
 
@@ -32,8 +33,17 @@ export class StorePicker {
   private readonly stores = inject(StoreService);
   private readonly router = inject(Router);
 
+  protected readonly plan = inject(PlanService);
+
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
+
+  /**
+   * Whether "Add a shop" would be refused. The plan is fetched alongside the list rather than
+   * guessed from `owned().length`: the ceiling may be an override set for this account alone,
+   * and only the server knows it.
+   */
+  protected readonly atStoreLimit = this.plan.atStoreLimit;
 
   protected readonly list = signal<Store[]>([]);
 
@@ -53,7 +63,12 @@ export class StorePicker {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      const stores = await this.stores.list();
+      // The plan only decides whether one button is offered, so a failure to read it must not
+      // fail the screen — fall back to offering it and letting the server answer.
+      const [stores] = await Promise.all([
+        this.stores.list(),
+        this.plan.refresh().catch(() => null),
+      ]);
       this.list.set(stores);
       if (stores.length === 0) {
         // Nothing to pick — the first shop is opened in the guided setup. Return
