@@ -49,7 +49,7 @@ export interface Overage {
  * shopkeeper who only opens the app on market days still sees it before being locked out,
  * short enough not to be background noise for the other three weeks.
  */
-const WARN_WITHIN_DAYS = 7;
+export const WARN_WITHIN_DAYS = 7;
 
 /**
  * Whole days from today to an ISO `yyyy-MM-dd`. Both ends are pinned to local midnight, so

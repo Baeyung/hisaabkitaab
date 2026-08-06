@@ -262,11 +262,6 @@
   color: var(--kg-chrome-dim);
 }
 
-.plan-countdown {
-  font: 600 11.5px system-ui;
-  color: var(--kg-amber);
-}
-
 .plan-meter {
   height: 3px;
   border-radius: 2px;

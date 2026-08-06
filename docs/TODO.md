@@ -16,4 +16,6 @@
 - [ ] monthly reports, on email + whatsapp
 - [ ] processed goods feature
 - [ ] billing/plan related stuff
+- [ ] admin page behaving weirdly and setting expiry after an year
 - [ ] numbers with country code
+- [ ] Once dismissed never shows again

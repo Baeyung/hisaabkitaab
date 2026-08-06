@@ -98,9 +98,6 @@
             <span class="plan-label">{{ locale.t('plan.badge.label') }}</span>
             <span class="plan-tier">{{ locale.t(plan.tier) }}</span>
           </div>
-          @if (plan.countdown; as countdown) {
-            <span class="plan-countdown">{{ locale.t(countdown.key, countdown.params) }}</span>
-          }
           @for (gauge of plan.gauges; track gauge.key) {
             <div class="plan-gauge">
               <span class="plan-usage">{{ locale.t(gauge.key, gauge.params) }}</span>
@@ -126,6 +123,9 @@
 
     <!-- Content -->
     <div class="content">
+      <!-- Outside <main>, which is the only thing that scrolls — the plan running out is the
+           one notice that must not scroll away. -->
+      <app-plan-notice />
       <main>
         <router-outlet />
       </main>

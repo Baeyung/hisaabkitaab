@@ -10,7 +10,8 @@ import { InstallButton } from '../../shared/install-button/install-button';
 import { PrintDetailsDialog } from '../../shared/print-details-dialog';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
-import { PlanService, daysUntil } from '../../core/plan/plan.service';
+import { PlanService } from '../../core/plan/plan.service';
+import { PlanNotice } from '../../shared/plan-notice/plan-notice';
 import { navFor } from './nav';
 
 /**
@@ -29,7 +30,7 @@ function gauge(key: TranslationKey, used: number, max: number) {
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, BrandMark, LanguageToggle, ThemeToggle, InstallButton, PrintDetailsDialog],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, BrandMark, LanguageToggle, ThemeToggle, InstallButton, PrintDetailsDialog, PlanNotice],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
   host: { '(document:keydown.escape)': 'closeOverlay()' },
@@ -57,7 +58,6 @@ export class Shell {
     if (status === null || !status.enforced) return null;
     return {
       tier: `plan.tier.${status.tier}` as TranslationKey,
-      countdown: this.countdown(),
       // Shops first: it is the ceiling a shopkeeper meets more often, and the one that
       // sends them to the plan-limits screen.
       gauges: [
@@ -66,20 +66,6 @@ export class Shell {
       ],
     };
   });
-
-  /**
-   * What the strip says about time left, or null while the end is far enough off not to nag.
-   * The thresholds are the plan service's, so this and the picker's banner never disagree.
-   */
-  private countdown(): { key: TranslationKey; params?: Record<string, string> } | null {
-    if (this.plans.expired()) return { key: 'plan.badge.ended' };
-    const iso = this.plans.expiresOn();
-    if (iso === null || !this.plans.endingSoon()) return null;
-    const days = daysUntil(iso);
-    if (days <= 0) return { key: 'plan.badge.lastDay' };
-    if (days === 1) return { key: 'plan.badge.oneDayLeft' };
-    return { key: 'plan.badge.daysLeft', params: { days: String(days) } };
-  }
 
   // open by default on wide screens, collapsed below the 760px breakpoint
   protected readonly open = signal(this.matches('(min-width: 760px)'));

@@ -102,6 +102,8 @@ export const en = {
   'stores.addLimit': 'Your plan is full. Upgrade to add another shop.',
   'plan.endingSoon': 'Your plan ends on {{date}}. Renew it to keep your books open.',
   'plan.ended': 'Your plan has ended. Renew it to open shops of your own again.',
+  // Named for how long it lasts: the strip is back next time the app is opened.
+  'plan.dismiss': 'Hide until next time',
 
   // The plan strip in the sidebar. It answers "what am I on, and how much of it is left"
   // in a glance, so every line is short enough to read without stopping.

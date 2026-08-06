@@ -8,6 +8,7 @@ import { StoreService } from '../../core/store/store.service';
 import { PlanService } from '../../core/plan/plan.service';
 import { Store } from '../../core/store/store.models';
 import { OuterBar } from '../../shared/outer-bar/outer-bar';
+import { PlanNotice } from '../../shared/plan-notice/plan-notice';
 
 /**
  * The first screen after signing in: every shop the user owns, on one page.
@@ -23,7 +24,7 @@ import { OuterBar } from '../../shared/outer-bar/outer-bar';
  */
 @Component({
   selector: 'app-store-picker',
-  imports: [RouterLink, OuterBar, NgTemplateOutlet],
+  imports: [RouterLink, OuterBar, NgTemplateOutlet, PlanNotice],
   templateUrl: './store-picker.html',
   styleUrl: './store-picker.css',
 })
@@ -44,26 +45,6 @@ export class StorePicker {
    * and only the server knows it.
    */
   protected readonly atStoreLimit = this.plan.atStoreLimit;
-
-  /**
-   * The plan warning, shown here because this is the one screen every session passes through —
-   * it is the landing screen after signing in and the only way between shops, so a user who
-   * never opens settings still meets the notice before the lockout rather than after it.
-   */
-  protected readonly planNoticeKey = computed<TranslationKey | null>(() =>
-    this.plan.expired() ? 'plan.ended' : this.plan.endingSoon() ? 'plan.endingSoon' : null,
-  );
-
-  /** The plan's last day, worded as the app words dates elsewhere (cashbook, dashboard). */
-  protected readonly endsOn = computed(() => {
-    const iso = this.plan.expiresOn();
-    return iso
-      ? new Date(`${iso}T00:00:00`).toLocaleDateString(this.locale.locale(), {
-          month: 'short',
-          day: 'numeric',
-        })
-      : '';
-  });
 
   protected readonly list = signal<Store[]>([]);
 

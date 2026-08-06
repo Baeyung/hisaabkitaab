@@ -107,6 +107,7 @@ export const ur: Record<TranslationKey, string> = {
   'stores.addLimit': 'آپ کے پلان کی گنجائش پوری ہو چکی ہے۔ مزید دکان کے لیے پلان بڑھائیں۔',
   'plan.endingSoon': 'آپ کا پلان {{date}} کو ختم ہو رہا ہے۔ کھاتے کھلے رکھنے کے لیے پلان تجدید کریں۔',
   'plan.ended': 'آپ کا پلان ختم ہو چکا ہے۔ اپنی نئی دکان کھولنے کے لیے پلان تجدید کریں۔',
+  'plan.dismiss': 'اگلی بار تک چھپائیں',
 
   'plan.badge.label': 'پلان',
   'plan.tier.TRIAL': 'آزمائشی',

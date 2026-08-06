@@ -4,13 +4,11 @@
   <button type="button" class="topbar__logout" (click)="logout()">{{ locale.t('home.logout') }}</button>
 </app-outer-bar>
 
-<section class="pick">
-  <!-- Above the shops, because it is about the account rather than any one of them. Held back
-       until the list has loaded so it never lands next to a skeleton or a load error. -->
-  @if (!loading() && !loadError() && planNoticeKey(); as key) {
-    <p role="status" class="pick__alert pick__notice">{{ locale.t(key, { date: endsOn() }) }}</p>
-  }
+<!-- The same strip the shell carries on every in-shop screen, in the same place relative to
+     the bar — the notice must not change shape depending on which screen you met it on. -->
+<app-plan-notice />
 
+<section class="pick">
   <!-- Shown once a shop of theirs is closed. The picker is the one screen every session
        passes through, so this is where an owner finds the way back to re-opening one —
        nothing else on the route would ever mention it. -->
