@@ -275,6 +275,21 @@ class PlanEnforcementApiTest extends ApiTest
         addParty("3500000010", ids[2]).andExpect(status().isForbidden());
     }
 
+    /**
+     * Once settled, the choice cannot be made again — otherwise a one-shop plan buys every
+     * shop, one at a time: close the kept one, open the next, carry on working.
+     */
+    @Test
+    void shopsCannotBeSwappedOnceTheOverageIsSettled() throws Exception
+    {
+        String[] ids = twoShopsOnPremium("3500000016");
+        downgradeToTrial(ids[0]);
+        keepOnly("3500000016", ids[1]).andExpect(status().isOk());
+
+        keepOnly("3500000016", ids[2]).andExpect(status().isConflict());
+        addParty("3500000016", ids[2]).andExpect(status().isForbidden());
+    }
+
     /** Keeping more than the plan covers is refused, so the overage cannot be resolved by lying. */
     @Test
     void keepingMoreShopsThanThePlanCoversIsRefused() throws Exception

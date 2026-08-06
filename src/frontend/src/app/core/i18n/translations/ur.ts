@@ -109,6 +109,8 @@ export const ur: Record<TranslationKey, string> = {
   'plan.ended': 'آپ کا پلان ختم ہو چکا ہے۔ اپنی نئی دکان کھولنے کے لیے پلان تجدید کریں۔',
   'stores.suspendedBadge': 'بند',
   'stores.suspendedNote': 'آپ کا پلان اب سب دکانوں کو نہیں سنبھالتا۔ منتخب کریں کہ کون سی کھلی رہیں۔',
+  'stores.suspendedSettled':
+    'آپ کی کچھ دکانیں بند ہیں — ان کا کوئی حساب ضائع نہیں ہوا۔ دوبارہ کھولنے کے لیے اپنا پلان بڑھائیں۔',
   'stores.suspendedCta': 'دکانیں منتخب کریں',
 
   'planLimits.title': 'آپ کا پلان اب سب کچھ نہیں سنبھالتا',

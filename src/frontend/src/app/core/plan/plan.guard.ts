@@ -40,3 +40,26 @@ export const planLimitGuard: CanActivateFn = async (route) => {
 
   return plan.overLimit() ? router.createUrlTree(['/plan/limits']) : true;
 };
+
+/**
+ * The reverse: lets an account into the "what do I keep" screen only while it is actually over
+ * its plan, and sends everyone else back to the picker.
+ *
+ * Without this the screen is a way around the ceiling rather than a way out of an overage —
+ * a settled owner could close the one shop their plan covers, open another in its place, and
+ * keep working through all of them one at a time on a single-shop plan. Re-opening is what
+ * paying for a bigger plan does (`PlanService.reopenWhereRoom`), not something to be had here.
+ * The server refuses the same call; this is only so the user never reaches a dead screen.
+ */
+export const overageGuard: CanActivateFn = async () => {
+  const plan = inject(PlanService);
+  const router = inject(Router);
+
+  try {
+    await plan.load();
+  } catch {
+    return true;
+  }
+
+  return plan.overLimit() ? true : router.createUrlTree(['/stores']);
+};

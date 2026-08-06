@@ -14,10 +14,14 @@
   <!-- Shown once a shop of theirs is closed. The picker is the one screen every session
        passes through, so this is where an owner finds the way back to re-opening one —
        nothing else on the route would ever mention it. -->
-  @if (!loading() && !loadError() && hasSuspended()) {
+  @if (!loading() && !loadError() && suspendedNoteKey(); as key) {
     <p role="status" class="pick__alert pick__notice pick__notice--closed">
-      <span>{{ locale.t('stores.suspendedNote') }}</span>
-      <a class="btn btn--ghost btn--sm" routerLink="/plan/limits">{{ locale.t('stores.suspendedCta') }}</a>
+      <span>{{ locale.t(key) }}</span>
+      <!-- Only while the choice is still open: the screen turns away a settled account, so
+           offering it would be offering a redirect back to here. -->
+      @if (plan.overLimit()) {
+        <a class="btn btn--ghost btn--sm" routerLink="/plan/limits">{{ locale.t('stores.suspendedCta') }}</a>
+      }
     </p>
   }
 

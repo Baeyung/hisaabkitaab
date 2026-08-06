@@ -82,6 +82,19 @@ export class StorePicker {
    */
   protected readonly hasSuspended = computed(() => this.owned().some((s) => s.suspended));
 
+  /**
+   * What the closed-shop notice says. Two different things: an account still over its plan is
+   * being *asked* to choose, one that has already chosen is only being told where its shops
+   * went. Keying both off `hasSuspended` alone left the demand standing after it was met.
+   */
+  protected readonly suspendedNoteKey = computed<TranslationKey | null>(() =>
+    !this.hasSuspended()
+      ? null
+      : this.plan.overLimit()
+        ? 'stores.suspendedNote'
+        : 'stores.suspendedSettled',
+  );
+
   constructor() {
     this.load();
   }

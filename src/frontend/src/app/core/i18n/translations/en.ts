@@ -104,6 +104,8 @@ export const en = {
   'plan.ended': 'Your plan has ended. Renew it to open shops of your own again.',
   'stores.suspendedBadge': 'Closed',
   'stores.suspendedNote': 'Your plan no longer covers every shop. Choose which stay open.',
+  'stores.suspendedSettled':
+    'Some of your shops are closed — nothing in them has been lost. Upgrade your plan to open them again.',
   'stores.suspendedCta': 'Choose shops',
 
   // The plan-limits screen. Worded to say what happened, what is safe, and what to do —

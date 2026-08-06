@@ -301,8 +301,14 @@ public class PlanService
 
     /**
      * Settles which of the owner's shops stay open; every other shop of theirs is closed.
-     * The whole set is stated in one call, so this is also how a shop is re-opened once a
-     * bigger plan has made room for it.
+     * The whole set is stated in one call, and only while the account is actually over its
+     * plan.
+     *
+     * <p>That last condition is the whole reason this is not simply an "open and close my
+     * shops" endpoint: once settled, an owner on a one-shop plan could close the shop they
+     * kept, open another in its place, and work through all of them one at a time. Re-opening
+     * a closed shop is what paying for a bigger plan does — see {@link #reopenWhereRoom},
+     * which runs on assignment and gives the shops back without anyone visiting a screen.
      *
      * <p>Does not touch people. Removing a member is what it always was — the owner does it
      * on the shop's own user list — and a seat freed that way is picked up by the next count
@@ -311,10 +317,17 @@ public class PlanService
      * @return the plan as it now stands, so the caller sees straight away whether that was
      *         enough or the seat ceiling is still over
      * @throws ResponseStatusException 400 if the list names a shop that is not this owner's,
-     *         or keeps more shops than the plan covers
+     *         or keeps more shops than the plan covers; 409 if the account is not over its
+     *         plan and so has nothing to settle
      */
     public PlanStatusResponse resolveOverage(String ownerId, List<String> keepStoreIds)
     {
+        if (enabled && !isOverLimit(ownerId))
+        {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Your shops already fit your plan. Upgrade it to open a closed shop again.");
+        }
+
         List<Store> owned = storeRepository.findByOwnerId(ownerId);
         Set<String> keep = Set.copyOf(keepStoreIds);
 
