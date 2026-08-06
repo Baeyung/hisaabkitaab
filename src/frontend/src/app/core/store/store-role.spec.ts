@@ -13,7 +13,7 @@ import { environment } from '../../../environments/environment';
 const route = {} as ActivatedRouteSnapshot;
 const state = {} as RouterStateSnapshot;
 
-const storeWith = (role: StoreRole): Store => ({
+const storeWith = (role: StoreRole, suspended = false): Store => ({
   id: 'shop-1',
   name: 'Rana Cloth',
   address: '',
@@ -22,6 +22,7 @@ const storeWith = (role: StoreRole): Store => ({
   watermarkUri: '',
   role,
   ownerName: 'Rana',
+  suspended,
 });
 
 /**
@@ -46,12 +47,12 @@ describe('store roles', () => {
   }
 
   /** Loads one store at `role` over the wire and enters it, as storeGuard would. */
-  async function enter(role: StoreRole) {
+  async function enter(role: StoreRole, suspended = false) {
     const stores = configure();
     const loaded = stores.list();
     TestBed.inject(HttpTestingController)
       .expectOne(`${environment.apiUrl}/stores`)
-      .flush([storeWith(role)]);
+      .flush([storeWith(role, suspended)]);
     await loaded;
     stores.select('shop-1');
     return stores;
@@ -63,6 +64,26 @@ describe('store roles', () => {
     expect((await enter('OWNER')).canEdit()).toBe(true);
     expect((await enter('EDITOR')).isOwner()).toBe(false);
     expect((await enter('OWNER')).isOwner()).toBe(true);
+  });
+
+  /**
+   * A shop the plan has closed is read-only for everyone in it, its owner included — but it
+   * is still theirs. `isOwner` staying true is what leaves them the settings screens they
+   * need to delete it or free a seat; `canEdit` going false is what every write route is
+   * already behind, so they all refuse without knowing a plan exists.
+   */
+  it('closes a suspended shop to writing without taking it away from its owner', async () => {
+    const owner = await enter('OWNER', true);
+    expect(owner.canEdit()).toBe(false);
+    expect(owner.isOwner()).toBe(true);
+
+    expect((await enter('EDITOR', true)).canEdit()).toBe(false);
+  });
+
+  it('sends an editor typing an entry URL into a closed shop back to the dashboard', async () => {
+    await enter('EDITOR', true);
+    const result = TestBed.runInInjectionContext(() => editorGuard(route, state));
+    expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/s/shop-1/dashboard');
   });
 
   it('has no role outside a store route', () => {

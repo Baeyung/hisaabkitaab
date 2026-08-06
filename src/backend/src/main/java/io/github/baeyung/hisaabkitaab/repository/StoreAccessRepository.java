@@ -25,20 +25,38 @@ public interface StoreAccessRepository extends JpaRepository<StoreAccess, String
     void deleteByStoreId(String storeId);
 
     /**
-     * Everyone this owner has shared any of their shops with, counted once however many shops
-     * they are in. The owner themselves is not here (they hold no {@code StoreAccess} row), so
-     * a caller comparing against {@code maxUsers} has to add them back — that limit counts the
-     * owner too.
+     * Everyone this owner has shared an <em>open</em> shop with, counted once however many
+     * shops they are in. The owner themselves is not here (they hold no {@code StoreAccess}
+     * row), so a caller comparing against {@code maxUsers} has to add them back — that limit
+     * counts the owner too.
+     *
+     * <p>People reachable only through a suspended shop are left out, for the same reason the
+     * shop itself is out of {@code maxStores}: a closed shop is read-only and grants nothing
+     * to spend a seat on. It also means an owner over both ceilings can close one shop and be
+     * under both, rather than being sent to remove people they were about to lose anyway.
      */
-    @Query("select count(distinct access.user.id) from StoreAccess access where access.store.owner.id = :ownerId")
+    @Query("""
+            select count(distinct access.user.id) from StoreAccess access
+             where access.store.owner.id = :ownerId
+               and access.store.suspendedAt is null
+            """)
     long countDistinctMembersOfStoresOwnedBy(@Param("ownerId") String ownerId);
 
+    /** Every grant across every shop this owner has, suspended ones included. */
+    List<StoreAccess> findByStoreOwnerId(String ownerId);
+
     /**
-     * Whether this user already works somewhere in this owner's account. Someone who does costs
-     * no new seat when they are added to a second shop — they are one of the distinct people
-     * {@code maxUsers} counts, and they were counted already.
+     * Whether this user already works in one of this owner's <em>open</em> shops. Someone who
+     * does costs no new seat when they are added to a second shop — they are one of the
+     * distinct people {@code maxUsers} counts, and they were counted already.
+     *
+     * <p>Restricted to open shops to stay in step with {@link
+     * #countDistinctMembersOfStoresOwnedBy}, which does not count the rest: someone reachable
+     * only through a suspended shop holds no seat, so giving them an open shop has to buy one.
+     * Left unfiltered, the two would disagree and an owner could walk past {@code maxUsers} by
+     * inviting into a closed shop first.
      */
-    boolean existsByStoreOwnerIdAndUserId(String ownerId, String userId);
+    boolean existsByStoreOwnerIdAndUserIdAndStoreSuspendedAtIsNull(String ownerId, String userId);
 
     /**
      * Whether any shop shared with this user belongs to an owner whose plan is still good. That

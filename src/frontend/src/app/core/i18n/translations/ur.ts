@@ -107,6 +107,41 @@ export const ur: Record<TranslationKey, string> = {
   'stores.addLimit': 'آپ کے پلان کی گنجائش پوری ہو چکی ہے۔ مزید دکان کے لیے پلان بڑھائیں۔',
   'plan.endingSoon': 'آپ کا پلان {{date}} کو ختم ہو رہا ہے۔ کھاتے کھلے رکھنے کے لیے پلان تجدید کریں۔',
   'plan.ended': 'آپ کا پلان ختم ہو چکا ہے۔ اپنی نئی دکان کھولنے کے لیے پلان تجدید کریں۔',
+  'stores.suspendedBadge': 'بند',
+  'stores.suspendedNote': 'آپ کا پلان اب سب دکانوں کو نہیں سنبھالتا۔ منتخب کریں کہ کون سی کھلی رہیں۔',
+  'stores.suspendedCta': 'دکانیں منتخب کریں',
+
+  'planLimits.title': 'آپ کا پلان اب سب کچھ نہیں سنبھالتا',
+  'planLimits.lede':
+    'آپ کا پلان تبدیل ہو گیا ہے اور اب یہ آپ کی کھلی دکانوں سے کم دکانیں سنبھالتا ہے۔ منتخب کریں کہ آپ کن دکانوں میں کام جاری رکھنا چاہتے ہیں۔',
+  'planLimits.safe':
+    'کچھ بھی حذف نہیں ہوتا۔ بند دکان کے تمام اندراجات محفوظ رہتے ہیں — آپ اسے کھول کر دیکھ اور پرنٹ کر سکتے ہیں، اور پلان بڑھانے پر یہ خود واپس کھل جاتی ہے۔',
+  'planLimits.loadError': 'آپ کی دکانیں اور ٹیم لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
+
+  'planLimits.shops.title': 'دکانیں',
+  'planLimits.shops.count': '{{max}} میں سے {{kept}} کھلی',
+  'planLimits.shops.kept': 'کھلی رہے گی',
+  'planLimits.shops.closed': 'بند ہو جائے گی',
+  'planLimits.shops.delete': 'یہ دکان حذف کریں',
+
+  'planLimits.people.title': 'آپ کی ٹیم',
+  'planLimits.people.count': '{{max}} میں سے {{used}} نشستیں استعمال میں',
+  'planLimits.people.note':
+    'آپ کا پلان آپ کے افراد سے کم افراد بھی سنبھالتا ہے۔ کسی کو ہٹانے سے آپ کی دکانوں تک اُن کی رسائی ختم ہو جاتی ہے — اُن کا اپنا اکاؤنٹ محفوظ رہتا ہے، اور آپ اُنہیں کبھی بھی دوبارہ مدعو کر سکتے ہیں۔',
+  'planLimits.people.remove': 'ہٹائیں',
+  'planLimits.people.confirm': 'آپ کی تمام دکانوں تک اِن کی رسائی ختم کر دی جائے؟',
+
+  'planLimits.bar.shops': '{{over}} دکانیں زیادہ کھلی ہیں',
+  'planLimits.bar.people': 'آپ کے پلان کے لیے افراد زیادہ ہیں',
+  'planLimits.bar.ready': 'یہ آپ کے پلان کے مطابق ہے۔',
+  'planLimits.bar.save': 'محفوظ کریں اور آگے بڑھیں',
+
+  'planLimits.delete.title': 'یہ دکان حذف کریں؟',
+  'planLimits.delete.body':
+    'اس سے ”{{name}}“ اور اس میں درج ہر چیز مٹ جائے گی — اندراجات، کھاتے، اشیاء۔ یہ واپس نہیں ہو سکتا۔ حذف کیے بغیر رکھنے کے لیے اسے بند کر دیں۔',
+  'planLimits.delete.prompt': 'تصدیق کے لیے دکان کا نام لکھیں',
+  'planLimits.delete.confirm': 'ہمیشہ کے لیے حذف کریں',
+
   'stores.switch': 'دکان بدلیں',
   'stores.loadError': 'آپ کی دکانیں لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
   'stores.retry': 'دوبارہ کوشش کریں',

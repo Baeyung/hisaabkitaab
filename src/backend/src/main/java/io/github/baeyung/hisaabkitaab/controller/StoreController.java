@@ -81,8 +81,13 @@ public class StoreController
         return ResponseEntity.ok(storeService.update(store.getId(), changes));
     }
 
+    /**
+     * Allowed on a closed shop: an owner whose plan stopped covering a shop may still want it
+     * gone rather than dormant, and refusing that would leave the shop un-deletable for as
+     * long as they stay on the smaller plan.
+     */
     @DeleteMapping("/{storeId}")
-    public ResponseEntity<Void> delete(@CurrentStore Store store)
+    public ResponseEntity<Void> delete(@CurrentStore(allowLocked = true) Store store)
     {
         storeService.delete(store.getId());
         return ResponseEntity.noContent().build();

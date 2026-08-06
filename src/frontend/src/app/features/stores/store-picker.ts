@@ -75,6 +75,13 @@ export class StorePicker {
   protected readonly owned = computed(() => this.list().filter((s) => s.role === 'OWNER'));
   protected readonly shared = computed(() => this.list().filter((s) => s.role !== 'OWNER'));
 
+  /**
+   * Whether the plan has closed any shop of theirs. Read off the list rather than off the
+   * plan's counts: a closed shop is already outside those, so the plan looks perfectly
+   * healthy and only the shops themselves still say what happened.
+   */
+  protected readonly hasSuspended = computed(() => this.owned().some((s) => s.suspended));
+
   constructor() {
     this.load();
   }

@@ -17,6 +17,33 @@ export interface PlanStatus {
   usage: { stores: number; users: number };
 }
 
+/** One of the owner's shops, as something to keep open or close. Mirrors `OverageStore`. */
+export interface OverageStore {
+  id: string;
+  name: string;
+  logoUri: string;
+  suspended: boolean;
+}
+
+/**
+ * One person with access to any of the owner's shops, listed once however many they are in —
+ * a seat costs per person, not per grant. Mirrors `OveragePerson`.
+ */
+export interface OveragePerson {
+  userId: string;
+  /** Null while their invite is outstanding. */
+  name: string | null;
+  email: string;
+  storeIds: string[];
+}
+
+/** Everything the "choose what to keep" screen needs, in one response. */
+export interface Overage {
+  plan: PlanStatus;
+  stores: OverageStore[];
+  people: OveragePerson[];
+}
+
 /**
  * How close to the end a plan has to be before the user is told. A week: long enough that a
  * shopkeeper who only opens the app on market days still sees it before being locked out,
@@ -109,10 +136,51 @@ export class PlanService {
     return status !== null && status.enforced ? status.expiresAt : null;
   });
 
+  /**
+   * How many shops are open beyond what the plan covers, and how many seats are spent beyond
+   * it. Zero unless an admin has moved the account onto a smaller plan than it was using —
+   * nothing a user can do to their own account gets here, because every path that adds is
+   * already refused at the ceiling.
+   */
+  readonly excessStores = computed(() => this.excessOf('stores', 'maxStores'));
+  readonly excessUsers = computed(() => this.excessOf('users', 'maxUsers'));
+
+  private excessOf(used: 'stores' | 'users', ceiling: 'maxStores' | 'maxUsers'): number {
+    const status = this._status();
+    if (status === null || !status.enforced) {
+      return 0;
+    }
+    return Math.max(0, status.usage[used] - status.limits[ceiling]);
+  }
+
+  /**
+   * Whether the account is using more than it is entitled to, and must say what it is giving
+   * up before working again. Distinct from {@link atStoreLimit}, which is merely being *at* a
+   * ceiling — that stops the next shop, this stops everything.
+   */
+  readonly overLimit = computed(() => this.excessStores() > 0 || this.excessUsers() > 0);
+
   /** Fetches the plan, caching it for the session. Call {@link refresh} after changing usage. */
   async load(): Promise<PlanStatus> {
     const cached = this._status();
     return cached ?? this.refresh();
+  }
+
+  /** The shops and people behind the overage, for the screen where the owner picks. */
+  overage(): Promise<Overage> {
+    return firstValueFrom(this.http.get<Overage>(`${environment.apiUrl}/plan/overage`));
+  }
+
+  /**
+   * Settles which shops stay open; the owner's others are closed. The whole set is sent, so
+   * this also re-opens a shop closed earlier once a bigger plan has left room for it.
+   */
+  async resolveOverage(keepStoreIds: string[]): Promise<PlanStatus> {
+    const status = await firstValueFrom(
+      this.http.put<PlanStatus>(`${environment.apiUrl}/plan/overage`, { keepStoreIds }),
+    );
+    this._status.set(status);
+    return status;
   }
 
   async refresh(): Promise<PlanStatus> {

@@ -11,6 +11,16 @@
     <p role="status" class="pick__alert pick__notice">{{ locale.t(key, { date: endsOn() }) }}</p>
   }
 
+  <!-- Shown once a shop of theirs is closed. The picker is the one screen every session
+       passes through, so this is where an owner finds the way back to re-opening one —
+       nothing else on the route would ever mention it. -->
+  @if (!loading() && !loadError() && hasSuspended()) {
+    <p role="status" class="pick__alert pick__notice pick__notice--closed">
+      <span>{{ locale.t('stores.suspendedNote') }}</span>
+      <a class="btn btn--ghost btn--sm" routerLink="/plan/limits">{{ locale.t('stores.suspendedCta') }}</a>
+    </p>
+  }
+
   <header class="pick__head">
     <div>
       <h1 class="pick__title">{{ locale.t('stores.title') }}</h1>
@@ -74,7 +84,14 @@
         }
       </span>
       <span class="card__meta">
-        <span class="card__name">{{ store.name }}</span>
+        <span class="card__name">
+          {{ store.name }}
+          <!-- On the name, not the card: a closed shop is still openable, and a badge
+               anywhere else would read as "you can't go in here". -->
+          @if (store.suspended) {
+            <span class="card__closed">{{ locale.t('stores.suspendedBadge') }}</span>
+          }
+        </span>
         @if (store.role !== 'OWNER') {
           <span class="card__shared">
             {{ locale.t('stores.sharedBy') }} {{ store.ownerName }}

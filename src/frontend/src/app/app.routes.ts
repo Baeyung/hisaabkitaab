@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard, publicOnlyGuard } from './core/auth/auth.guard';
 import { apexAppRedirectGuard, apexRedirectGuard } from './core/auth/apex.guard';
 import { editorGuard, ownerGuard, storeGuard } from './core/store/store.guard';
+import { planLimitGuard } from './core/plan/plan.guard';
 
 export const routes: Routes = [
   // Public marketing/landing page. No guard: reachable signed-out.
@@ -54,14 +55,22 @@ export const routes: Routes = [
   // everywhere else. Both sit outside the shell — there is nothing to navigate
   // to yet, and the wizard carries its own frame. Declared ahead of the routes
   // they extend so the longer path is matched before the shorter prefix.
+  // Where an account using more than its plan covers is sent, and the only way back out.
+  // Outside the shell like the picker, and behind no plan guard of its own — it is the
+  // screen that resolves the state, so gating it on that state would trap the user.
+  {
+    path: 'plan/limits',
+    canActivate: [apexRedirectGuard, authGuard],
+    loadComponent: () => import('./features/plan/plan-limits').then((m) => m.PlanLimits),
+  },
   {
     path: 'stores/new',
-    canActivate: [apexRedirectGuard, authGuard],
+    canActivate: [apexRedirectGuard, authGuard, planLimitGuard],
     loadComponent: () => import('./features/stores/store-setup').then((m) => m.StoreSetup),
   },
   {
     path: 's/:storeId/setup',
-    canActivate: [apexRedirectGuard, authGuard, storeGuard, editorGuard],
+    canActivate: [apexRedirectGuard, authGuard, storeGuard, planLimitGuard, editorGuard],
     loadComponent: () => import('./features/stores/store-setup').then((m) => m.StoreSetup),
   },
   {
@@ -74,7 +83,7 @@ export const routes: Routes = [
   // can sit in two different shops and a deep link carries its shop with it.
   {
     path: 's/:storeId',
-    canActivate: [apexRedirectGuard, authGuard, storeGuard],
+    canActivate: [apexRedirectGuard, authGuard, storeGuard, planLimitGuard],
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },

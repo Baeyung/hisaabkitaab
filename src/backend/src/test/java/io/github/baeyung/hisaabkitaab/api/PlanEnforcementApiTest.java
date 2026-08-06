@@ -15,8 +15,10 @@ import io.github.baeyung.hisaabkitaab.repository.UserPlanRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -204,5 +206,174 @@ class PlanEnforcementApiTest extends ApiTest
 
         mvc.perform(get("/api/admin/users").with(as(ADMIN)))
                 .andExpect(status().isOk());
+    }
+
+    /**
+     * An account on a plan covering two shops, with both open.
+     *
+     * @return the user's id first, then each shop's. The id is needed because changing the
+     *         plan out from under an account is the only way to produce an over-limit one —
+     *         every path that adds is already refused at the ceiling.
+     */
+    private String[] twoShopsOnPremium(String contact) throws Exception
+    {
+        String user = signup(contact);
+        plan(user, PlanTier.PREMIUM, LocalDate.now().plusYears(1));
+
+        return new String[] { user, createStore(contact, "First"), createStore(contact, "Second") };
+    }
+
+    /** Drops the account to a tier covering one shop, which is what puts it over its limit. */
+    private void downgradeToTrial(String userId)
+    {
+        plan(userId, PlanTier.TRIAL, LocalDate.now().plusYears(1));
+    }
+
+    private ResultActions keepOnly(String actor, String... storeIds) throws Exception
+    {
+        String ids = storeIds.length == 0 ? "" : "\"" + String.join("\",\"", storeIds) + "\"";
+
+        return mvc.perform(put("/api/plan/overage").with(as(actor))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"keepStoreIds\":[%s]}".formatted(ids)));
+    }
+
+    /** Any old write into a shop — this is about whether writing is allowed, not about parties. */
+    private ResultActions addParty(String actor, String store) throws Exception
+    {
+        return mvc.perform(post(api(store, "/parties")).with(as(actor))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Someone\"}"));
+    }
+
+    /**
+     * The whole point of the feature. An account dropped onto a smaller plan is stopped from
+     * writing anywhere until it says what it is keeping — but never stopped from reading, and
+     * nothing of theirs is destroyed to get them out of it.
+     */
+    @Test
+    void anAccountOverItsLimitIsReadOnlyUntilItChoosesWhatToKeep() throws Exception
+    {
+        String[] ids = twoShopsOnPremium("3500000010");
+        downgradeToTrial(ids[0]);
+
+        // Two shops open against a ceiling of one: every write is refused, in both shops.
+        addParty("3500000010", ids[1]).andExpect(status().isForbidden());
+        addParty("3500000010", ids[2]).andExpect(status().isForbidden());
+
+        // Reading is untouched. A billing change must never take somebody's books away.
+        mvc.perform(get(api(ids[1], "/parties")).with(as("3500000010")))
+                .andExpect(status().isOk());
+
+        keepOnly("3500000010", ids[1]).andExpect(status().isOk());
+
+        // The kept shop works again...
+        addParty("3500000010", ids[1]).andExpect(status().isOk());
+        // ...and the closed one is still readable, just not writable. Not deleted.
+        mvc.perform(get(api(ids[2], "/parties")).with(as("3500000010")))
+                .andExpect(status().isOk());
+        addParty("3500000010", ids[2]).andExpect(status().isForbidden());
+    }
+
+    /** Keeping more than the plan covers is refused, so the overage cannot be resolved by lying. */
+    @Test
+    void keepingMoreShopsThanThePlanCoversIsRefused() throws Exception
+    {
+        String[] ids = twoShopsOnPremium("3500000011");
+        downgradeToTrial(ids[0]);
+
+        keepOnly("3500000011", ids[1], ids[2]).andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Deleting a closed shop has to stay possible, or an owner who has resolved their overage
+     * is left with a shop they can neither work in nor be rid of — refused by the very check
+     * that being over the limit produced.
+     */
+    @Test
+    void aClosedShopCanStillBeDeleted() throws Exception
+    {
+        String[] ids = twoShopsOnPremium("3500000012");
+        downgradeToTrial(ids[0]);
+        keepOnly("3500000012", ids[1]).andExpect(status().isOk());
+
+        mvc.perform(delete("/api/stores/" + ids[2]).with(as("3500000012")))
+                .andExpect(status().isNoContent());
+    }
+
+    /**
+     * Paying more gives the shops back without the customer having to find a screen — the
+     * alternative is an upgrade that visibly changes nothing, which reads as not having worked.
+     */
+    @Test
+    void raisingThePlanReopensTheShopsItNowCovers() throws Exception
+    {
+        String[] ids = twoShopsOnPremium("3500000013");
+        downgradeToTrial(ids[0]);
+        keepOnly("3500000013", ids[1]).andExpect(status().isOk());
+
+        addParty("3500000013", ids[2]).andExpect(status().isForbidden());
+
+        // Through the admin API, because being re-opened by an actual upgrade is the claim.
+        signup(ADMIN);
+        mvc.perform(put("/api/admin/users/" + ids[0] + "/plan").with(as(ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tier\":\"PREMIUM\",\"expiresAt\":\"%s\"}"
+                                .formatted(LocalDate.now().plusYears(1))))
+                .andExpect(status().isOk());
+
+        addParty("3500000013", ids[2]).andExpect(status().isOk());
+    }
+
+    /**
+     * A closed shop's people stop costing a seat, so closing one shop can settle both ceilings
+     * at once. An owner made to remove staff they were about to lose anyway would be doing work
+     * the plan never actually asked of them.
+     */
+    @Test
+    void closingAShopFreesTheSeatsOfThePeopleOnlyInIt() throws Exception
+    {
+        String user = signup("3500000014");
+        plan(user, PlanTier.PREMIUM, LocalDate.now().plusYears(1));
+
+        String first = createStore("3500000014", "First");
+        String second = createStore("3500000014", "Second");
+        inviteAttempt("3500000014", second, "onlyhere@x.com").andExpect(status().isOk());
+
+        // owner + one member = 2, which is over TRIAL's ceiling of one.
+        downgradeToTrial(user);
+        mvc.perform(get("/api/plan/me").with(as("3500000014")))
+                .andExpect(jsonPath("$.usage.users").value(2));
+
+        // Closing the shop that person was in takes them out of the count with it.
+        keepOnly("3500000014", first).andExpect(status().isOk());
+        mvc.perform(get("/api/plan/me").with(as("3500000014")))
+                .andExpect(jsonPath("$.usage.users").value(1))
+                .andExpect(jsonPath("$.usage.stores").value(1));
+
+        addParty("3500000014", first).andExpect(status().isOk());
+    }
+
+    /** The screen's own feed: every shop, open or closed, and each person exactly once. */
+    @Test
+    void theOverageScreenListsEveryShopAndEachPersonOnce() throws Exception
+    {
+        String user = signup("3500000015");
+        plan(user, PlanTier.PREMIUM, LocalDate.now().plusYears(1));
+
+        String first = createStore("3500000015", "First");
+        String second = createStore("3500000015", "Second");
+        // The same person in both shops is one seat, so they must be one row.
+        inviteAttempt("3500000015", first, "both@x.com").andExpect(status().isOk());
+        inviteAttempt("3500000015", second, "both@x.com").andExpect(status().isOk());
+
+        downgradeToTrial(user);
+        keepOnly("3500000015", first).andExpect(status().isOk());
+
+        mvc.perform(get("/api/plan/overage").with(as("3500000015")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stores.length()").value(2))
+                .andExpect(jsonPath("$.people.length()").value(1))
+                .andExpect(jsonPath("$.people[0].storeIds.length()").value(2));
     }
 }

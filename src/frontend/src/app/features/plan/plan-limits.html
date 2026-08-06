@@ -1,0 +1,241 @@
+<!-- Outside the app shell, like the store picker: no shop is chosen, and the user may well
+     have arrived here from one that is now closed. Same frame, so this reads as a step in
+     the app rather than an error page it threw at them. -->
+<app-outer-bar>
+  <button type="button" class="topbar__logout" (click)="logout()">
+    {{ locale.t('home.logout') }}
+  </button>
+</app-outer-bar>
+
+<section class="lim">
+  @if (loading()) {
+    <div class="lim__grid" aria-hidden="true">
+      <div class="skel skel--card"></div>
+      <div class="skel skel--card"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="lim__state">
+      <p role="alert" class="lim__alert">{{ locale.t('planLimits.loadError') }}</p>
+      <button type="button" class="btn btn--ghost" (click)="load()">
+        {{ locale.t('stores.retry') }}
+      </button>
+    </div>
+  } @else {
+    <header class="lim__head">
+      <h1 class="lim__title">{{ locale.t('planLimits.title') }}</h1>
+      <p class="lim__lede">{{ locale.t('planLimits.lede') }}</p>
+      <!-- The reassurance goes first and stays on screen. The single worst thing this
+           screen could do is read as "delete your books or lose access". -->
+      <p class="lim__safe">{{ locale.t('planLimits.safe') }}</p>
+    </header>
+
+    <!-- ── shops ─────────────────────────────────────────────────────
+         Cards, not a table: they are the same cards as the store picker, so the shop
+         being closed is recognised by the mark and name the owner already knows. -->
+    <section class="lim__block">
+      <div class="lim__blockhead">
+        <h2 class="lim__h2">{{ locale.t('planLimits.shops.title') }}</h2>
+        <p class="lim__count" [class.lim__count--over]="!storesFit()" role="status">
+          {{ shopsCount() }}
+        </p>
+      </div>
+
+      <ul class="lim__grid">
+        @for (store of allStores(); track store.id) {
+          <li>
+            <!-- The whole card is the toggle. aria-pressed carries the state, so a screen
+                 reader is told "kept"/"closed" rather than left to infer it from styling. -->
+            <div class="pick" [class.pick--on]="isKept(store)">
+              <button
+                type="button"
+                class="pick__hit"
+                [class.pick__hit--blocked]="isBlocked(store)"
+                [attr.aria-pressed]="isKept(store)"
+                [disabled]="saving()"
+                (click)="toggle(store)"
+              >
+                <span class="pick__mark" [class.pick__mark--img]="store.logoUri">
+                  @if (store.logoUri) {
+                    <img [src]="store.logoUri" alt="" />
+                  } @else {
+                    <span aria-hidden="true">{{ markOf(store) }}</span>
+                  }
+                </span>
+
+                <span class="pick__meta">
+                  <span class="pick__name">{{ store.name }}</span>
+                  <span class="pick__state">
+                    {{
+                      locale.t(isKept(store) ? 'planLimits.shops.kept' : 'planLimits.shops.closed')
+                    }}
+                  </span>
+                </span>
+
+                <span class="pick__tick" aria-hidden="true">
+                  @if (isKept(store)) {
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                    >
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                  }
+                </span>
+              </button>
+
+              <!-- Deleting is deliberately the quieter control: closing is the reversible
+                   answer, and this one is here only for an owner who wants the shop gone. -->
+              <button
+                type="button"
+                class="pick__del"
+                [disabled]="saving()"
+                (click)="openDelete(store)"
+                [attr.aria-label]="locale.t('planLimits.shops.delete') + ' — ' + store.name"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"
+                  />
+                </svg>
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- ── people ────────────────────────────────────────────────────
+         Held back until the shops fit: closing a shop takes its people out of the count
+         too, so asking about them first would send the owner to remove someone they were
+         about to get back anyway. -->
+    @if (storesFit() && !usersFit()) {
+      <section class="lim__block">
+        <div class="lim__blockhead">
+          <h2 class="lim__h2">{{ locale.t('planLimits.people.title') }}</h2>
+          <p class="lim__count lim__count--over" role="status">{{ peopleCount() }}</p>
+        </div>
+        <p class="lim__note">{{ locale.t('planLimits.people.note') }}</p>
+
+        <ul class="lim__people">
+          @for (person of peopleInKeptStores(); track person.userId) {
+            <li class="prow">
+              <div class="prow__who">
+                <span class="prow__name">{{ displayName(person) }}</span>
+                <span class="prow__email">{{ person.email }}</span>
+                <span class="prow__shops">{{ shopsOf(person) }}</span>
+              </div>
+
+              @if (confirmingPersonId() === person.userId) {
+                <div class="prow__confirm">
+                  <span class="prow__msg">{{ locale.t('planLimits.people.confirm') }}</span>
+                  <span class="prow__acts">
+                    <button
+                      type="button"
+                      class="btn btn--ghost btn--sm"
+                      (click)="cancelRemovePerson()"
+                    >
+                      {{ locale.t('settings.users.remove.cancel') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--danger btn--sm"
+                      [disabled]="saving()"
+                      (click)="confirmRemovePerson(person)"
+                    >
+                      {{ locale.t('settings.users.remove.confirmBtn') }}
+                    </button>
+                  </span>
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  class="btn btn--ghost btn--sm"
+                  [disabled]="saving()"
+                  (click)="askRemovePerson(person.userId)"
+                >
+                  {{ locale.t('planLimits.people.remove') }}
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (errorKey(); as key) {
+      <p role="alert" class="lim__alert">{{ locale.t(key) }}</p>
+    }
+  }
+</section>
+
+<!-- Sticky, so on a phone the commit is always in thumb reach however far the shop list
+     runs. Held out of the DOM while loading so it can't sit under a skeleton. -->
+@if (!loading() && !loadError()) {
+  <div class="bar">
+    <div class="bar__inner">
+      <p class="bar__status" role="status">{{ barStatus() }}</p>
+      <button
+        type="button"
+        class="btn btn--primary"
+        [disabled]="!resolved() || !dirty() || saving()"
+        (click)="save()"
+      >
+        {{ locale.t('planLimits.bar.save') }}
+      </button>
+    </div>
+  </div>
+}
+
+<!-- Deleting a shop takes its whole book with it, so it asks for the name typed out —
+     the same bar Store Settings sets, because this is the same irreversible act. -->
+@if (deletingStore(); as store) {
+  <div class="scrim" (click)="cancelDelete()">
+    <div
+      class="dlg"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="locale.t('planLimits.delete.title')"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 class="dlg__title">{{ locale.t('planLimits.delete.title') }}</h2>
+      <p class="dlg__body">{{ locale.t('planLimits.delete.body', { name: store.name }) }}</p>
+
+      <label class="dlg__lbl" for="confirm-name">{{ locale.t('planLimits.delete.prompt') }}</label>
+      <input
+        id="confirm-name"
+        class="fld__input"
+        type="text"
+        autocomplete="off"
+        [value]="typedName()"
+        (input)="typedName.set($any($event.target).value)"
+        (keydown.enter)="confirmDelete()"
+      />
+
+      <div class="dlg__acts">
+        <button type="button" class="btn btn--ghost" (click)="cancelDelete()">
+          {{ locale.t('settings.users.remove.cancel') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn--danger"
+          [disabled]="!canDelete() || saving()"
+          (click)="confirmDelete()"
+        >
+          {{ locale.t('planLimits.delete.confirm') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

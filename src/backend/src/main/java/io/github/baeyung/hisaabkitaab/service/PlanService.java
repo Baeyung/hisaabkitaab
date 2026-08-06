@@ -4,8 +4,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,13 +19,16 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.github.baeyung.hisaabkitaab.dto.plan.AdminUserResponse;
 import io.github.baeyung.hisaabkitaab.dto.plan.AssignPlanRequest;
+import io.github.baeyung.hisaabkitaab.dto.plan.OverageResponse;
 import io.github.baeyung.hisaabkitaab.dto.plan.PlanLimits;
 import io.github.baeyung.hisaabkitaab.dto.plan.PlanResponse;
 import io.github.baeyung.hisaabkitaab.dto.plan.PlanStatusResponse;
+import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.entity.UserPlan;
 import io.github.baeyung.hisaabkitaab.enums.PlanCapacity;
 import io.github.baeyung.hisaabkitaab.enums.PlanTier;
+import io.github.baeyung.hisaabkitaab.enums.UserStatus;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.StoreAccessRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreRepository;
@@ -143,6 +149,8 @@ public class PlanService
                 .whatsappQuota(request.whatsappQuota())
                 .build());
 
+        reopenWhereRoom(userId, PlanLimits.effectiveFor(saved).maxStores());
+
         return PlanResponse.of(saved, LocalDate.now());
     }
 
@@ -224,7 +232,7 @@ public class PlanService
      */
     public void requireRoomForMember(String ownerId, String memberUserId)
     {
-        if (storeAccessRepository.existsByStoreOwnerIdAndUserId(ownerId, memberUserId))
+        if (storeAccessRepository.existsByStoreOwnerIdAndUserIdAndStoreSuspendedAtIsNull(ownerId, memberUserId))
         {
             return;
         }
@@ -257,15 +265,186 @@ public class PlanService
                         (int) usageOf(userId, PlanCapacity.USERS)));
     }
 
-    /** What this account has already spent against {@code capacity}, in the limit's own units. */
+    /**
+     * The shops and people an over-limit owner is choosing between, with the plan they are
+     * choosing against. One call for one screen — see {@link OverageResponse} for why the
+     * lists are counted here rather than stitched together by the client.
+     */
+    @Transactional(readOnly = true)
+    public OverageResponse overageOf(String ownerId)
+    {
+        List<OverageResponse.OverageStore> stores = storeRepository.findByOwnerId(ownerId).stream()
+                .map(store -> new OverageResponse.OverageStore(
+                        store.getId(), store.getName(), store.getLogoUri(), store.isSuspended()))
+                .toList();
+
+        // Grouped by person, not listed per grant: a seat is spent once however many shops
+        // someone is in, so a row per grant would misstate what removing them frees up.
+        List<OverageResponse.OveragePerson> people = storeAccessRepository.findByStoreOwnerId(ownerId).stream()
+                .collect(Collectors.groupingBy(access -> access.getUser().getId(),
+                        LinkedHashMap::new, Collectors.toList()))
+                .values().stream()
+                .map(grants -> {
+                    User user = grants.getFirst().getUser();
+                    return new OverageResponse.OveragePerson(
+                            user.getId(),
+                            // Same rule as MemberResponse: an outstanding invite has a
+                            // placeholder name, and showing it back would read as a real one.
+                            user.getStatus() == UserStatus.ACTIVE ? user.getName() : null,
+                            user.getEmail(),
+                            grants.stream().map(access -> access.getStore().getId()).toList());
+                })
+                .toList();
+
+        return new OverageResponse(statusOf(ownerId), stores, people);
+    }
+
+    /**
+     * Settles which of the owner's shops stay open; every other shop of theirs is closed.
+     * The whole set is stated in one call, so this is also how a shop is re-opened once a
+     * bigger plan has made room for it.
+     *
+     * <p>Does not touch people. Removing a member is what it always was — the owner does it
+     * on the shop's own user list — and a seat freed that way is picked up by the next count
+     * without anything here knowing.
+     *
+     * @return the plan as it now stands, so the caller sees straight away whether that was
+     *         enough or the seat ceiling is still over
+     * @throws ResponseStatusException 400 if the list names a shop that is not this owner's,
+     *         or keeps more shops than the plan covers
+     */
+    public PlanStatusResponse resolveOverage(String ownerId, List<String> keepStoreIds)
+    {
+        List<Store> owned = storeRepository.findByOwnerId(ownerId);
+        Set<String> keep = Set.copyOf(keepStoreIds);
+
+        if (!owned.stream().map(Store::getId).collect(Collectors.toSet()).containsAll(keep))
+        {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "That list names a shop which is not yours.");
+        }
+
+        int limit = PlanLimits.effectiveFor(planOf(ownerId)).maxStores();
+
+        if (enabled && keep.size() > limit)
+        {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Your plan covers " + PlanCapacity.STORES.describe(limit) + ".");
+        }
+
+        Instant now = Instant.now();
+
+        owned.forEach(store -> store.setSuspendedAt(
+                keep.contains(store.getId())
+                        ? null
+                        // Already-closed shops keep the date they were closed on: this call
+                        // settles which shops are open, and re-stamping one that never
+                        // re-opened would lose when it actually happened.
+                        : store.isSuspended() ? store.getSuspendedAt() : now));
+
+        storeRepository.saveAll(owned);
+
+        return statusOf(ownerId);
+    }
+
+    /**
+     * Re-opens closed shops while the plan has room for them, most recently closed first —
+     * the reverse of the order an owner gave them up in. Called after an assignment, so a
+     * customer who pays for a bigger plan gets their shops back by paying rather than by
+     * finding a screen; a plan that got no bigger re-opens nothing.
+     */
+    private void reopenWhereRoom(String ownerId, int maxStores)
+    {
+        long open = storeRepository.countByOwnerIdAndSuspendedAtIsNull(ownerId);
+
+        if (open >= maxStores)
+        {
+            return;
+        }
+
+        List<Store> reopened = storeRepository.findByOwnerId(ownerId).stream()
+                .filter(Store::isSuspended)
+                .sorted(Comparator.comparing(Store::getSuspendedAt).reversed())
+                .limit(maxStores - open)
+                .toList();
+
+        reopened.forEach(store -> store.setSuspendedAt(null));
+        storeRepository.saveAll(reopened);
+    }
+
+    /**
+     * What this account has already spent against {@code capacity}, in the limit's own units.
+     * Suspended shops are outside both counts — see {@code Store.suspendedAt} for why.
+     */
     private long usageOf(String ownerId, PlanCapacity capacity)
     {
         return switch (capacity)
         {
-            case STORES -> storeRepository.countByOwnerId(ownerId);
+            case STORES -> storeRepository.countByOwnerIdAndSuspendedAtIsNull(ownerId);
             // maxUsers counts the owner as well, and they hold no StoreAccess row of their own.
             case USERS -> storeAccessRepository.countDistinctMembersOfStoresOwnedBy(ownerId) + 1;
         };
+    }
+
+    /**
+     * Whether this account is using more than its plan covers — which is not the same as
+     * being <em>at</em> its ceiling. {@link #requireCapacity} refuses the next thing at the
+     * limit; this is the state after a downgrade has already put the account past one, and
+     * it is the only thing an owner is made to resolve before working again.
+     *
+     * <p>Reachable only by an admin dropping a tier or tightening an override: nothing a user
+     * can do to their own account gets them here, because every path that adds is refused at
+     * the ceiling.
+     */
+    public boolean isOverLimit(String ownerId)
+    {
+        if (!enabled)
+        {
+            return false;
+        }
+
+        PlanLimits limits = PlanLimits.effectiveFor(planOf(ownerId));
+
+        return usageOf(ownerId, PlanCapacity.STORES) > limits.maxStores()
+                || usageOf(ownerId, PlanCapacity.USERS) > limits.maxUsers();
+    }
+
+    /**
+     * Refuses a write into a shop the plan does not currently cover. Called from
+     * {@code CurrentStoreArgumentResolver} for every non-{@code GET} request, which is what
+     * makes this un-forgettable on a new endpoint the way {@code @CurrentStore} itself is —
+     * and why reads are never touched: a shop the plan has closed stays readable, printable
+     * and exportable, because a plan lapsing is a billing state and not grounds to take
+     * somebody's books away.
+     *
+     * <p>Two refusals, one for each half of {@code Store.suspendedAt}'s meaning: the shop is
+     * closed, or the account is past a ceiling and has not yet said which shops it is keeping.
+     *
+     * @throws ResponseStatusException 403, carrying a message meant to be shown as-is.
+     */
+    public void requireWritable(Store store)
+    {
+        if (!enabled)
+        {
+            return;
+        }
+
+        if (store.isSuspended())
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "This shop is closed because your plan no longer covers it. "
+                            + "Upgrade to open it again — nothing in it has been lost.");
+        }
+
+        // ponytail: three extra queries on every write, and only the first is short-circuited
+        // by the check above. Fine at a shopkeeper's request rate — cache the answer per
+        // request (a request-scoped bean, or an attribute on the request) if it ever isn't.
+        if (isOverLimit(store.getOwner().getId()))
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "This account is using more than its plan covers. "
+                            + "Choose which shops to keep open before adding anything new.");
+        }
     }
 
     /**

@@ -102,6 +102,44 @@ export const en = {
   'stores.addLimit': 'Your plan is full. Upgrade to add another shop.',
   'plan.endingSoon': 'Your plan ends on {{date}}. Renew it to keep your books open.',
   'plan.ended': 'Your plan has ended. Renew it to open shops of your own again.',
+  'stores.suspendedBadge': 'Closed',
+  'stores.suspendedNote': 'Your plan no longer covers every shop. Choose which stay open.',
+  'stores.suspendedCta': 'Choose shops',
+
+  // The plan-limits screen. Worded to say what happened, what is safe, and what to do —
+  // in that order. It is the one screen a user meets without having asked for it, so it
+  // never blames them and never implies anything has been lost.
+  'planLimits.title': 'Your plan no longer covers everything',
+  'planLimits.lede':
+    'Your plan was changed and it now covers fewer shops than you have open. Choose the ones you want to keep working in.',
+  'planLimits.safe':
+    'Nothing is deleted. A closed shop keeps all its entries — you can still open it and print from it, and it comes back on its own if your plan grows again.',
+  'planLimits.loadError': "Couldn't load your shops and team. Please try again.",
+
+  'planLimits.shops.title': 'Shops',
+  'planLimits.shops.count': '{{kept}} of {{max}} kept open',
+  'planLimits.shops.kept': 'Staying open',
+  'planLimits.shops.closed': 'Will be closed',
+  'planLimits.shops.delete': 'Delete this shop',
+
+  'planLimits.people.title': 'Your team',
+  'planLimits.people.count': '{{used}} of {{max}} seats used',
+  'planLimits.people.note':
+    'Your plan also covers fewer people than you have. Removing someone takes away their access to your shops — their own account is untouched, and you can invite them back any time.',
+  'planLimits.people.remove': 'Remove',
+  'planLimits.people.confirm': 'Remove their access to all your shops?',
+
+  'planLimits.bar.shops': '{{over}} too many shops open',
+  'planLimits.bar.people': 'Too many people for your plan',
+  'planLimits.bar.ready': 'That fits your plan.',
+  'planLimits.bar.save': 'Save and continue',
+
+  'planLimits.delete.title': 'Delete this shop?',
+  'planLimits.delete.body':
+    'This erases “{{name}}” and everything booked in it — entries, khatas, items. This cannot be undone. To keep it without deleting, close it instead.',
+  'planLimits.delete.prompt': 'Type the shop name to confirm',
+  'planLimits.delete.confirm': 'Delete for good',
+
   'stores.switch': 'Switch shop',
   'stores.loadError': "Couldn't load your shops. Please try again.",
   'stores.retry': 'Try again',
