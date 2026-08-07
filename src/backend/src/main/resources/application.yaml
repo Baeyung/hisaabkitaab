@@ -65,6 +65,13 @@ logging:
 
 app:
   whatsapp:
+    # Master switch for outgoing WhatsApp: off in dev, so nothing reaches Meta. Sending also
+    # stays off while phone-number-id or access-token is blank, whatever this says.
+    enabled: ${WHATSAPP_ENABLED:false}
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+    access-token: ${WHATSAPP_ACCESS_TOKEN:}
+    # Graph API versions expire after ~2 years; bump here rather than in code.
+    api-base-url: ${WHATSAPP_API_BASE_URL:https://graph.facebook.com/v23.0}
     # Shared secret Meta echoes back on the webhook verification handshake.
     verify-token: ${WHATSAPP_VERIFY_TOKEN:}
   frontend-base-url: ${FRONTEND_BASE_URL:https://aapka.hisaabkitaab.shop}

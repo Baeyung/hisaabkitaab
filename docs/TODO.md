@@ -16,8 +16,8 @@
 - [x] numbers with country code
 - [x] Strong password
 - [x] confirm password (signup) to avoid typos
+- [x] billing/plan related stuff
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
 - [ ] processed goods feature
-- [ ] billing/plan related stuff
