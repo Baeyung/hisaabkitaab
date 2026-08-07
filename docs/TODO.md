@@ -14,8 +14,8 @@
 - [x] admin page behaving weirdly and setting expiry after an year
 - [x] Once dismissed never shows again
 - [x] numbers with country code
-- [ ] Strong password
-- [ ] confirm password (signup) to avoid typos
+- [x] Strong password
+- [x] confirm password (signup) to avoid typos
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp

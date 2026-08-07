@@ -21,7 +21,7 @@ class AuthApiTest extends ApiTest
     void signupCreatesUserAndHidesPasswordHash() throws Exception
     {
         mvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content("""
-                        {"name":"Rana","contactNumber":"3001234567","email":"rana@x.com","password":"secret123"}
+                        {"name":"Rana","contactNumber":"3001234567","email":"rana@x.com","password":"secret123!"}
                         """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
@@ -34,7 +34,7 @@ class AuthApiTest extends ApiTest
     void signupRejectsBlankName() throws Exception
     {
         signupExpect("""
-                {"name":"","contactNumber":"3001234567","password":"secret123"}
+                {"name":"","contactNumber":"3001234567","password":"secret123!"}
                 """, status().isBadRequest());
     }
 
@@ -42,7 +42,7 @@ class AuthApiTest extends ApiTest
     void signupRejectsNonDigitContactNumber() throws Exception
     {
         signupExpect("""
-                {"name":"Rana","contactNumber":"030-abc","password":"secret123"}
+                {"name":"Rana","contactNumber":"030-abc","password":"secret123!"}
                 """, status().isBadRequest());
     }
 
@@ -54,11 +54,24 @@ class AuthApiTest extends ApiTest
                 """, status().isBadRequest());
     }
 
+    /** 8+ characters with a digit and a special one. Login is deliberately not held
+     *  to this, so accounts made before the rule can still get in. */
+    @Test
+    void signupRejectsWeakPassword() throws Exception
+    {
+        for (String weak : new String[] { "abc1!", "abcdefgh", "abcdefg1", "abcdefg!" })
+        {
+            signupExpect("""
+                    {"name":"Rana","contactNumber":"3001234567","email":"rana@x.com","password":"%s"}
+                    """.formatted(weak), status().isBadRequest());
+        }
+    }
+
     @Test
     void signupStoresEmailLowerCased() throws Exception
     {
         mvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content("""
-                        {"name":"Rana","contactNumber":"3001111111","email":"RaNa@X.CoM","password":"secret123"}
+                        {"name":"Rana","contactNumber":"3001111111","email":"RaNa@X.CoM","password":"secret123!"}
                         """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("rana@x.com"));
@@ -80,7 +93,7 @@ class AuthApiTest extends ApiTest
     {
         signup("3003333333"); // takes u3003333333@x.com
         signupExpect("""
-                {"name":"Rana","contactNumber":"3004444444","email":"U3003333333@X.CoM","password":"secret123"}
+                {"name":"Rana","contactNumber":"3004444444","email":"U3003333333@X.CoM","password":"secret123!"}
                 """, status().isConflict());
     }
 

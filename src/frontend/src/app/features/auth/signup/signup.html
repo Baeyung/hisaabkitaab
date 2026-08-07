@@ -41,15 +41,23 @@
 
     <div class="fld">
       <label class="fld__label" for="signup-password">{{ locale.t('auth.signup.password') }}</label>
+      <app-password-field inputId="signup-password" [formField]="signupForm.password" />
+      @if (serverFieldErrors()['password']) {
+        <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+      }
+    </div>
+
+    <div class="fld">
+      <label class="fld__label" for="signup-confirm">{{ locale.t('auth.signup.confirm') }}</label>
       <input
-        id="signup-password"
+        id="signup-confirm"
         class="fld__input"
-        [formField]="signupForm.password"
+        [formField]="signupForm.confirmPassword"
         type="password"
         autocomplete="new-password"
       />
-      @if (serverFieldErrors()['password']) {
-        <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+      @if (signupForm.confirmPassword().touched() && mismatch()) {
+        <span role="alert" class="fld__err">{{ locale.t('validation.passwordMismatch') }}</span>
       }
     </div>
 
@@ -57,7 +65,7 @@
       <p role="alert" class="auth__alert">{{ locale.t(key) }}</p>
     }
 
-    <button class="auth__cta" type="submit" [disabled]="submitting()">
+    <button class="auth__cta" type="submit" [disabled]="submitting() || mismatch()">
       {{ locale.t('auth.signup.submit') }}
     </button>
   </form>

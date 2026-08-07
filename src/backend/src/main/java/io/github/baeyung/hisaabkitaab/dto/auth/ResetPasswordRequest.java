@@ -20,7 +20,8 @@ public class ResetPasswordRequest
     @Pattern(regexp = "\\d{6}")
     private String otp;
 
-    /** The new password to set. */
+    /** The new password to set — same rules as signup, see SignupRequest#password. */
     @NotBlank
+    @Pattern(regexp = "^(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")
     private String password;
 }

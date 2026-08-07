@@ -428,9 +428,11 @@
 .auth__cta:active:not(:disabled) {
   transform: translateY(1px);
 }
+/* Disabled now covers more than "sending" — a mismatched confirm password holds
+   the button too, and a spinner cursor over that would be a lie. */
 .auth__cta:disabled {
   opacity: 0.6;
-  cursor: progress;
+  cursor: not-allowed;
 }
 .auth__cta:focus-visible {
   outline: none;
