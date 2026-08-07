@@ -25,7 +25,7 @@ export class Login {
 
   protected readonly submitting = signal(false);
   protected readonly errorKey = signal<
-    'auth.login.invalid' | 'auth.login.locked' | 'error.generic' | null
+    'auth.login.invalid' | 'auth.login.locked' | 'auth.login.planExpired' | 'error.generic' | null
   >(null);
 
   async submit(): Promise<void> {
@@ -48,9 +48,16 @@ export class Login {
         return; // interceptor already routed to /verify-pending
       }
       if (status === 401) {
-        // Too many wrong passwords: only a password reset opens the account again, so say
-        // so rather than leaving them retrying a password that can no longer work.
-        this.errorKey.set(code === 'ACCOUNT_LOCKED' ? 'auth.login.locked' : 'auth.login.invalid');
+        // Two of these are not about the password at all, and retrying one cannot help:
+        // ACCOUNT_LOCKED needs a password reset, PLAN_EXPIRED needs a renewal. Say which,
+        // rather than leaving them retrying credentials that were never the problem.
+        this.errorKey.set(
+          code === 'ACCOUNT_LOCKED'
+            ? 'auth.login.locked'
+            : code === 'PLAN_EXPIRED'
+              ? 'auth.login.planExpired'
+              : 'auth.login.invalid',
+        );
         return;
       }
       this.errorKey.set('error.generic');

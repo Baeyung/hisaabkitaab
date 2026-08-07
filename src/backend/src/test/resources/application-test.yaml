@@ -24,3 +24,13 @@ spring:
 app:
   verification:
     enabled: false
+  # Same reasoning as the flag above, and the same shape: the general API tests exercise
+  # CRUD, not entitlements, and a shared TRIAL ceiling of one shop and one user would have
+  # them failing on their second store rather than on anything they are about to assert.
+  # PlanEnforcementApiTest and PlansDisabledApiTest each name the value they want via
+  # @TestPropertySource, so neither depends on what is set here.
+  #
+  # Stated explicitly because application.yaml ships `enabled: ${PLANS_ENABLED:true}` — the
+  # tests would otherwise inherit production's switch and change behaviour with it.
+  plans:
+    enabled: false

@@ -90,6 +90,28 @@
     </nav>
 
     <div class="foot">
+      <!-- Standing state, not somewhere to go — so it sits with the account controls
+           rather than in the nav, and is not a link. -->
+      @if (planBadge(); as plan) {
+        <div class="plan">
+          <div class="plan-row">
+            <span class="plan-label">{{ locale.t('plan.badge.label') }}</span>
+            <span class="plan-tier">{{ locale.t(plan.tier) }}</span>
+          </div>
+          @for (gauge of plan.gauges; track gauge.key) {
+            <div class="plan-gauge">
+              <span class="plan-usage">{{ locale.t(gauge.key, gauge.params) }}</span>
+              <div class="plan-meter" aria-hidden="true">
+                <div
+                  class="plan-meter-fill"
+                  [class.full]="gauge.full"
+                  [style.width.%]="gauge.fill"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      }
       <app-theme-toggle />
       <app-language-toggle />
       <app-install-button />
@@ -101,6 +123,9 @@
 
     <!-- Content -->
     <div class="content">
+      <!-- Outside <main>, which is the only thing that scrolls — the plan running out is the
+           one notice that must not scroll away. -->
+      <app-plan-notice />
       <main>
         <router-outlet />
       </main>

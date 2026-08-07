@@ -58,6 +58,10 @@ public class SecurityConfig
                             .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/verify-reset-otp").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
+                            // The back office. Ahead of the catch-all below so it is gated the
+                            // same either way — with verification off, "authenticated" would
+                            // otherwise be enough to reach it.
+                            .requestMatchers("/api/admin/**").hasRole("ADMIN");
                             // WhatsApp calls these unauthenticated; the verify token is the gate.
                             .requestMatchers("/api/webhooks/whatsapp").permitAll();
                     // With verification on, everything else needs a *verified* account:
@@ -87,7 +91,10 @@ public class SecurityConfig
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "http://localhost:4200",
-                "https://aapka.hisaabkitaab.shop"
+                "https://aapka.hisaabkitaab.shop",
+                // The admin app, served separately from the customer-facing one.
+                "http://localhost:4300",
+                "https://admin.hisaabkitaab.shop"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "ngrok-skip-browser-warning"));

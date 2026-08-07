@@ -22,7 +22,13 @@ export interface Store {
   role: StoreRole;
   /** Whose shop it is — shown on shared shops ("Shared by …"). */
   ownerName: string;
+  /**
+   * Whether the owner's plan has this shop closed: readable and printable, but no new
+   * entries. Not a role — a closed shop is closed to its owner too. See {@link
+   * StoreService.canEdit}, which folds it in so every editor route already refuses.
+   */
+  suspended: boolean;
 }
 
 /** The editable shape sent on create/update: the shop's own fields, nothing about who is asking. */
-export type StoreDraft = Omit<Store, 'id' | 'role' | 'ownerName'>;
+export type StoreDraft = Omit<Store, 'id' | 'role' | 'ownerName' | 'suspended'>;

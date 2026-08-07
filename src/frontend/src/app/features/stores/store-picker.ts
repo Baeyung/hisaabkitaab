@@ -5,8 +5,10 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { AuthService } from '../../core/auth/auth.service';
 import { StoreService } from '../../core/store/store.service';
+import { PlanService } from '../../core/plan/plan.service';
 import { Store } from '../../core/store/store.models';
 import { OuterBar } from '../../shared/outer-bar/outer-bar';
+import { PlanNotice } from '../../shared/plan-notice/plan-notice';
 
 /**
  * The first screen after signing in: every shop the user owns, on one page.
@@ -22,7 +24,7 @@ import { OuterBar } from '../../shared/outer-bar/outer-bar';
  */
 @Component({
   selector: 'app-store-picker',
-  imports: [RouterLink, OuterBar, NgTemplateOutlet],
+  imports: [RouterLink, OuterBar, NgTemplateOutlet, PlanNotice],
   templateUrl: './store-picker.html',
   styleUrl: './store-picker.css',
 })
@@ -32,8 +34,17 @@ export class StorePicker {
   private readonly stores = inject(StoreService);
   private readonly router = inject(Router);
 
+  protected readonly plan = inject(PlanService);
+
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
+
+  /**
+   * Whether "Add a shop" would be refused. The plan is fetched alongside the list rather than
+   * guessed from `owned().length`: the ceiling may be an override set for this account alone,
+   * and only the server knows it.
+   */
+  protected readonly atStoreLimit = this.plan.atStoreLimit;
 
   protected readonly list = signal<Store[]>([]);
 
@@ -45,6 +56,26 @@ export class StorePicker {
   protected readonly owned = computed(() => this.list().filter((s) => s.role === 'OWNER'));
   protected readonly shared = computed(() => this.list().filter((s) => s.role !== 'OWNER'));
 
+  /**
+   * Whether the plan has closed any shop of theirs. Read off the list rather than off the
+   * plan's counts: a closed shop is already outside those, so the plan looks perfectly
+   * healthy and only the shops themselves still say what happened.
+   */
+  protected readonly hasSuspended = computed(() => this.owned().some((s) => s.suspended));
+
+  /**
+   * What the closed-shop notice says. Two different things: an account still over its plan is
+   * being *asked* to choose, one that has already chosen is only being told where its shops
+   * went. Keying both off `hasSuspended` alone left the demand standing after it was met.
+   */
+  protected readonly suspendedNoteKey = computed<TranslationKey | null>(() =>
+    !this.hasSuspended()
+      ? null
+      : this.plan.overLimit()
+        ? 'stores.suspendedNote'
+        : 'stores.suspendedSettled',
+  );
+
   constructor() {
     this.load();
   }
@@ -53,7 +84,12 @@ export class StorePicker {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      const stores = await this.stores.list();
+      // The plan only decides whether one button is offered, so a failure to read it must not
+      // fail the screen — fall back to offering it and letting the server answer.
+      const [stores] = await Promise.all([
+        this.stores.list(),
+        this.plan.refresh().catch(() => null),
+      ]);
       this.list.set(stores);
       if (stores.length === 0) {
         // Nothing to pick — the first shop is opened in the guided setup. Return

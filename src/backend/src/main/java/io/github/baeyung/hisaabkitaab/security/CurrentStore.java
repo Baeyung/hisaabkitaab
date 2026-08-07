@@ -29,4 +29,15 @@ public @interface CurrentStore
 {
     /** The weakest role that may reach this endpoint. */
     StoreRole value() default StoreRole.OWNER;
+
+    /**
+     * Lets this endpoint through even when the plan has the shop closed. Only the way
+     * <em>out</em> of that state qualifies: deleting the shop, and removing the people whose
+     * seats are over the ceiling. Without it those two would be refused by the very check
+     * they exist to satisfy, and the owner would have no move left.
+     *
+     * <p>Defaults false, and only ever applies to a write — reads are never refused for a
+     * closed shop in the first place (see {@code PlanService.requireWritable}).
+     */
+    boolean allowLocked() default false;
 }

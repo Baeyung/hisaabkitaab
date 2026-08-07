@@ -11,6 +11,11 @@
 - [x] delete store option
 - [x] multi-user support for same stores
 - [x] persistent date filters across navigation
+- [x] admin page behaving weirdly and setting expiry after an year
+- [x] Once dismissed never shows again
+- [x] numbers with country code
+- [x] Strong password
+- [x] confirm password (signup) to avoid typos
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp

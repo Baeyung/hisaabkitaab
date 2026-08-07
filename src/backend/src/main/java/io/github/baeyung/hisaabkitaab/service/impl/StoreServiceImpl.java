@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.github.baeyung.hisaabkitaab.dto.store.StoreSummary;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.enums.PlanCapacity;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
@@ -18,6 +19,7 @@ import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.repository.UserRepository;
+import io.github.baeyung.hisaabkitaab.security.RequiresPlanCapacity;
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
 import lombok.RequiredArgsConstructor;
@@ -77,6 +79,7 @@ public class StoreServiceImpl implements StoreService
     }
 
     @Override
+    @RequiresPlanCapacity(PlanCapacity.STORES)
     public StoreSummary create(Store input, String ownerId)
     {
         Store store = Store.builder()

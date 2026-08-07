@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { AuthShell } from '../auth-shell/auth-shell';
 import { OtpBox, OTP_PATTERN } from '../otp-box/otp-box';
+import { PasswordField, PASSWORD_PATTERN } from '../../../shared/password-field/password-field';
 
 const AUTO_LOGIN_SECONDS = 5;
 
@@ -19,7 +20,7 @@ const AUTO_LOGIN_SECONDS = 5;
  */
 @Component({
   selector: 'app-forgot-password',
-  imports: [FormField, RouterLink, AuthShell, OtpBox],
+  imports: [FormField, RouterLink, AuthShell, OtpBox, PasswordField],
   template: `
     <app-auth-shell>
       <div class="auth__head">
@@ -91,13 +92,7 @@ const AUTO_LOGIN_SECONDS = 5;
           <form class="auth__form" (submit)="$event.preventDefault(); setPassword()">
             <div class="fld">
               <label class="fld__label" for="reset-password">{{ locale.t('auth.reset.password') }}</label>
-              <input
-                id="reset-password"
-                class="fld__input"
-                [formField]="resetForm.password"
-                type="password"
-                autocomplete="new-password"
-              />
+              <app-password-field inputId="reset-password" [formField]="resetForm.password" />
             </div>
 
             <div class="fld">
@@ -110,7 +105,7 @@ const AUTO_LOGIN_SECONDS = 5;
                 autocomplete="new-password"
               />
               @if (resetForm.confirmPassword().touched() && mismatch()) {
-                <span role="alert" class="fld__err">{{ locale.t('auth.reset.mismatch') }}</span>
+                <span role="alert" class="fld__err">{{ locale.t('validation.passwordMismatch') }}</span>
               }
             </div>
 
@@ -209,6 +204,8 @@ export class ForgotPassword implements OnDestroy {
   protected readonly passwordModel = signal({ password: '', confirmPassword: '' });
   protected readonly resetForm = form(this.passwordModel, (path) => {
     required(path.password);
+    // The checklist under the field says which part is missing; this is the gate.
+    pattern(path.password, PASSWORD_PATTERN);
     required(path.confirmPassword);
   });
 

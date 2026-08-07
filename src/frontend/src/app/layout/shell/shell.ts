@@ -10,11 +10,27 @@ import { InstallButton } from '../../shared/install-button/install-button';
 import { PrintDetailsDialog } from '../../shared/print-details-dialog';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
+import { PlanService } from '../../core/plan/plan.service';
+import { PlanNotice } from '../../shared/plan-notice/plan-notice';
 import { navFor } from './nav';
+
+/**
+ * One "used of allowed" line on the plan strip: the numbers as words, and the same numbers
+ * as a length. `full` is what the strip goes amber on — being *at* a ceiling is the only
+ * part of the count worth interrupting someone for.
+ */
+function gauge(key: TranslationKey, used: number, max: number) {
+  return {
+    key,
+    params: { used: String(used), max: String(max) },
+    full: used >= max,
+    fill: max > 0 ? Math.min(100, (used / max) * 100) : 100,
+  };
+}
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, BrandMark, LanguageToggle, ThemeToggle, InstallButton, PrintDetailsDialog],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, BrandMark, LanguageToggle, ThemeToggle, InstallButton, PrintDetailsDialog, PlanNotice],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
   host: { '(document:keydown.escape)': 'closeOverlay()' },
@@ -24,9 +40,33 @@ export class Shell {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   protected readonly stores = inject(StoreService);
+  private readonly plans = inject(PlanService);
 
   /** Recomputes when the user switches shops — the same login can be owner in one, viewer in another. */
   protected readonly nav = computed(() => navFor(this.stores.role()));
+
+  /**
+   * The plan strip in the foot: which plan the account is on and how much of it is spent.
+   *
+   * Null while nothing is being enforced or the plan hasn't been read — an unknown plan says
+   * nothing rather than guessing at one. It is `planLimitGuard` that reads it on the way in,
+   * so this costs no request of its own; on a shop shared by another owner the guard skips
+   * that fetch and the strip stays away, which is right — that shop runs on their plan.
+   */
+  protected readonly planBadge = computed(() => {
+    const status = this.plans.status();
+    if (status === null || !status.enforced) return null;
+    return {
+      tier: `plan.tier.${status.tier}` as TranslationKey,
+      // Shops first: it is the ceiling a shopkeeper meets more often, and the one that
+      // sends them to the plan-limits screen.
+      gauges: [
+        gauge('plan.badge.shops', status.usage.stores, status.limits.maxStores),
+        gauge('plan.badge.seats', status.usage.users, status.limits.maxUsers),
+      ],
+    };
+  });
+
   // open by default on wide screens, collapsed below the 760px breakpoint
   protected readonly open = signal(this.matches('(min-width: 760px)'));
   // groups start collapsed on load; user expands what they need

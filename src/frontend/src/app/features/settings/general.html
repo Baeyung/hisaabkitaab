@@ -85,14 +85,7 @@
 
           <div class="fld">
             <label class="fld__label" for="store-contact">{{ locale.t('settings.general.contact') }}</label>
-            <input
-              id="store-contact"
-              class="fld__input"
-              [formField]="storeForm.contact"
-              type="tel"
-              inputmode="numeric"
-              autocomplete="tel"
-            />
+            <app-phone-field inputId="store-contact" [formField]="storeForm.contact" />
           </div>
         </div>
       </section>

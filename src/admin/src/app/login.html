@@ -1,0 +1,64 @@
+<div class="min-h-dvh flex items-center justify-center bg-desk px-4 py-10">
+  <form class="w-full max-w-sm" (ngSubmit)="submit()">
+    <div class="flex items-baseline gap-3">
+      <span class="font-display font-600 tracking-[0.18em] text-sm text-ink">HISAABKITAAB</span>
+      <span class="h-3 w-px bg-[var(--rule-strong)]" aria-hidden="true"></span>
+      <span class="font-mono text-xs text-brass">back office</span>
+    </div>
+
+    <div class="mt-4 rounded bg-card border border-[var(--rule)] p-6 space-y-5">
+      <div>
+        <h1 class="font-display text-2xl font-600 tracking-tight text-ink">Sign in</h1>
+        <p class="mt-1 text-sm text-muted">
+          Use your HisaabKitaab account. Only listed admins get through.
+        </p>
+      </div>
+
+      <label class="block">
+        <span class="eyebrow">Email or contact number</span>
+        <input
+          name="username"
+          autocomplete="username"
+          required
+          [ngModel]="username()"
+          (ngModelChange)="username.set($event)"
+          class="mt-1.5 w-full rounded border border-[var(--rule-strong)] bg-desk px-3 py-2
+                 font-mono text-sm text-ink focus:border-pine focus:outline-none"
+        />
+      </label>
+
+      <label class="block">
+        <span class="eyebrow">Password</span>
+        <input
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          class="mt-1.5 w-full rounded border border-[var(--rule-strong)] bg-desk px-3 py-2
+                 font-mono text-sm text-ink focus:border-pine focus:outline-none"
+        />
+      </label>
+
+      @if (error()) {
+        <p
+          class="rounded border-l-2 border-vermilion
+                 bg-[color-mix(in_srgb,var(--color-vermilion)_10%,transparent)] px-3 py-2 text-sm text-ink"
+          role="alert"
+        >
+          {{ error() }}
+        </p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="busy()"
+        class="w-full rounded bg-pine-deep px-3 py-2.5 font-display text-sm font-600 tracking-wider
+               uppercase text-white hover:bg-pine hover:text-desk disabled:opacity-50"
+      >
+        {{ busy() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </div>
+  </form>
+</div>

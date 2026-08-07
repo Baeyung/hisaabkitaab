@@ -82,7 +82,7 @@
                 </div>
                 <div class="fld">
                   <label class="fld__label" for="setup-contact">{{ locale.t('settings.general.contact') }}</label>
-                  <input id="setup-contact" class="fld__input" [formField]="shopForm.contact" type="tel" inputmode="numeric" autocomplete="tel" />
+                  <app-phone-field inputId="setup-contact" [formField]="shopForm.contact" />
                 </div>
               </div>
 
@@ -364,13 +364,10 @@
                   </div>
                   <div class="fld fld--grow">
                     <label class="fld__label" for="setup-party-contact">{{ locale.t('setup.khatas.contact') }}</label>
-                    <input
-                      id="setup-party-contact"
-                      class="fld__input num"
-                      type="tel"
-                      inputmode="numeric"
+                    <app-phone-field
+                      inputId="setup-party-contact"
                       [value]="partyRow().contact"
-                      (input)="partyRow.update((r) => ({ ...r, contact: $any($event.target).value }))"
+                      (valueChange)="partyRow.update((r) => ({ ...r, contact: $event }))"
                     />
                   </div>
                   <div class="fld fld--grow">

@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 abstract class ApiTest
 {
-    protected static final String PASSWORD = "secret123";
+    protected static final String PASSWORD = "secret123!";
 
     @Autowired
     protected MockMvc mvc;

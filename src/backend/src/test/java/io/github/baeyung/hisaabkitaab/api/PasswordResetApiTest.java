@@ -85,10 +85,10 @@ class PasswordResetApiTest extends ApiTest
 
         // Checking the code must not consume it — the new-password screen comes after.
         verifyOtp(email, otp, 204);
-        resetPassword(email, otp, "newpass123", 204);
+        resetPassword(email, otp, "newpass123!", 204);
 
         // New password works, old one no longer does, and the code is consumed.
-        mvc.perform(get("/api/auth/me").with(httpBasic("3201000002", "newpass123")))
+        mvc.perform(get("/api/auth/me").with(httpBasic("3201000002", "newpass123!")))
                 .andExpect(status().isOk());
         mvc.perform(get("/api/auth/me").with(httpBasic("3201000002", PASSWORD)))
                 .andExpect(status().isUnauthorized());
@@ -104,7 +104,7 @@ class PasswordResetApiTest extends ApiTest
         String wrong = wrongCode(otpFor("3201000003"));
 
         verifyOtp(email, wrong, 404);
-        resetPassword(email, wrong, "whatever123", 404);
+        resetPassword(email, wrong, "whatever123!", 404);
 
         mvc.perform(get("/api/auth/me").with(httpBasic("3201000003", PASSWORD)))
                 .andExpect(status().isOk());
@@ -121,7 +121,7 @@ class PasswordResetApiTest extends ApiTest
         user.setResetTokenExpiry(Instant.now().minusSeconds(60));
         users.save(user);
 
-        resetPassword(emailFor("3201000004"), otp, "newpass123", 404);
+        resetPassword(emailFor("3201000004"), otp, "newpass123!", 404);
     }
 
     @Test
@@ -138,7 +138,7 @@ class PasswordResetApiTest extends ApiTest
         }
 
         // The correct code is dead too now — the only way on is a fresh one.
-        resetPassword(email, otp, "newpass123", 404);
+        resetPassword(email, otp, "newpass123!", 404);
         assertNull(otpFor("3201000005"));
     }
 

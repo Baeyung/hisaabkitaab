@@ -15,7 +15,9 @@ import org.springframework.web.servlet.HandlerMapping;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
+import io.github.baeyung.hisaabkitaab.service.PlanService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -32,6 +34,8 @@ import lombok.RequiredArgsConstructor;
 public class CurrentStoreArgumentResolver implements HandlerMethodArgumentResolver
 {
     private final StoreService storeService;
+
+    private final PlanService planService;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter)
@@ -64,8 +68,29 @@ public class CurrentStoreArgumentResolver implements HandlerMethodArgumentResolv
             throw ResourceNotFoundException.forEntity("Store", storeId);
         }
 
-        StoreRole required = parameter.getParameterAnnotation(CurrentStore.class).value();
-        return storeService.findByIdForUser(storeId, principal.getId(), required);
+        CurrentStore annotation = parameter.getParameterAnnotation(CurrentStore.class);
+        Store store = storeService.findByIdForUser(storeId, principal.getId(), annotation.value());
+
+        // Keyed on the HTTP method rather than the required role, because the role does not
+        // say which way the data flows: the member list is a GET that needs OWNER. A closed
+        // shop stays wholly readable, so only the methods that change something are asked.
+        if (!annotation.allowLocked() && isWrite(webRequest))
+        {
+            planService.requireWritable(store);
+        }
+
+        return store;
+    }
+
+    private static boolean isWrite(NativeWebRequest request)
+    {
+        String method = request.getNativeRequest(HttpServletRequest.class) == null
+                ? null
+                : request.getNativeRequest(HttpServletRequest.class).getMethod();
+
+        // Anything we cannot identify counts as a write: failing closed is the same choice
+        // @CurrentStore already makes by defaulting to OWNER.
+        return !"GET".equals(method) && !"HEAD".equals(method) && !"OPTIONS".equals(method);
     }
 
     @SuppressWarnings("unchecked")

@@ -10,12 +10,15 @@ export const en = {
   'auth.login.title': 'Log in',
   'auth.login.subtitle': 'Open your ledger.',
   'auth.login.identifier': 'Email or mobile number',
+  'auth.login.hint': 'Mobile numbers include the country code — e.g. 923001234567',
   'auth.login.password': 'Password',
   'auth.login.submit': 'Log in',
   'auth.login.toSignup': 'Create an account',
   'auth.login.forgot': 'Forgot password?',
   'auth.login.invalid': 'Invalid credentials',
   'auth.login.locked': 'Account locked after too many wrong passwords. Reset your password to unlock it.',
+  'auth.login.planExpired':
+    'Your plan has ended, so this account is closed for now. Renew it to get back in.',
   'auth.forgot.title': 'Forgot your password?',
   'auth.forgot.subtitle': "Enter your email and we'll send you a 6-digit code.",
   'auth.forgot.email': 'Email',
@@ -37,7 +40,6 @@ export const en = {
   'auth.reset.autoLoginFailed': "Couldn't log you in automatically — please log in with your new password.",
   'auth.reset.password': 'New password',
   'auth.reset.confirm': 'Confirm new password',
-  'auth.reset.mismatch': 'Both passwords must match',
   'auth.reset.submit': 'Reset password',
   'auth.reset.invalid': 'That code is no longer valid. Ask for a new one.',
   'auth.reset.requestNew': 'Request a new code',
@@ -48,6 +50,7 @@ export const en = {
   'auth.signup.contact': 'Mobile number',
   'auth.signup.email': 'Email',
   'auth.signup.password': 'Password',
+  'auth.signup.confirm': 'Confirm password',
   'auth.signup.submit': 'Create account',
   'auth.signup.toLogin': 'I already have an account',
   'auth.signup.exists': 'An account with these details already exists',
@@ -64,6 +67,14 @@ export const en = {
   'validation.required': 'This field is required',
   'validation.email': 'Enter a valid email',
   'validation.contact': 'Enter a valid mobile number (7–15 digits)',
+  'validation.password.length': 'At least 8 characters',
+  'validation.password.digit': 'At least one number',
+  'validation.password.special': 'At least one special character (! ? @ # …)',
+  // Read out in place of the ✓/✗ mark, which is decoration a screen reader can't see.
+  'validation.password.met': 'Done:',
+  'validation.password.missing': 'Still needed:',
+  'validation.passwordMismatch': 'Both passwords must match',
+  'phone.country': 'Country code',
   'error.generic': 'Something went wrong. Please try again.',
   'home.welcome': 'Welcome, {{name}}',
   'home.logout': 'Log out',
@@ -97,6 +108,68 @@ export const en = {
   'stores.title': 'Your shops',
   'stores.subtitle': 'Pick the shop whose books you want to open.',
   'stores.add': 'Add a shop',
+  'stores.addLimit': 'Your plan is full. Upgrade to add another shop.',
+  'plan.endingSoon': 'Your plan ends on {{date}}. Renew it to keep your books open.',
+  'plan.ended': 'Your plan has ended. Renew it to open shops of your own again.',
+  // Named for how long it lasts: the strip is back next time the app is opened.
+  'plan.dismiss': 'Hide until next time',
+
+  // The plan strip in the sidebar. It answers "what am I on, and how much of it is left"
+  // in a glance, so every line is short enough to read without stopping.
+  'plan.badge.label': 'Plan',
+  'plan.tier.TRIAL': 'Trial',
+  'plan.tier.BASIC': 'Basic',
+  'plan.tier.PREMIUM': 'Premium',
+  'plan.tier.PREMIUM_PLUS': 'Premium Plus',
+  'plan.tier.ENTERPRISE': 'Enterprise',
+  'plan.badge.shops': '{{used}} of {{max}} shops',
+  // "Seats", not "users": it counts the owner too, so "3 of 3 users" reads as three other
+  // people to someone who has invited two.
+  'plan.badge.seats': '{{used}} of {{max}} seats',
+  'plan.badge.daysLeft': '{{days}} days left',
+  'plan.badge.oneDayLeft': '1 day left',
+  'plan.badge.lastDay': 'Last day',
+  'plan.badge.ended': 'Ended',
+  'stores.suspendedBadge': 'Closed',
+  'stores.suspendedNote': 'Your plan no longer covers every shop. Choose which stay open.',
+  'stores.suspendedSettled':
+    'Some of your shops are closed — nothing in them has been lost. Upgrade your plan to open them again.',
+  'stores.suspendedCta': 'Choose shops',
+
+  // The plan-limits screen. Worded to say what happened, what is safe, and what to do —
+  // in that order. It is the one screen a user meets without having asked for it, so it
+  // never blames them and never implies anything has been lost.
+  'planLimits.title': 'Your plan no longer covers everything',
+  'planLimits.lede':
+    'Your plan was changed and it now covers fewer shops than you have open. Choose the ones you want to keep working in.',
+  'planLimits.safe':
+    'Nothing is deleted. A closed shop keeps all its entries — you can still open it and print from it, and it comes back on its own if your plan grows again.',
+  'planLimits.loadError': "Couldn't load your shops and team. Please try again.",
+
+  'planLimits.shops.title': 'Shops',
+  'planLimits.shops.count': '{{kept}} of {{max}} kept open',
+  'planLimits.shops.kept': 'Staying open',
+  'planLimits.shops.closed': 'Will be closed',
+  'planLimits.shops.delete': 'Delete this shop',
+
+  'planLimits.people.title': 'Your team',
+  'planLimits.people.count': '{{used}} of {{max}} seats used',
+  'planLimits.people.note':
+    'Your plan also covers fewer people than you have. Removing someone takes away their access to your shops — their own account is untouched, and you can invite them back any time.',
+  'planLimits.people.remove': 'Remove',
+  'planLimits.people.confirm': 'Remove their access to all your shops?',
+
+  'planLimits.bar.shops': '{{over}} too many shops open',
+  'planLimits.bar.people': 'Too many people for your plan',
+  'planLimits.bar.ready': 'That fits your plan.',
+  'planLimits.bar.save': 'Save and continue',
+
+  'planLimits.delete.title': 'Delete this shop?',
+  'planLimits.delete.body':
+    'This erases “{{name}}” and everything booked in it — entries, khatas, items. This cannot be undone. To keep it without deleting, close it instead.',
+  'planLimits.delete.prompt': 'Type the shop name to confirm',
+  'planLimits.delete.confirm': 'Delete for good',
+
   'stores.switch': 'Switch shop',
   'stores.loadError': "Couldn't load your shops. Please try again.",
   'stores.retry': 'Try again',
@@ -585,6 +658,8 @@ export const en = {
   'members.pendingNote': "Hasn't joined yet",
   'members.error.duplicate': 'They already have access to this shop.',
   'members.error.self': "That's your own address — this shop is already yours.",
+  'members.error.planLimit':
+    'Your plan is full. Upgrade to give more people access, or remove someone first.',
 
   'stores.shared': 'Shared with me',
   'stores.sharedBy': 'Shared by',

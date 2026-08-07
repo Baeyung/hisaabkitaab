@@ -1,3 +1,172 @@
-/* You can add global styles to this file, and also import other style files */
-
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 @import 'tailwindcss';
+
+/* ── Back office ─────────────────────────────────────────────────────
+   The customer app is ledger paper on a cream desk. This is the room
+   behind it after closing: a warm near-black desk, brass rules, one
+   green lamp. The split is deliberate — this app can change what a
+   customer is paying for, and it should never be mistaken for theirs.
+
+   Plex Condensed labels the way a form does, Plex Mono carries anything
+   the machine wrote (dates, numbers, contacts), Plex Sans carries prose. */
+@theme {
+  --color-desk: #14120f; /* page */
+  --color-panel: #1b1815; /* rail + sidebar */
+  --color-card: #221f1b; /* register rows, inputs */
+  --color-raise: #2a2620; /* row hover, secondary buttons */
+
+  --color-ink: #efe9dc;
+  --color-muted: #a49b8c;
+  --color-faint: #948b7e; /* the lightest grey that still clears 4.5:1 on --color-card */
+
+  --color-pine: #63b294; /* accent: focus, links, current item */
+  --color-pine-deep: #1f5c4d; /* the house green, as a fill under white */
+  --color-brass: #d3a34e; /* stamp ink */
+  --color-vermilion: #e0614a; /* lapsed, rejected, unreachable */
+
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* Hairlines are mixed off ink so one value governs every rule on the page. */
+:root {
+  --rule: color-mix(in srgb, var(--color-ink) 10%, transparent);
+  --rule-strong: color-mix(in srgb, var(--color-ink) 18%, transparent);
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-desk);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pine);
+  outline-offset: 2px;
+}
+
+/* ── Field indicators ────────────────────────────────────────────────
+   Chrome draws a select's chevron hard against the border and ignores
+   the padding, while a date field insets its calendar button by the
+   padding — so side by side the two sat 14px apart and half a pixel
+   out of height. Draw our own chevron and size both indicators to the
+   same box, so every control on a form row ends the same way. */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a49b8c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.95rem;
+  padding-right: 2.4rem;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  width: 0.95rem;
+  height: 0.95rem;
+  padding: 0;
+  margin: 0;
+  opacity: 0.7; /* the chevron is drawn in muted; match its weight */
+  cursor: pointer;
+}
+
+/* The section label above every heading and field group: what a printed
+   form puts in the margin. */
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.688rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+.hairline {
+  border-top: 1px solid var(--rule);
+}
+
+/* ── The stamp ───────────────────────────────────────────────────────
+   A plan is a permit: a tier and the date it stops being valid. It is
+   drawn as one, double-ruled, so the answer to "what is this account
+   entitled to" is a single object on the row rather than three lines of
+   text. A lapsed plan is overprinted the way a real one would be. */
+.stamp {
+  position: relative;
+  overflow: hidden;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-brass) 50%, transparent);
+  border-radius: 2px;
+}
+
+.stamp::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid color-mix(in srgb, var(--color-brass) 22%, transparent);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.stamp--none {
+  border-color: var(--rule-strong);
+}
+
+.stamp--none::before {
+  border-color: transparent;
+}
+
+.stamp--expired {
+  border-color: color-mix(in srgb, var(--color-vermilion) 55%, transparent);
+}
+
+.stamp--expired::before {
+  border-color: color-mix(in srgb, var(--color-vermilion) 24%, transparent);
+}
+
+/* The date sits under the overprint, so it is lifted out of grey to stay
+   readable through it — it is the one thing a lapsed plan still has to say. */
+.stamp--expired p + p {
+  color: #f2cec6;
+}
+
+/* Struck across the stamp, clipped by its own edges so it never disturbs
+   the row it sits in. */
+.stamp--expired::after {
+  content: 'EXPIRED';
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  top: 50%;
+  transform: translateY(-50%) rotate(-7deg);
+  padding: 0.28rem 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em; /* the tracking pads the right edge; put it back on the left */
+  color: #ffd9d1;
+  background: color-mix(in srgb, var(--color-vermilion) 30%, transparent);
+  border-block: 1px solid var(--color-vermilion);
+}
+
+/* The register settles onto the desk once, top to bottom. Uniform delay
+   past the eighth row — a long list should not wait on its own animation. */
+@media (prefers-reduced-motion: no-preference) {
+  .row {
+    animation: settle 0.32s ease-out both;
+  }
+  .row:nth-child(2) { animation-delay: 0.04s; }
+  .row:nth-child(3) { animation-delay: 0.08s; }
+  .row:nth-child(4) { animation-delay: 0.12s; }
+  .row:nth-child(5) { animation-delay: 0.16s; }
+  .row:nth-child(n + 6) { animation-delay: 0.2s; }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

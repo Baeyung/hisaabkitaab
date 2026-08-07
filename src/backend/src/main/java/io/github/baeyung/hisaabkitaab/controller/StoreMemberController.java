@@ -55,8 +55,13 @@ public class StoreMemberController
         return ResponseEntity.ok(storeMemberService.changeRole(store.getId(), userId, request.role()));
     }
 
+    /**
+     * Allowed on a closed shop: taking a seat back is one of the two ways out of being over
+     * the plan's ceilings, so the check that state produces must not also block it.
+     */
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> remove(@PathVariable String userId, @CurrentStore Store store)
+    public ResponseEntity<Void> remove(@PathVariable String userId,
+            @CurrentStore(allowLocked = true) Store store)
     {
         storeMemberService.remove(store.getId(), userId);
         return ResponseEntity.noContent().build();

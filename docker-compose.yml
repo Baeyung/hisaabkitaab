@@ -27,6 +27,8 @@ services:
       BREVO_MAIL_USER_IDENTIFIER: ${BREVO_MAIL_USER_IDENTIFIER}
       BREVO_SMPTP_KEY: ${BREVO_SMPTP_KEY}
       EMAIL_ENABLED: ${EMAIL_ENABLED}
+      PLANS_ENABLED: ${PLANS_ENABLED}
+      ADMIN_EMAILS: ${ADMIN_EMAILS}
       WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN}
     depends_on:
       postgres:
@@ -42,6 +44,15 @@ services:
       - backend
     ports:
       - "80:80"
+
+  admin:
+    build: ./src/admin
+    container_name: hisaabkitaab-admin
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "81:80"
 
 volumes:
   postgres-data-hk:

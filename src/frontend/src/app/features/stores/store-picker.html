@@ -4,7 +4,25 @@
   <button type="button" class="topbar__logout" (click)="logout()">{{ locale.t('home.logout') }}</button>
 </app-outer-bar>
 
+<!-- The same strip the shell carries on every in-shop screen, in the same place relative to
+     the bar — the notice must not change shape depending on which screen you met it on. -->
+<app-plan-notice />
+
 <section class="pick">
+  <!-- Shown once a shop of theirs is closed. The picker is the one screen every session
+       passes through, so this is where an owner finds the way back to re-opening one —
+       nothing else on the route would ever mention it. -->
+  @if (!loading() && !loadError() && suspendedNoteKey(); as key) {
+    <p role="status" class="pick__alert pick__notice pick__notice--closed">
+      <span>{{ locale.t(key) }}</span>
+      <!-- Only while the choice is still open: the screen turns away a settled account, so
+           offering it would be offering a redirect back to here. -->
+      @if (plan.overLimit()) {
+        <a class="btn btn--ghost btn--sm" routerLink="/plan/limits">{{ locale.t('stores.suspendedCta') }}</a>
+      }
+    </p>
+  }
+
   <header class="pick__head">
     <div>
       <h1 class="pick__title">{{ locale.t('stores.title') }}</h1>
@@ -12,12 +30,18 @@
     </div>
 
     @if (!loading() && !loadError() && list().length > 0) {
-      <a class="btn btn--ghost" routerLink="/stores/new">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        {{ locale.t('stores.add') }}
-      </a>
+      <!-- At the plan's ceiling the control stays visible but inert, and says why. Hiding it
+           would leave "how do I add another shop?" unanswered; the server refuses either way. -->
+      @if (atStoreLimit()) {
+        <span class="pick__limit">{{ locale.t('stores.addLimit') }}</span>
+      } @else {
+        <a class="btn btn--ghost" routerLink="/stores/new">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          {{ locale.t('stores.add') }}
+        </a>
+      }
     }
   </header>
 
@@ -62,7 +86,14 @@
         }
       </span>
       <span class="card__meta">
-        <span class="card__name">{{ store.name }}</span>
+        <span class="card__name">
+          {{ store.name }}
+          <!-- On the name, not the card: a closed shop is still openable, and a badge
+               anywhere else would read as "you can't go in here". -->
+          @if (store.suspended) {
+            <span class="card__closed">{{ locale.t('stores.suspendedBadge') }}</span>
+          }
+        </span>
         @if (store.role !== 'OWNER') {
           <span class="card__shared">
             {{ locale.t('stores.sharedBy') }} {{ store.ownerName }}

@@ -24,6 +24,10 @@ public class SignupRequest
     @Email(regexp = "^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$")
     private String email;
 
+    /** 8+ characters with at least one digit and one non-alphanumeric. Mirrors
+     *  PASSWORD_PATTERN in the frontend's password-field.ts. Only new passwords
+     *  are held to this — login takes whatever an older account was created with. */
     @NotBlank
+    @Pattern(regexp = "^(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")
     private String password;
 }

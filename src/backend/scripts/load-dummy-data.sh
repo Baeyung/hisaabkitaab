@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 #
-# Seeds dummy data into HisaabKitaab through the REST API for a single, fixed
-# test account that owns THREE stores, each with its own trade, catalog, khata
-# and history -- so the store switcher, per-store isolation and the empty-ish
-# store case all have something real to show.
+# Seeds a whole demo tenancy into HisaabKitaab through the REST API: six
+# accounts on four plan tiers, two of them shop owners with stocked stores, so
+# every screen -- back office, plan meter, store switcher, member roles, the
+# empty first-run state -- has something real behind it.
 #
+# ACCOUNTS (all passwords are the same; see PASSWORD below)
+#   t@t.com                       back office admin. Owns nothing; must be
+#                                 listed in ADMIN_EMAILS for the admin app.
+#   demo@hisaabkitaab.shop        the main owner, PREMIUM_PLUS. Three stores.
+#   manager@hisaabkitaab.shop     EDITOR in Kiryana Store.
+#   viewer@hisaabkitaab.shop      VIEWER in Kiryana Store and Kapra Ghar.
+#   basic@hisaabkitaab.shop       owner on BASIC (1 store, 1 user) -- log in as
+#                                 this one to show the plan ceiling being hit.
+#   trial@hisaabkitaab.shop       fresh signup, still on TRIAL, no store yet:
+#                                 the onboarding/empty state.
+#
+# STORES (all under demo@, except Chai Dhaba)
 #   1. Kiryana Store   grocery: 7 parties, 20 items, ~46 entries over 30 days,
 #                      incl. the FIFO receipt demo. The big dataset.
 #   2. Kapra Ghar      cloth shop: 4 parties, 5 items (unit "gz"), ~13 entries,
@@ -12,33 +24,51 @@
 #   3. Hardware Point  thin store: 2 parties, 4 items, 6 entries, opening
 #                      balances/stock/cash set -- what a freshly onboarded
 #                      shop looks like.
+#   4. Chai Dhaba      basic@'s only store: 2 parties, 3 items, 6 entries.
 #
 # Every store-scoped call goes to /api/stores/{storeId}/... -- the store comes
 # from the URL, never from the login, so seeding a second store is just a second
-# `use_store` call. Re-run any time: stores, parties and items are matched by
-# name and only created if missing, so a re-run just stacks more transactions on
-# top of the same master data.
+# `use_store` call. Re-run any time: accounts, stores, parties and items are
+# matched and only created if missing, so a re-run just stacks more transactions
+# on top of the same master data.
+#
+# NEEDS, on the server being seeded:
+#   EMAIL_ENABLED=false   verification is wired to it (app.verification.enabled),
+#                         and a seeded account has no inbox to read a code from.
+#   ADMIN_EMAILS=t@t.com  the default. Plans are assigned through /api/admin,
+#                         so without it nobody can be moved off TRIAL -- and a
+#                         TRIAL account may hold exactly one store.
 #
 # Requirements: bash + curl + jq. On Windows run load-dummy-data.bat, which
 # hands this file to WSL/Git Bash.
 #
 # Usage:
 #   ./load-dummy-data.sh
-#   BASE_URL=http://localhost:8080 EMAIL=you@example.com PASSWORD=secret ./load-dummy-data.sh
+#   BASE_URL=http://localhost:8080 PASSWORD='Demo@123' ./load-dummy-data.sh
 #
 set -euo pipefail
 
-# --- account to seed --------------------------------------------------------
-# Put your own login here to seed the account you actually use; leave it alone
-# for the fixed test account. Env vars win over these, so a one-off run needs no
-# edit. The account is signed up if new, reused if it already exists -- but a
-# wrong password counts as a failed login, and 4 of those lock the account.
-EMAIL="${EMAIL:-test@test.com}"
-PASSWORD="${PASSWORD:-test}"
+# --- accounts ---------------------------------------------------------------
+# Env vars win over these, so a one-off run needs no edit. Every account is
+# signed up if new and reused if it already exists -- but a wrong password
+# counts as a failed login, and 4 of those lock the account.
+#
+# The password must satisfy the signup rule (8+ chars, one digit, one symbol),
+# which is why it is not "test": that account can no longer be created.
+PASSWORD="${PASSWORD:-Demo@123}"
+
+EMAIL="${EMAIL:-demo@hisaabkitaab.shop}"           # the main owner, 3 stores
+ADMIN_EMAIL="${ADMIN_EMAIL:-t@t.com}"              # must be in ADMIN_EMAILS
+MANAGER_EMAIL="${MANAGER_EMAIL:-manager@hisaabkitaab.shop}"
+VIEWER_EMAIL="${VIEWER_EMAIL:-viewer@hisaabkitaab.shop}"
+BASIC_EMAIL="${BASIC_EMAIL:-basic@hisaabkitaab.shop}"
+TRIAL_EMAIL="${TRIAL_EMAIL:-trial@hisaabkitaab.shop}"
 # ----------------------------------------------------------------------------
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
-CONTACT_NUMBER="${CONTACT_NUMBER:-03000000000}"
+# Digits only, 7-15 of them, country code included and no leading + -- same shape
+# the phone fields store (923001234567), and what login expects typed back.
+CONTACT_NUMBER="${CONTACT_NUMBER:-923000000000}"
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -47,7 +77,12 @@ say()  { printf '\n\033[1;34m==> %s\033[0m\n' "$1"; }
 info() { printf '    \033[0;90m%s\033[0m\n' "$1"; }
 die()  { printf '\033[1;31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
 
-# GET/POST/PUT as $EMAIL:$PASSWORD. args: <method> <path> [json_body]
+# Who req() authenticates as. Every account shares one password, so login_as
+# only has to move the address.
+AUTH_EMAIL="$EMAIL"
+login_as() { AUTH_EMAIL="$1"; }
+
+# GET/POST/PUT as the account login_as last named. args: <method> <path> [json_body]
 # Echoes "<body>\n<http_code>" -- use code_of/body_of to split it. (Can't set a
 # global http-code variable here: $(req ...) runs this in a subshell, so any
 # plain variable assignment inside would vanish once the subshell exits.)
@@ -55,9 +90,9 @@ req() {
   local method="$1" path="$2" data="${3:-}"
   if [ -n "$data" ]; then
     curl -sS -w $'\n%{http_code}' -X "$method" "$BASE_URL$path" \
-      -u "$EMAIL:$PASSWORD" -H 'Content-Type: application/json' -d "$data"
+      -u "$AUTH_EMAIL:$PASSWORD" -H 'Content-Type: application/json' -d "$data"
   else
-    curl -sS -w $'\n%{http_code}' -X "$method" "$BASE_URL$path" -u "$EMAIL:$PASSWORD"
+    curl -sS -w $'\n%{http_code}' -X "$method" "$BASE_URL$path" -u "$AUTH_EMAIL:$PASSWORD"
   fi
 }
 
@@ -111,13 +146,68 @@ open_cash()    { sreq PUT /opening-cash "{\"amount\":$1}" >/dev/null; }         
 open_balance() { sreq PUT "/parties/$1/opening-balance" "{\"amount\":$2,\"direction\":\"$3\"}" >/dev/null; } # <partyId> <amount> THEY_OWE_YOU|YOU_OWE_THEM
 open_stock()   { sreq PUT "/store-items/$1/opening-stock" "{\"quantity\":$2}" >/dev/null; }              # <itemId> <qty>
 
-# Portable "N days before today" -> YYYY-MM-DD (BSD date on macOS, GNU date on Linux).
-days_ago() {
-  if date -v-1d >/dev/null 2>&1; then
-    date -v-"$1"d +%F
-  else
-    date -d "-$1 days" +%F
-  fi
+# Portable "N days before/after today" -> YYYY-MM-DD (BSD date on macOS, GNU on Linux).
+days_ago()   { if date -v-1d >/dev/null 2>&1; then date -v-"$1"d +%F; else date -d "-$1 days" +%F; fi; }
+days_ahead() { if date -v-1d >/dev/null 2>&1; then date -v+"$1"d +%F; else date -d "+$1 days" +%F; fi; }
+
+# ---------------------------------------------------------------------------
+# accounts, plans, members
+# ---------------------------------------------------------------------------
+
+# Create an account if it isn't there, then prove it can log in. args: <email> <name> <contact>
+signup() {
+  local email="$1" name="$2" contact="$3" resp code
+  resp=$(curl -sS -w $'\n%{http_code}' -X POST "$BASE_URL/api/auth/signup" \
+    -H 'Content-Type: application/json' \
+    -d "{\"name\":\"$name\",\"contactNumber\":\"$contact\",\"email\":\"$email\",\"password\":\"$PASSWORD\"}")
+  code=$(code_of "$resp")
+
+  case "$code" in
+    200) info "created $email" ;;
+    409) info "$email already exists" ;;
+    *)   die "signup for $email failed (HTTP $code): $(body_of "$resp")" ;;
+  esac
+
+  # A 403 here is almost always an unverified account: the password authenticates,
+  # but ROLE_USER is withheld until a mailed code is entered, which a script cannot do.
+  login_as "$email"
+  code=$(code_of "$(req GET /api/stores)")
+  [ "$code" = "200" ] || die "$email cannot use the API (HTTP $code). $(
+      [ "$code" = "403" ] && printf 'Unverified -- restart the backend with EMAIL_ENABLED=false.' \
+                          || printf 'Wrong password for an account that already existed?')"
+}
+
+# Move an account onto a tier, as the admin. args: <email> <tier> [days_valid]
+# Without this every account stays on TRIAL, which caps it at one store.
+assign_plan() {
+  local email="$1" tier="$2" days="${3:-365}" resp code id
+  login_as "$ADMIN_EMAIL"
+
+  resp=$(req GET "/api/admin/users?q=$email")
+  code=$(code_of "$resp")
+  [ "$code" = "200" ] || die "admin lookup failed (HTTP $code). Is $ADMIN_EMAIL in ADMIN_EMAILS on the server?"
+
+  id=$(body_of "$resp" | jq -r --arg e "$email" '[.[] | select(.email==$e)][0].id // empty')
+  [ -n "$id" ] || die "admin cannot see $email -- did signup run?"
+
+  resp=$(req PUT "/api/admin/users/$id/plan" \
+    "{\"tier\":\"$tier\",\"expiresAt\":\"$(days_ahead "$days")\"}")
+  [ "$(code_of "$resp")" = "200" ] || die "could not put $email on $tier: $(body_of "$resp")"
+  info "$email -> $tier, $days days"
+}
+
+# Share the current store with someone. args: <email> VIEWER|EDITOR
+# Run as the store's owner; the invitee must already have signed up, or they get
+# an INVITED placeholder that cannot log in.
+invite() {
+  local resp code
+  resp=$(sreq POST /members "{\"email\":\"$1\",\"role\":\"$2\"}")
+  code=$(code_of "$resp")
+  case "$code" in
+    200) info "$1 -> $2" ;;
+    409) info "$1 already has access" ;;
+    *)   die "could not invite $1 (HTTP $code): $(body_of "$resp")" ;;
+  esac
 }
 
 # ---------------------------------------------------------------------------
@@ -185,41 +275,46 @@ curl -sS -m 5 -o /dev/null "$BASE_URL/api/stores" -u "preflight:preflight" \
 info "Server reachable."
 
 # ---------------------------------------------------------------------------
-# 1. User (ok if it already exists -- we just fall through to auth)
+# 1. Accounts (each is created if new, reused if it already exists)
 # ---------------------------------------------------------------------------
-say "Signing up $EMAIL"
+say "Accounts"
+signup "$ADMIN_EMAIL"   "Admin"         "923009990000"
+signup "$EMAIL"         "Ahmad Raza"    "$CONTACT_NUMBER"
+signup "$MANAGER_EMAIL" "Bilal Manager" "923009990002"
+signup "$VIEWER_EMAIL"  "Sara Viewer"   "923009990003"
+signup "$BASIC_EMAIL"   "Imran Chai"    "923009990004"
+signup "$TRIAL_EMAIL"   "Nadia Trial"   "923009990005"
 
-signup_resp=$(curl -sS -w $'\n%{http_code}' -X POST "$BASE_URL/api/auth/signup" \
-  -H 'Content-Type: application/json' \
-  -d "{\"name\":\"Test User\",\"contactNumber\":\"$CONTACT_NUMBER\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
-signup_code=$(printf '%s' "$signup_resp" | tail -n1)
-signup_body=$(printf '%s' "$signup_resp" | sed '$d')
+# ---------------------------------------------------------------------------
+# 2. Plans. TRIAL allows one store and one user, so the owners have to be moved
+#    off it before their stores exist. $TRIAL_EMAIL is deliberately left there.
+# ---------------------------------------------------------------------------
+say "Plans"
+assign_plan "$EMAIL"       PREMIUM_PLUS 365
+assign_plan "$BASIC_EMAIL" BASIC        365
+info "$TRIAL_EMAIL left on its signup TRIAL."
 
-if [ "$signup_code" = "200" ]; then
-  info "Created $EMAIL"
-else
-  info "Signup skipped (HTTP $signup_code) -- assuming $EMAIL already exists."
-fi
+# Point the seeding helpers at one owner's account and shop list.
+own_stores_as() {
+  login_as "$1"
+  STORES_JSON=$(body_of "$(req GET /api/stores)")
+}
 
-stores_resp=$(req GET /api/stores)
-[ "$(code_of "$stores_resp")" = "200" ] \
-  || die "Could not authenticate as $EMAIL:$PASSWORD. Signup said: $signup_body"
-STORES_JSON=$(body_of "$stores_resp")
-info "Authenticated as $EMAIL ($(printf '%s' "$STORES_JSON" | jq 'length') store(s) already)."
+own_stores_as "$EMAIL"
 
 # ===========================================================================
 # STORE 1 -- Kiryana Store: the full dataset
 # ===========================================================================
 say "Store 1: Kiryana Store"
-use_store "Kiryana Store" "Main Bazaar, Gulberg, Lahore" "0421234567"
+use_store "Kiryana Store" "Main Bazaar, Gulberg, Lahore" "92421234567"
 
-PARTY_BILAL=$(get_or_create_party "Bilal Traders" "03111111111")
-PARTY_USMAN=$(get_or_create_party "Usman Wholesale" "03122222222")
-PARTY_KAMRAN=$(get_or_create_party "Kamran Retail" "03133333333")
-PARTY_FAISAL=$(get_or_create_party "Faisal Distributors" "03144444444")
-PARTY_ADEEL=$(get_or_create_party "Adeel General Store" "03155555555")
-PARTY_SAJID=$(get_or_create_party "Sajid Karyana" "03166666666")
-PARTY_NOMAN=$(get_or_create_party "Noman Suppliers" "03177777777")
+PARTY_BILAL=$(get_or_create_party "Bilal Traders" "923111111111")
+PARTY_USMAN=$(get_or_create_party "Usman Wholesale" "923122222222")
+PARTY_KAMRAN=$(get_or_create_party "Kamran Retail" "923133333333")
+PARTY_FAISAL=$(get_or_create_party "Faisal Distributors" "923144444444")
+PARTY_ADEEL=$(get_or_create_party "Adeel General Store" "923155555555")
+PARTY_SAJID=$(get_or_create_party "Sajid Karyana" "923166666666")
+PARTY_NOMAN=$(get_or_create_party "Noman Suppliers" "923177777777")
 info "7 parties ready."
 
 ITEM_SUGAR=$(get_or_create_item    "Sugar"            "kg"     120 100)
@@ -246,6 +341,11 @@ info "20 items ready."
 
 open_cash 30000
 info "Opening cash 30,000."
+
+# The staff. Both signed up above, so the invite lands on a real account rather
+# than an INVITED placeholder that could not log in.
+invite "$MANAGER_EMAIL" EDITOR
+invite "$VIEWER_EMAIL" VIEWER
 
 # ---- Entries: 46 events over the last 30 days: SALE / PURCHASE / RECEIPT /
 #      PAYMENT / EXPENSE, single- and multi-line, fully / partially / over-paid,
@@ -347,12 +447,12 @@ txn SALE 600 600 0 SALE-020 "Sugar to Adeel General Store" "$PARTY_ADEEL" "Adeel
 # STORE 2 -- Kapra Ghar: cloth shop, purchase-heavy, unit "gz" (gaz/yards)
 # ===========================================================================
 say "Store 2: Kapra Ghar"
-use_store "Kapra Ghar" "Azam Cloth Market, Lahore" "0429876543"
+use_store "Kapra Ghar" "Azam Cloth Market, Lahore" "92429876543"
 
-P2_CRESCENT=$(get_or_create_party "Crescent Mills" "03121110000")
-P2_CHENAB=$(get_or_create_party   "Chenab Textiles" "03121110001")
-P2_ZAINAB=$(get_or_create_party   "Zainab Boutique" "03121110002")
-P2_MALIK=$(get_or_create_party    "Malik Cloth House" "03121110003")
+P2_CRESCENT=$(get_or_create_party "Crescent Mills" "923121110000")
+P2_CHENAB=$(get_or_create_party   "Chenab Textiles" "923121110001")
+P2_ZAINAB=$(get_or_create_party   "Zainab Boutique" "923121110002")
+P2_MALIK=$(get_or_create_party    "Malik Cloth House" "923121110003")
 info "4 parties ready."
 
 I2_CHAMKI=$(get_or_create_item  "Chamki-101"  "gz" 450 320)
@@ -361,6 +461,9 @@ I2_SILK=$(get_or_create_item    "Silk-303"    "gz" 900 640)
 I2_KHADDAR=$(get_or_create_item "Khaddar-404" "gz" 380 260)
 I2_LINEN=$(get_or_create_item   "Linen-505"   "gz" 520 400)
 info "5 items ready."
+
+# Same person, second shop -- costs no extra seat, which is the point of showing it.
+invite "$VIEWER_EMAIL" VIEWER
 
 open_cash 12000
 open_stock "$I2_KHADDAR" 200
@@ -397,10 +500,10 @@ txn SALE 0 9000 0 KG-SALE-005 "Silk on credit to Zainab Boutique" "$P2_ZAINAB" "
 # STORE 3 -- Hardware Point: a thin, freshly-onboarded shop
 # ===========================================================================
 say "Store 3: Hardware Point"
-use_store "Hardware Point" "Ferozepur Road, Lahore" "0423334444"
+use_store "Hardware Point" "Ferozepur Road, Lahore" "92423334444"
 
-P3_STEEL=$(get_or_create_party "Ittefaq Steel" "03211110000")
-P3_RAZA=$(get_or_create_party  "Raza Builders" "03211110001")
+P3_STEEL=$(get_or_create_party "Ittefaq Steel" "923211110000")
+P3_RAZA=$(get_or_create_party  "Raza Builders" "923211110001")
 info "2 parties ready."
 
 I3_CEMENT=$(get_or_create_item "Cement Bag"  "bag"   1350 1180)
@@ -428,4 +531,55 @@ settle RECEIPT 8000 2 HW-RCPT-001 "Part payment from Raza Builders" "$P3_RAZA" "
 txn SALE 1800 1800 0 HW-SALE-003 "Wall paint to Raza Builders" "$P3_RAZA" "Raza Builders" \
   "$(line "$I3_PAINT" "Wall Paint" 2 900)"
 
-say "Done. Log in as $EMAIL / $PASSWORD -- 3 stores loaded (Kiryana Store, Kapra Ghar, Hardware Point)."
+# ===========================================================================
+# STORE 4 -- Chai Dhaba: a different owner, on BASIC. One store is its ceiling,
+# so trying to add a second here is the plan wall, live.
+# ===========================================================================
+say "Store 4: Chai Dhaba (owner: $BASIC_EMAIL)"
+own_stores_as "$BASIC_EMAIL"
+use_store "Chai Dhaba" "Model Town Link Road, Lahore" "92425556666"
+
+P4_DAIRY=$(get_or_create_party "Shezan Dairy" "923311110000")
+P4_OFFICE=$(get_or_create_party "Zeeshan Office Canteen" "923311110001")
+info "2 parties ready."
+
+I4_CHAI=$(get_or_create_item   "Doodh Patti" "cup"    80  45)
+I4_PARATHA=$(get_or_create_item "Paratha"    "piece"  70  40)
+I4_MILK=$(get_or_create_item   "Fresh Milk"  "litre" 220 190)
+info "3 items ready."
+
+open_cash 4000
+open_balance "$P4_OFFICE" 3000 THEY_OWE_YOU
+info "Opening cash 4,000; canteen's carried-in balance set."
+
+say "Chai Dhaba: publishing entries"
+
+txn PURCHASE 5700 5700 12 CD-PUR-001 "Milk from Shezan Dairy" "$P4_DAIRY" "Shezan Dairy" \
+  "$(line "$I4_MILK" "Fresh Milk" 30 190)"
+counter_txn SALE 3200 3200 10 CD-SALE-001 "Chai and parathas, counter" \
+  "$(line "$I4_CHAI" "Doodh Patti" 25 80),$(line "$I4_PARATHA" "Paratha" 18 70)"
+txn SALE 0 6400 7 CD-SALE-002 "Monthly chai supply to office canteen" "$P4_OFFICE" "Zeeshan Office Canteen" \
+  "$(line "$I4_CHAI" "Doodh Patti" 80 80)"
+expense 2500 5 CD-EXP-001 "Gas cylinder refill" "GENERAL"
+settle RECEIPT 5000 3 CD-RCPT-001 "Part payment from office canteen" "$P4_OFFICE" "Zeeshan Office Canteen"
+counter_txn SALE 1600 1600 0 CD-SALE-003 "Morning chai, counter" \
+  "$(line "$I4_CHAI" "Doodh Patti" 20 80)"
+
+# ===========================================================================
+say "Done. Password for every account below: $PASSWORD"
+cat <<EOF
+
+    $ADMIN_EMAIL
+        back office (admin app). Owns no shop.
+    $EMAIL
+        PREMIUM_PLUS -- Kiryana Store, Kapra Ghar, Hardware Point.
+    $MANAGER_EMAIL
+        EDITOR in Kiryana Store.
+    $VIEWER_EMAIL
+        VIEWER in Kiryana Store and Kapra Ghar.
+    $BASIC_EMAIL
+        BASIC -- Chai Dhaba. At its 1-store, 1-user ceiling.
+    $TRIAL_EMAIL
+        TRIAL, no shop yet: the first-run state.
+
+EOF

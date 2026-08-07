@@ -11,6 +11,10 @@ import io.github.baeyung.hisaabkitaab.enums.StoreRole;
  *
  * @param ownerName the owner's name, shown on shared stores ("Shared by …"). Their own name
  *                  for a store the caller owns, which the client simply doesn't display.
+ * @param suspended true when the owner's plan no longer covers this shop, so it is readable
+ *                  but closed to new entries. Sent for shared stores too — a member of a
+ *                  closed shop meets the same read-only shop the owner does, and finding out
+ *                  by having a save refused would be the wrong way round.
  */
 public record StoreSummary(
         String id,
@@ -20,7 +24,8 @@ public record StoreSummary(
         String logoUri,
         String watermarkUri,
         StoreRole role,
-        String ownerName)
+        String ownerName,
+        boolean suspended)
 {
     public static StoreSummary of(Store store, StoreRole role)
     {
@@ -32,6 +37,7 @@ public record StoreSummary(
                 store.getLogoUri(),
                 store.getWatermarkUri(),
                 role,
-                store.getOwner().getName());
+                store.getOwner().getName(),
+                store.isSuspended());
     }
 }

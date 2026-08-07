@@ -1,5 +1,7 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
+import java.time.Instant;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -54,6 +56,24 @@ public class Store
 
     @Column(columnDefinition = "text")
     private String watermarkUri;
+
+    /**
+     * When the owner's plan stopped covering this shop, or null while it does. A suspended
+     * shop is read-only, not gone: it is still listed, readable and printable, and raising
+     * the plan's limits opens it again. Set only by {@code PlanService}, which is also the
+     * only thing that clears it.
+     *
+     * <p>Shops with a date here are out of every plan count, so closing one is what an owner
+     * over their ceiling does instead of deleting a book they may still need.
+     */
+    @JsonIgnore
+    private Instant suspendedAt;
+
+    /** Whether the plan has this shop closed. The single reading of {@link #suspendedAt}. */
+    public boolean isSuspended()
+    {
+        return suspendedAt != null;
+    }
 
     /**
      * Whether this store is {@code userId}'s own, as opposed to one shared with them. Reads

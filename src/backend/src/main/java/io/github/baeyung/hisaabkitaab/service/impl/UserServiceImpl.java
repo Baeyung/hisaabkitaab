@@ -17,6 +17,7 @@ import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.enums.UserStatus;
 import io.github.baeyung.hisaabkitaab.repository.UserRepository;
+import io.github.baeyung.hisaabkitaab.service.PlanService;
 import io.github.baeyung.hisaabkitaab.service.UserService;
 import io.github.baeyung.hisaabkitaab.service.mail.AccountVerificationEmailService;
 import io.github.baeyung.hisaabkitaab.service.mail.PasswordResetEmailService;
@@ -37,6 +38,8 @@ public class UserServiceImpl implements UserService
     private final PasswordResetEmailService passwordResetEmailService;
 
     private final WelcomeEmailService welcomeEmailService;
+
+    private final PlanService planService;
 
     private static final Duration OTP_TTL = Duration.ofMinutes(10);
 
@@ -103,6 +106,12 @@ public class UserServiceImpl implements UserService
         }
 
         User saved = userRepository.save(user);
+
+        // Here rather than at verification, and here rather than where the INVITED placeholder
+        // was first created: the trial clock should start when a person actually signs up, not
+        // when a shop owner typed their address, and not only if they get around to verifying.
+        planService.startTrial(saved);
+
         if (!verified)
         {
             sendVerificationEmail(saved);

@@ -54,6 +54,17 @@
   font-size: 13.5px;
   color: var(--kg-muted);
 }
+/* Stands where "Add a shop" would, so the answer is where the question was asked.
+   Sized to the button's own line height to keep the header from shifting. */
+.pick__limit {
+  flex-shrink: 0;
+  max-width: 260px;
+  padding: 8px 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--kg-muted);
+  text-align: end;
+}
 
 /* ── the shops ─────────────────────────────────────────────────────── */
 .pick__grid {
@@ -200,6 +211,49 @@
   border-radius: 11px;
 }
 
+/* The plan notice wears the alert's own styling — it is the same kind of news — and needs
+   only the gap the state block would otherwise have given it. */
+.pick__notice {
+  margin-bottom: 18px;
+}
+
+/* A closed shop is a state to act on, not a failure, so this one drops the alarm red for
+   the neutral card and carries its own way forward. Wraps rather than truncates: the Urdu
+   sentence runs long and the button must not be pushed off the edge. */
+.pick__notice--closed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--kg-ink);
+  background: var(--kg-tint-brand);
+  border-color: var(--kg-tint-brand-line);
+}
+.pick__notice--closed .btn--sm {
+  flex: none;
+  min-height: 38px;
+  padding-inline: 14px;
+  font-size: 13.5px;
+}
+
+/* A shop the plan has closed. Sits inline after the name, so it reads as part of what the
+   shop is rather than as a warning stuck to the card. */
+.card__closed {
+  display: inline-block;
+  margin-inline-start: 7px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  white-space: nowrap;
+  color: var(--kg-muted);
+  background: var(--kg-fill-subtle);
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 999px;
+}
+
 .skel {
   border-radius: 16px;
   background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);
@@ -226,6 +280,11 @@
   /* Full-bleed on its own row, matching the card stack beneath it. */
   .pick__head .btn {
     width: 100%;
+  }
+  .pick__limit {
+    max-width: none;
+    padding: 0;
+    text-align: start;
   }
 }
 @media (prefers-reduced-motion: no-preference) {

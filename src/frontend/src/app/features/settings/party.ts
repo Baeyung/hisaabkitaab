@@ -7,7 +7,8 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { Balance } from '../../core/store/balance.models';
 import { PartyService } from '../../core/store/party.service';
 import { OpeningDirection, Party, PartyDraft } from '../../core/store/party.models';
-import { DigitsOnly, toDigits } from '../../shared/digits-only';
+import { toDigits } from '../../shared/digits-only';
+import { PhoneField } from '../../shared/phone-field/phone-field';
 
 /** Form-facing shape: contact/address are non-null strings for the inputs (blank → null on send). */
 interface PartyForm {
@@ -32,7 +33,7 @@ const EMPTY_FORM: PartyForm = { name: '', contact: '', address: '', openingAmoun
  */
 @Component({
   selector: 'app-party',
-  imports: [FormField, NgTemplateOutlet, DigitsOnly],
+  imports: [FormField, NgTemplateOutlet, PhoneField],
   templateUrl: './party.html',
   styleUrl: './party.css',
 })

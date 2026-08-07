@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { StoreService } from './store.service';
 import { GrantableRole, InviteDraft, Member } from './member.models';
 
@@ -29,5 +30,16 @@ export class MemberService {
   /** Takes access away. Their own account is untouched — only this shop's grant goes. */
   remove(userId: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(this.stores.api(`members/${userId}`)));
+  }
+
+  /**
+   * The same, for a shop the user is not currently in. The plan-limits screen works across
+   * every shop an owner has at once, so it cannot go through the current-store url the way
+   * the rest of this service does.
+   */
+  removeFrom(storeId: string, userId: string): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<void>(`${environment.apiUrl}/stores/${storeId}/members/${userId}`),
+    );
   }
 }

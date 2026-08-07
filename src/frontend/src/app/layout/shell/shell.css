@@ -217,6 +217,68 @@
   border-top: 1px solid rgba(255, 255, 255, 0.09);
 }
 
+/* ── Plan strip ──────────────────────────────────────────────
+   Which plan is running and how much of it is spoken for. The meter is the
+   shop count again as a length; the text above it carries the same fact, so
+   it is aria-hidden and free to be decorative. It goes amber at the ceiling —
+   the one moment the count is worth noticing. */
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 10px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.plan-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.plan-label {
+  font: 700 10px system-ui;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--kg-chrome-locked);
+}
+
+.plan-tier {
+  font: 700 13px system-ui;
+  color: var(--kg-chrome-ink);
+}
+
+/* One counted thing: what it is, then how much of it is spent. */
+.plan-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plan-usage {
+  font: 500 11.5px system-ui;
+  color: var(--kg-chrome-dim);
+}
+
+.plan-meter {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.plan-meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--kg-chrome-ink) 62%, transparent);
+}
+
+.plan-meter-fill.full {
+  background: var(--kg-amber);
+}
+
 .logout {
   min-height: 40px;
   border: 1px solid rgba(255, 255, 255, 0.18);
