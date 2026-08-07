@@ -249,6 +249,14 @@ html[dir='rtl'] .kg-flip {
   flex-wrap: wrap;
   margin-bottom: 20px;
 }
+/* The buttons on the far side of a page header. Wraps as a unit on a narrow
+   screen so Print and Send stay together rather than splitting across lines. */
+.rm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-inline-start: auto;
+}
 .rm-title {
   margin: 0;
   font-size: clamp(21px, 2.4vw, 25px);
@@ -648,6 +656,62 @@ html[dir='rtl'] select.rm-input {
 .rm-btn--danger:hover {
   background: var(--kg-tint-out-hover);
 }
+/* Send-on-WhatsApp: a ghost button standing beside Print, deliberately *not*
+   wearing WhatsApp's #25D366. The app's own brand is already a green, and a
+   second, louder one next to it reads as a pasted-in badge rather than one of
+   this shop's controls. So the mark takes --kg-brand, and the one moment of
+   colour is the confirmation: a sent message turns the whole button --kg-in,
+   the same green the shopkeeper already reads as money arriving. The state
+   sits on the button instead of a toast — a message that left the shop should
+   still say so a minute later. */
+.rm-btn--wa {
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+}
+.rm-btn--wa svg {
+  color: var(--kg-brand);
+}
+.rm-btn--wa:hover:not(:disabled) {
+  border-color: var(--kg-tint-brand-line);
+  background: var(--kg-tint-brand);
+}
+.rm-btn--wa:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.rm-btn--wa[data-state='sent'],
+.rm-btn--wa[data-state='sent'] svg {
+  color: var(--kg-in);
+}
+.rm-btn--wa[data-state='sent'] {
+  border-color: color-mix(in srgb, var(--kg-in) 45%, transparent);
+}
+.rm-btn--wa[data-state='error'] {
+  color: var(--kg-out);
+  border-color: var(--kg-tint-out-edge);
+}
+/* Sending takes a second or two — the page is being rendered — so the glyph
+   slot holds a spinner rather than the button going quietly dead. */
+.rm-btn__spin {
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--kg-line-strong);
+  border-top-color: var(--kg-brand);
+  border-radius: 50%;
+  animation: rm-spin 0.7s linear infinite;
+}
+@keyframes rm-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rm-btn__spin {
+    animation-duration: 2.4s;
+  }
+}
+
 .rm-btn--sm {
   height: 36px;
   padding-inline: 13px;

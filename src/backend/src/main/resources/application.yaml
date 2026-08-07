@@ -6,6 +6,13 @@ spring:
     deserialization:
       fail-on-null-for-primitives: false
 
+  # A statement PDF the browser renders is a page-per-image raster; a long khata runs to a
+  # few megabytes and Spring's 1MB default would reject it before the controller sees it.
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+
   # Database properties
   datasource:
     url: jdbc:postgresql://localhost:5432/hisaabkitaab
@@ -74,6 +81,11 @@ app:
     api-base-url: ${WHATSAPP_API_BASE_URL:https://graph.facebook.com/v25.0}
     # Shared secret Meta echoes back on the webhook verification handshake.
     verify-token: ${WHATSAPP_VERIFY_TOKEN:}
+    # Approved template with a document header, used to send a party their bill or
+    # statement. Blank until Meta approves ours; while blank the PDF goes as a free-form
+    # document, which only reaches parties who messaged the shop in the last 24 hours.
+    document-template: ${WHATSAPP_DOCUMENT_TEMPLATE:}
+    document-template-language: ${WHATSAPP_DOCUMENT_TEMPLATE_LANGUAGE:en_US}
   frontend-base-url: ${FRONTEND_BASE_URL:https://aapka.hisaabkitaab.shop}
   email:
     enabled: ${EMAIL_ENABLED:false}

@@ -14,6 +14,7 @@ import { RecentLog } from '../../shared/recent-log';
 import { Combobox } from '../../shared/combobox/combobox';
 import { PrintHeader } from '../../shared/print-header';
 import { DateField } from '../../shared/date-field/date-field';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 
 /** One line of cloth on the bill. `key` is a stable id for @for tracking. */
 interface Line {
@@ -110,7 +111,7 @@ export interface GoodsEntryConfig {
   selector: 'app-goods-entry',
   templateUrl: './goods-entry.html',
   styleUrl: './sale.css',
-  imports: [Combobox, PrintHeader, DateField],
+  imports: [Combobox, PrintHeader, DateField, WhatsAppButton],
 })
 export class GoodsEntry {
   readonly config = input.required<GoodsEntryConfig>();
@@ -212,6 +213,18 @@ export class GoodsEntry {
   print(): void {
     window.print();
   }
+
+  /**
+   * The party this bill can be WhatsApp'd to — only one already on the books. A name
+   * typed in but not saved yet has no khata and no number to send to, and a cash sale
+   * has no party at all.
+   */
+  protected readonly sendParty = computed(() =>
+    this.cashParty() ? undefined : this.matchParty(this.partyName()),
+  );
+
+  /** A walk-in sale has nobody to notify, so the button stays off the screen entirely. */
+  protected readonly offerSend = computed(() => !this.cashParty() && !!this.partyName().trim());
 
   constructor() {
     void this.init();

@@ -44,11 +44,23 @@ export class PrintDetailsService {
 
   /** Ask, optionally load every bill's lines, then print. */
   async printWithDetails(saleIds: string[]): Promise<void> {
+    if (await this.expandDetails(saleIds)) {
+      window.print();
+    }
+  }
+
+  /**
+   * The half of the print flow that shapes the page: ask, load the opted-in bills' lines
+   * into `bills()`, and flush them into the DOM. Returns false if the user cancelled, so
+   * the caller sends nothing to the printer — or, on the statement's WhatsApp button, to
+   * the party.
+   */
+  async expandDetails(saleIds: string[]): Promise<boolean> {
     let withDetails = false;
     if (saleIds.length > 0) {
       const choice = await this.ask();
       if (choice === null) {
-        return; // cancelled — don't print at all
+        return false; // cancelled — don't print at all
       }
       withDetails = choice;
     }
@@ -66,10 +78,10 @@ export class PrintDetailsService {
       this.bills.set(new Map());
     }
     // Flush change detection first: close the dialog and render the sub-rows
-    // into the DOM before window.print() reads it — otherwise it prints the
-    // still-open modal / the un-expanded table.
+    // into the DOM before anything reads it — otherwise the printer (or the
+    // PDF capture) gets the still-open modal / the un-expanded table.
     this.appRef.tick();
-    window.print();
+    return true;
   }
 
   /**

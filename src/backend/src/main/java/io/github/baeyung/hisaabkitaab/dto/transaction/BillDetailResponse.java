@@ -10,7 +10,10 @@ public record BillDetailResponse(
         String billNumber,
         LocalDate date,
         String description,
+        String partyId,
         String partyName,
+        /** The party's phone number, so the bill screen can offer to WhatsApp it to them. */
+        String partyContact,
         List<BillLineResponse> lines,
         double goodsTotal,
         double cashReceived,

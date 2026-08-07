@@ -23,7 +23,10 @@ export interface BillDetail {
   billNumber: string | null;
   date: string;
   description: string | null;
+  /** Null on a walk-in cash sale — nobody to put it on a khata for, or to WhatsApp it to. */
+  partyId: string | null;
   partyName: string | null;
+  partyContact: string | null;
   lines: BillLine[];
   goodsTotal: number;
   cashReceived: number;

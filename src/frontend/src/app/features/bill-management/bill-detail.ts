@@ -6,6 +6,7 @@ import { StoreService } from '../../core/store/store.service';
 import { BillDetail as BillDetailModel } from '../../core/store/bill.models';
 import { PrintHeader } from '../../shared/print-header';
 import { BillInvoice } from '../../shared/bill-invoice';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
 
@@ -16,7 +17,7 @@ import { deleteErrorKey } from '../../core/store/delete-error';
  */
 @Component({
   selector: 'app-bill-detail',
-  imports: [RouterLink, PrintHeader, BillInvoice],
+  imports: [RouterLink, PrintHeader, BillInvoice, WhatsAppButton],
   templateUrl: './bill-detail.html',
 })
 export class BillDetail {

@@ -15,6 +15,7 @@ import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
 import { PrintDetailsService } from '../../shared/print-details.service';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { Select } from '../../shared/select/select';
 import { DateField } from '../../shared/date-field/date-field';
 
@@ -28,7 +29,7 @@ const SETTLED: Balance = { amount: 0, direction: 'SETTLED' };
  */
 @Component({
   selector: 'app-ledger-detail',
-  imports: [RouterLink, PrintHeader, Select, DateField],
+  imports: [RouterLink, PrintHeader, Select, DateField, WhatsAppButton],
   templateUrl: './ledger-detail.html',
 })
 export class LedgerDetail {
@@ -122,10 +123,22 @@ export class LedgerDetail {
   }
 
   print(): void {
-    const saleIds = (this.statement()?.rows ?? [])
+    void this.printer.printWithDetails(this.saleIds());
+  }
+
+  /**
+   * The WhatsApp send goes through the same bill-details question Print asks, so the
+   * party gets the statement the shopkeeper chose to send. Bound as a field, not a
+   * method, so the template hands over a callable rather than its result.
+   */
+  protected readonly expandForSend = (): Promise<boolean> =>
+    this.printer.expandDetails(this.saleIds());
+
+  /** Every row that stands for a bill, whose lines the details prompt can expand. */
+  private saleIds(): string[] {
+    return (this.statement()?.rows ?? [])
       .filter((r) => r.event === 'SALE')
       .map((r) => r.transactionId);
-    void this.printer.printWithDetails(saleIds);
   }
 
   /** A sale row's transactionId is the bill's id — open its detail. */

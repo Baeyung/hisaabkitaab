@@ -7,7 +7,9 @@ function bill(...lines: Partial<BillLine>[]): BillDetail {
     billNumber: null,
     date: '2026-07-25',
     description: null,
+    partyId: null,
     partyName: null,
+    partyContact: null,
     lines: lines.map((l) => ({
       itemId: null,
       itemName: null,
