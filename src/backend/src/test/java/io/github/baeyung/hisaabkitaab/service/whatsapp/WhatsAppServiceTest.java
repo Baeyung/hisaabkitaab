@@ -12,14 +12,14 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.http.HttpMethod.POST;
 
 /**
- * The {@code app.whatsapp.enabled} gate and the two payload shapes Meta expects. An
+ * The {@code app.whatsapp.enabled} gate and the three payload shapes Meta expects. An
  * unexpected call raises an {@code AssertionError}, which the service's {@code catch
  * (Exception)} lets through — so a leaked send fails the test rather than being swallowed.
  */
 class WhatsAppServiceTest
 {
-    private static final String MESSAGES_URL = "https://graph.test/v23.0/12345/messages";
-    private static final String MEDIA_URL = "https://graph.test/v23.0/12345/media";
+    private static final String MESSAGES_URL = "https://graph.test/v25.0/12345/messages";
+    private static final String MEDIA_URL = "https://graph.test/v25.0/12345/media";
 
     private MockRestServiceServer server;
 
@@ -27,7 +27,7 @@ class WhatsAppServiceTest
     {
         RestClient.Builder builder = RestClient.builder();
         server = MockRestServiceServer.bindTo(builder).build();
-        return new WhatsAppService(builder, enabled, "https://graph.test/v23.0", phoneNumberId, accessToken);
+        return new WhatsAppService(builder, enabled, "https://graph.test/v25.0", phoneNumberId, accessToken);
     }
 
     @Test
@@ -36,6 +36,7 @@ class WhatsAppServiceTest
         WhatsAppService whatsapp = service(false, "12345", "token");
 
         whatsapp.sendText("923001234567", "hello");
+        whatsapp.sendTemplate("923001234567", "hello_world", "en_US");
         whatsapp.sendDocument("923001234567", "pdf".getBytes(), "statement.pdf", "your statement");
 
         server.verify();
@@ -65,6 +66,77 @@ class WhatsAppServiceTest
 
         // A "+" and spacing survive in stored numbers; the service strips them.
         whatsapp.sendText("+92 300 1234567", "hello");
+
+        server.verify();
+    }
+
+    @Test
+    void sendsTemplateWithOrderedBodyParameters()
+    {
+        WhatsAppService whatsapp = service(true, "12345", "token");
+        server.expect(requestTo(MESSAGES_URL))
+                .andExpect(method(POST))
+                .andExpect(jsonPath("$.type").value("template"))
+                .andExpect(jsonPath("$.template.name").value("jaspers_market_order_confirmation_v1"))
+                .andExpect(jsonPath("$.template.language.code").value("en_US"))
+                .andExpect(jsonPath("$.template.components[0].type").value("body"))
+                .andExpect(jsonPath("$.template.components[0].parameters[0].type").value("text"))
+                .andExpect(jsonPath("$.template.components[0].parameters[0].text").value("John Doe"))
+                .andExpect(jsonPath("$.template.components[0].parameters[1].text").value("123456"))
+                .andExpect(jsonPath("$.template.components[0].parameters[2].text").value("Aug 7, 2026"))
+                .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.4\"}]}", MediaType.APPLICATION_JSON));
+
+        whatsapp.sendTemplate(
+                "923488001949",
+                "jaspers_market_order_confirmation_v1",
+                "en_US",
+                "John Doe", "123456", "Aug 7, 2026"
+        );
+
+        server.verify();
+    }
+
+    @Test
+    void omitsComponentsForTemplateWithoutParameters()
+    {
+        WhatsAppService whatsapp = service(true, "12345", "token");
+        server.expect(requestTo(MESSAGES_URL))
+                .andExpect(jsonPath("$.template.name").value("hello_world"))
+                .andExpect(jsonPath("$.template.components").doesNotExist())
+                .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.5\"}]}", MediaType.APPLICATION_JSON));
+
+        whatsapp.sendTemplate("923488001949", "hello_world", "en_US");
+
+        server.verify();
+    }
+
+    @Test
+    void uploadsDocumentThenSendsItInTemplateHeader()
+    {
+        WhatsAppService whatsapp = service(true, "12345", "token");
+        server.expect(requestTo(MEDIA_URL))
+                .andExpect(method(POST))
+                .andRespond(withSuccess("{\"id\":\"media-77\"}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo(MESSAGES_URL))
+                .andExpect(jsonPath("$.type").value("template"))
+                .andExpect(jsonPath("$.template.name").value("invoice_v1"))
+                // Header before body, in the order the approved template declares them.
+                .andExpect(jsonPath("$.template.components[0].type").value("header"))
+                .andExpect(jsonPath("$.template.components[0].parameters[0].type").value("document"))
+                .andExpect(jsonPath("$.template.components[0].parameters[0].document.id").value("media-77"))
+                .andExpect(jsonPath("$.template.components[0].parameters[0].document.filename").value("invoice.pdf"))
+                .andExpect(jsonPath("$.template.components[1].type").value("body"))
+                .andExpect(jsonPath("$.template.components[1].parameters[0].text").value("Ahmad"))
+                .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.6\"}]}", MediaType.APPLICATION_JSON));
+
+        whatsapp.sendTemplateWithDocument(
+                "923488001949",
+                "invoice_v1",
+                "en_US",
+                "pdf-bytes".getBytes(),
+                "invoice.pdf",
+                "Ahmad"
+        );
 
         server.verify();
     }
