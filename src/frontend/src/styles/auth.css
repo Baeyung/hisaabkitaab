@@ -238,6 +238,12 @@
   font-weight: 500;
   color: var(--kg-out);
 }
+/* Standing guidance under a field — quieter than .fld__err, which only ever
+   appears once something is actually wrong. */
+.fld__hint {
+  font-size: 12px;
+  color: var(--kg-faint);
+}
 
 /* ── one-time code: six ledger cells ─────────────────────────────────
    A single transparent input lies over the row and keeps every native

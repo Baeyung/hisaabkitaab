@@ -5,7 +5,8 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
 import { StoreDraft } from '../../core/store/store.models';
-import { DigitsOnly, toDigits } from '../../shared/digits-only';
+import { toDigits } from '../../shared/digits-only';
+import { PhoneField } from '../../shared/phone-field/phone-field';
 import { readImageFile } from '../../shared/image-file';
 
 const EMPTY_DRAFT: StoreDraft = { name: '', address: '', contact: '', logoUri: '', watermarkUri: '' };
@@ -21,7 +22,7 @@ type ImageField = 'logoUri' | 'watermarkUri';
  */
 @Component({
   selector: 'app-general',
-  imports: [FormField, DigitsOnly, RouterLink],
+  imports: [FormField, PhoneField, RouterLink],
   templateUrl: './general.html',
   styleUrl: './general.css',
 })

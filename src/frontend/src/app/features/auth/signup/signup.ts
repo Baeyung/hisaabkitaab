@@ -6,11 +6,12 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { ApiError } from '../../../core/auth/auth.models';
 import { LocaleService } from '../../../core/i18n/locale.service';
 import { AuthShell } from '../auth-shell/auth-shell';
-import { DigitsOnly, PHONE_PATTERN } from '../../../shared/digits-only';
+import { PHONE_PATTERN } from '../../../shared/digits-only';
+import { PhoneField } from '../../../shared/phone-field/phone-field';
 
 @Component({
   selector: 'app-signup',
-  imports: [FormField, RouterLink, AuthShell, DigitsOnly],
+  imports: [FormField, RouterLink, AuthShell, PhoneField],
   templateUrl: './signup.html',
 })
 export class Signup {

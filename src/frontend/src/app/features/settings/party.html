@@ -196,11 +196,12 @@
             <span class="efld__lbl">{{ locale.t('settings.party.col.name') }}</span>
             <input class="fld__input" [formField]="partyForm.name" type="text" />
           </label>
-          <label class="efld">
-            <span class="efld__lbl">{{ locale.t('settings.party.col.contact') }}</span>
-            <!-- type=tel also picks up the DigitsOnly directive -->
-            <input class="fld__input" [formField]="partyForm.contact" type="tel" />
-          </label>
+          <!-- A div, not the wrapping label the sibling rows use: the control is a
+               component now, so the label points at its inner input by id. -->
+          <div class="efld">
+            <label class="efld__lbl" for="party-contact">{{ locale.t('settings.party.col.contact') }}</label>
+            <app-phone-field inputId="party-contact" [formField]="partyForm.contact" />
+          </div>
           <label class="efld">
             <span class="efld__lbl">{{ locale.t('settings.party.col.address') }}</span>
             <input class="fld__input" [formField]="partyForm.address" type="text" />

@@ -15,14 +15,7 @@
 
     <div class="fld">
       <label class="fld__label" for="signup-contact">{{ locale.t('auth.signup.contact') }}</label>
-      <input
-        id="signup-contact"
-        class="fld__input"
-        [formField]="signupForm.contactNumber"
-        type="tel"
-        autocomplete="tel"
-        inputmode="numeric"
-      />
+      <app-phone-field inputId="signup-contact" [formField]="signupForm.contactNumber" />
       @if (
         (signupForm.contactNumber().touched() && signupForm.contactNumber().invalid()) ||
         serverFieldErrors()['contactNumber']

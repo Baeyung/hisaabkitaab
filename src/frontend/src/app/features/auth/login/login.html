@@ -15,6 +15,10 @@
         autocomplete="username"
         inputmode="email"
       />
+      <!-- Numbers now carry a country code, but this field takes an email too and
+           still has to accept whatever an older account was saved as — so it is a
+           hint, not a rule. -->
+      <span class="fld__hint">{{ locale.t('auth.login.hint') }}</span>
     </div>
 
     <div class="fld">

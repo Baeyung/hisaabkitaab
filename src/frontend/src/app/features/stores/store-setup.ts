@@ -10,7 +10,7 @@ import { StoreItem } from '../../core/store/store-item.models';
 import { PartyService } from '../../core/store/party.service';
 import { Balance } from '../../core/store/balance.models';
 import { OpeningDirection, Party } from '../../core/store/party.models';
-import { DigitsOnly } from '../../shared/digits-only';
+import { PhoneField } from '../../shared/phone-field/phone-field';
 import { OuterBar } from '../../shared/outer-bar/outer-bar';
 import { readImageFile } from '../../shared/image-file';
 
@@ -66,7 +66,7 @@ function negative(...values: Array<number | null>): boolean {
  */
 @Component({
   selector: 'app-store-setup',
-  imports: [FormField, DigitsOnly, RouterLink, OuterBar],
+  imports: [FormField, PhoneField, RouterLink, OuterBar],
   templateUrl: './store-setup.html',
   styleUrl: './store-setup.css',
 })

@@ -25,17 +25,28 @@ export class DigitsOnly {
    *  it clashes with `[formField]`, which owns validation attributes. */
   readonly maxDigits = input<number>();
 
+  /** Drops the trunk prefix as it is typed, for a field that already carries a
+   *  country code beside it: with +92 picked, "03001234567" is the local
+   *  3001234567, and keeping the 0 would build the wrong E.164 number. */
+  readonly noLeadingZeros = input(false);
+
+  private clean(raw: string): string {
+    const digits = this.noLeadingZeros() ? toDigits(raw).replace(/^0+/, '') : toDigits(raw);
+    return digits.slice(0, this.maxDigits());
+  }
+
   onInput(event: Event): void {
     const el = event.target as HTMLInputElement;
-    const digits = toDigits(el.value).slice(0, this.maxDigits());
+    const digits = this.clean(el.value);
     if (digits === el.value) {
       return;
     }
 
-    // Pull the caret back by however many characters we removed ahead of it,
-    // otherwise editing mid-number throws the cursor to the end.
+    // Where the caret lands is just how much text survives ahead of it — run the
+    // same cleanup over that slice, otherwise editing mid-number throws the
+    // cursor to the end.
     const pos = el.selectionStart ?? el.value.length;
-    const caret = pos - (el.value.slice(0, pos).match(/\D/g)?.length ?? 0);
+    const caret = this.clean(el.value.slice(0, pos)).length;
 
     el.value = digits;
     el.setSelectionRange(caret, caret);
