@@ -62,6 +62,8 @@ public class SecurityConfig
                             // same either way — with verification off, "authenticated" would
                             // otherwise be enough to reach it.
                             .requestMatchers("/api/admin/**").hasRole("ADMIN");
+                            // WhatsApp calls these unauthenticated; the verify token is the gate.
+                            .requestMatchers("/api/webhooks/whatsapp").permitAll();
                     // With verification on, everything else needs a *verified* account:
                     // unverified logins authenticate but hold only ROLE_UNVERIFIED, so they
                     // fall through to the 403 access-denied handler. With it off, plain

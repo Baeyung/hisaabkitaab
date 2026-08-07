@@ -29,6 +29,7 @@ services:
       EMAIL_ENABLED: ${EMAIL_ENABLED}
       PLANS_ENABLED: ${PLANS_ENABLED}
       ADMIN_EMAILS: ${ADMIN_EMAILS}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy
