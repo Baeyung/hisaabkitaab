@@ -22,11 +22,25 @@
 const PAGE = { width: 595.28, height: 841.89 };
 
 /**
- * Oversampling over CSS pixels. At a normal window width this lands around 250dpi on A4 —
- * sharp enough for the 11px table type the print stylesheet sets, and half the pixels of
- * the obvious `2`, which matters because those pixels are what gets uploaded.
+ * How wide the rendered page is, in pixels, across an A4 sheet — 1240px over 8.27in is
+ * 150dpi, which prints text cleanly and reads sharp on a phone.
+ *
+ * Deliberately a target rather than a multiplier of CSS pixels: capture scale would
+ * otherwise ride on the shopkeeper's window width, so the same statement would weigh
+ * three times as much from a wide monitor as from a laptop. Deriving the scale from this
+ * makes every send the same size, whatever it was sent from.
  */
-const SCALE = 1.5;
+const PAGE_WIDTH_PX = 1240;
+
+/**
+ * Anti-aliasing gives a page of black-on-white text a few thousand near-identical
+ * colours, and near-identical is exactly what deflate cannot collapse. Snapping
+ * near-white to paper white and everything else onto 16 levels per channel cuts the
+ * finished PDF to about a third with no visible change — the value colours survive,
+ * because 16 levels is far more than the handful of tints the ledger actually uses.
+ */
+const WHITE_AT = 246;
+const LEVELS = 16;
 
 export async function capturePrintablePdf(): Promise<Blob> {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
@@ -47,9 +61,11 @@ export async function capturePrintablePdf(): Promise<Blob> {
   const theme = root.getAttribute('data-theme');
   root.setAttribute('data-theme', 'light');
   try {
-    // One frame for the promoted rules to reflow the page before it gets measured.
-    await new Promise(requestAnimationFrame);
-    const canvas = await html2canvas(document.body, { scale: SCALE, backgroundColor: '#fff' });
+    await settled();
+    const canvas = await html2canvas(document.body, {
+      scale: PAGE_WIDTH_PX / document.body.scrollWidth,
+      backgroundColor: '#fff',
+    });
     // compress: true is not optional. Without it jsPDF stores the page bitmap as raw RGB —
     // an ordinary statement came to 18MB, which the server rejected outright.
     return paginate(canvas, new jsPDF({ unit: 'pt', format: 'a4', compress: true }));
@@ -60,6 +76,34 @@ export async function capturePrintablePdf(): Promise<Blob> {
     } else {
       root.setAttribute('data-theme', theme);
     }
+  }
+}
+
+/**
+ * Hold until the page has stopped changing shape.
+ *
+ * The promoted rules are a big layout change — they reveal the letterhead and, on a
+ * statement, every bill's item sub-rows, all of which are `display:none` on screen. Render
+ * while that reflow is still in flight and html2canvas measures some elements at their old
+ * positions and draws others at their new ones, which comes out as overlapping, re-wrapped
+ * text: a statement that went out with "Bilal Traders" run together and its totals split
+ * across lines. Waiting a fixed frame or two is a guess; waiting for the height to stop
+ * moving is the actual condition, and it costs two frames when there was nothing to wait
+ * for. Fonts first, since text that reflows on a late-arriving face moves everything under
+ * it — the language toggle can still be fetching its face when Send is pressed.
+ */
+async function settled(): Promise<void> {
+  await document.fonts.ready;
+
+  let previous = -1;
+  // Bounded: a page that somehow never settles still has to be sent.
+  for (let frame = 0; frame < 12; frame++) {
+    await new Promise(requestAnimationFrame);
+    const height = document.body.scrollHeight;
+    if (height === previous) {
+      return;
+    }
+    previous = height;
   }
 }
 
@@ -105,7 +149,13 @@ function paginate(
     const page = document.createElement('canvas');
     page.width = canvas.width;
     page.height = height;
-    page.getContext('2d')?.drawImage(canvas, 0, -top);
+    const ctx = page.getContext('2d');
+    ctx?.drawImage(canvas, 0, -top);
+    // Per page rather than over the whole tall canvas: a long khata's pixel buffer would
+    // be hundreds of megabytes in one go, and one page's is a few.
+    if (ctx) {
+      flatten(ctx, page.width, page.height);
+    }
 
     if (top > 0) {
       pdf.addPage();
@@ -121,4 +171,27 @@ function paginate(
   }
 
   return pdf.output('blob');
+}
+
+/**
+ * Collapse anti-aliasing noise into a few repeated values so deflate has long runs to
+ * work with. One linear pass over the page's pixels — about 10ms for an A4 page, which
+ * is nothing next to the render that produced them.
+ */
+function flatten(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+  const image = ctx.getImageData(0, 0, width, height);
+  const px = image.data;
+  const step = 255 / (LEVELS - 1);
+
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i] >= WHITE_AT && px[i + 1] >= WHITE_AT && px[i + 2] >= WHITE_AT) {
+      px[i] = px[i + 1] = px[i + 2] = 255;
+      continue;
+    }
+    px[i] = Math.round(px[i] / step) * step;
+    px[i + 1] = Math.round(px[i + 1] / step) * step;
+    px[i + 2] = Math.round(px[i + 2] / step) * step;
+  }
+
+  ctx.putImageData(image, 0, 0);
 }
