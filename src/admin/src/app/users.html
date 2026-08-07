@@ -136,18 +136,37 @@
                 </select>
               </label>
 
-              <label class="block">
-                <span class="eyebrow">Valid to</span>
-                <input
-                  name="expiresAt"
-                  type="date"
-                  required
-                  [ngModel]="plan.expiresAt"
-                  (ngModelChange)="update('expiresAt', $event)"
-                  class="mt-1.5 w-full rounded border border-[var(--rule-strong)] bg-card px-3 py-2
-                         font-mono text-sm text-ink focus:border-pine focus:outline-none"
-                />
-              </label>
+              <div>
+                <label class="block">
+                  <span class="eyebrow">Valid to</span>
+                  <input
+                    name="expiresAt"
+                    type="date"
+                    required
+                    [min]="earliest"
+                    [ngModel]="plan.expiresAt"
+                    (ngModelChange)="update('expiresAt', $event)"
+                    class="mt-1.5 w-full rounded border border-[var(--rule-strong)] bg-card px-3 py-2
+                           font-mono text-sm text-ink focus:border-pine focus:outline-none"
+                  />
+                </label>
+
+                <!-- The terms actually sold. A renewal counts from whatever the plan has left,
+                     so paying early never costs the customer the days they already hold. -->
+                <p class="mt-2 font-mono text-xs text-faint">{{ termsFrom() }}</p>
+                <div class="mt-1.5 flex flex-wrap gap-1.5">
+                  @for (term of terms; track term.months) {
+                    <button
+                      type="button"
+                      (click)="setTerm(term.months)"
+                      class="rounded border border-[var(--rule)] px-2 py-0.5 font-mono text-xs
+                             text-muted hover:border-pine hover:text-pine"
+                    >
+                      {{ term.label }}
+                    </button>
+                  }
+                </div>
+              </div>
             </div>
 
             <div>
@@ -208,7 +227,7 @@
             <div class="flex gap-2.5">
               <button
                 type="submit"
-                [disabled]="saving()"
+                [disabled]="saving() || !plan.expiresAt"
                 class="rounded bg-pine-deep px-5 py-2 font-display text-sm font-600 tracking-wider
                        uppercase text-white hover:bg-pine hover:text-desk disabled:opacity-50"
               >

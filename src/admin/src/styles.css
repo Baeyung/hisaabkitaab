@@ -47,6 +47,30 @@ body {
   outline-offset: 2px;
 }
 
+/* ── Field indicators ────────────────────────────────────────────────
+   Chrome draws a select's chevron hard against the border and ignores
+   the padding, while a date field insets its calendar button by the
+   padding — so side by side the two sat 14px apart and half a pixel
+   out of height. Draw our own chevron and size both indicators to the
+   same box, so every control on a form row ends the same way. */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a49b8c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.95rem;
+  padding-right: 2.4rem;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  width: 0.95rem;
+  height: 0.95rem;
+  padding: 0;
+  margin: 0;
+  opacity: 0.7; /* the chevron is drawn in muted; match its weight */
+  cursor: pointer;
+}
+
 /* The section label above every heading and field group: what a printed
    form puts in the margin. */
 .eyebrow {

@@ -89,17 +89,49 @@ export class Users {
     this.error.set(describe(failure));
   }
 
+  /** The terms sold, in months. A renewal is one of these, not a trip through the calendar. */
+  protected readonly terms: readonly { months: number; label: string }[] = [
+    { months: 1, label: '1 month' },
+    { months: 3, label: '3 months' },
+    { months: 6, label: '6 months' },
+    { months: 12, label: '1 year' },
+  ];
+
+  /**
+   * The date a term counts from: what is left on an unexpired plan, otherwise today. A customer
+   * renewing early keeps the days they already paid for.
+   */
+  protected readonly termBase = signal(today());
+
+  /** What the buttons count from, said plainly, so the label never claims the wrong start. */
+  protected readonly termsFrom = computed(() =>
+    this.termBase() === today() ? 'from today' : `from ${this.termBase()}`,
+  );
+
+  /** The earliest date the backend will take — it requires an expiry strictly after today. */
+  protected readonly earliest = addMonths(today(), 0, 1);
+
   protected edit(user: AdminUser): void {
     this.error.set('');
     this.editing.set(user.id);
+
+    const existing = user.plan?.expiresAt;
+    const remaining = existing && existing > today() ? existing : null;
+    this.termBase.set(remaining ?? today());
+
     this.form.set({
       tier: user.plan?.tier ?? 'BASIC',
-      // An expiry has to be in the future, so an already-lapsed plan cannot simply be re-offered.
-      expiresAt: futureDate(user.plan?.expiresAt),
+      // Blank for a lapsed or unplanned account, so the admin has to state the term. This box
+      // used to open a year ahead, which meant a mis-click gave away twelve months.
+      expiresAt: remaining ?? '',
       maxStores: user.plan?.overrides.maxStores ?? null,
       maxUsers: user.plan?.overrides.maxUsers ?? null,
       whatsappQuota: user.plan?.overrides.whatsappQuota ?? null,
     });
+  }
+
+  protected setTerm(months: number): void {
+    this.update('expiresAt', addMonths(this.termBase(), months));
   }
 
   protected cancel(): void {
@@ -164,16 +196,27 @@ function blankToNull(value: number | null): number | null {
   return value === null || Number.isNaN(value) ? null : value;
 }
 
-/** The given date if it is still ahead of us, otherwise a year from today. */
-function futureDate(existing: string | null | undefined): string {
-  const fallback = new Date();
-  fallback.setFullYear(fallback.getFullYear() + 1);
-  const fallbackIso = fallback.toISOString().slice(0, 10);
+/**
+ * Today where the admin is sitting. `toISOString` would answer in UTC, which is a day behind
+ * Pakistan for the first five hours of every morning — long enough to misjudge an expiry.
+ */
+function today(): string {
+  return new Date().toLocaleDateString('en-CA');
+}
 
-  if (!existing) {
-    return fallbackIso;
-  }
-  return existing > new Date().toISOString().slice(0, 10) ? existing : fallbackIso;
+/**
+ * `date` moved on by whole months, then days. The day of the month is held where it exists and
+ * clamped where it does not, so 31 January plus a month is 28 February rather than 3 March —
+ * a term should never quietly run longer than the one that was sold.
+ */
+export function addMonths(date: string, months: number, days = 0): string {
+  const moved = new Date(`${date}T00:00:00`);
+  const day = moved.getDate();
+  moved.setDate(1);
+  moved.setMonth(moved.getMonth() + months);
+  moved.setDate(Math.min(day, new Date(moved.getFullYear(), moved.getMonth() + 1, 0).getDate()));
+  moved.setDate(moved.getDate() + days);
+  return moved.toLocaleDateString('en-CA');
 }
 
 function describe(failure: unknown): string {
