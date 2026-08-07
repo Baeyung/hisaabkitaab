@@ -1,6 +1,7 @@
 import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { LocaleService } from '../core/i18n/locale.service';
 import { TranslationKey } from '../core/i18n/translations/en';
+import { PlanService } from '../core/plan/plan.service';
 import { StoreService } from '../core/store/store.service';
 import { WhatsAppService } from '../core/store/whatsapp.service';
 import { todayIso } from './date.util';
@@ -95,12 +96,24 @@ export class WhatsAppButton {
   protected readonly locale = inject(LocaleService);
   private readonly stores = inject(StoreService);
   private readonly api = inject(WhatsAppService);
+  private readonly plan = inject(PlanService);
   private readonly dlg = viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
 
   protected readonly state = signal<State>('idle');
 
-  /** A party with a saved phone number is the whole precondition. */
-  protected readonly sendable = computed(() => !!this.partyId() && !!this.contact());
+  /**
+   * Whether the plan this shop runs on pays for WhatsApp. Only the *owner's* own shops are
+   * judged on the signed-in user's plan — a shop shared with them is its owner's to pay for
+   * and none of this, exactly as `planLimitGuard` reads it.
+   */
+  protected readonly onPlan = computed(
+    () => this.stores.role() !== 'OWNER' || this.plan.whatsappAllowed(),
+  );
+
+  /** A party with a saved phone number, on a plan that covers sending. */
+  protected readonly sendable = computed(
+    () => this.onPlan() && !!this.partyId() && !!this.contact(),
+  );
 
   private static readonly LABELS: Record<State, TranslationKey> = {
     idle: 'whatsapp.send',
@@ -112,9 +125,12 @@ export class WhatsAppButton {
   protected readonly label = computed(() => WhatsAppButton.LABELS[this.state()]);
 
   /** Says why the button is dead, since a disabled control can't say it itself. */
-  protected readonly hint = computed(() =>
-    this.sendable() ? '' : this.locale.t('whatsapp.noNumber', { name: this.partyName() }),
-  );
+  protected readonly hint = computed(() => {
+    if (this.sendable()) return '';
+    return this.onPlan()
+      ? this.locale.t('whatsapp.noNumber', { name: this.partyName() })
+      : this.locale.t('whatsapp.notOnPlan');
+  });
 
   protected ask(): void {
     this.state.set('idle');

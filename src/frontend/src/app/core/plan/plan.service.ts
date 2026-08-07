@@ -137,6 +137,18 @@ export class PlanService {
   });
 
   /**
+   * Whether the account may send on WhatsApp at all: a quota above zero on a plan that is still
+   * running. False is what a trial gets (`PlanTier.TRIAL` allows nothing). True while the plan
+   * is unknown or unenforced, for the same reason {@link atStoreLimit} is false there.
+   */
+  readonly whatsappAllowed = computed(() => {
+    const status = this._status();
+    return (
+      status === null || !status.enforced || (!status.expired && status.limits.whatsappQuota > 0)
+    );
+  });
+
+  /**
    * How many shops are open beyond what the plan covers, and how many seats are spent beyond
    * it. Zero unless an admin has moved the account onto a smaller plan than it was using —
    * nothing a user can do to their own account gets here, because every path that adds is
@@ -184,9 +196,7 @@ export class PlanService {
   }
 
   async refresh(): Promise<PlanStatus> {
-    const status = await firstValueFrom(
-      this.http.get<PlanStatus>(`${environment.apiUrl}/plan/me`),
-    );
+    const status = await firstValueFrom(this.http.get<PlanStatus>(`${environment.apiUrl}/plan/me`));
     this._status.set(status);
     return status;
   }

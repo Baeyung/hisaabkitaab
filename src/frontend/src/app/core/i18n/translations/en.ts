@@ -458,6 +458,7 @@ export const en = {
   'whatsapp.title': 'Send on WhatsApp',
   'whatsapp.confirm': '{{document}} goes to {{name}} on WhatsApp at {{contact}}.',
   'whatsapp.noNumber': 'Add a phone number for {{name}} to send on WhatsApp',
+  'whatsapp.notOnPlan': 'Sending on WhatsApp is not part of your plan',
   'whatsapp.doc.statement': 'Khata statement',
   'whatsapp.doc.bill': 'Bill',
   'common.printDetails.title': 'Bill details',
