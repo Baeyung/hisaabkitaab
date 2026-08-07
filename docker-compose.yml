@@ -18,12 +18,20 @@ services:
       timeout: 5s
       retries: 5
 
+  renderer:
+    build: ./src/renderer
+    container_name: hisaabkitaab-renderer
+    restart: unless-stopped
+
   backend:
     build: ./src/backend
     container_name: hisaabkitaab-backend
     restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hisaabkitaab
+      PDF_RENDERER_URL: http://renderer:3000
+      # Set PDF_DUMP_DIR=/pdf-dumps to keep every sent PDF under ./pdf-dumps on the host.
+      PDF_DUMP_DIR: ${PDF_DUMP_DIR:-}
       BREVO_MAIL_USER_IDENTIFIER: ${BREVO_MAIL_USER_IDENTIFIER}
       BREVO_SMPTP_KEY: ${BREVO_SMPTP_KEY}
       EMAIL_ENABLED: ${EMAIL_ENABLED}
@@ -36,6 +44,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      renderer:
+        condition: service_started
+    volumes:
+      - ./pdf-dumps:/pdf-dumps
     ports:
       - "8080:8080"
 

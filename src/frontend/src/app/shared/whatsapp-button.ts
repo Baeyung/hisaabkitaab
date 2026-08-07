@@ -5,7 +5,7 @@ import { PlanService } from '../core/plan/plan.service';
 import { StoreService } from '../core/store/store.service';
 import { WhatsAppService } from '../core/store/whatsapp.service';
 import { todayIso } from './date.util';
-import { capturePrintablePdf } from './pdf-capture';
+import { printableHtml } from './printable-html';
 
 type State = 'idle' | 'sending' | 'sent' | 'error';
 
@@ -164,8 +164,7 @@ export class WhatsAppButton {
         this.state.set('idle');
         return;
       }
-      const pdf = await capturePrintablePdf();
-      await this.api.send(partyId, pdf, this.filename(), this.caption());
+      await this.api.send(partyId, printableHtml(), this.filename(), this.caption());
       this.state.set('sent');
     } catch {
       this.state.set('error');

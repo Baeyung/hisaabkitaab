@@ -6,15 +6,6 @@ spring:
     deserialization:
       fail-on-null-for-primitives: false
 
-  # A statement PDF the browser renders is a page-per-image raster. Measured: a one-page
-  # statement is ~70KB and a dense 441-row khata ~1.1MB over seven pages, so this holds
-  # any real statement several times over while still catching a capture that has gone
-  # wrong. Spring's 1MB default is what it replaces.
-  servlet:
-    multipart:
-      max-file-size: 8MB
-      max-request-size: 9MB
-
   # Database properties
   datasource:
     url: jdbc:postgresql://localhost:5432/hisaabkitaab
@@ -88,6 +79,9 @@ app:
     # document, which only reaches parties who messaged the shop in the last 24 hours.
     document-template: ${WHATSAPP_DOCUMENT_TEMPLATE:}
     document-template-language: ${WHATSAPP_DOCUMENT_TEMPLATE_LANGUAGE:en_US}
+  pdf:
+    renderer-url: ${PDF_RENDERER_URL:http://localhost:3000}
+    dump-dir: ${PDF_DUMP_DIR:}
   frontend-base-url: ${FRONTEND_BASE_URL:https://aapka.hisaabkitaab.shop}
   email:
     enabled: ${EMAIL_ENABLED:false}

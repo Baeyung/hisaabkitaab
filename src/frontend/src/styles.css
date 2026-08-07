@@ -202,7 +202,11 @@ html {
 
 body {
   margin: 0;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  /* Nastaliq trails the stack for the English UI too. Fallback is per-character, so Latin
+     still comes from IBM Plex — but an Urdu party name in an English page gets shaped
+     letters instead of whatever the machine happens to have. On a box with no Urdu font at
+     all, and the PDF renderer is one, the alternative is disconnected letterforms. */
+  font-family: 'IBM Plex Sans', 'Noto Nastaliq Urdu', system-ui, sans-serif;
   color: var(--kg-ink);
   /* .layout paints the desk too, but it stops at 100dvh — without this the
      rubber-band area past the top and bottom of a scroll is the UA's white,

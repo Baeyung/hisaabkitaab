@@ -1,6 +1,5 @@
 package io.github.baeyung.hisaabkitaab.controller;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -11,21 +10,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
 import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
 import io.github.baeyung.hisaabkitaab.dto.opening.OpeningBalanceRequest;
 import io.github.baeyung.hisaabkitaab.dto.party.PartyResponse;
+import io.github.baeyung.hisaabkitaab.dto.party.PartyWhatsAppRequest;
 import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
+import io.github.baeyung.hisaabkitaab.service.pdf.PdfRenderService;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.PartyDocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +37,7 @@ public class PartyController
     private final PartyService partyService;
     private final OpeningEntryService openingEntryService;
     private final PartyDocumentService partyDocumentService;
+    private final PdfRenderService pdfRenderService;
 
     @GetMapping
     public ResponseEntity<List<PartyResponse>> list(@CurrentStore(StoreRole.VIEWER) Store store)
@@ -77,19 +77,19 @@ public class PartyController
 
     /**
      * Send this party the printout the shopkeeper is looking at, as a PDF on WhatsApp.
-     * The browser renders the PDF (same layout Print produces) and posts the bytes; the
-     * recipient's number is resolved here from the party, never taken from the request.
+     * The browser posts the page, not a file: the PDF is rendered here, so a client cannot
+     * put arbitrary bytes on a customer's phone. The recipient's number is likewise
+     * resolved from the party rather than taken from the request.
      */
     @PostMapping("/{id}/whatsapp")
     public ResponseEntity<Void> sendOnWhatsApp(@PathVariable String id,
-            @RequestPart("document") MultipartFile document,
-            @RequestPart("caption") String caption,
-            @CurrentStore(StoreRole.EDITOR) Store store) throws IOException
+            @Valid @RequestBody PartyWhatsAppRequest request,
+            @CurrentStore(StoreRole.EDITOR) Store store)
     {
         partyDocumentService.send(partyService.findByIdForStore(id, store.getId()),
-                document.getBytes(),
-                document.getOriginalFilename(),
-                caption);
+                pdfRenderService.render(request.html()),
+                request.filename(),
+                request.caption());
         return ResponseEntity.accepted().build();
     }
 

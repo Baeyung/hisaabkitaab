@@ -10,18 +10,19 @@ export class WhatsAppService {
   private readonly stores = inject(StoreService);
 
   /**
-   * The number is never sent — the backend reads it off the party, so a tampered request
-   * can't redirect a customer's khata to someone else's phone.
+   * Posts the page, not a file: the backend renders the PDF, so neither the document nor
+   * the recipient is the client's to choose — the number is read off the party there.
    *
    * @param caption what the document is, in the shopkeeper's words; also fills the
    *                approved template's placeholder.
    */
-  send(partyId: string, pdf: Blob, filename: string, caption: string): Promise<void> {
-    const form = new FormData();
-    form.append('document', pdf, filename);
-    form.append('caption', caption);
+  send(partyId: string, html: string, filename: string, caption: string): Promise<void> {
     return firstValueFrom(
-      this.http.post<void>(this.stores.api(`parties/${partyId}/whatsapp`), form),
+      this.http.post<void>(this.stores.api(`parties/${partyId}/whatsapp`), {
+        html,
+        filename,
+        caption,
+      }),
     );
   }
 }

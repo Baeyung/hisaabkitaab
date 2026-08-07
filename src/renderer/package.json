@@ -1,0 +1,13 @@
+{
+  "name": "hisaabkitaab-renderer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Renders the app's printable pages to PDF with headless Chrome.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "playwright": "1.62.1"
+  }
+}
