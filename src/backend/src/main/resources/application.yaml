@@ -64,6 +64,9 @@ logging:
       total-size-cap: 500MB
 
 app:
+  whatsapp:
+    # Shared secret Meta echoes back on the webhook verification handshake.
+    verify-token: ${WHATSAPP_VERIFY_TOKEN:}
   frontend-base-url: ${FRONTEND_BASE_URL:https://aapka.hisaabkitaab.shop}
   email:
     enabled: ${EMAIL_ENABLED:false}

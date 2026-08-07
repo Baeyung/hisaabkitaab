@@ -27,6 +27,7 @@ services:
       BREVO_MAIL_USER_IDENTIFIER: ${BREVO_MAIL_USER_IDENTIFIER}
       BREVO_SMPTP_KEY: ${BREVO_SMPTP_KEY}
       EMAIL_ENABLED: ${EMAIL_ENABLED}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy

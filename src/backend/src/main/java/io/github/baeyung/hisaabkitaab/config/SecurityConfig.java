@@ -57,7 +57,9 @@ public class SecurityConfig
                             .requestMatchers(HttpMethod.POST, "/api/auth/resend-verification").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/auth/verify-reset-otp").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll();
+                            .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
+                            // WhatsApp calls these unauthenticated; the verify token is the gate.
+                            .requestMatchers("/api/webhooks/whatsapp").permitAll();
                     // With verification on, everything else needs a *verified* account:
                     // unverified logins authenticate but hold only ROLE_UNVERIFIED, so they
                     // fall through to the 403 access-denied handler. With it off, plain
