@@ -61,7 +61,7 @@ public class SecurityConfig
                             // The back office. Ahead of the catch-all below so it is gated the
                             // same either way — with verification off, "authenticated" would
                             // otherwise be enough to reach it.
-                            .requestMatchers("/api/admin/**").hasRole("ADMIN");
+                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
                             // WhatsApp calls these unauthenticated; the verify token is the gate.
                             .requestMatchers("/api/webhooks/whatsapp").permitAll();
                     // With verification on, everything else needs a *verified* account:
