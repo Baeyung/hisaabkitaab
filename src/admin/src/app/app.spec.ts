@@ -9,7 +9,7 @@ import { AdminApi } from './admin-api';
 
 describe('App', () => {
   beforeEach(async () => {
-    sessionStorage.clear();
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [

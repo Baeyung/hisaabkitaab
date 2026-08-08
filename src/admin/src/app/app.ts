@@ -23,7 +23,7 @@ export class App {
     // ngsw keeps serving the cached build to already-open tabs until every one is
     // closed, so a deployed fix can sit live but never reach a tab you left open.
     // Reload as soon as the new version has finished downloading. Unprompted,
-    // same as the customer app: sign-in lives in sessionStorage and survives it,
+    // same as the customer app: sign-in lives in localStorage and survives it,
     // and this only fires on a deploy, so at worst an open plan edit is dropped.
     inject(SwUpdate)
       .versionUpdates.pipe(filter((e) => e.type === 'VERSION_READY'))

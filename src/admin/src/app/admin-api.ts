@@ -55,9 +55,9 @@ const CREDENTIALS_KEY = 'hk-admin-credentials';
  * The back office's only network layer. The backend speaks HTTP Basic, so there is no token to
  * refresh and no session to keep alive — the credentials ride on every request.
  *
- * <p>They live in sessionStorage rather than localStorage on purpose: closing the tab is a
- * logout, which is the behaviour you want from a screen that can change what customers are
- * paying for.
+ * <p>They live in localStorage, same as the customer app, so signing in survives closing the
+ * tab. A password change or an address dropped from `app.admin.emails` still ends the session
+ * on the next request — the 401/403 handler clears them.
  */
 @Injectable({ providedIn: 'root' })
 export class AdminApi {
@@ -65,7 +65,7 @@ export class AdminApi {
   private readonly base = `${environment.apiUrl}/admin`;
 
   /** Base64 `user:password`, or null when signed out. Drives which screen the app shows. */
-  readonly credentials = signal<string | null>(sessionStorage.getItem(CREDENTIALS_KEY));
+  readonly credentials = signal<string | null>(localStorage.getItem(CREDENTIALS_KEY));
 
   /**
    * Verifies the credentials before keeping them, by fetching something only an admin may see —
@@ -79,12 +79,12 @@ export class AdminApi {
       this.http.get<PlanTierInfo[]>(`${this.base}/plan-tiers`, { headers: authHeader(token) }),
     );
 
-    sessionStorage.setItem(CREDENTIALS_KEY, token);
+    localStorage.setItem(CREDENTIALS_KEY, token);
     this.credentials.set(token);
   }
 
   signOut(): void {
-    sessionStorage.removeItem(CREDENTIALS_KEY);
+    localStorage.removeItem(CREDENTIALS_KEY);
     this.credentials.set(null);
   }
 
