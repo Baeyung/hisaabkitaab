@@ -90,34 +90,57 @@ input[type='date']::-webkit-calendar-picker-indicator {
    A plan is a permit: a tier and the date it stops being valid. It is
    drawn as one, double-ruled, so the answer to "what is this account
    entitled to" is a single object on the row rather than three lines of
-   text. A lapsed plan is overprinted the way a real one would be. */
+   text. A lapsed plan is overprinted the way a real one would be.
+
+   Each tier is inked in its own colour, so the register can be read down
+   the column without reading a word of it. One value, --stamp-ink, sets
+   the rules, the wash and the tier name together. */
 .stamp {
+  --stamp-ink: var(--color-brass);
   position: relative;
   overflow: hidden;
   padding: 0.6rem 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--color-brass) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--stamp-ink) 50%, transparent);
   border-radius: 2px;
+  background: color-mix(in srgb, var(--stamp-ink) 8%, transparent);
 }
 
 .stamp::before {
   content: '';
   position: absolute;
   inset: 3px;
-  border: 1px solid color-mix(in srgb, var(--color-brass) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--stamp-ink) 22%, transparent);
   border-radius: 1px;
   pointer-events: none;
 }
 
+/* The tier name, in the ink of its own stamp. */
+.stamp-tier {
+  color: var(--stamp-ink);
+}
+
+/* Ranked as the tiers are sold: unpaid grey, then brass, then the house
+   green, then violet, then blue at the top. */
+.stamp--trial { --stamp-ink: #9c9486; }
+.stamp--basic { --stamp-ink: var(--color-brass); }
+.stamp--premium { --stamp-ink: var(--color-pine); }
+.stamp--premium_plus { --stamp-ink: #b18ada; }
+.stamp--enterprise { --stamp-ink: #6ea6e6; }
+
 .stamp--none {
   border-color: var(--rule-strong);
+  background: none;
 }
 
 .stamp--none::before {
   border-color: transparent;
 }
 
+/* A lapsed plan keeps its tier ink on the name — you still need to know
+   what lapsed — but the permit itself is reprinted in the alarm colour. */
 .stamp--expired {
   border-color: color-mix(in srgb, var(--color-vermilion) 55%, transparent);
+  background: color-mix(in srgb, var(--color-vermilion) 8%, transparent);
 }
 
 .stamp--expired::before {

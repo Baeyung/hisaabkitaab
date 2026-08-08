@@ -22,7 +22,7 @@
 - [ ] monthly reports, on email + whatsapp
 - [ ] processed goods feature
 - [x] Admin persistent login
-- [ ] Admin different colors for different plans
+- [x] Admin different colors for different plans
 - [ ] Admin filters to filter users
 - [ ] Disable menus with exceeded limit
 - [ ] WhatsApp metering

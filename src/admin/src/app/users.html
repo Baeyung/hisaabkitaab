@@ -82,8 +82,11 @@
                register column, not a label that grows with its tier name. -->
           <div class="w-60 shrink-0">
             @if (user.plan; as plan) {
-              <div class="stamp" [class.stamp--expired]="plan.expired">
-                <p class="font-display text-sm font-600 tracking-[0.16em] uppercase text-brass">
+              <div
+                [class]="'stamp stamp--' + plan.tier.toLowerCase()"
+                [class.stamp--expired]="plan.expired"
+              >
+                <p class="stamp-tier font-display text-sm font-600 tracking-[0.16em] uppercase">
                   {{ plan.tier.replace('_', ' ') }}
                 </p>
                 <p class="mt-0.5 font-mono text-xs text-muted">
