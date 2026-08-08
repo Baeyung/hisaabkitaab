@@ -14,6 +14,15 @@ interface PlanForm {
 }
 
 /**
+ * Where a plan stands, as one of four states rather than a set of flags. They are exclusive and
+ * every account is in exactly one, so the tallies beside them add up to the register.
+ */
+type Standing = 'ACTIVE' | 'SOON' | 'EXPIRED' | 'NONE';
+
+/** Where the account itself stands — signed up and verified, or not yet either. */
+type Account = 'VERIFIED' | 'UNVERIFIED' | 'INVITED';
+
+/**
  * Every account, and the plan each is on. Until there is a payment provider this screen is how
  * a customer gets what they paid for, so the whole of it is a list and one form.
  *
@@ -35,9 +44,79 @@ export class Users {
   protected readonly loading = signal(false);
   protected readonly error = signal('');
 
-  /** What the search turned up, as a line: the total, and the two states worth acting on. */
+  /**
+   * The three narrowing controls. The search box asks the server; these do not — the register
+   * arrives whole, so narrowing it is a filter over what is already on screen and answers on the
+   * keystroke rather than the round trip.
+   */
+  protected readonly tier = signal<PlanTier | 'ALL'>('ALL');
+  protected readonly standing = signal<Standing | 'ALL'>('ALL');
+  protected readonly account = signal<Account | 'ALL'>('ALL');
+
+  protected readonly standings: readonly { value: Standing | 'ALL'; label: string }[] = [
+    { value: 'ALL', label: 'Any' },
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'SOON', label: 'Expiring in a month' },
+    { value: 'EXPIRED', label: 'Expired' },
+    { value: 'NONE', label: 'No plan' },
+  ];
+
+  protected readonly accounts: readonly { value: Account | 'ALL'; label: string }[] = [
+    { value: 'ALL', label: 'Any' },
+    { value: 'VERIFIED', label: 'Verified' },
+    { value: 'UNVERIFIED', label: 'Unverified' },
+    { value: 'INVITED', label: 'Invited' },
+  ];
+
+  /** The rows the filters leave standing. */
+  protected readonly visible = computed(() =>
+    this.users().filter(
+      (user) =>
+        (this.tier() === 'ALL' || user.plan?.tier === this.tier()) &&
+        (this.standing() === 'ALL' || standingOf(user) === this.standing()) &&
+        (this.account() === 'ALL' || accountOf(user) === this.account()),
+    ),
+  );
+
+  protected readonly filtering = computed(
+    () => this.tier() !== 'ALL' || this.standing() !== 'ALL' || this.account() !== 'ALL',
+  );
+
+  protected clearFilters(): void {
+    this.tier.set('ALL');
+    this.standing.set('ALL');
+    this.account.set('ALL');
+  }
+
+  /**
+   * How many accounts sit in every bucket of every facet, keyed `facet:value`. The dropdowns carry
+   * these next to their labels, so the closed register can be read off the controls — "how many
+   * lapsed" is answered before anyone opens the menu, let alone picks from it.
+   *
+   * <p>Counted over the whole search result, not the filtered view, so the numbers say what each
+   * option would show rather than collapsing to zero as soon as a sibling filter is on.
+   */
+  private readonly tally = computed(() => {
+    const counts: Record<string, number> = {};
+    for (const user of this.users()) {
+      for (const key of [
+        `tier:${user.plan?.tier}`,
+        `standing:${standingOf(user)}`,
+        `account:${accountOf(user)}`,
+      ]) {
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+    }
+    return counts;
+  });
+
+  protected tallyOf(facet: string, value: string): number {
+    return value === 'ALL' ? this.users().length : (this.tally()[`${facet}:${value}`] ?? 0);
+  }
+
+  /** What is on screen, as a line: the total, and the two states worth acting on. */
   protected readonly counts = computed(() => {
-    const users = this.users();
+    const users = this.visible();
     return {
       total: users.length,
       expired: users.filter((user) => user.plan?.expired).length,
@@ -185,6 +264,30 @@ export class Users {
   protected defaultsFor(tier: PlanTier): PlanTierInfo | undefined {
     return this.tiers().find((info) => info.tier === tier);
   }
+}
+
+/**
+ * Which of the four a plan is in. "Soon" is carved out of active because a month is the shortest
+ * term sold — anything inside one is a renewal conversation, not a healthy account. A plan whose
+ * clock has not started has no date to fall due, so it reads as active.
+ */
+export function standingOf(user: AdminUser): Standing {
+  const plan = user.plan;
+  if (!plan) {
+    return 'NONE';
+  }
+  if (plan.expired) {
+    return 'EXPIRED';
+  }
+  return plan.expiresAt && plan.expiresAt <= addMonths(today(), 1) ? 'SOON' : 'ACTIVE';
+}
+
+/** An INVITED placeholder has nobody behind it yet, so it is neither verified nor unverified. */
+function accountOf(user: AdminUser): Account {
+  if (user.status === 'INVITED') {
+    return 'INVITED';
+  }
+  return user.verified ? 'VERIFIED' : 'UNVERIFIED';
 }
 
 function count(value: number | null, noun: string): string {
