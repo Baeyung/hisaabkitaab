@@ -13,6 +13,16 @@ export interface NavLeaf {
    * so a typed URL lands the same way — hiding a link is presentation, not a control.
    */
   requires?: Extract<StoreRole, 'EDITOR' | 'OWNER'>;
+  /**
+   * Set on anything that records something, so it can be shown greyed while the owner's plan
+   * has this shop closed instead of quietly bouncing to the dashboard. Two different facts,
+   * shown two different ways: `requires` is a rank the user never had, so it is dropped;
+   * this is something that was there yesterday, so it stays visible with its reason on it.
+   *
+   * Only groups and sub-items carry it today — every top-level link is a read screen, which
+   * the shell relies on (see its `blocked`) and `nav.spec.ts` holds to.
+   */
+  writes?: true;
 }
 
 export interface NavLink extends NavLeaf {
@@ -25,6 +35,7 @@ export interface NavGroup {
   key: TranslationKey;
   icon: NavIcon;
   requires?: NavLeaf['requires'];
+  writes?: NavLeaf['writes'];
   children: NavLeaf[];
 }
 
@@ -46,6 +57,7 @@ export const NAV: NavItem[] = [
     // Nothing here does anything for a viewer — the whole group goes rather than
     // offering five screens that refuse to save.
     requires: 'EDITOR',
+    writes: true,
     children: [
       { key: 'nav.sale', path: 'new-entry/sale' },
       { key: 'nav.receipt', path: 'new-entry/receipt' },
@@ -60,12 +72,14 @@ export const NAV: NavItem[] = [
     icon: 'settings',
     children: [
       // Editors get in for the opening drawer balance; the rest of the page is
-      // read-only for them (see SettingsGeneral).
+      // read-only for them (see SettingsGeneral). No `writes`: a closed shop keeps this
+      // screen, which is where its owner deletes it.
       { key: 'nav.settings.general', path: 'settings/general', requires: 'EDITOR' },
-      // The shop's people are the owner's alone.
+      // The shop's people are the owner's alone — and freeing a seat is one way out of an
+      // overage, so this stays open on a closed shop too.
       { key: 'nav.settings.users', path: 'settings/users', requires: 'OWNER' },
-      { key: 'nav.settings.items', path: 'settings/items', requires: 'EDITOR' },
-      { key: 'nav.settings.party', path: 'settings/party', requires: 'EDITOR' },
+      { key: 'nav.settings.items', path: 'settings/items', requires: 'EDITOR', writes: true },
+      { key: 'nav.settings.party', path: 'settings/party', requires: 'EDITOR', writes: true },
     ],
   },
 ];

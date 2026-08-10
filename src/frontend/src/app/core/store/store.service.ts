@@ -41,17 +41,24 @@ export class StoreService {
   /** Their own shop: settings, the user list, and deleting things are all theirs. */
   readonly isOwner = computed(() => this.role() === 'OWNER');
   /**
+   * Rank alone: EDITOR or OWNER, whatever the plan is doing. This is what gates the shop's
+   * own settings, which stay open on a closed shop — the backend deliberately allows deleting
+   * one (`@CurrentStore(allowLocked = true)`), so the screen carrying that button has to be
+   * reachable or a downgrade leaves the shop un-deletable.
+   */
+  readonly canManage = computed(() => this.role() === 'OWNER' || this.role() === 'EDITOR');
+
+  /**
    * May record work — entries, items, khatas, opening balances. Owners included.
    *
    * A shop the owner's plan has closed is false for everyone, owner included: it is
    * read-only until the plan makes room for it again. Folding that in here rather than at
    * each screen is what makes it stick — every write route is already behind `editorGuard`,
-   * so they all refuse without knowing a plan exists. `isOwner` deliberately stays true, so
-   * the owner keeps the settings screens they need to delete the shop or free a seat.
+   * so they all refuse without knowing a plan exists. `isOwner` and {@link canManage}
+   * deliberately stay true, so the owner keeps the settings screens they need to delete the
+   * shop or free a seat.
    */
-  readonly canEdit = computed(
-    () => (this.role() === 'OWNER' || this.role() === 'EDITOR') && !this.current()?.suspended,
-  );
+  readonly canEdit = computed(() => this.canManage() && !this.current()?.suspended);
 
   constructor() {
     // This cache belongs to one session. Drop it when credentials go away

@@ -23,6 +23,11 @@
     @if (stores.current(); as store) {
       <a class="storeswitch" routerLink="/stores" [attr.title]="locale.t('stores.switch')">
         <span class="storeswitch__name">{{ store.name }}</span>
+        <!-- Why half the menu is greyed, said once where the shop is named rather than on
+             every item that refuses. -->
+        @if (store.suspended) {
+          <span class="storeswitch__closed">{{ locale.t('stores.suspendedBadge') }}</span>
+        }
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M8 7h12l-3-3M16 17H4l3 3" />
         </svg>
@@ -56,6 +61,8 @@
           <button
             type="button"
             class="nav-item nav-group-toggle"
+            [disabled]="blocked(item)"
+            [attr.title]="blocked(item) ? locale.t('nav.closedHint') : null"
             [attr.aria-expanded]="isGroupOpen(item.key)"
             (click)="toggleGroup(item.key)"
           >
@@ -63,6 +70,9 @@
               <ng-container [ngTemplateOutlet]="icon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
             </span>
             <span class="nav-label">{{ locale.t(item.key) }}</span>
+            @if (blocked(item)) {
+              <span class="nav-tag">{{ locale.t('stores.suspendedBadge') }}</span>
+            }
             <svg
               class="chevron"
               [class.up]="isGroupOpen(item.key)"
@@ -74,14 +84,21 @@
           <div class="subnav" [class.expanded]="isGroupOpen(item.key)" [attr.aria-hidden]="!isGroupOpen(item.key)">
             <div class="subnav-inner">
               @for (child of item.children; track child.key) {
-                <a
-                  class="nav-item nav-sub"
-                  [routerLink]="stores.link(child.path)"
-                  routerLinkActive="active"
-                  (click)="closeOverlay()"
-                >
-                  <span class="nav-label">{{ locale.t(child.key) }}</span>
-                </a>
+                @if (blocked(child)) {
+                  <span class="nav-item nav-sub nav-item--off" aria-disabled="true" [attr.title]="locale.t('nav.closedHint')">
+                    <span class="nav-label">{{ locale.t(child.key) }}</span>
+                    <span class="nav-tag">{{ locale.t('stores.suspendedBadge') }}</span>
+                  </span>
+                } @else {
+                  <a
+                    class="nav-item nav-sub"
+                    [routerLink]="stores.link(child.path)"
+                    routerLinkActive="active"
+                    (click)="closeOverlay()"
+                  >
+                    <span class="nav-label">{{ locale.t(child.key) }}</span>
+                  </a>
+                }
               }
             </div>
           </div>

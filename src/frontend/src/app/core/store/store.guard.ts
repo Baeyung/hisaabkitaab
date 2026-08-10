@@ -52,6 +52,12 @@ export const editorGuard: CanActivateFn = () => allowIf((stores) => stores.canEd
 
 export const ownerGuard: CanActivateFn = () => allowIf((stores) => stores.isOwner());
 
+/**
+ * Rank without the plan: the shop's own settings, which a closed shop keeps. `editorGuard`
+ * would bounce the owner of a closed shop off the one screen holding its delete button.
+ */
+export const managerGuard: CanActivateFn = () => allowIf((stores) => stores.canManage());
+
 const allowIf = (allowed: (stores: StoreService) => boolean) => {
   const stores = inject(StoreService);
   // The id comes from StoreService, not the route: these sit on child routes of

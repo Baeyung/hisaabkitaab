@@ -12,7 +12,7 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
 import { PlanService } from '../../core/plan/plan.service';
 import { PlanNotice } from '../../shared/plan-notice/plan-notice';
-import { navFor } from './nav';
+import { NavLeaf, navFor } from './nav';
 
 /**
  * One "used of allowed" line on the plan strip: the numbers as words, and the same numbers
@@ -44,6 +44,17 @@ export class Shell {
 
   /** Recomputes when the user switches shops — the same login can be owner in one, viewer in another. */
   protected readonly nav = computed(() => navFor(this.stores.role()));
+
+  /**
+   * Whether a menu item is offered but not usable: it records something, and the owner's plan
+   * has this shop closed. Shown greyed with "Closed" on it rather than dropped — the sections
+   * were there before the downgrade, and a menu that silently sheds them (or worse, bounces
+   * every click back to the dashboard, which is what `editorGuard` does to a typed URL) reads
+   * as the app being broken rather than as the plan having lapsed.
+   */
+  protected blocked(item: Pick<NavLeaf, 'writes'>): boolean {
+    return item.writes === true && !this.stores.canEdit();
+  }
 
   /**
    * The plan strip in the foot: which plan the account is on and how much of it is spent.

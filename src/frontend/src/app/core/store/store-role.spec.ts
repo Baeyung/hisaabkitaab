@@ -3,11 +3,11 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRouteSnapshot, provideRouter, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { editorGuard, ownerGuard } from './store.guard';
+import { editorGuard, managerGuard, ownerGuard } from './store.guard';
 import { StoreService } from './store.service';
 import { AuthStore } from '../auth/auth.store';
 import { Store, StoreRole } from './store.models';
-import { navFor } from '../../layout/shell/nav';
+import { NAV, navFor } from '../../layout/shell/nav';
 import { environment } from '../../../environments/environment';
 
 const route = {} as ActivatedRouteSnapshot;
@@ -76,8 +76,22 @@ describe('store roles', () => {
     const owner = await enter('OWNER', true);
     expect(owner.canEdit()).toBe(false);
     expect(owner.isOwner()).toBe(true);
+    // The screen holding the delete button, which the backend allows on a closed shop
+    // (`@CurrentStore(allowLocked = true)`) — so this must not be gated on canEdit.
+    expect(owner.canManage()).toBe(true);
 
     expect((await enter('EDITOR', true)).canEdit()).toBe(false);
+  });
+
+  it('keeps the shop settings reachable in a closed shop', async () => {
+    await enter('OWNER', true);
+    expect(TestBed.runInInjectionContext(() => managerGuard(route, state))).toBe(true);
+  });
+
+  it('keeps the shop settings from a viewer, closed or not', async () => {
+    await enter('VIEWER', true);
+    const refused = TestBed.runInInjectionContext(() => managerGuard(route, state));
+    expect(TestBed.inject(Router).serializeUrl(refused as UrlTree)).toBe('/s/shop-1/dashboard');
   });
 
   it('sends an editor typing an entry URL into a closed shop back to the dashboard', async () => {
@@ -136,6 +150,24 @@ describe('store roles', () => {
 
     it('offers the owner everything', () => {
       expect(paths('OWNER')).toContain('settings/users');
+    });
+
+    /**
+     * The shell only checks `writes` on groups and sub-items — a top-level link carrying it
+     * would be offered as usable in a closed shop and then bounce off `editorGuard`, which is
+     * the exact thing greying these out exists to stop. Kept here so adding one fails loudly.
+     */
+    it('keeps every top-level link a read screen', () => {
+      expect(NAV.filter((item) => item.kind === 'link' && item.writes)).toEqual([]);
+    });
+
+    it('marks what a closed shop refuses, and nothing else', () => {
+      const settings = NAV.find((item) => item.key === 'nav.settings');
+      const marked = settings?.kind === 'group' ? settings.children.filter((c) => c.writes) : [];
+      expect(marked.map((c) => c.path)).toEqual(['settings/items', 'settings/party']);
+      // The way out of a closed shop — deleting it, or freeing a seat — stays open.
+      expect(marked.map((c) => c.path)).not.toContain('settings/general');
+      expect(NAV.some((item) => item.key === 'nav.newEntry' && item.writes)).toBe(true);
     });
 
     it('drops a group once every child is above the role', () => {

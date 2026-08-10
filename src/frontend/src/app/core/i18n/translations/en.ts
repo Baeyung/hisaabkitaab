@@ -104,6 +104,9 @@ export const en = {
   'nav.settings.users': 'Manage Users',
   'nav.settings.items': 'Items',
   'nav.settings.party': 'Parties',
+  // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
+  // same two things `stores.suspendedSettled` says on the picker, in one line.
+  'nav.closedHint': 'This shop is closed — your plan no longer covers it. Nothing has been lost.',
   'common.comingSoon': 'Coming soon',
   'stores.title': 'Your shops',
   'stores.subtitle': 'Pick the shop whose books you want to open.',

@@ -96,6 +96,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Stays at every width, unlike the "switch" verb below: which shop you are in is a
+   convenience, whether it is closed is the reason the menu looks the way it does. */
+.storeswitch__closed {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 .storeswitch__label {
   font-size: 12.5px;
   font-weight: 600;
@@ -160,6 +173,26 @@
 .nav-item.active {
   background: var(--kg-brand-solid);
   color: var(--kg-on-brand);
+}
+
+/* Still listed, just not usable while the plan has the shop closed. Dimmed rather than
+   hidden so the menu keeps its shape — and it carries the "Closed" tag, because a greyed
+   row with no reason is the same puzzle as a click that goes nowhere. */
+.nav-item--off,
+.nav-group-toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.nav-tag {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .nav-icon {

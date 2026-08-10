@@ -17,12 +17,12 @@
 - [x] Strong password
 - [x] confirm password (signup) to avoid typos
 - [x] billing/plan related stuff
+- [x] Admin persistent login
+- [x] Admin different colors for different plans
+- [x] Admin filters to filter users
+- [x] Disable menus with exceeded limit
+- [ ] WhatsApp metering
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
 - [ ] processed goods feature
-- [x] Admin persistent login
-- [x] Admin different colors for different plans
-- [ ] Admin filters to filter users
-- [ ] Disable menus with exceeded limit
-- [ ] WhatsApp metering

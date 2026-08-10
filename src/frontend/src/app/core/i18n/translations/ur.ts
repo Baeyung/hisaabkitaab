@@ -108,6 +108,7 @@ export const ur: Record<TranslationKey, string> = {
   'nav.settings.users': 'صارفین',
   'nav.settings.items': 'آئٹمز',
   'nav.settings.party': 'پارٹیاں',
+  'nav.closedHint': 'یہ دکان بند ہے — آپ کا پلان اب اسے نہیں سنبھالتا۔ کچھ ضائع نہیں ہوا۔',
   'common.comingSoon': 'جلد آ رہا ہے',
   'stores.title': 'آپ کی دکانیں',
   'stores.subtitle': 'وہ دکان چنیں جس کا کھاتہ کھولنا ہے۔',

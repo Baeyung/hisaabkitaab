@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, publicOnlyGuard } from './core/auth/auth.guard';
 import { apexAppRedirectGuard, apexRedirectGuard } from './core/auth/apex.guard';
-import { editorGuard, ownerGuard, storeGuard } from './core/store/store.guard';
+import { editorGuard, managerGuard, ownerGuard, storeGuard } from './core/store/store.guard';
 import { overageGuard, planLimitGuard } from './core/plan/plan.guard';
 
 export const routes: Routes = [
@@ -195,7 +195,9 @@ export const routes: Routes = [
       },
       {
         path: 'settings/general',
-        canActivate: [editorGuard],
+        // managerGuard, not editorGuard: a closed shop keeps its own settings — that is
+        // where its owner deletes it.
+        canActivate: [managerGuard],
         loadComponent: () => import('./features/settings/general').then((m) => m.SettingsGeneral),
       },
     ],
