@@ -26,8 +26,15 @@ public record PlanStatusResponse(
         PlanLimits limits,
         PlanUsage usage)
 {
-    /** What has been spent against {@link PlanStatusResponse#limits()}, in the same units. */
-    public record PlanUsage(int stores, int users)
+    /**
+     * What has been spent against {@link PlanStatusResponse#limits()}, in the same units.
+     *
+     * @param whatsapp messages sent <em>this calendar month</em>, which is the period the
+     *                 quota is granted over — the other two are standing totals with no
+     *                 period at all. Zero once the month turns, without anything having to
+     *                 reset it.
+     */
+    public record PlanUsage(int stores, int users, int whatsapp)
     {
     }
 }

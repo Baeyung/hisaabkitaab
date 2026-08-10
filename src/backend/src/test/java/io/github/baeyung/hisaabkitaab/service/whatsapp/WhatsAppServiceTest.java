@@ -8,7 +8,10 @@ import org.springframework.web.client.RestClient;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpMethod.POST;
 
 /**
@@ -30,14 +33,18 @@ class WhatsAppServiceTest
         return new WhatsAppService(builder, enabled, "https://graph.test/v25.0", phoneNumberId, accessToken);
     }
 
+    /**
+     * A suppressed send reports false, not true: the caller is metering these against a paid
+     * quota, and a message that never left must not be charged for.
+     */
     @Test
     void sendsNothingWhenDisabled()
     {
         WhatsAppService whatsapp = service(false, "12345", "token");
 
-        whatsapp.sendText("923001234567", "hello");
-        whatsapp.sendTemplate("923001234567", "hello_world", "en_US");
-        whatsapp.sendDocument("923001234567", "pdf".getBytes(), "statement.pdf", "your statement");
+        assertFalse(whatsapp.sendText("923001234567", "hello"));
+        assertFalse(whatsapp.sendTemplate("923001234567", "hello_world", "en_US"));
+        assertFalse(whatsapp.sendDocument("923001234567", "pdf".getBytes(), "statement.pdf", "your statement"));
 
         server.verify();
     }
@@ -47,7 +54,20 @@ class WhatsAppServiceTest
     {
         WhatsAppService whatsapp = service(true, "", "");
 
-        whatsapp.sendText("923001234567", "hello");
+        assertFalse(whatsapp.sendText("923001234567", "hello"));
+
+        server.verify();
+    }
+
+    /** Meta refusing the message is reported rather than thrown — but it is reported. */
+    @Test
+    void reportsAMessageMetaRejected()
+    {
+        WhatsAppService whatsapp = service(true, "12345", "token");
+        server.expect(requestTo(MESSAGES_URL))
+                .andRespond(withBadRequest().body("{\"error\":{\"message\":\"outside window\"}}"));
+
+        assertFalse(whatsapp.sendText("923001234567", "hello"));
 
         server.verify();
     }
@@ -65,7 +85,7 @@ class WhatsAppServiceTest
                 .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.1\"}]}", MediaType.APPLICATION_JSON));
 
         // A "+" and spacing survive in stored numbers; the service strips them.
-        whatsapp.sendText("+92 300 1234567", "hello");
+        assertTrue(whatsapp.sendText("+92 300 1234567", "hello"));
 
         server.verify();
     }
@@ -156,7 +176,7 @@ class WhatsAppServiceTest
                 .andExpect(jsonPath("$.document.caption").value("your statement"))
                 .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.2\"}]}", MediaType.APPLICATION_JSON));
 
-        whatsapp.sendDocument("923001234567", "pdf-bytes".getBytes(), "statement.pdf", "your statement");
+        assertTrue(whatsapp.sendDocument("923001234567", "pdf-bytes".getBytes(), "statement.pdf", "your statement"));
 
         server.verify();
     }

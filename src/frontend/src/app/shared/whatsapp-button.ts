@@ -66,6 +66,9 @@ type State = 'idle' | 'sending' | 'sent' | 'error';
             contact: contact() ?? '',
           })
         }}
+        @if (quotaNote(); as note) {
+          <span class="rm-dialog__note">{{ note }}</span>
+        }
       </p>
       <div class="rm-dialog__actions">
         <button type="button" class="rm-btn rm-btn--ghost" (click)="dismiss($event)">
@@ -110,9 +113,34 @@ export class WhatsAppButton {
     () => this.stores.role() !== 'OWNER' || this.plan.whatsappAllowed(),
   );
 
-  /** A party with a saved phone number, on a plan that covers sending. */
+  /**
+   * How many messages are left this month, or null when there is no number worth showing —
+   * see {@link PlanService.whatsappRemaining}. Only the owner's own shops are metered against
+   * the signed-in user's plan, exactly as {@link onPlan} reads it; in someone else's shop the
+   * count belongs to that owner and is not ours to show.
+   */
+  protected readonly remaining = computed(() =>
+    this.stores.role() === 'OWNER' ? this.plan.whatsappRemaining() : null,
+  );
+
+  /** Whether this month's quota is spent. Only ever true in a shop the signed-in user owns. */
+  protected readonly outOfQuota = computed(
+    () => this.stores.role() === 'OWNER' && this.plan.whatsappExhausted(),
+  );
+
+  /**
+   * What the send costs, shown in the dialog beneath what it does — the last moment before a
+   * message is spent is the honest place to say how many are left. Null when there is no
+   * number to show, which is also when the line is left out entirely.
+   */
+  protected readonly quotaNote = computed(() => {
+    const left = this.remaining();
+    return left === null ? null : this.locale.t('whatsapp.quotaLeft', { left: String(left) });
+  });
+
+  /** A party with a saved phone number, on a plan that covers sending and has a message left. */
   protected readonly sendable = computed(
-    () => this.onPlan() && !!this.partyId() && !!this.contact(),
+    () => this.onPlan() && !this.outOfQuota() && !!this.partyId() && !!this.contact(),
   );
 
   private static readonly LABELS: Record<State, TranslationKey> = {
@@ -124,12 +152,16 @@ export class WhatsAppButton {
 
   protected readonly label = computed(() => WhatsAppButton.LABELS[this.state()]);
 
-  /** Says why the button is dead, since a disabled control can't say it itself. */
+  /**
+   * Says why the button is dead, since a disabled control can't say it itself. Being out of
+   * messages and not paying for WhatsApp read as separate reasons on purpose: one is over
+   * next month, the other only ends by upgrading.
+   */
   protected readonly hint = computed(() => {
     if (this.sendable()) return '';
-    return this.onPlan()
-      ? this.locale.t('whatsapp.noNumber', { name: this.partyName() })
-      : this.locale.t('whatsapp.notOnPlan');
+    if (!this.onPlan()) return this.locale.t('whatsapp.notOnPlan');
+    if (this.outOfQuota()) return this.locale.t('whatsapp.noQuota');
+    return this.locale.t('whatsapp.noNumber', { name: this.partyName() });
   });
 
   protected ask(): void {
@@ -169,6 +201,11 @@ export class WhatsAppButton {
     } catch {
       this.state.set('error');
     }
+
+    // Either way: a send spends a message, and a refusal means the count on hand was already
+    // out of date. Deliberately not awaited — the button has said what happened and must not
+    // wait on a second request to say it.
+    void this.plan.refresh().catch(() => undefined);
   }
 
   /** What lands in the party's chat — the document, and which shop sent it. */

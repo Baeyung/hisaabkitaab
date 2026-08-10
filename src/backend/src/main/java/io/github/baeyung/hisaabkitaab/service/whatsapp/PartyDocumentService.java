@@ -33,9 +33,15 @@ public class PartyDocumentService
     /**
      * @param caption what the document is, in the shopkeeper's words — "Bill #1042 from
      *                Rehman Cloth House". Also the template's single {{1}} placeholder.
+     * @return whether Meta accepted the message. False for a send that was rejected or
+     *         suppressed — the caller charges the account's WhatsApp quota for this message,
+     *         and must give it back when nothing actually went out. Relevant in practice and
+     *         not only in theory: while {@link #templateName} is unset every app-initiated
+     *         send falls back to a free-form document, which Meta drops outside the 24-hour
+     *         window the party's own last message opens.
      * @throws IllegalArgumentException when the party has no phone number to send to.
      */
-    public void send(Party party, byte[] pdf, String filename, String caption)
+    public boolean send(Party party, byte[] pdf, String filename, String caption)
     {
         String contact = party.getContact();
         if (contact == null || contact.isBlank())
@@ -45,9 +51,9 @@ public class PartyDocumentService
 
         if (templateName.isBlank())
         {
-            whatsAppService.sendDocument(contact, pdf, filename, caption);
-            return;
+            return whatsAppService.sendDocument(contact, pdf, filename, caption);
         }
-        whatsAppService.sendTemplateWithDocument(contact, templateName, templateLanguage, pdf, filename, caption);
+        return whatsAppService.sendTemplateWithDocument(
+                contact, templateName, templateLanguage, pdf, filename, caption);
     }
 }

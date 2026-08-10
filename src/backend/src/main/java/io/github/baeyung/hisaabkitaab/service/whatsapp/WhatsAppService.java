@@ -28,8 +28,10 @@ import org.springframework.web.client.RestClientResponseException;
  * choke point that every outgoing message routes through, switched off by default so a
  * dev machine never reaches Meta.
  * <p>
- * Failures are logged and swallowed; callers treat a suppressed or failed send as success,
- * exactly as they do for mail.
+ * Failures are logged rather than thrown — a customer's message not going out is not grounds
+ * to fail the shopkeeper's request — but every send says whether it actually left, so a
+ * caller that is charging for the message can tell delivered from dropped. A suppressed send
+ * (switched off, or unconfigured) reports false for the same reason: nothing went anywhere.
  * <p>
  * Do not autowire this directly in other non-WhatsApp services — create a specific
  * action-related service (as {@code service/mail} does), autowire there, and send from it.
@@ -87,14 +89,16 @@ public class WhatsAppService {
      * with no placeholders takes none. {@code languageCode} is the template's own locale
      * ({@code en_US}, {@code ur}) — a template exists per language, so the caller picks.
      */
-    public void sendTemplate(String to, String templateName, String languageCode, String... bodyParameters) {
+    public boolean sendTemplate(String to, String templateName, String languageCode, String... bodyParameters) {
         if (suppressed(to, templateName)) {
-            return;
+            return false;
         }
         try {
             postMessage(message(to, "template", template(templateName, languageCode, null, bodyParameters)));
+            return true;
         } catch (Exception e) {
             logFailure(to, templateName, e);
+            return false;
         }
     }
 
@@ -104,7 +108,7 @@ public class WhatsAppService {
      * approved with a <em>document</em> header; the file is uploaded first and referenced by
      * media id, so it never has to be publicly hosted.
      */
-    public void sendTemplateWithDocument(
+    public boolean sendTemplateWithDocument(
             String to,
             String templateName,
             String languageCode,
@@ -113,7 +117,7 @@ public class WhatsAppService {
             String... bodyParameters
     ) {
         if (suppressed(to, templateName)) {
-            return;
+            return false;
         }
         try {
             Map<String, Object> header = Map.of(
@@ -125,8 +129,10 @@ public class WhatsAppService {
             );
 
             postMessage(message(to, "template", template(templateName, languageCode, header, bodyParameters)));
+            return true;
         } catch (Exception e) {
             logFailure(to, templateName, e);
+            return false;
         }
     }
 
@@ -167,14 +173,16 @@ public class WhatsAppService {
      * who wrote to us. Anything we initiate has to go through
      * {@link #sendTemplate(String, String, String, String...)}.
      */
-    public void sendText(String to, String body) {
+    public boolean sendText(String to, String body) {
         if (suppressed(to, "text message")) {
-            return;
+            return false;
         }
         try {
             postMessage(message(to, "text", Map.of("preview_url", false, "body", body)));
+            return true;
         } catch (Exception e) {
             logFailure(to, "text message", e);
+            return false;
         }
     }
 
@@ -185,9 +193,9 @@ public class WhatsAppService {
      * Free-form like {@link #sendText}, so it is bound by the same 24-hour window. Pushing a
      * document unprompted needs a template with a document header instead — not built yet.
      */
-    public void sendDocument(String to, byte[] document, String filename, String caption) {
+    public boolean sendDocument(String to, byte[] document, String filename, String caption) {
         if (suppressed(to, filename)) {
-            return;
+            return false;
         }
         try {
             Map<String, Object> payload = new LinkedHashMap<>();
@@ -198,8 +206,10 @@ public class WhatsAppService {
             }
 
             postMessage(message(to, "document", payload));
+            return true;
         } catch (Exception e) {
             logFailure(to, filename, e);
+            return false;
         }
     }
 

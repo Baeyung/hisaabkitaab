@@ -24,6 +24,7 @@ import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
+import io.github.baeyung.hisaabkitaab.service.PlanService;
 import io.github.baeyung.hisaabkitaab.service.pdf.PdfRenderService;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.PartyDocumentService;
 import jakarta.validation.Valid;
@@ -38,6 +39,7 @@ public class PartyController
     private final OpeningEntryService openingEntryService;
     private final PartyDocumentService partyDocumentService;
     private final PdfRenderService pdfRenderService;
+    private final PlanService planService;
 
     @GetMapping
     public ResponseEntity<List<PartyResponse>> list(@CurrentStore(StoreRole.VIEWER) Store store)
@@ -80,16 +82,29 @@ public class PartyController
      * The browser posts the page, not a file: the PDF is rendered here, so a client cannot
      * put arbitrary bytes on a customer's phone. The recipient's number is likewise
      * resolved from the party rather than taken from the request.
+     *
+     * <p>Every send is metered against the shop owner's plan, and this is the only route to
+     * one — the frontend greys the button out when the quota is gone, but that is a courtesy
+     * and this is the rule. The message is charged before it goes and given back if it does
+     * not, so the count cannot be walked past by racing requests and cannot be spent by a
+     * message the customer never got.
      */
     @PostMapping("/{id}/whatsapp")
     public ResponseEntity<Void> sendOnWhatsApp(@PathVariable String id,
             @Valid @RequestBody PartyWhatsAppRequest request,
             @CurrentStore(StoreRole.EDITOR) Store store)
     {
-        partyDocumentService.send(partyService.findByIdForStore(id, store.getId()),
+        String ownerId = store.getOwner().getId();
+        String charged = planService.spendWhatsappMessage(ownerId);
+
+        if (!partyDocumentService.send(partyService.findByIdForStore(id, store.getId()),
                 pdfRenderService.render(request.html()),
                 request.filename(),
-                request.caption());
+                request.caption()))
+        {
+            planService.releaseWhatsappMessage(ownerId, charged);
+        }
+
         return ResponseEntity.accepted().build();
     }
 

@@ -44,10 +44,10 @@ const overLimit: PlanStatus = {
   expired: false,
   enforced: true,
   limits: { maxStores: 1, maxUsers: 1, whatsappQuota: 0 },
-  usage: { stores: 2, users: 1 },
+  usage: { stores: 2, users: 1, whatsapp: 0 },
 };
 
-const withinLimit: PlanStatus = { ...overLimit, usage: { stores: 1, users: 1 } };
+const withinLimit: PlanStatus = { ...overLimit, usage: { stores: 1, users: 1, whatsapp: 0 } };
 
 /**
  * Who gets sent to the "choose what to keep" screen. The backend refuses the writes either

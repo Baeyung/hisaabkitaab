@@ -14,7 +14,8 @@ export interface PlanStatus {
   /** False when the server is not applying plans at all — see {@link PlanService.atStoreLimit}. */
   enforced: boolean;
   limits: { maxStores: number; maxUsers: number; whatsappQuota: number };
-  usage: { stores: number; users: number };
+  /** `whatsapp` is messages sent *this calendar month* — the other two are standing totals. */
+  usage: { stores: number; users: number; whatsapp: number };
 }
 
 /** One of the owner's shops, as something to keep open or close. Mirrors `OverageStore`. */
@@ -147,6 +148,29 @@ export class PlanService {
       status === null || !status.enforced || (!status.expired && status.limits.whatsappQuota > 0)
     );
   });
+
+  /**
+   * Messages left to send this month, or null when there is no number to show — an unknown or
+   * unenforced plan, or one that does not cover WhatsApp at all ({@link whatsappAllowed} is
+   * what says that, and says it differently).
+   *
+   * Never negative: an admin can cut a quota below what has already been spent this month, and
+   * "-8 left" is not a thing to put in front of a shopkeeper.
+   */
+  readonly whatsappRemaining = computed(() => {
+    const status = this._status();
+    if (status === null || !status.enforced || status.limits.whatsappQuota === 0) {
+      return null;
+    }
+    return Math.max(0, status.limits.whatsappQuota - status.usage.whatsapp);
+  });
+
+  /**
+   * Whether this month's quota is gone, on a plan that otherwise covers sending. Distinct from
+   * `!whatsappAllowed()`, which is not paying for WhatsApp in the first place — one is answered
+   * by waiting for the month to turn, the other only by upgrading.
+   */
+  readonly whatsappExhausted = computed(() => this.whatsappRemaining() === 0);
 
   /**
    * How many shops are open beyond what the plan covers, and how many seats are spent beyond

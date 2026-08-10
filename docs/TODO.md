@@ -21,7 +21,8 @@
 - [x] Admin different colors for different plans
 - [x] Admin filters to filter users
 - [x] Disable menus with exceeded limit
-- [ ] WhatsApp metering
+- [x] WhatsApp metering
+- [ ] WhatsApp concurrency?
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp

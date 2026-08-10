@@ -3,6 +3,7 @@ package io.github.baeyung.hisaabkitaab.service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.YearMonth;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -131,6 +132,12 @@ public class PlanService
      * Puts a plan on an account, replacing whatever was there. Overrides left out of the
      * request are cleared rather than kept: an assignment states the whole plan, so moving an
      * account back to a standard tier cannot silently leave a bespoke limit behind.
+     *
+     * <p>What this month's WhatsApp sends cost is <em>not</em> part of the plan being stated,
+     * so it is carried across rather than rebuilt with the rest. An assignment changes what
+     * the account is entitled to from here on; it does not un-send the messages already sent,
+     * and a re-assignment that refilled the month's quota would be a way to buy the same
+     * fifty messages twice.
      */
     public PlanResponse assign(String userId, AssignPlanRequest request)
     {
@@ -138,6 +145,8 @@ public class PlanService
         {
             throw ResourceNotFoundException.forEntity("User", userId);
         }
+
+        UserPlan previous = userPlanRepository.findById(userId).orElse(null);
 
         UserPlan saved = userPlanRepository.save(UserPlan.builder()
                 .userId(userId)
@@ -147,6 +156,8 @@ public class PlanService
                 .maxStores(request.maxStores())
                 .maxUsers(request.maxUsers())
                 .whatsappQuota(request.whatsappQuota())
+                .whatsappUsed(previous == null ? 0 : previous.getWhatsappUsed())
+                .whatsappPeriod(previous == null ? null : previous.getWhatsappPeriod())
                 .build());
 
         reopenWhereRoom(userId, PlanLimits.effectiveFor(saved).maxStores());
@@ -241,6 +252,94 @@ public class PlanService
     }
 
     /**
+     * Charges one WhatsApp message to the owner's plan, refusing the send if there is nothing
+     * left to charge it to. The only enforcement point for the quota — a send that has not
+     * been through here has not been paid for.
+     *
+     * <p>Unlike the standing capacities this is spent, not occupied, so it is charged
+     * <em>before</em> the message goes out and given back by {@link #releaseWhatsappMessage}
+     * if it turns out not to have gone. Charging afterwards would leave the ceiling open to
+     * anyone willing to fire requests in parallel, which is the whole thing this defends
+     * against; see {@code UserPlanRepository.spendWhatsapp} for how the count itself is kept
+     * honest.
+     *
+     * <p>Quota belongs to the account that <em>owns</em> the shop, not to whoever pressed the
+     * button — an invited member sending a customer their bill spends the owner's plan, for
+     * the same reason they work inside the owner's shop at all.
+     *
+     * @return the period the message was charged to, to be handed back to
+     *         {@link #releaseWhatsappMessage}, or null when plans are switched off and
+     *         nothing was charged
+     * @throws ResponseStatusException 403, carrying a message meant to be shown as-is
+     */
+    public String spendWhatsappMessage(String ownerId)
+    {
+        if (!enabled)
+        {
+            return null;
+        }
+
+        UserPlan plan = startClock(planOf(ownerId));
+
+        if (!isActive(plan, LocalDate.now()))
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Your plan ended on " + plan.getExpiresAt() + ". Renew it to send on WhatsApp.");
+        }
+
+        int quota = PlanLimits.effectiveFor(plan).whatsappQuota();
+
+        // Nothing to meter rather than nothing left — a different sentence, because upgrading
+        // is the answer to one and waiting for the month to turn is the answer to the other.
+        if (quota == 0)
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Sending on WhatsApp is not part of your plan. Upgrade to send bills and "
+                            + "statements to your customers.");
+        }
+
+        String period = currentPeriod();
+
+        if (userPlanRepository.spendWhatsapp(ownerId, period, quota) == 0)
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You have used all " + quota + " WhatsApp messages your plan covers this month. "
+                            + "The count starts again next month, or upgrade for more.");
+        }
+
+        return period;
+    }
+
+    /**
+     * Gives back a message charged by {@link #spendWhatsappMessage} that never actually
+     * reached the recipient. Takes the period that call returned and does nothing when it is
+     * null, so a caller pairs the two without having to know whether plans are switched on.
+     */
+    public void releaseWhatsappMessage(String ownerId, String period)
+    {
+        if (period != null)
+        {
+            userPlanRepository.refundWhatsapp(ownerId, period);
+        }
+    }
+
+    /**
+     * What the account has spent of its quota this month. A count stamped with any other
+     * month is last month's and reads as zero — the same reading the next send will act on
+     * when it overwrites the row.
+     */
+    private static int whatsappUsedThisMonth(UserPlan plan)
+    {
+        return currentPeriod().equals(plan.getWhatsappPeriod()) ? plan.getWhatsappUsed() : 0;
+    }
+
+    /** The calendar month a send is charged to, as {@code "2026-08"}. */
+    private static String currentPeriod()
+    {
+        return YearMonth.now().toString();
+    }
+
+    /**
      * The signed-in user's own plan with what they have spent against it, for the screens that
      * would rather grey a button out than let the user find the ceiling by hitting it.
      */
@@ -262,7 +361,8 @@ public class PlanService
                 PlanLimits.effectiveFor(plan),
                 new PlanStatusResponse.PlanUsage(
                         (int) usageOf(userId, PlanCapacity.STORES),
-                        (int) usageOf(userId, PlanCapacity.USERS)));
+                        (int) usageOf(userId, PlanCapacity.USERS),
+                        whatsappUsedThisMonth(plan)));
     }
 
     /**

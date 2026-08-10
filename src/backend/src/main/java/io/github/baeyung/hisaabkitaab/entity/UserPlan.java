@@ -67,4 +67,29 @@ public class UserPlan
     private Integer maxUsers;
 
     private Integer whatsappQuota;
+
+    /**
+     * Messages spent against {@link #whatsappQuota} during {@link #whatsappPeriod}. Meaningless
+     * on its own — read it only together with the period, which is what says whether the count
+     * is this month's or a forgotten one.
+     *
+     * <p>The one limit that has to be recorded rather than counted: shops and users can be
+     * tallied from their own rows at any time, but a sent message leaves nothing behind to
+     * count. Written by {@code UserPlanRepository.spendWhatsapp}, never by an entity write, so
+     * that two simultaneous sends cannot both squeeze past the ceiling.
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private int whatsappUsed = 0;
+
+    /**
+     * The calendar month {@link #whatsappUsed} was spent in, as {@code "2026-08"}. Null until
+     * the account's first ever send.
+     *
+     * <p>This is how the quota resets without anything sweeping it: a send in a month that
+     * differs from what is stored here overwrites both columns rather than adding to them, so
+     * last month's total is simply dropped on the first send of the new one.
+     */
+    @Column(length = 7)
+    private String whatsappPeriod;
 }

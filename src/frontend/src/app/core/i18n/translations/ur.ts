@@ -456,6 +456,8 @@ export const ur: Record<TranslationKey, string> = {
   'whatsapp.confirm': '{{document}}، {{name}} کو واٹس ایپ نمبر {{contact}} پر بھیجا جائے گا۔',
   'whatsapp.noNumber': 'واٹس ایپ پر بھیجنے کے لیے {{name}} کا فون نمبر شامل کریں',
   'whatsapp.notOnPlan': 'واٹس ایپ پر بھیجنا آپ کے پلان میں شامل نہیں',
+  'whatsapp.quotaLeft': 'اس مہینے آپ کے پلان میں {{left}} پیغام باقی ہیں۔',
+  'whatsapp.noQuota': 'اس مہینے کے واٹس ایپ پیغامات آپ استعمال کر چکے ہیں',
   'whatsapp.doc.statement': 'کھاتہ گوشوارہ',
   'whatsapp.doc.bill': 'بل',
   'common.printDetails.title': 'بل کی تفصیلات',
