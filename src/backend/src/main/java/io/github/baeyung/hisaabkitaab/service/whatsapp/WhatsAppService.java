@@ -2,7 +2,6 @@ package io.github.baeyung.hisaabkitaab.service.whatsapp;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,17 +83,24 @@ public class WhatsAppService {
      * A pre-approved template — the only thing Meta delivers to someone who has not messaged
      * us in the last 24 hours, so this is what any app-initiated message must use.
      * <p>
-     * {@code bodyParameters} fill the template's {{1}}, {{2}}, … placeholders in order, and
-     * must match the approved template exactly in count or Meta rejects the send. A template
-     * with no placeholders takes none. {@code languageCode} is the template's own locale
+     * {@code bodyParameters} are keyed by the variable names the approved template declares
+     * ({@code recipient_name}, …) — our templates are built with named variables rather than
+     * {{1}}, {{2}}, and Meta rejects the send if a name is missing or unknown. A template with
+     * no variables takes an empty map. {@code languageCode} is the template's own locale
      * ({@code en_US}, {@code ur}) — a template exists per language, so the caller picks.
      */
-    public boolean sendTemplate(String to, String templateName, String languageCode, String... bodyParameters) {
+    public boolean sendTemplate(
+            String to,
+            String templateName,
+            String languageCode,
+            Map<String, String> bodyParameters
+    ) {
         if (suppressed(to, templateName)) {
             return false;
         }
         try {
-            postMessage(message(to, "template", template(templateName, languageCode, null, bodyParameters)));
+            postMessage(message(to, "template",
+                    template(templateName, languageCode, null, bodyParameters, List.of())));
             return true;
         } catch (Exception e) {
             logFailure(to, templateName, e);
@@ -107,6 +113,10 @@ public class WhatsAppService {
      * statement reaches someone outside the 24-hour window. The template must already be
      * approved with a <em>document</em> header; the file is uploaded first and referenced by
      * media id, so it never has to be publicly hosted.
+     * <p>
+     * {@code urlButtonParameters} fill the placeholders in the template's dynamic URL button.
+     * Those stay positional — Meta names body variables, not button ones — so order is what
+     * matters here. Empty for a template whose buttons are all static.
      */
     public boolean sendTemplateWithDocument(
             String to,
@@ -114,7 +124,8 @@ public class WhatsAppService {
             String languageCode,
             byte[] document,
             String filename,
-            String... bodyParameters
+            Map<String, String> bodyParameters,
+            List<String> urlButtonParameters
     ) {
         if (suppressed(to, templateName)) {
             return false;
@@ -128,7 +139,14 @@ public class WhatsAppService {
                     ))
             );
 
-            postMessage(message(to, "template", template(templateName, languageCode, header, bodyParameters)));
+            postMessage(
+                    message(
+                            to,
+                            "template",
+                            template(templateName, languageCode, header, bodyParameters, urlButtonParameters)
+                    )
+            );
+
             return true;
         } catch (Exception e) {
             logFailure(to, templateName, e);
@@ -137,23 +155,46 @@ public class WhatsAppService {
     }
 
     /**
-     * Header first, then body — Meta reads components in the order the template declares them.
+     * Header, body, then buttons — Meta reads components in the order the template declares
+     * them.
      */
     private Map<String, Object> template(
             String templateName,
             String languageCode,
             Map<String, Object> header,
-            String[] bodyParameters
+            Map<String, String> bodyParameters,
+            List<String> urlButtonParameters
     ) {
         List<Map<String, Object>> components = new ArrayList<>();
         if (header != null) {
             components.add(header);
         }
-        if (bodyParameters.length > 0) {
+        if (!bodyParameters.isEmpty()) {
+            components.add(
+                    Map.of(
+                            "type", "body",
+                            "parameters", bodyParameters
+                                    .entrySet()
+                                    .stream()
+                                    .map(variable -> Map.<String, Object>of(
+                                        "type", "text",
+                                        "parameter_name", variable.getKey(),
+                                        "text", variable.getValue())
+                                    )
+                                    .toList()
+                    )
+            );
+        }
+        if (!urlButtonParameters.isEmpty()) {
             components.add(Map.of(
-                    "type", "body",
-                    "parameters", Arrays.stream(bodyParameters)
-                            .map(value -> Map.of("type", "text", "text", value))
+                    "type", "button",
+                    "sub_type", "url",
+                    // ponytail: the template's first button. Take an index parameter if a
+                    // template ever puts the dynamic URL behind another one.
+                    "index", "0",
+                    "parameters", urlButtonParameters
+                            .stream()
+                            .map(value -> Map.<String, Object>of("type", "text", "text", value))
                             .toList()
             ));
         }
@@ -171,7 +212,6 @@ public class WhatsAppService {
      * A plain text message. Meta only delivers free-form text inside the 24-hour window
      * opened by the recipient's last inbound message — so this is for replying to someone
      * who wrote to us. Anything we initiate has to go through
-     * {@link #sendTemplate(String, String, String, String...)}.
      */
     public boolean sendText(String to, String body) {
         if (suppressed(to, "text message")) {
@@ -191,7 +231,9 @@ public class WhatsAppService {
      * file never has to be publicly hosted. {@code caption} may be null or blank.
      * <p>
      * Free-form like {@link #sendText}, so it is bound by the same 24-hour window. Pushing a
-     * document unprompted needs a template with a document header instead — not built yet.
+     * document unprompted goes through
+     * {@link #sendTemplateWithDocument(String, String, String, byte[], String, Map, List)}
+     * instead.
      */
     public boolean sendDocument(String to, byte[] document, String filename, String caption) {
         if (suppressed(to, filename)) {

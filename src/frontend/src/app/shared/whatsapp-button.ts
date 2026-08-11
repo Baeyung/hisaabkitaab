@@ -91,6 +91,12 @@ export class WhatsAppButton {
   readonly document = input.required<string>();
 
   /**
+   * The same thing without its number — "Bill", "Khata statement", "Cashbook". It reads
+   * inside a sentence in the WhatsApp template, where "Bill #1042" would not.
+   */
+  readonly action = input.required<string>();
+
+  /**
    * Runs before the page is captured — the ledger statement uses it to ask about expanding
    * bill details, exactly as Print does. Returning false calls the whole thing off.
    */
@@ -196,7 +202,13 @@ export class WhatsAppButton {
         this.state.set('idle');
         return;
       }
-      await this.api.send(partyId, printableHtml(), this.filename(), this.caption());
+      await this.api.send(
+        partyId,
+        printableHtml(),
+        this.filename(),
+        this.action(),
+        this.locale.locale(),
+      );
       this.state.set('sent');
     } catch {
       this.state.set('error');
@@ -206,12 +218,6 @@ export class WhatsAppButton {
     // out of date. Deliberately not awaited — the button has said what happened and must not
     // wait on a second request to say it.
     void this.plan.refresh().catch(() => undefined);
-  }
-
-  /** What lands in the party's chat — the document, and which shop sent it. */
-  private caption(): string {
-    const shop = this.stores.current()?.name;
-    return shop ? `${this.document()} — ${shop}` : this.document();
   }
 
   /**

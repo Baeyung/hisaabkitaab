@@ -74,11 +74,10 @@ app:
     api-base-url: ${WHATSAPP_API_BASE_URL:https://graph.facebook.com/v25.0}
     # Shared secret Meta echoes back on the webhook verification handshake.
     verify-token: ${WHATSAPP_VERIFY_TOKEN:}
-    # Approved template with a document header, used to send a party their bill or
-    # statement. Blank until Meta approves ours; while blank the PDF goes as a free-form
-    # document, which only reaches parties who messaged the shop in the last 24 hours.
-    document-template: ${WHATSAPP_DOCUMENT_TEMPLATE:}
-    document-template-language: ${WHATSAPP_DOCUMENT_TEMPLATE_LANGUAGE:en_US}
+    # Approved template with a document header, used to send a party their bill, statement
+    # or cashbook. Approved once per language (en_US, ur) under the one name; override only
+    # to roll out a newly approved version without a deploy.
+    document-template: ${WHATSAPP_DOCUMENT_TEMPLATE:document_share}
   pdf:
     renderer-url: ${PDF_RENDERER_URL:http://localhost:3000}
     dump-dir: ${PDF_DUMP_DIR:}

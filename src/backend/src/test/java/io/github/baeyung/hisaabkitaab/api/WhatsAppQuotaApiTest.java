@@ -16,7 +16,7 @@ import io.github.baeyung.hisaabkitaab.entity.UserPlan;
 import io.github.baeyung.hisaabkitaab.enums.PlanTier;
 import io.github.baeyung.hisaabkitaab.repository.UserPlanRepository;
 import io.github.baeyung.hisaabkitaab.service.pdf.PdfRenderService;
-import io.github.baeyung.hisaabkitaab.service.whatsapp.PartyDocumentService;
+import io.github.baeyung.hisaabkitaab.service.whatsapp.DocumentShareService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * shop's owner rather than whoever pressed the button, and started again by the calendar.
  *
  * <p>Both ends of the send are mocked, and for different reasons. {@link PdfRenderService}
- * talks to a headless Chrome that no test has, and {@link PartyDocumentService} talks to Meta
+ * talks to a headless Chrome that no test has, and {@link DocumentShareService} talks to Meta
  * — neither is what this class is about, and the second one has to be stubbed <em>true</em> on
  * purpose: a real send is suppressed in tests, and a suppressed send is refunded, which would
  * hide every miscount this class exists to catch.
@@ -50,13 +50,13 @@ class WhatsAppQuotaApiTest extends ApiTest
     private PdfRenderService pdfRenderService;
 
     @MockitoBean
-    private PartyDocumentService partyDocumentService;
+    private DocumentShareService documentShareService;
 
     @BeforeEach
     void stubTheOutsideWorld()
     {
         when(pdfRenderService.render(any())).thenReturn("pdf".getBytes());
-        when(partyDocumentService.send(any(), any(), any(), any())).thenReturn(true);
+        when(documentShareService.share(any(), any(), any(), any(), any(), any())).thenReturn(true);
     }
 
     /** Puts a plan on an account, live for a month, with the given monthly message quota. */
@@ -85,7 +85,7 @@ class WhatsAppQuotaApiTest extends ApiTest
     {
         return mvc.perform(post(api(storeId, "/parties/" + partyId + "/whatsapp")).with(as(actor))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"html\":\"<p>bill</p>\",\"caption\":\"Bill SALE-1\",\"filename\":\"bill.pdf\"}"));
+                .content("{\"html\":\"<p>bill</p>\",\"filename\":\"bill.pdf\",\"action\":\"Bill\",\"locale\":\"en\"}"));
     }
 
     private int used(String userId)
@@ -190,13 +190,13 @@ class WhatsAppQuotaApiTest extends ApiTest
     }
 
     /**
-     * A message Meta never took is not a message the account should pay for — which is the
-     * normal case while no document template is approved, not an edge one.
+     * A message Meta never took is not a message the account should pay for — a rejected
+     * template, a number Meta will not deliver to, or WhatsApp switched off entirely.
      */
     @Test
     void givesTheMessageBackWhenItDoesNotGoOut() throws Exception
     {
-        when(partyDocumentService.send(any(), any(), any(), any())).thenReturn(false);
+        when(documentShareService.share(any(), any(), any(), any(), any(), any())).thenReturn(false);
 
         String ownerId = signup(OWNER);
         plan(ownerId, PlanTier.BASIC, 3);

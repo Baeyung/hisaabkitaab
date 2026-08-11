@@ -49,6 +49,7 @@
             [partyName]="b.partyName ?? ''"
             [contact]="b.partyContact"
             [document]="locale.t('whatsapp.doc.bill') + (b.billNumber ? ' ' + b.billNumber : '')"
+            [action]="locale.t('whatsapp.doc.bill')"
           />
         }
         @if (stores.canEdit()) {

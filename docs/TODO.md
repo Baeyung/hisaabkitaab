@@ -22,7 +22,8 @@
 - [x] Admin filters to filter users
 - [x] Disable menus with exceeded limit
 - [x] WhatsApp metering
-- [ ] WhatsApp concurrency?
+- [x] WhatsApp concurrency?
+- [ ] WhatsApp data header sending with an expiry
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp

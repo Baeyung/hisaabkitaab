@@ -1,5 +1,9 @@
 package io.github.baeyung.hisaabkitaab.service.whatsapp;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -43,7 +47,7 @@ class WhatsAppServiceTest
         WhatsAppService whatsapp = service(false, "12345", "token");
 
         assertFalse(whatsapp.sendText("923001234567", "hello"));
-        assertFalse(whatsapp.sendTemplate("923001234567", "hello_world", "en_US"));
+        assertFalse(whatsapp.sendTemplate("923001234567", "hello_world", "en_US", Map.of()));
         assertFalse(whatsapp.sendDocument("923001234567", "pdf".getBytes(), "statement.pdf", "your statement"));
 
         server.verify();
@@ -91,7 +95,7 @@ class WhatsAppServiceTest
     }
 
     @Test
-    void sendsTemplateWithOrderedBodyParameters()
+    void sendsTemplateWithNamedBodyParameters()
     {
         WhatsAppService whatsapp = service(true, "12345", "token");
         server.expect(requestTo(MESSAGES_URL))
@@ -101,17 +105,19 @@ class WhatsAppServiceTest
                 .andExpect(jsonPath("$.template.language.code").value("en_US"))
                 .andExpect(jsonPath("$.template.components[0].type").value("body"))
                 .andExpect(jsonPath("$.template.components[0].parameters[0].type").value("text"))
+                // Named, not {{1}}: the value is carried by the variable name the template
+                // declares, so Meta matches on the name rather than the position.
+                .andExpect(jsonPath("$.template.components[0].parameters[0].parameter_name").value("customer_name"))
                 .andExpect(jsonPath("$.template.components[0].parameters[0].text").value("John Doe"))
+                .andExpect(jsonPath("$.template.components[0].parameters[1].parameter_name").value("order_id"))
                 .andExpect(jsonPath("$.template.components[0].parameters[1].text").value("123456"))
-                .andExpect(jsonPath("$.template.components[0].parameters[2].text").value("Aug 7, 2026"))
                 .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.4\"}]}", MediaType.APPLICATION_JSON));
 
-        whatsapp.sendTemplate(
-                "923488001949",
-                "jaspers_market_order_confirmation_v1",
-                "en_US",
-                "John Doe", "123456", "Aug 7, 2026"
-        );
+        Map<String, String> body = new LinkedHashMap<>();
+        body.put("customer_name", "John Doe");
+        body.put("order_id", "123456");
+
+        whatsapp.sendTemplate("923488001949", "jaspers_market_order_confirmation_v1", "en_US", body);
 
         server.verify();
     }
@@ -125,7 +131,7 @@ class WhatsAppServiceTest
                 .andExpect(jsonPath("$.template.components").doesNotExist())
                 .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.5\"}]}", MediaType.APPLICATION_JSON));
 
-        whatsapp.sendTemplate("923488001949", "hello_world", "en_US");
+        whatsapp.sendTemplate("923488001949", "hello_world", "en_US", Map.of());
 
         server.verify();
     }
@@ -146,7 +152,14 @@ class WhatsAppServiceTest
                 .andExpect(jsonPath("$.template.components[0].parameters[0].document.id").value("media-77"))
                 .andExpect(jsonPath("$.template.components[0].parameters[0].document.filename").value("invoice.pdf"))
                 .andExpect(jsonPath("$.template.components[1].type").value("body"))
+                .andExpect(jsonPath("$.template.components[1].parameters[0].parameter_name").value("recipient_name"))
                 .andExpect(jsonPath("$.template.components[1].parameters[0].text").value("Ahmad"))
+                // …and the dynamic URL button last, addressed by its index in the template.
+                .andExpect(jsonPath("$.template.components[2].type").value("button"))
+                .andExpect(jsonPath("$.template.components[2].sub_type").value("url"))
+                .andExpect(jsonPath("$.template.components[2].index").value("0"))
+                .andExpect(jsonPath("$.template.components[2].parameters[0].text").value("store-3"))
+                .andExpect(jsonPath("$.template.components[2].parameters[1].text").value("party-7"))
                 .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.6\"}]}", MediaType.APPLICATION_JSON));
 
         whatsapp.sendTemplateWithDocument(
@@ -155,7 +168,8 @@ class WhatsAppServiceTest
                 "en_US",
                 "pdf-bytes".getBytes(),
                 "invoice.pdf",
-                "Ahmad"
+                Map.of("recipient_name", "Ahmad"),
+                List.of("store-3", "party-7")
         );
 
         server.verify();

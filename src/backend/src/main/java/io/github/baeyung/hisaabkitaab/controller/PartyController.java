@@ -26,7 +26,7 @@ import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.PlanService;
 import io.github.baeyung.hisaabkitaab.service.pdf.PdfRenderService;
-import io.github.baeyung.hisaabkitaab.service.whatsapp.PartyDocumentService;
+import io.github.baeyung.hisaabkitaab.service.whatsapp.DocumentShareService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -37,7 +37,7 @@ public class PartyController
 {
     private final PartyService partyService;
     private final OpeningEntryService openingEntryService;
-    private final PartyDocumentService partyDocumentService;
+    private final DocumentShareService documentShareService;
     private final PdfRenderService pdfRenderService;
     private final PlanService planService;
 
@@ -97,10 +97,14 @@ public class PartyController
         String ownerId = store.getOwner().getId();
         String charged = planService.spendWhatsappMessage(ownerId);
 
-        if (!partyDocumentService.send(partyService.findByIdForStore(id, store.getId()),
+        if (!documentShareService.share(
+                store,
+                partyService.findByIdForStore(id, store.getId()),
+                request.action(),
                 pdfRenderService.render(request.html()),
                 request.filename(),
-                request.caption()))
+                request.locale())
+        )
         {
             planService.releaseWhatsappMessage(ownerId, charged);
         }

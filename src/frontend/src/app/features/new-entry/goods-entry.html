@@ -274,6 +274,7 @@
             [partyName]="partyName()"
             [contact]="sendParty()?.contact ?? null"
             [document]="locale.t('whatsapp.doc.bill') + (billNumber() ? ' ' + billNumber() : '')"
+            [action]="locale.t('whatsapp.doc.bill')"
           />
         }
         <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
@@ -292,6 +293,7 @@
             [partyName]="partyName()"
             [contact]="sendParty()?.contact ?? null"
             [document]="locale.t('whatsapp.doc.bill') + (billNumber() ? ' ' + billNumber() : '')"
+            [action]="locale.t('whatsapp.doc.bill')"
           />
         }
         <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
