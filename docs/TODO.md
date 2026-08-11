@@ -23,8 +23,8 @@
 - [x] Disable menus with exceeded limit
 - [x] WhatsApp metering
 - [x] WhatsApp concurrency?
-- [ ] WhatsApp data header sending with an expiry
+- [x] WhatsApp data header sending with an expiry
+- [ ] processed goods feature
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp
-- [ ] processed goods feature

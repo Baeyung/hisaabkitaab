@@ -117,10 +117,29 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
                             else 0 end) as stock
             from TransactionLine tl
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.STOCK
+              and tl.item is not null
               and tl.transaction.store.id = :storeId
             group by tl.item.id
             """)
     List<ItemStockRow> sumStockByStore(@Param("storeId") String storeId);
+
+    /**
+     * One item's net stock — the single-item form of {@link #sumStockByStore}, for the
+     * weighted-average cost a PROCESSING entry folds its output into. Store-scoped for the
+     * same reason as the movement history: owning the item doesn't make every line that
+     * references it this shop's.
+     */
+    @Query("""
+            select coalesce(sum(
+                       case when tl.inOut = io.github.baeyung.hisaabkitaab.enums.InOut.IN then tl.quantity
+                            when tl.inOut = io.github.baeyung.hisaabkitaab.enums.InOut.OUT then -tl.quantity
+                            else 0 end), 0)
+            from TransactionLine tl
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.STOCK
+              and tl.item.id = :itemId
+              and tl.transaction.store.id = :storeId
+            """)
+    BigDecimal sumStockByItem(@Param("itemId") String itemId, @Param("storeId") String storeId);
 
     /**
      * Every STOCK line for one item, chronological by business date — the movement history rows.

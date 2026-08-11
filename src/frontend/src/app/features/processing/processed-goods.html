@@ -1,0 +1,163 @@
+<section class="rm-page">
+  <header class="rm-head">
+    <div>
+      <h1 class="rm-title">{{ locale.t('nav.processedGoods') }}</h1>
+      <p class="rm-sub">{{ locale.t('processing.list.subtitle') }}</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state">
+      <p role="alert" class="rm-alert">{{ locale.t('processing.list.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">
+        {{ locale.t('settings.general.retry') }}
+      </button>
+    </div>
+  } @else if ((batches()?.length ?? 0) === 0) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('processing.list.empty.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('processing.list.empty.body') }}</p>
+      <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/processing')">
+        {{ locale.t('processing.list.empty.cta') }}
+      </a>
+    </div>
+  } @else {
+    @if (deleteError(); as key) {
+      <p role="alert" class="rm-alert">{{ locale.t(key) }}</p>
+    }
+    <div class="rm-card">
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('processing.list.col.output') }}</th>
+              <th scope="col">{{ locale.t('processing.list.col.date') }}</th>
+              <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
+              <th scope="col" class="end">{{ locale.t('processing.unitCost') }}</th>
+              <th scope="col" class="rm-noprint"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (batch of batches(); track batch.transactionId) {
+              <tr class="rm-rowlink" (click)="toggle(batch.transactionId)">
+                <td class="rm-cell-head">
+                  <span class="rm-tbl__name">{{ batch.output?.name ?? '—' }}</span>
+                  @if (batch.billNumber) {
+                    <span class="rm-tbl__meta">{{ batch.billNumber }}</span>
+                  }
+                </td>
+                <td [attr.data-label]="locale.t('processing.list.col.date')">{{ batch.date }}</td>
+                <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">
+                  {{ locale.qtyUnit(batch.output?.quantity ?? 0, batch.output?.unit ?? null) }}
+                </td>
+                <td class="end num rm-tbl__name rm-cell-amt">
+                  {{ batch.output?.unitCost != null ? locale.money(batch.output!.unitCost!) : '—' }}
+                </td>
+                <td class="rm-noprint">
+                  <button
+                    type="button"
+                    class="rm-btn rm-btn--ghost rm-btn--sm"
+                    (click)="askDelete(batch.transactionId); $event.stopPropagation()"
+                  >
+                    {{ locale.t('common.delete') }}
+                  </button>
+                </td>
+              </tr>
+
+              @if (expandedId() === batch.transactionId) {
+                <tr class="rm-detail-row" (click)="$event.stopPropagation()">
+                  <td colspan="5">
+                    <div class="rm-tablewrap">
+                      <table class="rm-tbl">
+                        <thead>
+                          <tr>
+                            <th scope="col">{{ locale.t('processing.list.madeFrom') }}</th>
+                            <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
+                            <th scope="col" class="end">{{ locale.t('processing.col.rate') }}</th>
+                            <th scope="col" class="end">{{ locale.t('processing.col.amount') }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (row of batch.rawItems; track $index) {
+                            <tr>
+                              <td class="rm-cell-head">
+                                <span class="rm-tbl__name">{{ row.name }}</span>
+                                <span class="rm-tbl__meta">{{ locale.t('processing.raw') }}</span>
+                              </td>
+                              <td class="end num">{{ locale.qtyUnit(row.quantity ?? 0, row.unit) }}</td>
+                              <td class="end num">{{ locale.money(row.pricePerUnit ?? 0) }}</td>
+                              <td class="end num">{{ locale.money(lineAmount(row)) }}</td>
+                            </tr>
+                          }
+                          @for (row of batch.processingItems; track $index) {
+                            <tr>
+                              <td class="rm-cell-head">
+                                <span class="rm-tbl__name">{{ row.name }}</span>
+                                <span class="rm-tbl__meta">{{ locale.t('processing.items') }}</span>
+                              </td>
+                              <td class="end num">{{ locale.qtyUnit(row.quantity ?? 0, row.unit) }}</td>
+                              <td class="end num">{{ locale.money(row.pricePerUnit ?? 0) }}</td>
+                              <td class="end num">{{ locale.money(lineAmount(row)) }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                    @if (batch.output?.wastage) {
+                      <p class="rm-sub">
+                        {{ locale.t('processing.col.wastage') }}:
+                        {{ locale.qtyUnit(batch.output!.wastage!, batch.output?.unit ?? null) }}
+                      </p>
+                    }
+                    @if (batch.description) {
+                      <p class="rm-sub">{{ batch.description }}</p>
+                    }
+                  </td>
+                </tr>
+              }
+
+              @if (confirmingId() === batch.transactionId) {
+                <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
+                  <td colspan="5">
+                    <div class="rm-confirm">
+                      <span class="rm-confirm__msg">
+                        {{
+                          locale.t('processing.list.deleteConfirm', {
+                            name: batch.output?.name ?? '',
+                          })
+                        }}
+                      </span>
+                      <span class="rm-confirm__actions">
+                        <button
+                          type="button"
+                          class="rm-btn rm-btn--ghost rm-btn--sm"
+                          (click)="cancelDelete()"
+                        >
+                          {{ locale.t('common.cancel') }}
+                        </button>
+                        <button
+                          type="button"
+                          class="rm-btn rm-btn--danger rm-btn--sm"
+                          (click)="confirmDelete(batch.transactionId)"
+                          [disabled]="deleting()"
+                        >
+                          {{ locale.t('common.delete') }}
+                        </button>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</section>

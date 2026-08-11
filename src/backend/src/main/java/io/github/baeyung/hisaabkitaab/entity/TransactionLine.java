@@ -49,6 +49,13 @@ public class TransactionLine
     @ManyToOne(fetch = FetchType.LAZY)
     private StoreItem item;
 
+    /**
+     * What this line names when no {@link #item} does — the raw material on a PROCESSING
+     * entry, which is deliberately not a catalogue item (see V5__processing.sql). Null
+     * everywhere else, where the item's own name serves.
+     */
+    private String name;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InOut inOut;

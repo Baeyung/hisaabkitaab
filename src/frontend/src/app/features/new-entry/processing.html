@@ -1,0 +1,340 @@
+<section class="sale">
+  <!-- ── entry form ─────────────────────────────────────────────────────── -->
+  <div class="sale__form">
+    <header class="sale__head">
+      <div>
+        <p class="sale__eyebrow">{{ locale.t('processing.newEntry') }}</p>
+        <h1 class="sale__title">{{ locale.t('nav.processing') }}</h1>
+      </div>
+      <div class="sale__head-right">
+        <app-date-field
+          [value]="billDate()"
+          (valueChange)="billDate.set($event)"
+          [ariaLabel]="locale.t('sale.billDate')"
+        />
+        <div class="fld">
+          <label class="fld__label" for="processing-bill">
+            {{ locale.t('processing.billNumber') }}
+          </label>
+          <input
+            #firstField
+            class="fld__input"
+            type="text"
+            id="processing-bill"
+            [value]="billNumber()"
+            (input)="billNumber.set($any($event.target).value)"
+            [attr.placeholder]="locale.t('processing.billNumber.ph')"
+          />
+        </div>
+      </div>
+    </header>
+
+    <!-- raw material: typed free, never a catalogue item -->
+    <div class="pgrid" role="group" [attr.aria-label]="locale.t('processing.raw')">
+      <p class="pgrid__title">{{ locale.t('processing.raw') }}</p>
+      <div class="pgrid__head" aria-hidden="true">
+        <span>{{ locale.t('processing.col.name') }}</span>
+        <span>{{ locale.t('processing.col.unit') }}</span>
+        <span class="num">{{ locale.t('processing.col.rate') }}</span>
+        <span class="num">{{ locale.t('processing.col.qty') }}</span>
+        <span class="num grid__head-amount">{{ locale.t('processing.col.amount') }}</span>
+        <span></span>
+      </div>
+
+      @for (line of rawLines(); track line.key) {
+        <div class="pgrid__row">
+          <input
+            class="fld__input fld__input--sm"
+            type="text"
+            [value]="line.name"
+            (input)="patchRaw(line.key, { name: $any($event.target).value })"
+            [attr.placeholder]="locale.t('processing.raw.ph')"
+            [attr.aria-label]="locale.t('processing.col.name')"
+          />
+          <input
+            class="fld__input fld__input--sm"
+            type="text"
+            [value]="line.unit"
+            (input)="patchRaw(line.key, { unit: $any($event.target).value })"
+            [attr.placeholder]="locale.t('processing.col.unit.ph')"
+            [attr.aria-label]="locale.t('processing.col.unit')"
+          />
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            [value]="line.rate"
+            (input)="patchRaw(line.key, { rate: toNum($any($event.target).value) })"
+            [attr.placeholder]="locale.t('processing.col.rate')"
+            [attr.aria-label]="locale.t('processing.col.rate')"
+          />
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            [value]="line.qty"
+            (input)="patchRaw(line.key, { qty: toNum($any($event.target).value) })"
+            [attr.placeholder]="locale.t('processing.col.qty')"
+            [attr.aria-label]="locale.t('processing.col.qty')"
+          />
+          <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+          <button
+            type="button"
+            class="iconbtn iconbtn--danger"
+            (click)="removeRaw(line.key)"
+            [disabled]="rawLines().length === 1"
+            [attr.aria-label]="locale.t('processing.line.remove')"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14" />
+            </svg>
+          </button>
+        </div>
+      }
+
+      <button type="button" class="linkbtn" (click)="addRaw()">
+        + {{ locale.t('processing.raw.add') }}
+      </button>
+    </div>
+
+    <!-- processing items: real stock, drawn down by the batch -->
+    <div class="pgrid" role="group" [attr.aria-label]="locale.t('processing.items')">
+      <p class="pgrid__title">{{ locale.t('processing.items') }}</p>
+      <div class="pgrid__head" aria-hidden="true">
+        <span>{{ locale.t('processing.col.name') }}</span>
+        <span>{{ locale.t('processing.col.unit') }}</span>
+        <span class="num">{{ locale.t('processing.col.rate') }}</span>
+        <span class="num">{{ locale.t('processing.col.qty') }}</span>
+        <span class="num grid__head-amount">{{ locale.t('processing.col.amount') }}</span>
+        <span></span>
+      </div>
+
+      @for (line of procLines(); track line.key) {
+        <div class="pgrid__row">
+          <app-combobox
+            [small]="true"
+            [options]="itemNames()"
+            [value]="line.name"
+            (valueChange)="setProcName(line.key, $event)"
+            [placeholder]="locale.t('processing.items.ph')"
+            [ariaLabel]="locale.t('processing.col.name')"
+          />
+          <input
+            class="fld__input fld__input--sm"
+            type="text"
+            [value]="line.unit"
+            (input)="patchProc(line.key, { unit: $any($event.target).value })"
+            [attr.placeholder]="locale.t('processing.col.unit.ph')"
+            [attr.aria-label]="locale.t('processing.col.unit')"
+          />
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            [value]="line.rate"
+            (input)="patchProc(line.key, { rate: toNum($any($event.target).value) })"
+            [attr.placeholder]="locale.t('processing.col.rate')"
+            [attr.aria-label]="locale.t('processing.col.rate')"
+          />
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            [value]="line.qty"
+            (input)="patchProc(line.key, { qty: toNum($any($event.target).value) })"
+            [attr.placeholder]="locale.t('processing.col.qty')"
+            [attr.aria-label]="locale.t('processing.col.qty')"
+          />
+          <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+          <button
+            type="button"
+            class="iconbtn iconbtn--danger"
+            (click)="removeProc(line.key)"
+            [disabled]="procLines().length === 1"
+            [attr.aria-label]="locale.t('processing.line.remove')"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14" />
+            </svg>
+          </button>
+        </div>
+      }
+
+      <button type="button" class="linkbtn" (click)="addProc()">
+        + {{ locale.t('processing.items.add') }}
+      </button>
+    </div>
+
+    <!-- what the batch made -->
+    <div class="pgrid" role="group" [attr.aria-label]="locale.t('processing.output')">
+      <p class="pgrid__title">{{ locale.t('processing.output') }}</p>
+      <div class="ogrid__head" aria-hidden="true">
+        <span>{{ locale.t('processing.col.name') }}</span>
+        <span>{{ locale.t('processing.col.unit') }}</span>
+        <span class="num">{{ locale.t('processing.unitCost') }}</span>
+        <span class="num">{{ locale.t('processing.col.qty') }}</span>
+        <span class="num">{{ locale.t('processing.col.wastage') }}</span>
+      </div>
+      <div class="ogrid__row">
+        <app-combobox
+          [small]="true"
+          [options]="itemNames()"
+          [value]="outputName()"
+          (valueChange)="setOutputName($event)"
+          [placeholder]="locale.t('processing.output.ph')"
+          [ariaLabel]="locale.t('processing.col.name')"
+        />
+        <input
+          class="fld__input fld__input--sm"
+          type="text"
+          [value]="outputUnit()"
+          (input)="outputUnit.set($any($event.target).value)"
+          [attr.placeholder]="locale.t('processing.col.unit.ph')"
+          [attr.aria-label]="locale.t('processing.col.unit')"
+        />
+        <input
+          class="fld__input fld__input--sm num"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          [value]="unitCostTouched() ? typedUnitCost() : computedUnitCost() || null"
+          (input)="setUnitCost($any($event.target).value)"
+          [attr.placeholder]="'0'"
+          [attr.aria-label]="locale.t('processing.unitCost')"
+        />
+        <input
+          class="fld__input fld__input--sm num"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          [value]="outputQty()"
+          (input)="outputQty.set(toNum($any($event.target).value))"
+          [attr.placeholder]="locale.t('processing.col.qty')"
+          [attr.aria-label]="locale.t('processing.col.qty')"
+        />
+        <input
+          class="fld__input fld__input--sm num"
+          type="number"
+          inputmode="decimal"
+          [value]="wastageTouched() ? typedWastage() : suggestedWastage() || null"
+          (input)="setWastage($any($event.target).value)"
+          [attr.placeholder]="'0'"
+          [attr.aria-label]="locale.t('processing.col.wastage')"
+        />
+      </div>
+      <p class="pgrid__hint">{{ locale.t('processing.unitCost.hint') }}</p>
+    </div>
+
+    <!-- totals -->
+    <div class="totals">
+      <div class="totals__row">
+        <span class="totals__label">{{ locale.t('processing.totalCost') }}</span>
+        <span class="totals__val num">{{ locale.money(totalCost()) }}</span>
+      </div>
+      <div class="totals__row">
+        <span class="totals__label">{{ locale.t('processing.unitCost') }}</span>
+        <span class="totals__val num">{{ locale.money(unitCost()) }}</span>
+      </div>
+    </div>
+
+    <!-- note -->
+    <div class="fld">
+      <label class="fld__label" for="processing-desc">
+        {{ locale.t('processing.description') }}
+      </label>
+      <input
+        class="fld__input"
+        type="text"
+        id="processing-desc"
+        [value]="description()"
+        (input)="description.set($any($event.target).value)"
+        [attr.placeholder]="locale.t('processing.description.ph')"
+      />
+    </div>
+
+    @if (errorKey(); as key) {
+      <p role="alert" class="alert">{{ locale.t(key) }}</p>
+    }
+
+    <div class="sale__actions">
+      <button type="button" class="btn btn--ghost" (click)="reset()">
+        {{ locale.t('processing.clear') }}
+      </button>
+      <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
+        {{ locale.t('processing.saveNext') }} ↵
+      </button>
+    </div>
+  </div>
+
+  <!-- ── live effect + recent ───────────────────────────────────────────── -->
+  <aside class="rail">
+    <div class="panel">
+      <h2 class="panel__title">{{ locale.t('processing.effect') }}</h2>
+      @if (totalCost() > 0 || stockOut().length > 0) {
+        <ul class="fx">
+          <li class="fx__group">{{ locale.t('processing.effect.stockOut') }}</li>
+          @for (s of stockOut(); track s.key) {
+            <li class="fx__row fx__row--indent fx__row--out">
+              <span class="fx__sign">▼</span>
+              <span class="fx__label">{{ s.name }}</span>
+              <span class="fx__amt num">{{ s.qty }}</span>
+            </li>
+          }
+          @if (outputName().trim() && (outputQty() ?? 0) > 0) {
+            <li class="fx__group">{{ locale.t('processing.effect.stockIn') }}</li>
+            <li class="fx__row fx__row--indent fx__row--in">
+              <span class="fx__sign">▲</span>
+              <span class="fx__label"
+                >{{ outputName() }}<small class="fx__sub">{{ locale.money(unitCost()) }}</small></span
+              >
+              <span class="fx__amt num">{{ locale.qtyUnit(outputQty() ?? 0, outputUnit() || null) }}</span>
+            </li>
+          }
+          @if (wastage() !== 0) {
+            <li class="fx__row fx__row--out">
+              <span class="fx__sign">▼</span>
+              <span class="fx__label">{{ locale.t('processing.col.wastage') }}</span>
+              <span class="fx__amt num">{{ locale.formatNumber(wastage()) }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="panel__empty">{{ locale.t('processing.effect.empty') }}</p>
+      }
+    </div>
+
+    @if (recent.entries().length > 0) {
+      <div class="panel">
+        <h2 class="panel__title">{{ locale.t('processing.recent') }}</h2>
+        <ul class="recent">
+          @for (r of recent.entries(); track r.key) {
+            <li class="recent__row">
+              <span class="recent__summary">{{ r.summary }}</span>
+              <span class="recent__sub">{{ r.sub }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </aside>
+</section>

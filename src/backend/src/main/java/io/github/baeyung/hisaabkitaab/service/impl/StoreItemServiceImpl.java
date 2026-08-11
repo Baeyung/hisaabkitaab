@@ -1,9 +1,11 @@
 package io.github.baeyung.hisaabkitaab.service.impl;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
@@ -69,6 +71,23 @@ public class StoreItemServiceImpl implements StoreItemService
     public StoreItem create(StoreItem input)
     {
         return storeItemRepository.save(input);
+    }
+
+    @Override
+    public StoreItem resolveOrCreate(String itemId, String name, String unit, Store store)
+    {
+        if (StringUtils.hasText(itemId))
+        {
+            return findByIdForStore(itemId, store.getId());
+        }
+
+        return storeItemRepository.save(StoreItem.builder()
+                .store(store)
+                .name(name)
+                .unit(unit)
+                .salePrice(BigDecimal.ZERO)
+                .costPrice(BigDecimal.ZERO)
+                .build());
     }
 
     @Override

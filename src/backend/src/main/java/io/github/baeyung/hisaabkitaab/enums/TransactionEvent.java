@@ -8,6 +8,8 @@ public enum TransactionEvent
 {
     SALE,
     PURCHASE,
+    /** Raw material and consumables turned into a different item — see ProcessingService. */
+    PROCESSING,
     RECEIPT,
     PAYMENT,
     EXPENSE,

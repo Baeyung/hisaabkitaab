@@ -2,6 +2,7 @@
 export type TransactionEventKind =
   | 'SALE'
   | 'PURCHASE'
+  | 'PROCESSING'
   | 'RECEIPT'
   | 'PAYMENT'
   | 'EXPENSE'

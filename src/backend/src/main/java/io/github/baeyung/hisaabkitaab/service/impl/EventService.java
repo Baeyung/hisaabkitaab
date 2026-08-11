@@ -125,6 +125,15 @@ public class EventService
     {
         Transaction transaction = loadEditable(id, store);
 
+        // A processed-goods batch is not an EventRequest and never round-trips through the
+        // processors — re-deriving it from one would drop its raw rows and leave the output
+        // item priced off a batch that no longer exists. Correcting one is delete + re-enter.
+        if (transaction.getEvent() == TransactionEvent.PROCESSING)
+        {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "A processed-goods entry cannot be edited — delete it and enter it again");
+        }
+
         // orphanRemoval drops the old derived lines; saveAndFlush makes those DELETEs
         // land before the processors insert the fresh ones, so no stale rows survive.
         transaction.getLines().clear();

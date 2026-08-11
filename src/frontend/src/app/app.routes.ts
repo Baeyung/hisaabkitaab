@@ -139,6 +139,14 @@ export const routes: Routes = [
         canActivate: [editorGuard],
         loadComponent: () => import('./features/new-entry/purchase').then((m) => m.Purchase),
       },
+      // No `:entryId` twin: a batch reprices the item it made, and that weighted average
+      // cannot be un-averaged, so correcting one is delete + re-enter (the backend refuses
+      // a PUT on it outright).
+      {
+        path: 'new-entry/processing',
+        canActivate: [editorGuard],
+        loadComponent: () => import('./features/new-entry/processing').then((m) => m.Processing),
+      },
       {
         path: 'new-entry/expense',
         canActivate: [editorGuard],
@@ -167,6 +175,11 @@ export const routes: Routes = [
         path: 'inventory/:itemId',
         loadComponent: () =>
           import('./features/inventory/inventory-detail').then((m) => m.InventoryDetail),
+      },
+      {
+        path: 'processing',
+        loadComponent: () =>
+          import('./features/processing/processed-goods').then((m) => m.ProcessedGoods),
       },
       {
         path: 'bill-management',

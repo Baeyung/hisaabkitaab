@@ -45,6 +45,22 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
             @Param("partyId") String partyId,
             @Param("itemId") String itemId);
 
+    /**
+     * Every entry of one event in a store, newest business day first, with its lines and their
+     * items fetched — the processed-goods list, which reads each batch whole. Ordered by the
+     * same coalesced date the response displays, so an entry saved without one sorts by its
+     * entry date rather than NULLS FIRST-ing to the top.
+     */
+    @EntityGraph(attributePaths = {"lines", "lines.item"})
+    @Query("""
+            select t from Transaction t
+            where t.store.id = :storeId and t.event = :event
+            order by coalesce(t.eventDate, t.entryDate) desc, t.createdAt desc
+            """)
+    List<Transaction> findByStoreAndEventNewestFirst(
+            @Param("storeId") String storeId,
+            @Param("event") TransactionEvent event);
+
     @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
     Optional<Transaction> findByIdAndStoreId(String id, String storeId);
 

@@ -49,6 +49,7 @@ export const NAV: NavItem[] = [
   { kind: 'link', key: 'nav.cashbook', path: 'cashbook', icon: 'cashbook' },
   { kind: 'link', key: 'nav.ledger', path: 'ledger', icon: 'ledger' },
   { kind: 'link', key: 'nav.inventory', path: 'inventory', icon: 'stock' },
+  { kind: 'link', key: 'nav.processedGoods', path: 'processing', icon: 'stock' },
   { kind: 'link', key: 'nav.billManagement', path: 'bill-management', icon: 'bill' },
   {
     kind: 'group',
@@ -62,6 +63,7 @@ export const NAV: NavItem[] = [
       { key: 'nav.sale', path: 'new-entry/sale' },
       { key: 'nav.receipt', path: 'new-entry/receipt' },
       { key: 'nav.purchase', path: 'new-entry/purchase' },
+      { key: 'nav.processing', path: 'new-entry/processing' },
       { key: 'nav.expense', path: 'new-entry/expense' },
       { key: 'nav.payment', path: 'new-entry/payment' },
     ],

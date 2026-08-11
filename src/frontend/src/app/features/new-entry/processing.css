@@ -1,0 +1,125 @@
+/* Processed goods adds two row shapes to the entry surface in sale.css, which the
+   screen otherwise reuses whole. A batch row carries a unit of its own — a dye is
+   bought in grams while the cloth it colours is measured in metres — so it needs one
+   more column than a sale line does, and the output row swaps the amount cell for
+   the wastage box the diagram puts there. */
+
+.pgrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 12px;
+}
+
+.pgrid__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--kg-ink);
+}
+
+.pgrid__hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--kg-faint);
+}
+
+.pgrid__head,
+.pgrid__row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1fr)
+    minmax(0, 1fr) minmax(70px, 1.2fr) 40px;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Same columns as a batch row minus the remove button, whose 40px the wastage box
+   does not need — one output, nothing to take away. */
+.ogrid__head,
+.ogrid__row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1fr)
+    minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.pgrid__head,
+.ogrid__head {
+  padding: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+
+/* Narrow: the headings go and each row folds into a labelled block, matching what
+   sale.css does to its own grid at the same width. */
+@container (max-width: 560px) {
+  .pgrid__head,
+  .ogrid__head {
+    display: none;
+  }
+  .pgrid__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+    grid-template-areas:
+      'name name remove'
+      'unit rate qty'
+      'amount amount amount';
+    padding: 10px;
+    border: 1px solid var(--kg-line);
+    border-radius: 10px;
+  }
+  .pgrid__row > :nth-child(1) {
+    grid-area: name;
+  }
+  .pgrid__row > :nth-child(2) {
+    grid-area: unit;
+  }
+  .pgrid__row > :nth-child(3) {
+    grid-area: rate;
+  }
+  .pgrid__row > :nth-child(4) {
+    grid-area: qty;
+  }
+  .pgrid__row > .grid__amount {
+    grid-area: amount;
+  }
+  .pgrid__row > .iconbtn {
+    grid-area: remove;
+    justify-self: end;
+  }
+
+  .ogrid__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'name name'
+      'unit cost'
+      'qty wastage';
+    padding: 10px;
+    border: 1px solid var(--kg-line);
+    border-radius: 10px;
+  }
+  .ogrid__row > :nth-child(1) {
+    grid-area: name;
+  }
+  .ogrid__row > :nth-child(2) {
+    grid-area: unit;
+  }
+  .ogrid__row > :nth-child(3) {
+    grid-area: cost;
+  }
+  .ogrid__row > :nth-child(4) {
+    grid-area: qty;
+  }
+  .ogrid__row > :nth-child(5) {
+    grid-area: wastage;
+  }
+}
