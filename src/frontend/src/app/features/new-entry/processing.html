@@ -45,54 +45,67 @@
     <!-- raw material: typed free, never a catalogue item -->
     <div class="pgrid" role="group" [attr.aria-label]="locale.t('processing.raw')">
       <p class="pgrid__title">{{ locale.t('processing.raw') }}</p>
-      <div class="pgrid__head" aria-hidden="true">
-        <span>{{ locale.t('processing.col.name') }}</span>
-        <span>{{ locale.t('processing.col.unit') }}</span>
-        <span class="num">{{ locale.t('processing.col.rate') }}</span>
-        <span class="num">{{ locale.t('processing.col.qty') }}</span>
-        <span class="num grid__head-amount">{{ locale.t('processing.col.amount') }}</span>
-        <span></span>
-      </div>
 
       @for (line of rawLines(); track line.key) {
         <div class="pgrid__row">
-          <input
-            class="fld__input fld__input--sm"
-            type="text"
-            [value]="line.name"
-            (input)="patchRaw(line.key, { name: $any($event.target).value })"
-            [attr.placeholder]="locale.t('processing.raw.ph')"
-            [attr.aria-label]="locale.t('processing.col.name')"
-          />
-          <input
-            class="fld__input fld__input--sm"
-            type="text"
-            [value]="line.unit"
-            (input)="patchRaw(line.key, { unit: $any($event.target).value })"
-            [attr.placeholder]="locale.t('processing.col.unit.ph')"
-            [attr.aria-label]="locale.t('processing.col.unit')"
-          />
-          <input
-            class="fld__input fld__input--sm num"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            [value]="line.rate"
-            (input)="patchRaw(line.key, { rate: toNum($any($event.target).value) })"
-            [attr.placeholder]="locale.t('processing.col.rate')"
-            [attr.aria-label]="locale.t('processing.col.rate')"
-          />
-          <input
-            class="fld__input fld__input--sm num"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            [value]="line.qty"
-            (input)="patchRaw(line.key, { qty: toNum($any($event.target).value) })"
-            [attr.placeholder]="locale.t('processing.col.qty')"
-            [attr.aria-label]="locale.t('processing.col.qty')"
-          />
-          <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+          <div class="fld">
+            <label class="fld__label" [attr.for]="'raw-name-' + line.key">
+              {{ locale.t('processing.col.name') }}
+            </label>
+            <input
+              class="fld__input fld__input--sm"
+              type="text"
+              [id]="'raw-name-' + line.key"
+              [value]="line.name"
+              (input)="patchRaw(line.key, { name: $any($event.target).value })"
+              [attr.placeholder]="locale.t('processing.raw.ph')"
+            />
+          </div>
+          <div class="fld">
+            <label class="fld__label" [attr.for]="'raw-unit-' + line.key">
+              {{ locale.t('processing.col.unit') }}
+            </label>
+            <input
+              class="fld__input fld__input--sm"
+              type="text"
+              [id]="'raw-unit-' + line.key"
+              [value]="line.unit"
+              (input)="patchRaw(line.key, { unit: $any($event.target).value })"
+              [attr.placeholder]="locale.t('processing.col.unit.ph')"
+            />
+          </div>
+          <div class="fld">
+            <label class="fld__label" [attr.for]="'raw-rate-' + line.key">
+              {{ locale.t('processing.col.rate') }}
+            </label>
+            <input
+              class="fld__input fld__input--sm num"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              [id]="'raw-rate-' + line.key"
+              [value]="line.rate"
+              (input)="patchRaw(line.key, { rate: toNum($any($event.target).value) })"
+            />
+          </div>
+          <div class="fld">
+            <label class="fld__label" [attr.for]="'raw-qty-' + line.key">
+              {{ locale.t('processing.col.qty') }}
+            </label>
+            <input
+              class="fld__input fld__input--sm num"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              [id]="'raw-qty-' + line.key"
+              [value]="line.qty"
+              (input)="patchRaw(line.key, { qty: toNum($any($event.target).value) })"
+            />
+          </div>
+          <div class="fld pgrid__amount">
+            <span class="fld__label">{{ locale.t('processing.col.amount') }}</span>
+            <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+          </div>
           <button
             type="button"
             class="iconbtn iconbtn--danger"
@@ -120,57 +133,73 @@
       </button>
     </div>
 
+    <!-- the three blocks read as one recipe: raw + consumables → output -->
+    <div class="flow" aria-hidden="true"><span class="flow__mark">+</span></div>
+
     <!-- processing items: real stock, drawn down by the batch -->
     <div class="pgrid" role="group" [attr.aria-label]="locale.t('processing.items')">
       <p class="pgrid__title">{{ locale.t('processing.items') }}</p>
-      <div class="pgrid__head" aria-hidden="true">
-        <span>{{ locale.t('processing.col.name') }}</span>
-        <span>{{ locale.t('processing.col.unit') }}</span>
-        <span class="num">{{ locale.t('processing.col.rate') }}</span>
-        <span class="num">{{ locale.t('processing.col.qty') }}</span>
-        <span class="num grid__head-amount">{{ locale.t('processing.col.amount') }}</span>
-        <span></span>
-      </div>
 
       @for (line of procLines(); track line.key) {
         <div class="pgrid__row">
-          <app-combobox
-            [small]="true"
-            [options]="itemNames()"
-            [value]="line.name"
-            (valueChange)="setProcName(line.key, $event)"
-            [placeholder]="locale.t('processing.items.ph')"
-            [ariaLabel]="locale.t('processing.col.name')"
-          />
-          <input
-            class="fld__input fld__input--sm"
-            type="text"
-            [value]="line.unit"
-            (input)="patchProc(line.key, { unit: $any($event.target).value })"
-            [attr.placeholder]="locale.t('processing.col.unit.ph')"
-            [attr.aria-label]="locale.t('processing.col.unit')"
-          />
-          <input
-            class="fld__input fld__input--sm num"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            [value]="line.rate"
-            (input)="patchProc(line.key, { rate: toNum($any($event.target).value) })"
-            [attr.placeholder]="locale.t('processing.col.rate')"
-            [attr.aria-label]="locale.t('processing.col.rate')"
-          />
-          <input
-            class="fld__input fld__input--sm num"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            [value]="line.qty"
-            (input)="patchProc(line.key, { qty: toNum($any($event.target).value) })"
-            [attr.placeholder]="locale.t('processing.col.qty')"
-            [attr.aria-label]="locale.t('processing.col.qty')"
-          />
-          <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+          <div class="fld">
+            <label class="fld__label" [attr.for]="'proc-name-' + line.key">
+              {{ locale.t('processing.col.name') }}
+            </label>
+            <app-combobox
+              [small]="true"
+              [inputId]="'proc-name-' + line.key"
+              [options]="itemNames()"
+              [value]="line.name"
+              (valueChange)="setProcName(line.key, $event)"
+              [placeholder]="locale.t('processing.items.ph')"
+            />
+          </div>
+          <div class="fld">
+            <label class="fld__label" [attr.for]="'proc-unit-' + line.key">
+              {{ locale.t('processing.col.unit') }}
+            </label>
+            <input
+              class="fld__input fld__input--sm"
+              type="text"
+              [id]="'proc-unit-' + line.key"
+              [value]="line.unit"
+              (input)="patchProc(line.key, { unit: $any($event.target).value })"
+              [attr.placeholder]="locale.t('processing.col.unit.ph')"
+            />
+          </div>
+          <div class="fld">
+            <label class="fld__label" [attr.for]="'proc-rate-' + line.key">
+              {{ locale.t('processing.col.rate') }}
+            </label>
+            <input
+              class="fld__input fld__input--sm num"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              [id]="'proc-rate-' + line.key"
+              [value]="line.rate"
+              (input)="patchProc(line.key, { rate: toNum($any($event.target).value) })"
+            />
+          </div>
+          <div class="fld">
+            <label class="fld__label" [attr.for]="'proc-qty-' + line.key">
+              {{ locale.t('processing.col.qty') }}
+            </label>
+            <input
+              class="fld__input fld__input--sm num"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              [id]="'proc-qty-' + line.key"
+              [value]="line.qty"
+              (input)="patchProc(line.key, { qty: toNum($any($event.target).value) })"
+            />
+          </div>
+          <div class="fld pgrid__amount">
+            <span class="fld__label">{{ locale.t('processing.col.amount') }}</span>
+            <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+          </div>
           <button
             type="button"
             class="iconbtn iconbtn--danger"
@@ -198,64 +227,87 @@
       </button>
     </div>
 
+    <div class="flow" aria-hidden="true">
+      <span class="flow__mark flow__mark--arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M6 13l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+    </div>
+
     <!-- what the batch made -->
     <div class="pgrid" role="group" [attr.aria-label]="locale.t('processing.output')">
       <p class="pgrid__title">{{ locale.t('processing.output') }}</p>
-      <div class="ogrid__head" aria-hidden="true">
-        <span>{{ locale.t('processing.col.name') }}</span>
-        <span>{{ locale.t('processing.col.unit') }}</span>
-        <span class="num">{{ locale.t('processing.unitCost') }}</span>
-        <span class="num">{{ locale.t('processing.col.qty') }}</span>
-        <span class="num">{{ locale.t('processing.col.wastage') }}</span>
-      </div>
       <div class="ogrid__row">
-        <app-combobox
-          [small]="true"
-          [options]="itemNames()"
-          [value]="outputName()"
-          (valueChange)="setOutputName($event)"
-          [placeholder]="locale.t('processing.output.ph')"
-          [ariaLabel]="locale.t('processing.col.name')"
-        />
-        <input
-          class="fld__input fld__input--sm"
-          type="text"
-          [value]="outputUnit()"
-          (input)="outputUnit.set($any($event.target).value)"
-          [attr.placeholder]="locale.t('processing.col.unit.ph')"
-          [attr.aria-label]="locale.t('processing.col.unit')"
-        />
-        <input
-          class="fld__input fld__input--sm num"
-          type="number"
-          inputmode="decimal"
-          min="0"
-          [value]="unitCostTouched() ? typedUnitCost() : computedUnitCost() || null"
-          (input)="setUnitCost($any($event.target).value)"
-          [attr.placeholder]="'0'"
-          [attr.aria-label]="locale.t('processing.unitCost')"
-        />
-        <input
-          class="fld__input fld__input--sm num"
-          type="number"
-          inputmode="decimal"
-          min="0"
-          [value]="outputQty()"
-          (input)="outputQty.set(toNum($any($event.target).value))"
-          [attr.placeholder]="locale.t('processing.col.qty')"
-          [attr.aria-label]="locale.t('processing.col.qty')"
-        />
-        <input
-          class="fld__input fld__input--sm num"
-          type="number"
-          inputmode="decimal"
-          [value]="wastageTouched() ? typedWastage() : suggestedWastage() || null"
-          (input)="setWastage($any($event.target).value)"
-          [attr.placeholder]="'0'"
-          [attr.aria-label]="locale.t('processing.col.wastage')"
-        />
+        <div class="fld">
+          <label class="fld__label" for="output-name">{{ locale.t('processing.col.name') }}</label>
+          <app-combobox
+            [small]="true"
+            inputId="output-name"
+            [options]="itemNames()"
+            [value]="outputName()"
+            (valueChange)="setOutputName($event)"
+            [placeholder]="locale.t('processing.output.ph')"
+          />
+        </div>
+        <div class="fld">
+          <label class="fld__label" for="output-unit">{{ locale.t('processing.col.unit') }}</label>
+          <input
+            class="fld__input fld__input--sm"
+            type="text"
+            id="output-unit"
+            [value]="outputUnit()"
+            (input)="outputUnit.set($any($event.target).value)"
+            [attr.placeholder]="locale.t('processing.col.unit.ph')"
+          />
+        </div>
+        <!-- units made comes before cost/unit: it is what unlocks the box below -->
+        <div class="fld">
+          <label class="fld__label" for="output-qty">{{ locale.t('processing.col.qty') }}</label>
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            id="output-qty"
+            [value]="outputQty()"
+            (input)="outputQty.set(toNum($any($event.target).value))"
+          />
+        </div>
+        <!-- locked until the units are in: there is nothing to spread the cost over yet -->
+        <div class="fld">
+          <label class="fld__label" for="output-cost">{{ locale.t('processing.unitCost') }}</label>
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            id="output-cost"
+            [disabled]="!hasOutputQty()"
+            [value]="unitCostTouched() ? typedUnitCost() : computedUnitCost() || null"
+            (input)="setUnitCost($any($event.target).value)"
+            [attr.placeholder]="'0'"
+            [attr.aria-describedby]="hasOutputQty() ? null : 'output-cost-lock'"
+          />
+        </div>
+        <div class="fld">
+          <label class="fld__label" for="output-wastage">
+            {{ locale.t('processing.col.wastage') }}
+          </label>
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            id="output-wastage"
+            [value]="wastageTouched() ? typedWastage() : suggestedWastage() || null"
+            (input)="setWastage($any($event.target).value)"
+            [attr.placeholder]="'0'"
+          />
+        </div>
       </div>
-      <p class="pgrid__hint">{{ locale.t('processing.unitCost.hint') }}</p>
+      <p class="pgrid__hint" id="output-cost-lock">
+        {{ locale.t(hasOutputQty() ? 'processing.unitCost.hint' : 'processing.unitCost.locked') }}
+      </p>
     </div>
 
     <!-- totals -->

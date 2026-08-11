@@ -407,6 +407,7 @@ export const en = {
   'processing.unitCost': 'Cost/unit',
   'processing.unitCost.hint':
     'Cost/unit and wastage are worked out for you — type over either to set your own.',
+  'processing.unitCost.locked': 'Enter the units this batch made, then cost/unit opens up.',
   'processing.billNumber': 'Batch no.',
   'processing.party': 'Party',
   'processing.party.ph': 'Who this batch is for — optional',

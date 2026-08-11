@@ -105,10 +105,15 @@ export class Processing {
     () => sumAmount(this.validRaw()) + sumAmount(this.validProc()),
   );
 
+  /** Cost/unit is only meaningful once there are units to spread the batch cost over. */
+  protected readonly hasOutputQty = computed(() => (this.outputQty() ?? 0) > 0);
+
   /** The batch's cost spread over what it produced; 0 until an output quantity is entered. */
   protected readonly computedUnitCost = computed(() => {
     const qty = this.outputQty() ?? 0;
-    return qty > 0 ? this.totalCost() / qty : 0;
+    // Rounded to paisa: the box shows the figure raw, and 13000/90 spelled out in
+    // full is not something anyone wants to read or type over.
+    return qty > 0 ? Math.round((this.totalCost() / qty) * 100) / 100 : 0;
   });
 
   /** What the entry actually saves: the typed figure once touched, the computed one until then. */

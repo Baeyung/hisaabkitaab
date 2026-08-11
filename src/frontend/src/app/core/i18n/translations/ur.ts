@@ -400,6 +400,7 @@ export const ur: Record<TranslationKey, string> = {
   'processing.totalCost': 'کل لاگت',
   'processing.unitCost': 'فی یونٹ لاگت',
   'processing.unitCost.hint': 'فی یونٹ لاگت اور ضائع خود نکل آتے ہیں — اپنی مرضی کے لیے اوپر لکھ دیں۔',
+  'processing.unitCost.locked': 'پہلے بننے والے یونٹ لکھیں، پھر فی یونٹ لاگت کھل جائے گی۔',
   'processing.billNumber': 'بیچ نمبر',
   'processing.party': 'پارٹی',
   'processing.party.ph': 'یہ بیچ کس کے لیے ہے — اختیاری',

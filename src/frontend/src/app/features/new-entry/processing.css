@@ -1,13 +1,14 @@
-/* Processed goods adds two row shapes to the entry surface in sale.css, which the
-   screen otherwise reuses whole. A batch row carries a unit of its own — a dye is
-   bought in grams while the cloth it colours is measured in metres — so it needs one
-   more column than a sale line does, and the output row swaps the amount cell for
-   the wastage box the diagram puts there. */
+/* Processed goods lays its lines out as labelled cards rather than the wide table
+   rows sale.css uses: a batch line carries five figures — a dye is bought in grams
+   while the cloth it colours is measured in metres — and five boxes across one row
+   read as a spreadsheet, not a form. Two fields to a row, each with its own label,
+   and the three blocks separated by a + and an arrow so the screen reads as the
+   recipe it is: raw + consumables → output. */
 
 .pgrid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   padding: 12px;
   background: var(--kg-card);
   border: 1px solid var(--kg-line);
@@ -28,98 +29,128 @@
   color: var(--kg-faint);
 }
 
-.pgrid__head,
+/* Name spans the pair; the remove button runs down the right of the whole card. */
 .pgrid__row {
   display: grid;
-  grid-template-columns:
-    minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1fr)
-    minmax(0, 1fr) minmax(70px, 1.2fr) 40px;
-  gap: 8px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px;
+  grid-template-areas:
+    'name name   remove'
+    'unit rate   remove'
+    'qty  amount remove';
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid var(--kg-line);
+  border-radius: 10px;
+}
+.pgrid__row > :nth-child(1) {
+  grid-area: name;
+}
+.pgrid__row > :nth-child(2) {
+  grid-area: unit;
+}
+.pgrid__row > :nth-child(3) {
+  grid-area: rate;
+}
+.pgrid__row > :nth-child(4) {
+  grid-area: qty;
+}
+.pgrid__row > .pgrid__amount {
+  grid-area: amount;
+}
+.pgrid__row > .iconbtn {
+  grid-area: remove;
+  align-self: center;
+  justify-self: end;
 }
 
-/* Same columns as a batch row minus the remove button, whose 40px the wastage box
-   does not need — one output, nothing to take away. */
-.ogrid__head,
+/* The amount cell is a read-out, not a box, but it keeps an input's height so its
+   label lines up with the labels beside it. */
+.pgrid__amount .grid__amount {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 40px;
+}
+
+/* Units before cost/unit: the box below is locked until this one has a figure. */
 .ogrid__row {
   display: grid;
-  grid-template-columns:
-    minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1fr)
-    minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'name name'
+    'unit qty'
+    'cost wastage';
+  gap: 10px;
+  align-items: end;
+}
+.ogrid__row > :nth-child(1) {
+  grid-area: name;
+}
+.ogrid__row > :nth-child(2) {
+  grid-area: unit;
+}
+.ogrid__row > :nth-child(3) {
+  grid-area: qty;
+}
+.ogrid__row > :nth-child(4) {
+  grid-area: cost;
+}
+.ogrid__row > :nth-child(5) {
+  grid-area: wastage;
+}
+
+/* ── flow marks ───────────────────────────────────────────────────────────
+   The + and the arrow between the three blocks. Decoration only: aria-hidden
+   in the template, the group labels already say which block is which. */
+.flow {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  margin: -6px 0;
 }
-
-.pgrid__head,
-.ogrid__head {
-  padding: 0 0 4px;
-  font-size: 11px;
+.flow::before,
+.flow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--kg-line);
+}
+.flow__mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  font-size: 17px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--kg-faint);
+  line-height: 1;
+  color: var(--kg-brand);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 50%;
+}
+.flow__mark--arrow {
+  color: var(--kg-in);
 }
 
-/* Narrow: the headings go and each row folds into a labelled block, matching what
-   sale.css does to its own grid at the same width. */
-@container (max-width: 560px) {
-  .pgrid__head,
-  .ogrid__head {
-    display: none;
-  }
+/* Narrow: one field to a row, the remove button still down the right. */
+@container (max-width: 420px) {
   .pgrid__row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+    grid-template-columns: minmax(0, 1fr) 36px;
     grid-template-areas:
-      'name name remove'
-      'unit rate qty'
-      'amount amount amount';
-    padding: 10px;
-    border: 1px solid var(--kg-line);
-    border-radius: 10px;
+      'name   remove'
+      'unit   remove'
+      'rate   remove'
+      'qty    remove'
+      'amount remove';
   }
-  .pgrid__row > :nth-child(1) {
-    grid-area: name;
-  }
-  .pgrid__row > :nth-child(2) {
-    grid-area: unit;
-  }
-  .pgrid__row > :nth-child(3) {
-    grid-area: rate;
-  }
-  .pgrid__row > :nth-child(4) {
-    grid-area: qty;
-  }
-  .pgrid__row > .grid__amount {
-    grid-area: amount;
-  }
-  .pgrid__row > .iconbtn {
-    grid-area: remove;
-    justify-self: end;
-  }
-
   .ogrid__row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      'name name'
-      'unit cost'
-      'qty wastage';
-    padding: 10px;
-    border: 1px solid var(--kg-line);
-    border-radius: 10px;
-  }
-  .ogrid__row > :nth-child(1) {
-    grid-area: name;
-  }
-  .ogrid__row > :nth-child(2) {
-    grid-area: unit;
-  }
-  .ogrid__row > :nth-child(3) {
-    grid-area: cost;
-  }
-  .ogrid__row > :nth-child(4) {
-    grid-area: qty;
-  }
-  .ogrid__row > :nth-child(5) {
-    grid-area: wastage;
+      'name'
+      'unit'
+      'qty'
+      'cost'
+      'wastage';
   }
 }
