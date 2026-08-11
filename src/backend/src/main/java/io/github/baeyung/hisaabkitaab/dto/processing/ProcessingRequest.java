@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import io.github.baeyung.hisaabkitaab.dto.event.EventRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -41,6 +42,13 @@ public class ProcessingRequest
     private String billNumber;
     private LocalDate billDate;
     private String description;
+
+    /**
+     * Who the batch was run for, optional — the same {id, name} pair every other entry sends,
+     * resolved (or created) the same way. It carries no money: see {@code ProcessingService}
+     * for why the party line it posts is worth nothing.
+     */
+    private EventRequest.Party party;
 
     /**
      * A raw material: named and priced, but never a catalogue item. It holds no stock and

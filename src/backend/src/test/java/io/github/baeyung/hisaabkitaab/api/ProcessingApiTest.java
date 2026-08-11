@@ -178,6 +178,73 @@ class ProcessingApiTest extends ApiTest
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
+    /**
+     * A batch run for a party shows in their khata and links back to itself, but must leave
+     * their baqaya exactly where it was — job work moves no money on its own, the bill for it
+     * is a separate sale. That is what the zero-valued NONE party line buys, and this is the
+     * test that would catch it going back to IN/OUT.
+     */
+    @Test
+    void aBatchShowsInThePartysKhataWithoutMovingTheirBalance() throws Exception
+    {
+        signup(USER);
+        String store = createStore(USER, "Rana Processing");
+        String dye = itemWithStock(store, "Dye", "grams", 50);
+
+        MvcResult created = mvc.perform(post(api(store, "/parties")).with(as(USER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Rana Textiles\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String party = tree(created).get("id").asString();
+
+        String batch = """
+                {
+                  "rawItems":[{"name":"KORA","unit":"meter","quantity":100,"pricePerUnit":60}],
+                  "processingItems":[
+                    {"itemId":"%s","name":"Dye","unit":"grams","quantity":10,"pricePerUnit":100}
+                  ],
+                  "output":{"name":"chamki-100","unit":"meter","quantity":100},
+                  "party":{"partyId":"%s","name":"Rana Textiles"}
+                }
+                """.formatted(dye, party);
+
+        mvc.perform(post(api(store, "/processing")).with(as(USER))
+                        .contentType(MediaType.APPLICATION_JSON).content(batch))
+                .andExpect(status().isNoContent());
+
+        MvcResult listed = mvc.perform(get(api(store, "/processing")).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].partyName").value("Rana Textiles"))
+                .andReturn();
+        String entryId = tree(listed).get(0).get("transactionId").asString();
+
+        // The khata carries the batch as a row — and nothing else.
+        mvc.perform(get(api(store, "/ledger/" + party)).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].event").value("PROCESSING"))
+                .andExpect(jsonPath("$.rows[0].transactionId").value(entryId))
+                // Named by what it made, not by the dye it burned.
+                .andExpect(jsonPath("$.rows[0].itemSummary").value("chamki-100 × 100"))
+                .andExpect(jsonPath("$.rows[0].amount").value(0.0))
+                .andExpect(jsonPath("$.rows[0].runningBalance.direction").value("SETTLED"))
+                .andExpect(jsonPath("$.currentBalance.amount").value(0.0))
+                .andExpect(jsonPath("$.currentBalance.direction").value("SETTLED"));
+
+        // …and the party list agrees: still square.
+        mvc.perform(get(api(store, "/ledger")).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].balance.amount").value(0.0))
+                .andExpect(jsonPath("$[0].balance.direction").value("SETTLED"));
+
+        // Clicking that row opens the batch on its own page.
+        mvc.perform(get(api(store, "/processing/" + entryId)).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.partyId").value(party))
+                .andExpect(jsonPath("$.output.name").value("chamki-100"))
+                .andExpect(jsonPath("$.rawItems[0].name").value("KORA"));
+    }
+
     @Test
     void aBatchNeedsSomethingToWorkOnAndSomethingToWorkWith() throws Exception
     {

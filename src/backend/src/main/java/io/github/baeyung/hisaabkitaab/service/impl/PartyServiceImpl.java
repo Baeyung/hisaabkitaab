@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
@@ -62,6 +63,24 @@ public class PartyServiceImpl implements PartyService
                 .build();
 
         return partyRepository.save(party);
+    }
+
+    @Override
+    public Party resolveOrCreate(String partyId, String name, Store store)
+    {
+        if (StringUtils.hasText(partyId))
+        {
+            return findByIdForStore(partyId, store.getId());
+        }
+
+        return create(
+                Party.builder()
+                        .name(name)
+                        .contact("090078601")
+                        .address("address@HisaabKitaab")
+                        .build(),
+                store
+        );
     }
 
     @Override

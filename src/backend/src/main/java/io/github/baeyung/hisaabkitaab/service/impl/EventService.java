@@ -267,39 +267,12 @@ public class EventService
         return request;
     }
 
-    /**
-     * The entry's counterparty: an existing party by id, or a new one created from the typed
-     * name. The id arrives from the client, so it is checked against {@code store} — without
-     * that, an entry could name another shop's party, and since the khata statement is queried
-     * by party alone the line would surface in <em>their</em> books. Reported as not-found so
-     * we never leak whether the id exists.
-     */
+    /** The entry's counterparty; see {@link PartyService#resolveOrCreate}. */
     private Party resolveParty(EventRequest eventRequest, Store store)
     {
         EventRequest.Party party = eventRequest.getParty();
-        if (party == null)
-        {
-            return null;
-        }
-
-        if (!StringUtils.hasText(party.getPartyId()))
-        {
-            return partyService.create(
-                    Party
-                            .builder()
-                            .name(party.getName())
-                            .contact("090078601")
-                            .address("address@HisaabKitaab")
-                            .build(),
-                    store
-            );
-        }
-
-        Party resolved = partyService.findEntity(party.getPartyId());
-        if (!resolved.getStore().getId().equals(store.getId()))
-        {
-            throw ResourceNotFoundException.forEntity("Party", party.getPartyId());
-        }
-        return resolved;
+        return party == null
+                ? null
+                : partyService.resolveOrCreate(party.getPartyId(), party.getName(), store);
     }
 }

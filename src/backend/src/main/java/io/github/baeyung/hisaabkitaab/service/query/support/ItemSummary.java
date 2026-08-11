@@ -5,7 +5,9 @@ import java.util.List;
 
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
+import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
+import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 
 /**
  * The goods on a transaction, named for a row that carries no note: one item →
@@ -24,9 +26,14 @@ public final class ItemSummary
     {
         // ponytail: touches the transaction's line collection per row (lazy load).
         // Add a fetch join to the row queries if a long cashbook range gets slow.
+        // A PROCESSING batch carries stock lines both ways — the dyes it burned as well as
+        // the cloth it made. Only what it made names the row: "Processed Dye, Fuel" would
+        // say the opposite of what happened.
         List<TransactionLine> stock = transaction.getLines()
                 .stream()
                 .filter(line -> line.getTargetKind() == TargetKind.STOCK && line.getItem() != null)
+                .filter(line -> transaction.getEvent() != TransactionEvent.PROCESSING
+                        || line.getInOut() == InOut.IN)
                 .toList();
 
         if (stock.isEmpty())

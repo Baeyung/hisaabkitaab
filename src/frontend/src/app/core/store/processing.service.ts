@@ -24,6 +24,11 @@ export class ProcessingService {
     return firstValueFrom(this.http.get<ProcessingRow[]>(this.url));
   }
 
+  /** One batch, for its own page. 404s on an id that is not a batch in this store. */
+  get(transactionId: string): Promise<ProcessingRow> {
+    return firstValueFrom(this.http.get<ProcessingRow>(`${this.url}/${transactionId}`));
+  }
+
   process(request: ProcessingRequest): Promise<void> {
     return firstValueFrom(this.http.post<void>(this.url, request));
   }

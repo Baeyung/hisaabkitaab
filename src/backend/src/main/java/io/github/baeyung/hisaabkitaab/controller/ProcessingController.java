@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,15 @@ public class ProcessingController
     public ResponseEntity<List<ProcessingResponse>> list(@CurrentStore(StoreRole.VIEWER) Store store)
     {
         return ResponseEntity.ok(processingService.list(store.getId()));
+    }
+
+    @GetMapping("/{transactionId}")
+    public ResponseEntity<ProcessingResponse> get(
+            @PathVariable String transactionId,
+            @CurrentStore(StoreRole.VIEWER) Store store
+    )
+    {
+        return ResponseEntity.ok(processingService.get(transactionId, store.getId()));
     }
 
     @PostMapping

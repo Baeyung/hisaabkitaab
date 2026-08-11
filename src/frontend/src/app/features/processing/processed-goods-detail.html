@@ -1,0 +1,185 @@
+<section class="rm-page">
+  <app-print-header />
+  <a class="rm-back rm-noprint" [routerLink]="stores.link('processing')">{{
+    locale.t('common.back')
+  }}</a>
+
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (notFound()) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('processing.detail.notFound') }}</h2>
+      <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('processing')">{{
+        locale.t('common.back')
+      }}</a>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state">
+      <p role="alert" class="rm-alert">{{ locale.t('processing.list.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load(transactionId())">
+        {{ locale.t('settings.general.retry') }}
+      </button>
+    </div>
+  } @else if (batch(); as b) {
+    <header class="rm-head rm-noprint">
+      <div class="rm-actions">
+        <button type="button" class="rm-btn rm-btn--ghost" (click)="print()">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"
+            />
+          </svg>
+          {{ locale.t('common.print') }}
+        </button>
+        @if (stores.canEdit()) {
+          <button type="button" class="rm-btn rm-btn--danger" (click)="askDelete()">
+            {{ locale.t('common.delete') }}
+          </button>
+        }
+      </div>
+    </header>
+
+    @if (confirming()) {
+      <div class="rm-confirm rm-confirm--card rm-noprint">
+        <span class="rm-confirm__msg">
+          {{ locale.t('processing.list.deleteConfirm', { name: b.output?.name ?? '' }) }}
+        </span>
+        <span class="rm-confirm__actions">
+          <button type="button" class="rm-btn rm-btn--ghost rm-btn--sm" (click)="cancelDelete()">
+            {{ locale.t('common.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="rm-btn rm-btn--danger rm-btn--sm"
+            (click)="confirmDelete()"
+            [disabled]="deleting()"
+          >
+            {{ locale.t('common.delete') }}
+          </button>
+        </span>
+      </div>
+    }
+    @if (deleteError(); as key) {
+      <p role="alert" class="rm-alert" style="margin-bottom: 12px">{{ locale.t(key) }}</p>
+    }
+
+    <header class="rm-head">
+      <div>
+        <h1 class="rm-title">{{ b.output?.name ?? locale.t('nav.processedGoods') }}</h1>
+        <p class="rm-sub num">
+          {{ b.date }}
+          @if (b.billNumber) {
+            · {{ b.billNumber }}
+          }
+        </p>
+        @if (b.partyName) {
+          <p class="rm-billto">
+            <span class="rm-billto__label">{{ locale.t('processing.detail.for') }}</span>
+            <span class="rm-billto__name">
+              <a class="rm-noprint" [routerLink]="stores.link('ledger', b.partyId ?? '')">{{
+                b.partyName
+              }}</a>
+              <span class="rm-printonly">{{ b.partyName }}</span>
+            </span>
+          </p>
+        }
+      </div>
+    </header>
+
+    <!-- what came out, and what one unit of it cost to make -->
+    <div class="rm-card">
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('processing.list.col.output') }}</th>
+              <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
+              <th scope="col" class="end">{{ locale.t('processing.col.wastage') }}</th>
+              <th scope="col" class="end">{{ locale.t('processing.unitCost') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="rm-cell-head">
+                <span class="rm-tbl__name">{{ b.output?.name ?? '—' }}</span>
+                @if (b.output?.unit) {
+                  <span class="rm-tbl__meta">{{ b.output?.unit }}</span>
+                }
+              </td>
+              <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">
+                {{ locale.qtyUnit(b.output?.quantity ?? 0, b.output?.unit ?? null) }}
+              </td>
+              <td class="end num" [attr.data-label]="locale.t('processing.col.wastage')">
+                {{ locale.qtyUnit(b.output?.wastage ?? 0, b.output?.unit ?? null) }}
+              </td>
+              <td class="end num rm-tbl__name rm-cell-amt">
+                {{ b.output?.unitCost != null ? locale.money(b.output!.unitCost!) : '—' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- the recipe: raw material and consumables, each with what it contributed -->
+    <div class="rm-card" style="margin-top: 12px">
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('processing.list.madeFrom') }}</th>
+              <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
+              <th scope="col" class="end">{{ locale.t('processing.col.rate') }}</th>
+              <th scope="col" class="end">{{ locale.t('processing.col.amount') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of inputs(); track $index) {
+              <tr>
+                <td class="rm-cell-head">
+                  <span class="rm-tbl__name">{{ row.name }}</span>
+                  <span class="rm-tbl__meta">{{ locale.t(row.kind) }}</span>
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">
+                  {{ locale.qtyUnit(row.quantity ?? 0, row.unit) }}
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('processing.col.rate')">
+                  {{ locale.money(row.pricePerUnit ?? 0) }}
+                </td>
+                <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(row.amount) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="rm-foot">
+        <span>
+          {{ locale.t('processing.totalCost') }}
+          <strong class="num">{{ locale.money(totalCost()) }}</strong>
+        </span>
+        <span>
+          {{ locale.t('processing.unitCost') }}
+          <strong class="num">{{
+            b.output?.unitCost != null ? locale.money(b.output!.unitCost!) : '—'
+          }}</strong>
+        </span>
+      </div>
+    </div>
+
+    @if (b.description) {
+      <p class="rm-sub" style="margin-top: 12px">{{ b.description }}</p>
+    }
+  }
+</section>

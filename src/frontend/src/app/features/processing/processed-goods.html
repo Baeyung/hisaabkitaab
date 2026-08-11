@@ -37,6 +37,7 @@
           <thead>
             <tr>
               <th scope="col">{{ locale.t('processing.list.col.output') }}</th>
+              <th scope="col">{{ locale.t('processing.party') }}</th>
               <th scope="col">{{ locale.t('processing.list.col.date') }}</th>
               <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
               <th scope="col" class="end">{{ locale.t('processing.unitCost') }}</th>
@@ -45,13 +46,19 @@
           </thead>
           <tbody>
             @for (batch of batches(); track batch.transactionId) {
-              <tr class="rm-rowlink" (click)="toggle(batch.transactionId)">
+              <tr class="rm-rowlink" (click)="open(batch.transactionId)">
                 <td class="rm-cell-head">
-                  <span class="rm-tbl__name">{{ batch.output?.name ?? '—' }}</span>
+                  <a
+                    class="rm-tbl__name"
+                    [routerLink]="stores.link('processing', batch.transactionId)"
+                    (click)="$event.stopPropagation()"
+                    >{{ batch.output?.name ?? '—' }}</a
+                  >
                   @if (batch.billNumber) {
                     <span class="rm-tbl__meta">{{ batch.billNumber }}</span>
                   }
                 </td>
+                <td [attr.data-label]="locale.t('processing.party')">{{ batch.partyName ?? '—' }}</td>
                 <td [attr.data-label]="locale.t('processing.list.col.date')">{{ batch.date }}</td>
                 <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">
                   {{ locale.qtyUnit(batch.output?.quantity ?? 0, batch.output?.unit ?? null) }}
@@ -70,61 +77,9 @@
                 </td>
               </tr>
 
-              @if (expandedId() === batch.transactionId) {
-                <tr class="rm-detail-row" (click)="$event.stopPropagation()">
-                  <td colspan="5">
-                    <div class="rm-tablewrap">
-                      <table class="rm-tbl">
-                        <thead>
-                          <tr>
-                            <th scope="col">{{ locale.t('processing.list.madeFrom') }}</th>
-                            <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
-                            <th scope="col" class="end">{{ locale.t('processing.col.rate') }}</th>
-                            <th scope="col" class="end">{{ locale.t('processing.col.amount') }}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (row of batch.rawItems; track $index) {
-                            <tr>
-                              <td class="rm-cell-head">
-                                <span class="rm-tbl__name">{{ row.name }}</span>
-                                <span class="rm-tbl__meta">{{ locale.t('processing.raw') }}</span>
-                              </td>
-                              <td class="end num">{{ locale.qtyUnit(row.quantity ?? 0, row.unit) }}</td>
-                              <td class="end num">{{ locale.money(row.pricePerUnit ?? 0) }}</td>
-                              <td class="end num">{{ locale.money(lineAmount(row)) }}</td>
-                            </tr>
-                          }
-                          @for (row of batch.processingItems; track $index) {
-                            <tr>
-                              <td class="rm-cell-head">
-                                <span class="rm-tbl__name">{{ row.name }}</span>
-                                <span class="rm-tbl__meta">{{ locale.t('processing.items') }}</span>
-                              </td>
-                              <td class="end num">{{ locale.qtyUnit(row.quantity ?? 0, row.unit) }}</td>
-                              <td class="end num">{{ locale.money(row.pricePerUnit ?? 0) }}</td>
-                              <td class="end num">{{ locale.money(lineAmount(row)) }}</td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                    @if (batch.output?.wastage) {
-                      <p class="rm-sub">
-                        {{ locale.t('processing.col.wastage') }}:
-                        {{ locale.qtyUnit(batch.output!.wastage!, batch.output?.unit ?? null) }}
-                      </p>
-                    }
-                    @if (batch.description) {
-                      <p class="rm-sub">{{ batch.description }}</p>
-                    }
-                  </td>
-                </tr>
-              }
-
               @if (confirmingId() === batch.transactionId) {
                 <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
-                  <td colspan="5">
+                  <td colspan="6">
                     <div class="rm-confirm">
                       <span class="rm-confirm__msg">
                         {{

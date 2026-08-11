@@ -139,16 +139,14 @@
             <tbody>
               @for (row of filteredRows(); track row.transactionId + row.occurredAt) {
                 <tr
-                  [class.rm-rowlink]="row.event === 'SALE'"
+                  [class.rm-rowlink]="!!detailLink(row.event, row.transactionId)"
                   [class.rm-row--cleared]="row.cleared === true"
-                  (click)="row.event === 'SALE' && openBill(row.transactionId)"
+                  (click)="openDetail(row.event, row.transactionId)"
                 >
                   <td class="num">{{ row.date }}</td>
                   <td class="rm-cell-head">
-                    @if (row.event === 'SALE') {
-                      <a
-                        [routerLink]="stores.link('bill-management', row.transactionId)"
-                        (click)="$event.stopPropagation()"
+                    @if (detailLink(row.event, row.transactionId); as link) {
+                      <a [routerLink]="link" (click)="$event.stopPropagation()"
                         >{{ locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}
                         @if (row.description) {
                           <em class="rm-note"> ({{ row.description }})</em>

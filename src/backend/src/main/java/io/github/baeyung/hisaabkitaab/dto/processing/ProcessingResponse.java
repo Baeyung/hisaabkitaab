@@ -14,6 +14,9 @@ public record ProcessingResponse(
         LocalDate date,
         String billNumber,
         String description,
+        /** Who it was run for, or null — a batch does not need a party. */
+        String partyId,
+        String partyName,
         List<InputRow> rawItems,
         List<InputRow> processingItems,
         OutputRow output,

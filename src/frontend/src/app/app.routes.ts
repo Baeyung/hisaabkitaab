@@ -181,6 +181,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/processing/processed-goods').then((m) => m.ProcessedGoods),
       },
+      // One batch's recipe, on its own page — linked from the list and from the khata of
+      // the party it was run for.
+      {
+        path: 'processing/:transactionId',
+        loadComponent: () =>
+          import('./features/processing/processed-goods-detail').then((m) => m.ProcessedGoodsDetail),
+      },
       {
         path: 'bill-management',
         loadComponent: () =>

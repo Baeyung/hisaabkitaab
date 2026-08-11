@@ -25,6 +25,8 @@
 - [x] WhatsApp concurrency?
 - [x] WhatsApp data header sending with an expiry
 - [ ] processed goods feature
+- [ ] processed goods whatsapp
+- [ ] processed goods + -> ui improvement
 - [ ] enhance mobile UI for better UX.
 - [ ] whatsApp integration, sending messages
 - [ ] monthly reports, on email + whatsapp

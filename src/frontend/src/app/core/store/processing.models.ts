@@ -14,6 +14,12 @@ export interface ProcessingRequest {
   billNumber: string | null;
   billDate: string | null;
   description: string | null;
+  /**
+   * Who the batch was run for, or null. Carries no money: the entry shows in that party's
+   * khata and links back to itself, but leaves their baqaya where it was (see the backend
+   * `ProcessingService`).
+   */
+  party: { partyId: string | null; name: string } | null;
 }
 
 /** A raw material: named and priced, but not an item — nothing to match against. */
@@ -49,6 +55,8 @@ export interface ProcessingRow {
   date: string;
   billNumber: string | null;
   description: string | null;
+  partyId: string | null;
+  partyName: string | null;
   rawItems: ProcessingRowInput[];
   processingItems: ProcessingRowInput[];
   output: ProcessingRowOutput | null;

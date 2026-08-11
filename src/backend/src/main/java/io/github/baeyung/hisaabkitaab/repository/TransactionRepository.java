@@ -51,7 +51,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
      * same coalesced date the response displays, so an entry saved without one sorts by its
      * entry date rather than NULLS FIRST-ing to the top.
      */
-    @EntityGraph(attributePaths = {"lines", "lines.item"})
+    @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
     @Query("""
             select t from Transaction t
             where t.store.id = :storeId and t.event = :event

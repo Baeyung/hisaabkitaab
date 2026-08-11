@@ -29,6 +29,19 @@
       </div>
     </header>
 
+    <!-- who it was run for: optional, and it moves no money either way -->
+    <div class="fld">
+      <label class="fld__label" for="processing-party">{{ locale.t('processing.party') }}</label>
+      <app-combobox
+        inputId="processing-party"
+        [options]="partyNames()"
+        [value]="partyName()"
+        (valueChange)="partyName.set($event)"
+        [placeholder]="locale.t('processing.party.ph')"
+      />
+      <small class="fld__hint">{{ locale.t('processing.party.hint') }}</small>
+    </div>
+
     <!-- raw material: typed free, never a catalogue item -->
     <div class="pgrid" role="group" [attr.aria-label]="locale.t('processing.raw')">
       <p class="pgrid__title">{{ locale.t('processing.raw') }}</p>

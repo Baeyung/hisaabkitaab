@@ -8,7 +8,7 @@ import { PartyStatement, PartyStatementRow } from '../../core/store/ledger.model
 import { Balance } from '../../core/store/balance.models';
 import { TransactionEventKind } from '../../core/store/cashbook.models';
 import { TranslationKey } from '../../core/i18n/translations/en';
-import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
+import { entryDetailLink, entryEditLink, isEditableEntry } from '../../shared/entry-route';
 import { deleteErrorKey } from '../../core/store/delete-error';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
@@ -141,9 +141,20 @@ export class LedgerDetail {
       .map((r) => r.transactionId);
   }
 
-  /** A sale row's transactionId is the bill's id — open its detail. */
-  openBill(transactionId: string): void {
-    void this.router.navigate(this.stores.link('bill-management', transactionId));
+  /**
+   * The row's own page, when it has one: the bill for a sale, the batch for a processed-
+   * goods entry. Null elsewhere, and the template leaves those rows unlinked.
+   */
+  protected detailLink(event: TransactionEventKind, transactionId: string): string[] | null {
+    const link = entryDetailLink(event, transactionId);
+    return link ? this.stores.link(...link) : null;
+  }
+
+  openDetail(event: TransactionEventKind, transactionId: string): void {
+    const link = this.detailLink(event, transactionId);
+    if (link) {
+      void this.router.navigate(link);
+    }
   }
 
   /** Open the entry's screen in edit mode, prefilled. */

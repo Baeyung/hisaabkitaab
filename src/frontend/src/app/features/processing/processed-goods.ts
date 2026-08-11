@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
@@ -9,17 +9,16 @@ import { StoreService } from '../../core/store/store.service';
 import { ProcessingRow } from '../../core/store/processing.models';
 
 /**
- * Every batch this shop has run, newest first. A row names what came out and what it cost
- * to make; expanding it shows the recipe — the raw material and the consumables, each with
- * what it contributed.
+ * Every batch this shop has run, newest first. A row names what came out, who it was run
+ * for and what it cost to make; opening one goes to {@link ProcessedGoodsDetail} for the
+ * recipe — a page that can be linked to, printed, and come back to.
  *
- * Rows expand in place rather than opening a detail route: a batch is a handful of lines
- * already loaded with the list, so a second screen would only be a second fetch.
- *
- * Delete goes through {@link EventService} — a batch is an ordinary transaction, so the
- * entry endpoint already reverses both its stock movements and holds a non-owner to the
- * 24-hour window. Prices do not revert, which is why the confirm says so: the weighted
- * average this batch folded into the item cannot be un-averaged.
+ * Delete stays here as well as on the detail page: taking back a batch just entered is the
+ * common case, and it needs no trip through the recipe. It goes through {@link EventService}
+ * — a batch is an ordinary transaction, so the entry endpoint reverses both its stock
+ * movements and holds a non-owner to the 24-hour window. Prices do not revert, which is why
+ * the confirm says so: the weighted average this batch folded into the item cannot be
+ * un-averaged.
  */
 @Component({
   selector: 'app-processed-goods',
@@ -31,12 +30,12 @@ export class ProcessedGoods {
   protected readonly stores = inject(StoreService);
   private readonly api = inject(ProcessingService);
   private readonly events = inject(EventService);
+  private readonly router = inject(Router);
 
   protected readonly batches = signal<ProcessingRow[] | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
 
-  protected readonly expandedId = signal<string | null>(null);
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<TranslationKey | null>(null);
@@ -57,8 +56,8 @@ export class ProcessedGoods {
     }
   }
 
-  toggle(id: string): void {
-    this.expandedId.update((open) => (open === id ? null : id));
+  open(id: string): void {
+    void this.router.navigate(this.stores.link('processing', id));
   }
 
   askDelete(id: string): void {
@@ -82,10 +81,5 @@ export class ProcessedGoods {
     } finally {
       this.deleting.set(false);
     }
-  }
-
-  /** What a recipe row contributed to the batch's cost. */
-  lineAmount(row: { quantity: number | null; pricePerUnit: number | null }): number {
-    return (row.quantity ?? 0) * (row.pricePerUnit ?? 0);
   }
 }

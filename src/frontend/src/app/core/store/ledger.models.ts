@@ -17,7 +17,8 @@ export interface PartyStatementRow {
   description: string | null;
   /** Goods on the entry ("Lawn Print × 12") — null when it moves none. */
   itemSummary: string | null;
-  inOut: 'IN' | 'OUT';
+  /** 'NONE' on a row that is only a record — a processed-goods batch moves the party no money. */
+  inOut: 'IN' | 'OUT' | 'NONE';
   amount: number;
   runningBalance: Balance;
   /** For a charge (a bill): true once FIFO payments have covered it; null for payment rows. */

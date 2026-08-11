@@ -1,8 +1,10 @@
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { StoreItemService } from '../../core/store/store-item.service';
+import { PartyService } from '../../core/store/party.service';
 import { ProcessingService } from '../../core/store/processing.service';
 import { StoreItem } from '../../core/store/store-item.models';
+import { Party } from '../../core/store/party.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { Combobox } from '../../shared/combobox/combobox';
@@ -52,6 +54,7 @@ interface Line {
 export class Processing {
   protected readonly locale = inject(LocaleService);
   private readonly itemApi = inject(StoreItemService);
+  private readonly partyApi = inject(PartyService);
   private readonly api = inject(ProcessingService);
 
   /** Batch-number box — where the cursor goes after a Save + Next. */
@@ -63,6 +66,11 @@ export class Processing {
   /** Autocomplete source; empty when the item list 404s (no store yet). */
   protected readonly items = signal<StoreItem[]>([]);
   protected readonly itemNames = computed(() => this.items().map((i) => i.name));
+
+  /** Party autocomplete; a name that matches nothing is created on save, as elsewhere. */
+  protected readonly parties = signal<Party[]>([]);
+  protected readonly partyNames = computed(() => this.parties().map((p) => p.name));
+  protected readonly partyName = signal('');
 
   protected readonly billNumber = signal('');
   protected readonly billDate = signal(todayIso());
@@ -128,6 +136,11 @@ export class Processing {
 
   constructor() {
     void this.loadItems();
+    // Same 404-before-a-store tolerance as the item list: the field is just empty.
+    void this.partyApi
+      .list()
+      .catch(() => [] as Party[])
+      .then((parties) => this.parties.set(parties));
   }
 
   private async loadItems(): Promise<void> {
@@ -213,6 +226,7 @@ export class Processing {
 
     const outputName = this.outputName().trim();
     const outputQty = this.outputQty() as number;
+    const partyName = this.partyName().trim();
 
     try {
       await this.api.process({
@@ -240,6 +254,9 @@ export class Processing {
         billNumber: this.billNumber().trim() || null,
         billDate: this.billDate() || null,
         description: this.description().trim() || null,
+        party: partyName
+          ? { partyId: this.matchParty(partyName)?.id ?? null, name: partyName }
+          : null,
       });
 
       this.recent.push(
@@ -249,8 +266,10 @@ export class Processing {
         }),
       );
       // A new output item is now in the catalogue, and consumables may have been created
-      // too — reload so the next batch can autocomplete and match them by id.
+      // too — reload so the next batch can autocomplete and match them by id. Same for a
+      // party typed in free.
       await this.loadItems();
+      this.parties.set(await this.partyApi.list().catch(() => this.parties()));
       this.reset();
     } catch {
       this.errorKey.set('error.generic');
@@ -261,6 +280,7 @@ export class Processing {
 
   reset(): void {
     this.billNumber.set('');
+    this.partyName.set('');
     this.description.set('');
     this.rawLines.set([this.blankLine()]);
     this.procLines.set([this.blankLine()]);
@@ -290,6 +310,11 @@ export class Processing {
   private matchItem(name: string): StoreItem | undefined {
     const q = name.trim().toLowerCase();
     return q ? this.items().find((i) => i.name.trim().toLowerCase() === q) : undefined;
+  }
+
+  private matchParty(name: string): Party | undefined {
+    const q = name.trim().toLowerCase();
+    return q ? this.parties().find((p) => p.name.trim().toLowerCase() === q) : undefined;
   }
 
   private blankLine(): Line {

@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import io.github.baeyung.hisaabkitaab.dto.processing.ProcessingRequest;
 import io.github.baeyung.hisaabkitaab.dto.processing.ProcessingResponse;
+import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
@@ -19,6 +20,7 @@ import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
+import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
@@ -63,6 +65,7 @@ public class ProcessingService
     private final TransactionLineRepository transactionLineRepository;
     private final StoreItemRepository storeItemRepository;
     private final StoreItemService storeItemService;
+    private final PartyService partyService;
 
     /** Record one batch: post its stock movements and reprice what it produced. */
     public void process(ProcessingRequest request, Store store)
@@ -71,8 +74,14 @@ public class ProcessingService
         BigDecimal outputQuantity = orZero(output.getQuantity());
         BigDecimal unitCost = unitCost(request);
 
+        Party party = request.getParty() == null
+                ? null
+                : partyService.resolveOrCreate(
+                        request.getParty().getPartyId(), request.getParty().getName(), store);
+
         Transaction transaction = Transaction.builder()
                 .store(store)
+                .party(party)
                 .event(TransactionEvent.PROCESSING)
                 .bill(request.getBillNumber())
                 .eventDate(request.getBillDate())
@@ -121,6 +130,23 @@ public class ProcessingService
                 .value(orZero(output.getWastage()).doubleValue())
                 .build());
 
+        // The party side, when there is one: worth nothing, deliberately. Job work moves no
+        // money on its own — the bill for it is a separate SALE — so the batch must not touch
+        // the khata's arithmetic. InOut.NONE with a zero value is what keeps it out: every
+        // balance sum CASEs anything that is not IN/OUT to 0, while the statement query
+        // selects PARTY lines regardless of direction. So the batch shows in the party's
+        // khata, links back to itself, and leaves the baqaya exactly where it was.
+        if (party != null)
+        {
+            lines.add(TransactionLine.builder()
+                    .transaction(transaction)
+                    .targetKind(TargetKind.PARTY)
+                    .party(party)
+                    .inOut(InOut.NONE)
+                    .value(0.0)
+                    .build());
+        }
+
         transactionRepository.save(transaction);
 
         reprice(outputItem, stockBefore, outputQuantity, unitCost);
@@ -135,6 +161,19 @@ public class ProcessingService
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    /**
+     * One batch, for its own page. Store-scoped by the same query the bill detail uses, and
+     * 404-ing on any other event so an ordinary transaction id cannot be read as a batch.
+     */
+    @Transactional(readOnly = true)
+    public ProcessingResponse get(String transactionId, String storeId)
+    {
+        return transactionRepository.findByIdAndStoreId(transactionId, storeId)
+                .filter(transaction -> transaction.getEvent() == TransactionEvent.PROCESSING)
+                .map(this::toResponse)
+                .orElseThrow(() -> ResourceNotFoundException.forEntity("Processing", transactionId));
     }
 
     // ── the price of a batch ──────────────────────────────────────────────────
@@ -222,11 +261,15 @@ public class ProcessingService
                 .findFirst()
                 .orElse(null);
 
+        Party party = transaction.getParty();
+
         return new ProcessingResponse(
                 transaction.getId(),
                 transaction.getEventDate() != null ? transaction.getEventDate() : transaction.getEntryDate(),
                 transaction.getBill(),
                 transaction.getDescription(),
+                party == null ? null : party.getId(),
+                party == null ? null : party.getName(),
                 inputRows(stock, InOut.NONE),
                 inputRows(stock, InOut.OUT),
                 output == null ? null : new ProcessingResponse.OutputRow(
