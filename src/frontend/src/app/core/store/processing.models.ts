@@ -57,6 +57,7 @@ export interface ProcessingRow {
   description: string | null;
   partyId: string | null;
   partyName: string | null;
+  partyContact: string | null;
   rawItems: ProcessingRowInput[];
   processingItems: ProcessingRowInput[];
   output: ProcessingRowOutput | null;

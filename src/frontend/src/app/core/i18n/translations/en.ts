@@ -523,6 +523,7 @@ export const en = {
   'whatsapp.noQuota': "You've used all your plan's WhatsApp messages this month",
   'whatsapp.doc.statement': 'Khata statement',
   'whatsapp.doc.bill': 'Bill',
+  'whatsapp.doc.batch': 'Processing batch',
   'common.printDetails.title': 'Bill details',
   'common.printDetails.confirm': "Include each bill's item details as sub-rows?",
   'common.printDetails.with': 'With details',

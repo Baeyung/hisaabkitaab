@@ -43,6 +43,15 @@
           </svg>
           {{ locale.t('common.print') }}
         </button>
+        @if (b.partyId) {
+          <app-whatsapp-button
+            [partyId]="b.partyId"
+            [partyName]="b.partyName ?? ''"
+            [contact]="b.partyContact"
+            [document]="locale.t('whatsapp.doc.batch') + (b.billNumber ? ' ' + b.billNumber : '')"
+            [action]="locale.t('whatsapp.doc.batch')"
+          />
+        }
         @if (stores.canEdit()) {
           <button type="button" class="rm-btn rm-btn--danger" (click)="askDelete()">
             {{ locale.t('common.delete') }}

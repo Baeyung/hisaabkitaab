@@ -17,6 +17,8 @@ public record ProcessingResponse(
         /** Who it was run for, or null — a batch does not need a party. */
         String partyId,
         String partyName,
+        /** The party's phone number, so the batch screen can offer to WhatsApp it to them. */
+        String partyContact,
         List<InputRow> rawItems,
         List<InputRow> processingItems,
         OutputRow output,

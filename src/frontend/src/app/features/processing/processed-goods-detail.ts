@@ -8,6 +8,7 @@ import { ProcessingService } from '../../core/store/processing.service';
 import { StoreService } from '../../core/store/store.service';
 import { ProcessingRow, ProcessingRowInput } from '../../core/store/processing.models';
 import { PrintHeader } from '../../shared/print-header';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 
 /**
  * One batch on its own page: what it made, what it was made from, and what it cost — the
@@ -22,7 +23,7 @@ import { PrintHeader } from '../../shared/print-header';
  */
 @Component({
   selector: 'app-processed-goods-detail',
-  imports: [RouterLink, PrintHeader],
+  imports: [RouterLink, PrintHeader, WhatsAppButton],
   templateUrl: './processed-goods-detail.html',
 })
 export class ProcessedGoodsDetail {

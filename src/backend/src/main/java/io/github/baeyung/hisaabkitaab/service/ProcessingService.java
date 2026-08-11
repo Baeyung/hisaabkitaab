@@ -270,6 +270,7 @@ public class ProcessingService
                 transaction.getDescription(),
                 party == null ? null : party.getId(),
                 party == null ? null : party.getName(),
+                party == null ? null : party.getContact(),
                 inputRows(stock, InOut.NONE),
                 inputRows(stock, InOut.OUT),
                 output == null ? null : new ProcessingResponse.OutputRow(

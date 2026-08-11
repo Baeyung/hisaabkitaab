@@ -514,6 +514,7 @@ export const ur: Record<TranslationKey, string> = {
   'whatsapp.noQuota': 'اس مہینے کے واٹس ایپ پیغامات آپ استعمال کر چکے ہیں',
   'whatsapp.doc.statement': 'کھاتہ گوشوارہ',
   'whatsapp.doc.bill': 'بل',
+  'whatsapp.doc.batch': 'پروسیسنگ بیچ',
   'common.printDetails.title': 'بل کی تفصیلات',
   'common.printDetails.confirm': 'کیا ہر بل کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
   'common.printDetails.with': 'تفصیلات کے ساتھ',
