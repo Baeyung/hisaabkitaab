@@ -100,6 +100,10 @@ class DocumentShareServiceTest
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> service.share(store("923001112233"), party("  "), "Bill", PDF, "bill.pdf", "en"))
                 .isInstanceOf(IllegalArgumentException.class);
+        // The number a party created in passing carries: real-looking, and nobody's.
+        assertThatThrownBy(() -> service.share(
+                store("923001112233"), party(Party.PLACEHOLDER_CONTACT), "Bill", PDF, "bill.pdf", "en"))
+                .isInstanceOf(IllegalArgumentException.class);
 
         verifyNoInteractions(whatsapp);
     }

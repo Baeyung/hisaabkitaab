@@ -28,6 +28,12 @@ import lombok.Setter;
 @Builder
 public class Party
 {
+    /**
+     * Stamped on a party created in passing (see {@code PartyService.resolveOrCreate}) so the
+     * column's pattern passes. It is nobody's number — nothing may be sent to it.
+     */
+    public static final String PLACEHOLDER_CONTACT = "090078601";
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;

@@ -2,6 +2,8 @@ import { Component, ElementRef, computed, inject, input, signal, viewChild } fro
 import { LocaleService } from '../core/i18n/locale.service';
 import { TranslationKey } from '../core/i18n/translations/en';
 import { PlanService } from '../core/plan/plan.service';
+import { RouterLink } from '@angular/router';
+import { hasRealContact } from '../core/store/party.models';
 import { StoreService } from '../core/store/store.service';
 import { WhatsAppService } from '../core/store/whatsapp.service';
 import { todayIso } from './date.util';
@@ -24,7 +26,7 @@ type State = 'idle' | 'sending' | 'sent' | 'error';
       type="button"
       class="rm-btn rm-btn--ghost rm-btn--wa rm-noprint"
       [attr.data-state]="state()"
-      [disabled]="!sendable() || state() === 'sending'"
+      [disabled]="!clickable() || state() === 'sending'"
       [title]="hint()"
       (click)="ask()"
     >
@@ -58,28 +60,45 @@ type State = 'idle' | 'sending' | 'sent' | 'error';
 
     <dialog #dlg class="rm-dialog" (cancel)="dismiss($event)" (click)="onBackdrop($event)">
       <h2 class="rm-dialog__title">{{ locale.t('whatsapp.title') }}</h2>
-      <p class="rm-dialog__body">
-        {{
-          locale.t('whatsapp.confirm', {
-            document: document(),
-            name: partyName(),
-            contact: contact() ?? '',
-          })
-        }}
-        @if (quotaNote(); as note) {
-          <span class="rm-dialog__note">{{ note }}</span>
-        }
-      </p>
-      <div class="rm-dialog__actions">
-        <button type="button" class="rm-btn rm-btn--ghost" (click)="dismiss($event)">
-          {{ locale.t('common.cancel') }}
-        </button>
-        <button type="button" class="rm-btn rm-btn--primary" (click)="send($event)">
-          {{ locale.t('whatsapp.send') }}
-        </button>
-      </div>
+      @if (needsNumber()) {
+        <p class="rm-dialog__body">{{ locale.t('whatsapp.noNumber', { name: partyName() }) }}</p>
+        <div class="rm-dialog__actions">
+          <button type="button" class="rm-btn rm-btn--ghost" (click)="dismiss($event)">
+            {{ locale.t('common.cancel') }}
+          </button>
+          <a
+            class="rm-btn rm-btn--primary"
+            [routerLink]="stores.link('settings/party')"
+            (click)="close()"
+          >
+            {{ locale.t('whatsapp.addNumber') }}
+          </a>
+        </div>
+      } @else {
+        <p class="rm-dialog__body">
+          {{
+            locale.t('whatsapp.confirm', {
+              document: document(),
+              name: partyName(),
+              contact: contact() ?? '',
+            })
+          }}
+          @if (quotaNote(); as note) {
+            <span class="rm-dialog__note">{{ note }}</span>
+          }
+        </p>
+        <div class="rm-dialog__actions">
+          <button type="button" class="rm-btn rm-btn--ghost" (click)="dismiss($event)">
+            {{ locale.t('common.cancel') }}
+          </button>
+          <button type="button" class="rm-btn rm-btn--primary" (click)="send($event)">
+            {{ locale.t('whatsapp.send') }}
+          </button>
+        </div>
+      }
     </dialog>
   `,
+  imports: [RouterLink],
 })
 export class WhatsAppButton {
   /** Null for a walk-in cash sale, or a party typed in but not saved yet — nothing to send to. */
@@ -103,7 +122,7 @@ export class WhatsAppButton {
   readonly beforeCapture = input<() => Promise<boolean>>();
 
   protected readonly locale = inject(LocaleService);
-  private readonly stores = inject(StoreService);
+  protected readonly stores = inject(StoreService);
   private readonly api = inject(WhatsAppService);
   private readonly plan = inject(PlanService);
   private readonly dlg = viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
@@ -144,10 +163,22 @@ export class WhatsAppButton {
     return left === null ? null : this.locale.t('whatsapp.quotaLeft', { left: String(left) });
   });
 
-  /** A party with a saved phone number, on a plan that covers sending and has a message left. */
-  protected readonly sendable = computed(
-    () => this.onPlan() && !this.outOfQuota() && !!this.partyId() && !!this.contact(),
+  /**
+   * A saved party without a number a person answers — no number at all, or the placeholder
+   * the backend stamps on a party created in passing. The button stays live for this: the
+   * dialog sends them off to add one instead of going quiet.
+   */
+  protected readonly needsNumber = computed(
+    () => !!this.partyId() && !hasRealContact(this.contact()),
   );
+
+  /** Worth opening the dialog for: a saved party, on a plan that covers sending, with quota left. */
+  protected readonly clickable = computed(
+    () => this.onPlan() && !this.outOfQuota() && !!this.partyId(),
+  );
+
+  /** All of that, and a real number to send to. */
+  protected readonly sendable = computed(() => this.clickable() && !this.needsNumber());
 
   private static readonly LABELS: Record<State, TranslationKey> = {
     idle: 'whatsapp.send',
@@ -177,6 +208,11 @@ export class WhatsAppButton {
 
   protected dismiss(event: Event): void {
     event.preventDefault();
+    this.close();
+  }
+
+  /** Closes without swallowing the click — the "add a number" link has a navigation to do. */
+  protected close(): void {
     this.dlg().nativeElement.close();
   }
 

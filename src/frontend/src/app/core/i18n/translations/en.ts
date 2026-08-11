@@ -518,6 +518,7 @@ export const en = {
   'whatsapp.title': 'Send on WhatsApp',
   'whatsapp.confirm': '{{document}} goes to {{name}} on WhatsApp at {{contact}}.',
   'whatsapp.noNumber': 'Add a phone number for {{name}} to send on WhatsApp',
+  'whatsapp.addNumber': 'Add number',
   'whatsapp.notOnPlan': 'Sending on WhatsApp is not part of your plan',
   'whatsapp.quotaLeft': '{{left}} messages left on your plan this month.',
   'whatsapp.noQuota': "You've used all your plan's WhatsApp messages this month",

@@ -94,12 +94,15 @@ public class PartyController
             @Valid @RequestBody PartyWhatsAppRequest request,
             @CurrentStore(StoreRole.EDITOR) Store store)
     {
+        Party party = partyService.findByIdForStore(id, store.getId());
+        DocumentShareService.requireSendable(party);
+
         String ownerId = store.getOwner().getId();
         String charged = planService.spendWhatsappMessage(ownerId);
 
         if (!documentShareService.share(
                 store,
-                partyService.findByIdForStore(id, store.getId()),
+                party,
                 request.action(),
                 pdfRenderService.render(request.html()),
                 request.filename(),

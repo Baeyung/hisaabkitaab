@@ -15,6 +15,17 @@ export interface Party {
   openingBalance?: Balance | null;
 }
 
+/**
+ * What the backend stamps on a party created in passing (a name typed into an entry form).
+ * It is nobody's number — mirrors `Party.PLACEHOLDER_CONTACT` on the backend.
+ */
+export const PLACEHOLDER_CONTACT = '090078601';
+
+/** Whether this party has a number a person would actually answer. */
+export function hasRealContact(contact: string | null | undefined): boolean {
+  return !!contact && contact !== PLACEHOLDER_CONTACT;
+}
+
 /** The editable shape sent on create/update — the free-text fields only. */
 export type PartyDraft = Omit<Party, 'id' | 'openingBalance'>;
 

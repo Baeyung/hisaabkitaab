@@ -76,7 +76,7 @@ public class PartyServiceImpl implements PartyService
         return create(
                 Party.builder()
                         .name(name)
-                        .contact("090078601")
+                        .contact(Party.PLACEHOLDER_CONTACT)
                         .address("address@HisaabKitaab")
                         .build(),
                 store

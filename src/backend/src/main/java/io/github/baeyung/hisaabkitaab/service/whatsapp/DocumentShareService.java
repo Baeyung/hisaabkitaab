@@ -42,6 +42,23 @@ public class DocumentShareService
     }
 
     /**
+     * A party is only messageable on a number a person actually answers: no number at all, or
+     * the placeholder {@link Party#PLACEHOLDER_CONTACT} left by a party created in passing,
+     * means there is nowhere to send. Callers charge quota before sending, so they check this
+     * first — a message that cannot go out must not cost one.
+     *
+     * @throws IllegalArgumentException when the party has no real phone number.
+     */
+    public static void requireSendable(Party party)
+    {
+        String contact = party.getContact();
+        if (contact == null || contact.isBlank() || Party.PLACEHOLDER_CONTACT.equals(contact))
+        {
+            throw new IllegalArgumentException("Party has no phone number to send to on WhatsApp");
+        }
+    }
+
+    /**
      * @param action what was shared, in the reader's language and matching {@code locale} —
      *               "Bill", "Khata statement", "بل". Reads inside the template's sentence, so
      *               it is a noun, not a whole caption.
@@ -53,11 +70,8 @@ public class DocumentShareService
      */
     public boolean share(Store store, Party party, String action, byte[] pdf, String filename, String locale)
     {
+        requireSendable(party);
         String contact = party.getContact();
-        if (contact == null || contact.isBlank())
-        {
-            throw new IllegalArgumentException("Party has no phone number to send to on WhatsApp");
-        }
 
         // The names the approved template declares. Meta rejects the send if one is missing
         // or unknown, so these spellings are the contract — not the order.
