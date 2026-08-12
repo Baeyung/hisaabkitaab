@@ -1103,6 +1103,7 @@ html[dir='rtl'] select.rm-input {
   .rm-print-invoice:not(:first-of-type) .pf-brand {
     display: none !important;
   }
+
   @page {
     margin: 12mm;
   }
@@ -1506,6 +1507,27 @@ a.dw-row__name:hover {
   color: var(--kg-faint);
   font-size: 13px;
 }
+/* ── What the dashboard prints instead of its charts ───────────────────────
+   A chart is a screen instrument: it answers on hover, and it sizes its type
+   for a monitor. Printed, it answers nothing and its axis labels close up into
+   a smudge — so the printout carries the same series as ruled tables, and the
+   canvases stay behind. Everything here is hidden on screen and turned on
+   inside @media print above. */
+.dw-ptbl,
+.dw-share {
+  display: none;
+}
+/* The "Other designs" remainder: only the printout needs it, because only the
+   printout is missing the doughnut that used to hold that slice. */
+.dw-row--other {
+  display: none;
+}
+/* The bubbles' middle aging band (30–60 days). Red is the 60+ band, and it
+   already has a token; this is the step before it. */
+.dw-aged {
+  color: var(--kg-amber);
+}
+
 /* Footnote under a chart — the profit-vs-cash-realised caveat. */
 .dw-note {
   margin: 0;
@@ -1518,5 +1540,203 @@ a.dw-row__name:hover {
 @media (max-width: 860px) {
   .dw-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/*
+ * The dashboard's print rules live down here, not in the @media print block
+ * above, because everything they restyle is declared between the two — and a
+ * media query buys no specificity, only source order. Moved up, they lose.
+ */
+@media print {
+  /* ── Dashboard on paper ──────────────────────────────────────────────
+     The screen dashboard is a wall of cards, each with its own border,
+     radius and inner padding, sized around three chart canvases. Printed
+     as-is that reads as a screenshot: boxes floating on a sheet, charts
+     spilling past the boxes that were meant to hold them, and axis type
+     shrunk to a smudge.
+
+     On paper it becomes a statement instead. The cards give up their
+     boxes and keep only a ruled heading, so every section starts at the
+     same margin as the letterhead above it; the charts hand over to the
+     tables beside them; and the whole thing sets one measure down the
+     page rather than five. */
+  /* Flex and grid both fragment badly across a page boundary in Chrome: the
+     four-widget grid is one container, so it is placed as one thing, and a
+     card that would have fitted in the foot of a page gets carried to the next
+     with 300px of white left behind it. Block layout is the one mode that
+     fills a page greedily, which is all a printed statement wants — so the
+     page and the grid become stacks, and the gap becomes a margin. */
+  .dw-page,
+  .dw-grid {
+    --dw-gap: 15px;
+    display: block;
+  }
+  .dw-page > * + *,
+  .dw-grid > * + * {
+    margin-top: var(--dw-gap);
+  }
+  .dw-page a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* The five headline figures as one banded strip: hairline dividers instead
+     of five separate cards, and the semantic accent moved to a top rule,
+     which is the edge a narrow cell can still spare. */
+  .dw-kpis {
+    gap: 0;
+    border: 1px solid var(--kg-line-strong);
+  }
+  .dw-kpi {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 9px 10px 10px;
+    border: 0;
+    border-radius: 0;
+  }
+  .dw-kpi + .dw-kpi {
+    border-inline-start: 1px solid var(--kg-line);
+  }
+  .dw-kpi::before {
+    inset-block: 0 auto;
+    inset-inline: 0;
+    width: auto;
+    height: 3px;
+  }
+  .dw-kpi__label {
+    font-size: 8px;
+  }
+  .dw-kpi__value {
+    font-size: 15px;
+  }
+  .dw-kpi__hint {
+    font-size: 8.5px;
+  }
+
+  /* Section heading: a rule across the sheet, flush to the page margin, and
+     never left stranded at the foot of one. */
+  .dw-card__head {
+    padding: 0 0 5px;
+    border-bottom: 1.2px solid var(--kg-ink);
+    break-after: avoid;
+  }
+  .dw-card__title {
+    font-size: 12.5px;
+  }
+  .dw-card__hint {
+    font-size: 9.5px;
+  }
+  .dw-row {
+    padding: 4px 0;
+  }
+  .dw-row__name,
+  .dw-row__val {
+    font-size: 11px;
+  }
+  .dw-row__val small {
+    font-size: 9px;
+  }
+  .dw-row--other {
+    display: grid;
+  }
+  .dw-share {
+    display: block;
+  }
+  .dw-grouplabel {
+    padding: 9px 0 2px;
+    font-size: 8.5px;
+  }
+  .dw-empty {
+    padding: 7px 0;
+    font-size: 10px;
+  }
+
+  /* The tables that replace the charts. Ruled, not boxed — same ledger
+     hand as the cashbook, so a shopkeeper reading both recognises one
+     document. */
+  .dw-ptbl {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+  }
+  /* A month of days is taller than a sheet, so this one card has to be allowed
+     to fragment — the blanket `break-inside: avoid` the other widgets rely on
+     would only be dropped on the floor here. What does need holding together is
+     the row, and the column heads, which repeat onto the page it continues on. */
+  .dw-card:has(.dw-ptbl) {
+    break-inside: auto;
+  }
+  .dw-ptbl thead {
+    display: table-header-group;
+  }
+  .dw-ptbl tr {
+    break-inside: avoid;
+  }
+  .dw-ptbl th,
+  .dw-ptbl td {
+    padding: 3px 7px;
+    text-align: start;
+    border-bottom: 1px solid var(--kg-line);
+  }
+  .dw-ptbl th:first-child,
+  .dw-ptbl td:first-child {
+    padding-inline-start: 0;
+  }
+  .dw-ptbl th:last-child,
+  .dw-ptbl td:last-child {
+    padding-inline-end: 0;
+  }
+  .dw-ptbl thead th {
+    padding-top: 6px;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--kg-faint);
+  }
+  .dw-ptbl .end {
+    text-align: end;
+  }
+  .dw-ptbl__tot th,
+  .dw-ptbl__tot td {
+    padding-top: 5px;
+    font-weight: 700;
+    border-top: 1.2px solid var(--kg-ink);
+    border-bottom: 0;
+  }
+  /* The one thing a column of figures loses that the line chart had: shape.
+     Each day's take is washed in behind its own figure, scaled to the best
+     day in that column, so a strong week still reads as a run at arm's
+     length. A gradient rather than an underlay, because the card's own white
+     ground paints over anything sent behind the text. */
+  .dw-ptbl__bar--in {
+    background-image: linear-gradient(
+      to left,
+      color-mix(in srgb, var(--kg-in) 15%, transparent) var(--fill, 0%),
+      transparent 0
+    );
+  }
+  .dw-ptbl__bar--out {
+    background-image: linear-gradient(
+      to left,
+      color-mix(in srgb, var(--kg-out) 15%, transparent) var(--fill, 0%),
+      transparent 0
+    );
+  }
+  html[dir='rtl'] .dw-ptbl__bar--in {
+    background-image: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--kg-in) 15%, transparent) var(--fill, 0%),
+      transparent 0
+    );
+  }
+  html[dir='rtl'] .dw-ptbl__bar--out {
+    background-image: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--kg-out) 15%, transparent) var(--fill, 0%),
+      transparent 0
+    );
   }
 }

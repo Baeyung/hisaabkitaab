@@ -24,8 +24,18 @@
       </div>
       @if (data()) {
         <button type="button" class="rm-btn rm-btn--ghost" (click)="print()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"
+            />
           </svg>
           {{ locale.t('common.print') }}
         </button>
@@ -46,8 +56,12 @@
       <h2 class="rm-state__title">{{ locale.t('dash.welcome.title', { store: store.name }) }}</h2>
       <p class="rm-state__body">{{ locale.t('dash.welcome.body') }}</p>
       <div class="rm-state__acts">
-        <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{ locale.t('dash.empty.cta') }}</a>
-        <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('settings/general')">{{ locale.t('nav.settings') }}</a>
+        <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{
+          locale.t('dash.empty.cta')
+        }}</a>
+        <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('settings/general')">{{
+          locale.t('nav.settings')
+        }}</a>
       </div>
     </div>
   }
@@ -61,16 +75,22 @@
   } @else if (loadError()) {
     <div class="rm-state rm-noprint">
       <p role="alert" class="rm-alert">{{ locale.t('dash.loadError') }}</p>
-      <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">
+        {{ locale.t('settings.general.retry') }}
+      </button>
     </div>
   } @else if (isEmpty() && !justOpened) {
     <div class="rm-state">
       <h2 class="rm-state__title">{{ locale.t('dash.empty.title') }}</h2>
       <p class="rm-state__body">{{ locale.t('dash.empty.body') }}</p>
-      <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{ locale.t('dash.empty.cta') }}</a>
+      <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{
+        locale.t('dash.empty.cta')
+      }}</a>
     </div>
   } @else if (data(); as d) {
-    <p class="rm-sub rm-printonly">{{ locale.t('cashbook.print.period', { from: filters.from(), to: filters.to() }) }}</p>
+    <p class="rm-sub rm-printonly">
+      {{ locale.t('cashbook.print.period', { from: filters.from(), to: filters.to() }) }}
+    </p>
     <div class="dw-kpis">
       <article class="dw-kpi dw-kpi--in">
         <span class="dw-kpi__label">{{ locale.t('dash.sales') }}</span>
@@ -99,13 +119,63 @@
       </article>
     </div>
 
-    <!-- Revenue vs spending, with the running cash balance overlaid. -->
+    <!-- Revenue vs spending, with the running cash balance overlaid.
+         On paper the same three series become a day-by-day table: a printed
+         line chart has no tooltip to ask, and its axis labels shrink to a
+         smudge over a month-long window. -->
     <section class="rm-card dw-card">
       <header class="dw-card__head">
         <h2 class="dw-card__title">{{ locale.t('dash.trend.title') }}</h2>
+        <span class="dw-card__hint rm-printonly">{{ locale.t('dash.print.dayByDay') }}</span>
       </header>
-      <div class="dw-chart">
+      <div class="dw-chart rm-noprint">
         <app-chart [config]="trendConfig()" [label]="trendLabel()" />
+      </div>
+      <div class="rm-printonly">
+        <table class="dw-ptbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('dash.print.date') }}</th>
+              <th scope="col" class="end">{{ locale.t('dash.sales') }}</th>
+              <th scope="col" class="end">{{ locale.t('dash.spend') }}</th>
+              <th scope="col" class="end">{{ locale.t('dash.cash') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of dailyRows(); track p.date) {
+              <tr>
+                <td>{{ day(p.date) }}</td>
+                <td
+                  class="end num dw-ptbl__bar dw-ptbl__bar--in"
+                  [style.--fill.%]="dailySalesPct(p.sales)"
+                >
+                  @if (p.sales) {
+                    {{ locale.money(p.sales) }}
+                  }
+                </td>
+                <td
+                  class="end num dw-ptbl__bar dw-ptbl__bar--out"
+                  [style.--fill.%]="dailySpendPct(p.spend)"
+                >
+                  @if (p.spend) {
+                    {{ locale.money(p.spend) }}
+                  }
+                </td>
+                <td class="end num">{{ locale.money(p.cash) }}</td>
+              </tr>
+            }
+            <!-- The period's totals, and the drawer as it stands at the end of it.
+                 A real <tfoot> would be repeated on every page the table runs to,
+                 which would read as a subtotal for the days above it — and it
+                 isn't one. -->
+            <tr class="dw-ptbl__tot">
+              <th scope="row">{{ locale.t('dash.print.total') }}</th>
+              <td class="end num amt--in">{{ locale.money(d.sales) }}</td>
+              <td class="end num amt--out">{{ locale.money(d.spend) }}</td>
+              <td class="end num">{{ locale.money(d.cashPosition) }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -113,8 +183,10 @@
          aging (who owes, how much, how long). Keeps neither stranded at half
          width beside dead space. -->
     <div class="dw-grid">
-      <!-- Where sales came from: revenue share by design. -->
-      <section class="rm-card dw-card">
+      <!-- Where sales came from: revenue share by design. Screen only — on paper
+           the same shares run down the top-selling list as a "% of sales" line,
+           which needs no legend to be matched against by eye. -->
+      <section class="rm-card dw-card rm-noprint">
         <header class="dw-card__head">
           <h2 class="dw-card__title">{{ locale.t('dash.mix.title') }}</h2>
           <span class="dw-card__hint">{{ locale.t('dash.byRevenue') }}</span>
@@ -128,15 +200,40 @@
         }
       </section>
 
-      <!-- Receivable aging: who owes, how much, and how long it's been sitting. -->
+      <!-- Receivable aging: who owes, how much, and how long it's been sitting.
+           The printed table names the parties the bubbles only carried in their
+           tooltips — worst first, so the reading is the row order. -->
       <section class="rm-card dw-card">
         <header class="dw-card__head">
           <h2 class="dw-card__title">{{ locale.t('dash.stale.title') }}</h2>
-          <span class="dw-card__hint">{{ locale.t('dash.stale.sub') }}</span>
+          <span class="dw-card__hint rm-noprint">{{ locale.t('dash.stale.sub') }}</span>
+          <span class="dw-card__hint rm-printonly">{{ locale.t('dash.print.oldestFirst') }}</span>
         </header>
         @if (hasStale()) {
-          <div class="dw-chart">
+          <div class="dw-chart rm-noprint">
             <app-chart [config]="staleConfig()" [label]="staleLabel()" />
+          </div>
+          <div class="rm-printonly">
+            <table class="dw-ptbl">
+              <thead>
+                <tr>
+                  <th scope="col">{{ locale.t('dash.print.party') }}</th>
+                  <th scope="col" class="end">{{ locale.t('dash.stale.yaxis') }}</th>
+                  <th scope="col" class="end">{{ locale.t('dash.print.waiting') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of agedRows(); track p.partyId) {
+                  <tr>
+                    <td>{{ p.name }}</td>
+                    <td class="end num amt--in">{{ locale.money(p.amount) }}</td>
+                    <td class="end num" [class]="agedTone(p.daysStale)">
+                      {{ waited(p.daysStale) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         } @else {
           <p class="dw-empty">{{ locale.t('dash.stale.empty') }}</p>
@@ -155,14 +252,35 @@
           @for (item of d.topItems; track item.itemId) {
             <li class="dw-row dw-row--bar" [style.--fill.%]="itemPct(item.revenue)">
               <span class="dw-row__fill dw-row__fill--in" aria-hidden="true"></span>
-              <a class="dw-row__name" [routerLink]="stores.link('inventory', item.itemId)">{{ item.name }}</a>
+              <a class="dw-row__name" [routerLink]="stores.link('inventory', item.itemId)">{{
+                item.name
+              }}</a>
               <span class="dw-row__val num">
                 {{ locale.money(item.revenue) }}
-                <small class="num">{{ locale.qtyUnit(item.quantity, item.unit) }}</small>
+                <small class="num">
+                  {{ locale.qtyUnit(item.quantity, item.unit) }}
+                  <!-- The doughnut's slice, spelled out: it doesn't print. -->
+                  <span class="dw-share num">{{
+                    locale.t('dash.print.share', { pct: sharePct(item.revenue) + '' })
+                  }}</span>
+                </small>
               </span>
             </li>
           } @empty {
             <li class="dw-empty">{{ locale.t('dash.topItems.empty') }}</li>
+          }
+          @if (otherRevenue() > 1) {
+            <li class="dw-row dw-row--other">
+              <span class="dw-row__name">{{ locale.t('dash.mix.other') }}</span>
+              <span class="dw-row__val num">
+                {{ locale.money(otherRevenue()) }}
+                <small class="num">
+                  <span class="dw-share num">{{
+                    locale.t('dash.print.share', { pct: sharePct(otherRevenue()) + '' })
+                  }}</span>
+                </small>
+              </span>
+            </li>
           }
         </ul>
       </section>
@@ -176,7 +294,9 @@
         <ul class="dw-list">
           @for (item of d.deadStock; track item.itemId) {
             <li class="dw-row">
-              <a class="dw-row__name" [routerLink]="stores.link('inventory', item.itemId)">{{ item.name }}</a>
+              <a class="dw-row__name" [routerLink]="stores.link('inventory', item.itemId)">{{
+                item.name
+              }}</a>
               <span class="dw-row__val num">
                 {{ locale.money(item.value) }}
                 <small class="num">{{ locale.qtyUnit(item.stock, item.unit) }}</small>
@@ -197,7 +317,9 @@
         <ul class="dw-list">
           @for (p of d.topReceivables; track p.partyId) {
             <li class="dw-row">
-              <a class="dw-row__name" [routerLink]="stores.link('ledger', p.partyId)">{{ p.name }}</a>
+              <a class="dw-row__name" [routerLink]="stores.link('ledger', p.partyId)">{{
+                p.name
+              }}</a>
               <span class="dw-row__val num amt--in">{{ locale.money(p.amount) }}</span>
             </li>
           } @empty {
@@ -208,7 +330,9 @@
         <ul class="dw-list">
           @for (p of d.topPayables; track p.partyId) {
             <li class="dw-row">
-              <a class="dw-row__name" [routerLink]="stores.link('ledger', p.partyId)">{{ p.name }}</a>
+              <a class="dw-row__name" [routerLink]="stores.link('ledger', p.partyId)">{{
+                p.name
+              }}</a>
               <span class="dw-row__val num amt--out">{{ locale.money(p.amount) }}</span>
             </li>
           } @empty {
@@ -229,7 +353,7 @@
               <span class="dw-row__name">{{ categoryLabel(e.category) }}</span>
               <span class="dw-row__val num amt--out">
                 {{ locale.money(e.total) }}
-                <small>{{ locale.t('dash.expenses.count', { count: e.count + '' }) }}</small>
+                <small>{{ entryCount(e.count) }}</small>
               </span>
             </li>
           } @empty {

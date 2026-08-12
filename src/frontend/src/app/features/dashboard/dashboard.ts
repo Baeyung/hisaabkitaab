@@ -72,6 +72,38 @@ export class Dashboard {
     Math.max(1, ...(this.data()?.topExpenses ?? []).map((e) => e.total)),
   );
 
+  /*
+   * ── What the printout reads instead of the charts ───────────────────────
+   * A canvas prints as a picture of a screen: no hover, no tooltip, axis type
+   * sized for a monitor, and a legend that names colours the reader then has to
+   * match by eye. Everything below is the same data as a table, which is what
+   * the shopkeeper's accountant wanted anyway — the figures, in a column, with
+   * the days named. The charts stay on screen; these stay on paper.
+   */
+
+  /** The trend line, day by day. Ordered as the backend sent it: oldest first. */
+  protected readonly dailyRows = computed(() => this.data()?.daily ?? []);
+  private readonly maxDailySales = computed(() =>
+    Math.max(1, ...this.dailyRows().map((p) => p.sales)),
+  );
+  private readonly maxDailySpend = computed(() =>
+    Math.max(1, ...this.dailyRows().map((p) => p.spend)),
+  );
+
+  /** The bubble field, worst first — the reading its top-right corner encoded. */
+  protected readonly agedRows = computed(() =>
+    [...(this.data()?.staleReceivables ?? [])].sort((a, b) => b.daysStale - a.daysStale),
+  );
+
+  /**
+   * Everything the top-selling list doesn't name, so the printed shares still
+   * sum to the period's revenue — the slice the doughnut called "Other designs".
+   */
+  protected readonly otherRevenue = computed(() => {
+    const d = this.data();
+    return d ? d.sales - d.topItems.reduce((sum, i) => sum + i.revenue, 0) : 0;
+  });
+
   /** Revenue (sales) and spending as flow lines over the window, cash as a running balance. */
   protected readonly trendConfig = computed<ChartConfiguration>(() => {
     const pal = this.palette();
@@ -96,12 +128,24 @@ export class Dashboard {
       data: {
         labels: points.map((p) => this.shortDate(p.date)),
         datasets: [
-          line(this.locale.t('dash.sales'), points.map((p) => p.sales), pal.green),
-          line(this.locale.t('dash.spend'), points.map((p) => p.spend), pal.red),
+          line(
+            this.locale.t('dash.sales'),
+            points.map((p) => p.sales),
+            pal.green,
+          ),
+          line(
+            this.locale.t('dash.spend'),
+            points.map((p) => p.spend),
+            pal.red,
+          ),
           // Cash is a running balance, not a daily flow — dashed, on its own
           // right-hand axis so its scale never squashes the flow lines.
           {
-            ...line(this.locale.t('dash.cash'), points.map((p) => p.cash), pal.blue),
+            ...line(
+              this.locale.t('dash.cash'),
+              points.map((p) => p.cash),
+              pal.blue,
+            ),
             yAxisID: 'y1',
             borderDash: [6, 4],
             pointRadius: 2,
@@ -125,7 +169,12 @@ export class Dashboard {
             beginAtZero: true,
             border: { display: false },
             grid: { color: pal.line },
-            ticks: { color: pal.muted, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+            ticks: {
+              color: pal.muted,
+              font: { family: FONT, size: 11 },
+              maxTicksLimit: 5,
+              callback: (v) => this.compact(Number(v)),
+            },
           },
           // Secondary axis for the cash balance. Its gridlines are hidden so the
           // chart keeps one set of horizontal rules (the flows' axis).
@@ -133,7 +182,12 @@ export class Dashboard {
             position: 'right',
             border: { display: false },
             grid: { drawOnChartArea: false },
-            ticks: { color: pal.blue, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+            ticks: {
+              color: pal.blue,
+              font: { family: FONT, size: 11 },
+              maxTicksLimit: 5,
+              callback: (v) => this.compact(Number(v)),
+            },
           },
         },
         plugins: {
@@ -141,7 +195,14 @@ export class Dashboard {
             rtl,
             position: 'top',
             align: 'end',
-            labels: { color: pal.ink, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { family: FONT, size: 12 }, padding: 16 },
+            labels: {
+              color: pal.ink,
+              boxWidth: 8,
+              boxHeight: 8,
+              usePointStyle: true,
+              font: { family: FONT, size: 12 },
+              padding: 16,
+            },
           },
           tooltip: {
             rtl,
@@ -151,7 +212,9 @@ export class Dashboard {
             padding: 10,
             titleFont: { family: FONT, size: 12 },
             bodyFont: { family: FONT, size: 12 },
-            callbacks: { label: (c) => `${c.dataset.label}: ${this.locale.money(Number(c.parsed.y))}` },
+            callbacks: {
+              label: (c) => `${c.dataset.label}: ${this.locale.money(Number(c.parsed.y))}`,
+            },
           },
         },
       },
@@ -195,7 +258,11 @@ export class Dashboard {
         datasets: [
           {
             label: this.locale.t('dash.stale.title'),
-            data: parties.map((p) => ({ x: p.daysStale, y: p.amount, r: 6 + (p.amount / maxAmount) * 14 })),
+            data: parties.map((p) => ({
+              x: p.daysStale,
+              y: p.amount,
+              r: 6 + (p.amount / maxAmount) * 14,
+            })),
             backgroundColor: parties.map((p) => color(p.daysStale) + '99'),
             borderColor: parties.map((p) => color(p.daysStale)),
             borderWidth: 1.5,
@@ -211,17 +278,32 @@ export class Dashboard {
           x: {
             reverse: rtl,
             beginAtZero: true,
-            title: { display: true, text: this.locale.t('dash.stale.xaxis'), color: pal.muted, font: { family: FONT, size: 11 } },
+            title: {
+              display: true,
+              text: this.locale.t('dash.stale.xaxis'),
+              color: pal.muted,
+              font: { family: FONT, size: 11 },
+            },
             grid: { color: pal.line },
             border: { color: pal.line },
             ticks: { color: pal.muted, font: { family: FONT, size: 11 }, callback: (v) => `${v}d` },
           },
           y: {
             beginAtZero: true,
-            title: { display: true, text: this.locale.t('dash.stale.yaxis'), color: pal.muted, font: { family: FONT, size: 11 } },
+            title: {
+              display: true,
+              text: this.locale.t('dash.stale.yaxis'),
+              color: pal.muted,
+              font: { family: FONT, size: 11 },
+            },
             border: { display: false },
             grid: { color: pal.line },
-            ticks: { color: pal.muted, font: { family: FONT, size: 11 }, maxTicksLimit: 5, callback: (v) => this.compact(Number(v)) },
+            ticks: {
+              color: pal.muted,
+              font: { family: FONT, size: 11 },
+              maxTicksLimit: 5,
+              callback: (v) => this.compact(Number(v)),
+            },
           },
         },
         plugins: {
@@ -267,7 +349,15 @@ export class Dashboard {
       type: 'doughnut',
       data: {
         labels,
-        datasets: [{ data: values, backgroundColor: colors, borderColor: pal.card, borderWidth: 2, hoverOffset: 6 }],
+        datasets: [
+          {
+            data: values,
+            backgroundColor: colors,
+            borderColor: pal.card,
+            borderWidth: 2,
+            hoverOffset: 6,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -278,7 +368,14 @@ export class Dashboard {
           legend: {
             rtl,
             position: 'bottom',
-            labels: { color: pal.ink, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { family: FONT, size: 12 }, padding: 12 },
+            labels: {
+              color: pal.ink,
+              boxWidth: 8,
+              boxHeight: 8,
+              usePointStyle: true,
+              font: { family: FONT, size: 12 },
+              padding: 12,
+            },
           },
           tooltip: {
             rtl,
@@ -288,7 +385,8 @@ export class Dashboard {
             padding: 10,
             bodyFont: { family: FONT, size: 12 },
             callbacks: {
-              label: (c) => ` ${c.label}: ${this.locale.money(Number(c.parsed))} (${Math.round((Number(c.parsed) / total) * 100)}%)`,
+              label: (c) =>
+                ` ${c.label}: ${this.locale.money(Number(c.parsed))} (${Math.round((Number(c.parsed) / total) * 100)}%)`,
             },
           },
         },
@@ -322,6 +420,42 @@ export class Dashboard {
     return Math.round((total / this.maxExpense()) * 100);
   }
 
+  /** Cell-fill widths for the printed daily table, scaled per column. */
+  protected dailySalesPct(sales: number): number {
+    return Math.round((sales / this.maxDailySales()) * 100);
+  }
+
+  protected dailySpendPct(spend: number): number {
+    return Math.round((spend / this.maxDailySpend()) * 100);
+  }
+
+  /** An item's cut of the period's revenue — the doughnut's slice, as a figure. */
+  protected sharePct(revenue: number): number {
+    return Math.round((revenue / Math.max(1, this.data()?.sales ?? 0)) * 100);
+  }
+
+  /** Same three aging bands the bubbles are tinted by: fresh, 30 days, 60 days. */
+  protected agedTone(days: number): string {
+    return days >= 60 ? 'amt--out' : days >= 30 ? 'dw-aged' : '';
+  }
+
+  /** How long a due has sat. Reads "1 day", not "1 days" — this goes to an accountant. */
+  protected waited(days: number): string {
+    return this.locale.t(days === 1 ? 'dash.print.day' : 'dash.print.days', { days: days + '' });
+  }
+
+  /** How many entries make up a spend head. Same singular care as `waited`. */
+  protected entryCount(count: number): string {
+    return this.locale.t(count === 1 ? 'dash.expenses.count.one' : 'dash.expenses.count', {
+      count: count + '',
+    });
+  }
+
+  /** A day, as the printed table's row label. Public so the template can call it. */
+  protected day(iso: string): string {
+    return this.shortDate(iso);
+  }
+
   /** A plain-language sentence of the chart's numbers, for screen readers. */
   protected trendLabel(): string {
     const d = this.data();
@@ -340,7 +474,10 @@ export class Dashboard {
     if (items.length === 0) {
       return this.locale.t('dash.topItems.empty');
     }
-    return this.locale.t('dash.mix.aria', { name: items[0].name, amount: this.locale.money(items[0].revenue) });
+    return this.locale.t('dash.mix.aria', {
+      name: items[0].name,
+      amount: this.locale.money(items[0].revenue),
+    });
   }
 
   protected staleLabel(): string {
