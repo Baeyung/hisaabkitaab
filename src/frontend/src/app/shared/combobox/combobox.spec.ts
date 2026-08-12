@@ -43,4 +43,17 @@ describe('Combobox', () => {
   it('Enter keeps the raw string when nothing matches', () => {
     expect(typeThenEnter(fx, 'Boski')).toBe('Boski');
   });
+
+  // The list is position:fixed and anchored from the input's rect, so it can
+  // escape <main>'s scroll box and flip above the field near a phone's bottom
+  // edge. Without the inline coords it renders pinned to the viewport corner.
+  it('anchors the open list to the input', () => {
+    const el: HTMLInputElement = fx.nativeElement.querySelector('input');
+    el.dispatchEvent(new Event('focus'));
+    fx.detectChanges();
+
+    const list: HTMLElement = fx.nativeElement.querySelector('[role="listbox"]');
+    expect(list.style.top).not.toBe('');
+    expect(list.style.left).not.toBe('');
+  });
 });

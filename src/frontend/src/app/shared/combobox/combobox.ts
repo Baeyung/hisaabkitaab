@@ -8,6 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { anchorPopup } from '../anchor-popup';
 
 /** Module-level counter so each instance gets a unique listbox/option id set. */
 let uid = 0;
@@ -49,7 +50,15 @@ let uid = 0;
         (keydown)="onKeydown($event)"
       />
       @if (open() && filtered().length) {
-        <ul #list class="cbx__list" role="listbox" [attr.id]="listboxId">
+        <ul
+          #list
+          class="cbx__list"
+          role="listbox"
+          [attr.id]="listboxId"
+          [style.top.px]="pop().top"
+          [style.left.px]="pop().left"
+          [style.min-width.px]="pop().width"
+        >
           @for (opt of filtered(); track opt; let i = $index) {
             <li
               class="cbx__opt"
@@ -70,9 +79,6 @@ let uid = 0;
   styles: `
     :host {
       display: block;
-    }
-    .cbx {
-      position: relative;
     }
     /* Mirrors .fld__input from sale.css — encapsulation walls off the parent's
        copy, so the field primitive is duplicated here (same deferred ticket). */
@@ -105,14 +111,18 @@ let uid = 0;
       color: var(--kg-placeholder);
       font-weight: 400;
     }
+    /* position:fixed and anchored from the input's rect, exactly like .sel__pop:
+       an absolute list is clipped by <main>'s scroll box and, on a phone, opens
+       downward off the bottom with no way to reach it. anchorPopup() flips it
+       above the field when there is no room below and keeps it on screen. */
     .cbx__list {
-      position: absolute;
-      z-index: 20;
-      top: calc(100% + 4px);
-      inset-inline: 0;
+      position: fixed;
+      z-index: 50;
       margin: 0;
       padding: 4px;
       list-style: none;
+      width: max-content;
+      max-width: min(90vw, 30ch);
       max-height: 240px;
       overflow-y: auto;
       background: var(--kg-card);
@@ -154,6 +164,8 @@ export class Combobox {
   protected readonly listboxId = `cbx-${uid++}`;
   protected readonly open = signal(false);
   protected readonly active = signal(-1);
+  /** Viewport coords of the fixed list, kept in sync with the input's rect. */
+  protected readonly pop = signal({ top: 0, left: 0, width: 0 });
 
   /** Case-insensitive substring match; whole list when empty. Capped so a large
    *  catalog doesn't render thousands of rows.
@@ -166,6 +178,26 @@ export class Combobox {
   });
 
   constructor() {
+    // Re-anchor whenever the list appears or its height changes (typing filters
+    // it, which can turn a downward list into a flipped one and back).
+    effect(() => {
+      if (this.open() && this.filtered().length) {
+        this.positionPopup();
+      }
+    });
+    // Keep it anchored while open: page scroll, window resize, keyboard open.
+    effect((onCleanup) => {
+      if (!this.open()) {
+        return;
+      }
+      const reposition = () => this.positionPopup();
+      window.addEventListener('scroll', reposition, true);
+      window.addEventListener('resize', reposition);
+      onCleanup(() => {
+        window.removeEventListener('scroll', reposition, true);
+        window.removeEventListener('resize', reposition);
+      });
+    });
     // Keep the active option scrolled into view during keyboard nav.
     effect(() => {
       const i = this.active();
@@ -181,6 +213,11 @@ export class Combobox {
 
   protected optionId(i: number): string {
     return `${this.listboxId}-opt-${i}`;
+  }
+
+  private positionPopup(): void {
+    const r = this.inputEl().nativeElement.getBoundingClientRect();
+    this.pop.set({ ...anchorPopup(r, this.list()?.nativeElement), width: r.width });
   }
 
   protected onInput(v: string): void {
