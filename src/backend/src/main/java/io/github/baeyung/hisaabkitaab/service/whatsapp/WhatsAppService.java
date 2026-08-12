@@ -191,7 +191,7 @@ public class WhatsAppService {
                     "sub_type", "url",
                     // ponytail: the template's first button. Take an index parameter if a
                     // template ever puts the dynamic URL behind another one.
-                    "index", "0",
+                    "index", "1",
                     "parameters", urlButtonParameters
                             .stream()
                             .map(value -> Map.<String, Object>of("type", "text", "text", value))

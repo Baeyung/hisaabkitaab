@@ -38,7 +38,7 @@ public class DocumentShareService
      */
     private static String templateLanguage(String locale)
     {
-        return "ur".equals(locale) ? "ur" : "en_US";
+        return "ur".equals(locale) ? "ur" : "en";
     }
 
     /**
@@ -76,7 +76,7 @@ public class DocumentShareService
         // The names the approved template declares. Meta rejects the send if one is missing
         // or unknown, so these spellings are the contract — not the order.
         Map<String, String> body = new LinkedHashMap<>();
-        body.put("recipient_name", party.getName());
+        body.put("recepient_name", party.getName());
         body.put("action", action);
         body.put("provider_name", store.getName());
         body.put("contact_number", storeContact(store));
@@ -90,7 +90,7 @@ public class DocumentShareService
                 body,
                 // The button URL's {{1}} and {{2}}, which stay positional: which shop, whose
                 // khata.
-                List.of(store.getId(), party.getId()));
+                List.of(store.getId() + "/" + party.getId()));
     }
 
     /**
