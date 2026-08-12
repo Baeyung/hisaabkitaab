@@ -5,12 +5,6 @@ describe('LocaleService.describe', () => {
   let locale: LocaleService;
 
   beforeEach(() => {
-    // The node test environment has no localStorage; the service only uses it to
-    // remember the chosen language.
-    (globalThis as { localStorage?: Storage }).localStorage ??= {
-      getItem: () => null,
-      setItem: () => undefined,
-    } as unknown as Storage;
     locale = TestBed.inject(LocaleService);
     locale.setLocale('en');
   });
