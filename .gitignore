@@ -12,3 +12,6 @@
 /*.html
 *.pdf
 pdf-dumps/
+
+logs/dev/
+node_modules/
