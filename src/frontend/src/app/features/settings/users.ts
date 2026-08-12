@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { email as emailRule, form, FormField, pattern, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
@@ -9,7 +9,7 @@ import { StoreService } from '../../core/store/store.service';
 import { PlanService } from '../../core/plan/plan.service';
 import { GrantableRole, InviteDraft, Member } from '../../core/store/member.models';
 import { PHONE_PATTERN } from '../../shared/digits-only';
-import { PhoneField } from '../../shared/phone-field/phone-field';
+import { dialOf, PhoneField } from '../../shared/phone-field/phone-field';
 
 const EMPTY_INVITE: InviteDraft = { email: '', role: 'EDITOR' };
 
@@ -58,11 +58,36 @@ export class SettingsUsers {
   });
   protected readonly savingAccount = signal(false);
   protected readonly accountErrorKey = signal<TranslationKey | null>(null);
-  /** What was last saved, so the confirmation drops away the moment the fields move off it. */
-  private readonly savedSnapshot = signal<string | null>(null);
-  protected readonly accountSaved = computed(
-    () => this.savedSnapshot() === JSON.stringify(this.account()),
+
+  /**
+   * Your own details are read on nearly every visit and changed almost never, so the card
+   * shows them and keeps the fields behind the pencil — the same way a row on Items or
+   * Parties is read until someone asks to edit it.
+   */
+  protected readonly editing = signal(false);
+  protected readonly accountSaved = signal(false);
+  /** What to put back if the edit is abandoned — the form writes straight into `account`. */
+  private beforeEdit: { name: string; contactNumber: string } | null = null;
+
+  /** Two letters standing in for a photo there is nowhere to upload. */
+  protected readonly initials = computed(
+    () =>
+      this.account()
+        .name.trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((word) => word.charAt(0).toUpperCase())
+        .join('') || '·',
   );
+
+  /** Stored run-together ("923001234567"); split back out to read as a number. */
+  protected readonly contactDisplay = computed(() => {
+    const value = this.account().contactNumber;
+    const dial = dialOf(value);
+    return dial ? `+${dial} ${value.slice(dial.length)}` : value;
+  });
+
+  private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('acctName');
 
   /**
    * Whether one more *new* person would be refused. The count is the owner's across every shop
@@ -96,6 +121,8 @@ export class SettingsUsers {
 
   constructor() {
     this.load();
+    // The pencil is replaced by the form it opens, so the keyboard has to follow it there.
+    effect(() => this.nameInput()?.nativeElement.focus());
   }
 
   async load(): Promise<void> {
@@ -112,13 +139,29 @@ export class SettingsUsers {
         this.plan.refresh().catch(() => null),
       ]);
       this.account.set({ name: user.name, contactNumber: user.contactNumber });
-      this.savedSnapshot.set(null);
+      this.editing.set(false);
+      this.accountSaved.set(false);
       this.members.set(members);
     } catch {
       this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  startEditAccount(): void {
+    this.beforeEdit = this.account();
+    this.accountErrorKey.set(null);
+    this.accountSaved.set(false);
+    this.editing.set(true);
+  }
+
+  cancelEditAccount(): void {
+    if (this.beforeEdit) {
+      this.account.set(this.beforeEdit);
+    }
+    this.accountErrorKey.set(null);
+    this.editing.set(false);
   }
 
   async saveAccount(): Promise<void> {
@@ -131,7 +174,8 @@ export class SettingsUsers {
       const saved = { ...this.account(), name: this.account().name.trim() };
       await this.auth.updateProfile(saved);
       this.account.set(saved);
-      this.savedSnapshot.set(JSON.stringify(saved));
+      this.editing.set(false);
+      this.accountSaved.set(true);
     } catch (err) {
       // The one the user can act on is a number that is already someone else's login.
       const status = (err as { status?: number } | null)?.status;

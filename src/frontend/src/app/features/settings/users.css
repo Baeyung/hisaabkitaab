@@ -59,21 +59,122 @@
   margin-top: 28px;
 }
 .acct {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 16px;
+  padding: 14px 16px 4px;
   border: 1px solid var(--kg-line);
   border-radius: 14px;
   background: var(--kg-card);
 }
-.acct__note {
-  font-size: 12px;
+
+/* Monogram, title, and the one control — the pencil sits at the far end where
+   the row actions sit on every other Settings screen. */
+/* The seam belongs to the header, not to whatever follows it — so it spans the card
+   at its full width whether the body below is the read rows or the narrower form. */
+.acct__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--kg-line);
+}
+.acct__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+/* Two letters standing in for a photo there is nowhere to upload. */
+.acct__mono {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--kg-brand);
+  background: var(--kg-tint-brand);
+  border: 1px solid var(--kg-tint-brand-line);
+  border-radius: 12px;
+}
+
+/* Labels in one column, values in another: everything lines up down two edges
+   however long any single value runs. */
+.acct__rows {
+  margin: 0;
+}
+.acct__row {
+  display: grid;
+  grid-template-columns: minmax(0, 190px) 1fr;
+  gap: 2px 20px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-top: 1px solid var(--kg-line);
+}
+.acct__row:first-child {
+  border-top: 0;
+}
+.acct__lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--kg-faint);
 }
-.acct__ok {
-  font-size: 13px;
+.acct__val {
+  margin: 0;
+  font-size: 15px;
   font-weight: 600;
+  color: var(--kg-ink);
+  overflow-wrap: anywhere;
+}
+/* A phone number is never read right-to-left, even in Urdu — but only the digits turn
+   around. Left on the cell itself, `direction` would drag the whole value to the far
+   edge in Urdu and break the column; on an inline box sized to the number, it does not. */
+.acct__num {
+  display: inline-block;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+.acct__note {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--kg-faint);
+}
+
+/* One column at a form's width, so the name box and the phone box share both edges. */
+.acct__form {
+  display: grid;
+  gap: 14px;
+  max-width: 420px;
+  padding: 14px 0 16px;
+}
+/* The email, in the column the fields keep but plainly not one of them. */
+.acct__fixed {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  overflow-wrap: anywhere;
+}
+.acct__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.acct__ok {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--kg-in);
 }
 
@@ -118,6 +219,15 @@
     width: 100%;
   }
   .roletoggle__btn {
+    flex: 1;
+  }
+
+  /* No room for two columns — label over value, still one left edge. */
+  .acct__row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+  .acct__foot .btn {
     flex: 1;
   }
 }
