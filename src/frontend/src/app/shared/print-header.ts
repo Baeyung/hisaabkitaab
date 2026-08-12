@@ -9,6 +9,11 @@ import { StoreService } from '../core/store/store.service';
  * inline base64. Hidden on screen via :host; the page's own header carries the
  * on-screen title.
  *
+ * It also carries the hisaabkitaab mark in the page footer, which is why this
+ * sits on every printable screen rather than only the letterheaded ones: a PDF
+ * that reaches a customer on WhatsApp should say where it came from, and one
+ * component is the only place that has to be true.
+ *
  * ponytail: single centred watermark, not tiled per printed page — fine for the
  * one- or two-page runs a shop prints. Revisit if statements grow long.
  */
@@ -33,6 +38,7 @@ import { StoreService } from '../core/store/store.service';
       @if (s.watermarkUri) {
         <img class="pf-watermark" [src]="s.watermarkUri" alt="" aria-hidden="true" />
       }
+      <a class="pf-brand" href="https://hisaabkitaab.shop">hisaabkitaab.shop</a>
     }
   `,
   styles: `
@@ -78,6 +84,30 @@ import { StoreService } from '../core/store/store.service';
         transform: translate(-50%, -50%);
         opacity: 0.06;
         z-index: -1;
+      }
+      /*
+       * Fixed, like the watermark, so it lands on every page of a long statement
+       * rather than only after the last row.
+       *
+       * Stays inside the page's content box: Chrome clips a fixed element pushed
+       * into the @page margin, and drops it from whole pages when it does. The
+       * white ground is what pays for that — on a page whose rows reach the very
+       * bottom, this sits over the last row's right edge rather than under it.
+       *
+       * ponytail: covers a corner sliver on a maximally full page. If that ever
+       * bites, widen the @page bottom margin (renderer's page.pdf() margin too)
+       * and give this a matching negative offset.
+       */
+      .pf-brand {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        padding: 2px 0 0 8px;
+        background: #fff;
+        font-size: 8.5px;
+        letter-spacing: 0.03em;
+        color: #666;
+        text-decoration: none;
       }
     }
   `,

@@ -2,6 +2,7 @@ package io.github.baeyung.hisaabkitaab.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -88,6 +90,9 @@ public class PartyController
      * and this is the rule. The message is charged before it goes and given back if it does
      * not, so the count cannot be walked past by racing requests and cannot be spent by a
      * message the customer never got.
+     *
+     * <p>A send Meta refused answers 502, not 202 — the refund is invisible to the shopkeeper,
+     * so a success status for a message that never left would just be a lie on the screen.
      */
     @PostMapping("/{id}/whatsapp")
     public ResponseEntity<Void> sendOnWhatsApp(@PathVariable String id,
@@ -110,6 +115,10 @@ public class PartyController
         )
         {
             planService.releaseWhatsappMessage(ownerId, charged);
+            // Giving the message back is not enough: a 2xx here tells the shopkeeper "Sent"
+            // for a message that never left. The reason is in the log (Meta's, or WhatsApp
+            // being switched off) and is not the shopkeeper's to read.
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "WhatsApp couldn't deliver this message");
         }
 
         return ResponseEntity.accepted().build();

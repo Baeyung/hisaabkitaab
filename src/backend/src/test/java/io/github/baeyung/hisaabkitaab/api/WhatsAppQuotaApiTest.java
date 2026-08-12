@@ -192,9 +192,13 @@ class WhatsAppQuotaApiTest extends ApiTest
     /**
      * A message Meta never took is not a message the account should pay for — a rejected
      * template, a number Meta will not deliver to, or WhatsApp switched off entirely.
+     *
+     * <p>And it must not be reported as sent. The refund alone is invisible to the shopkeeper,
+     * who is looking at a button that says "Sent"; the status is the only thing that tells the
+     * screen otherwise.
      */
     @Test
-    void givesTheMessageBackWhenItDoesNotGoOut() throws Exception
+    void givesTheMessageBackAndSaysSoWhenItDoesNotGoOut() throws Exception
     {
         when(documentShareService.share(any(), any(), any(), any(), any(), any())).thenReturn(false);
 
@@ -203,7 +207,7 @@ class WhatsAppQuotaApiTest extends ApiTest
         String store = createStore(OWNER, "Kiryana Store");
         String party = createParty(OWNER, store);
 
-        sendAttempt(OWNER, store, party).andExpect(status().isAccepted());
+        sendAttempt(OWNER, store, party).andExpect(status().isBadGateway());
 
         assertEquals(0, used(ownerId));
     }

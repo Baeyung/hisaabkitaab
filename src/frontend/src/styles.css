@@ -1090,12 +1090,14 @@ html[dir='rtl'] select.rm-input {
     gap: 2px 16px;
   }
   /* "Print all bills": each invoice starts a fresh page. The first invoice's
-     letterhead watermark is position:fixed, so it already repeats on every
-     page — hide the rest so N stacked watermarks don't compound the opacity. */
+     letterhead watermark and brand line are position:fixed, so they already
+     repeat on every page — hide the rest so N stacked copies don't compound
+     the watermark's opacity or smudge the brand line on top of itself. */
   .rm-print-invoice + .rm-print-invoice {
     break-before: page;
   }
-  .rm-print-invoice:not(:first-of-type) .pf-watermark {
+  .rm-print-invoice:not(:first-of-type) .pf-watermark,
+  .rm-print-invoice:not(:first-of-type) .pf-brand {
     display: none !important;
   }
   @page {
