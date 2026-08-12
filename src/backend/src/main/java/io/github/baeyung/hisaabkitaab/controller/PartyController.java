@@ -2,7 +2,6 @@ package io.github.baeyung.hisaabkitaab.controller;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,23 +11,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
 import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
 import io.github.baeyung.hisaabkitaab.dto.opening.OpeningBalanceRequest;
 import io.github.baeyung.hisaabkitaab.dto.party.PartyResponse;
-import io.github.baeyung.hisaabkitaab.dto.party.PartyWhatsAppRequest;
 import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
-import io.github.baeyung.hisaabkitaab.service.PlanService;
-import io.github.baeyung.hisaabkitaab.service.pdf.PdfRenderService;
-import io.github.baeyung.hisaabkitaab.service.whatsapp.DocumentShareService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -39,9 +33,6 @@ public class PartyController
 {
     private final PartyService partyService;
     private final OpeningEntryService openingEntryService;
-    private final DocumentShareService documentShareService;
-    private final PdfRenderService pdfRenderService;
-    private final PlanService planService;
 
     @GetMapping
     public ResponseEntity<List<PartyResponse>> list(@CurrentStore(StoreRole.VIEWER) Store store)
@@ -77,51 +68,6 @@ public class PartyController
     {
         partyService.delete(id, store.getId());
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Send this party the printout the shopkeeper is looking at, as a PDF on WhatsApp.
-     * The browser posts the page, not a file: the PDF is rendered here, so a client cannot
-     * put arbitrary bytes on a customer's phone. The recipient's number is likewise
-     * resolved from the party rather than taken from the request.
-     *
-     * <p>Every send is metered against the shop owner's plan, and this is the only route to
-     * one — the frontend greys the button out when the quota is gone, but that is a courtesy
-     * and this is the rule. The message is charged before it goes and given back if it does
-     * not, so the count cannot be walked past by racing requests and cannot be spent by a
-     * message the customer never got.
-     *
-     * <p>A send Meta refused answers 502, not 202 — the refund is invisible to the shopkeeper,
-     * so a success status for a message that never left would just be a lie on the screen.
-     */
-    @PostMapping("/{id}/whatsapp")
-    public ResponseEntity<Void> sendOnWhatsApp(@PathVariable String id,
-            @Valid @RequestBody PartyWhatsAppRequest request,
-            @CurrentStore(StoreRole.EDITOR) Store store)
-    {
-        Party party = partyService.findByIdForStore(id, store.getId());
-        DocumentShareService.requireSendable(party);
-
-        String ownerId = store.getOwner().getId();
-        String charged = planService.spendWhatsappMessage(ownerId);
-
-        if (!documentShareService.share(
-                store,
-                party,
-                request.action(),
-                pdfRenderService.render(request.html()),
-                request.filename(),
-                request.locale())
-        )
-        {
-            planService.releaseWhatsappMessage(ownerId, charged);
-            // Giving the message back is not enough: a 2xx here tells the shopkeeper "Sent"
-            // for a message that never left. The reason is in the log (Meta's, or WhatsApp
-            // being switched off) and is not the shopkeeper's to read.
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "WhatsApp couldn't deliver this message");
-        }
-
-        return ResponseEntity.accepted().build();
     }
 
     @PutMapping("/{id}/opening-balance")

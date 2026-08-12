@@ -4,6 +4,8 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { InventoryService } from '../../core/store/inventory.service';
 import { StoreService } from '../../core/store/store.service';
 import { ItemStockRow } from '../../core/store/inventory.models';
+import { PrintHeader } from '../../shared/print-header';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 
 /**
  * Stock list: every item with its current on-hand quantity, searchable by
@@ -11,7 +13,7 @@ import { ItemStockRow } from '../../core/store/inventory.models';
  */
 @Component({
   selector: 'app-inventory',
-  imports: [RouterLink],
+  imports: [RouterLink, PrintHeader, WhatsAppButton],
   templateUrl: './inventory.html',
 })
 export class Inventory {
@@ -45,6 +47,10 @@ export class Inventory {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  print(): void {
+    window.print();
   }
 
   open(itemId: string): void {

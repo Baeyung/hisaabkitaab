@@ -1,11 +1,20 @@
 package io.github.baeyung.hisaabkitaab.service;
 
 import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
+import io.github.baeyung.hisaabkitaab.dto.user.ProfileRequest;
 import io.github.baeyung.hisaabkitaab.entity.User;
 
 public interface UserService
 {
     User create(SignupRequest request);
+
+    /**
+     * Changes the account's own name and contact number. Everyone edits themselves — there is
+     * no path here for one user to edit another, including a shop owner editing someone they
+     * shared with. Rejects (409) a contact number another account already holds, since it
+     * doubles as a login identifier.
+     */
+    User updateProfile(String userId, ProfileRequest request);
 
     /**
      * Flips the unverified account whose contact number or email matches {@code identifier} to

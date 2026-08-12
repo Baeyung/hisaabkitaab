@@ -6,6 +6,7 @@ import { StoreService } from '../../core/store/store.service';
 import { ExpenseCategoryGroup } from '../../core/store/ledger.models';
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { PrintHeader } from '../../shared/print-header';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 
 /**
  * One expense category's statement: every expense filed under it (parts, bijli,
@@ -15,7 +16,7 @@ import { PrintHeader } from '../../shared/print-header';
  */
 @Component({
   selector: 'app-category-detail',
-  imports: [RouterLink, PrintHeader],
+  imports: [RouterLink, PrintHeader, WhatsAppButton],
   templateUrl: './category-detail.html',
 })
 export class CategoryDetail {

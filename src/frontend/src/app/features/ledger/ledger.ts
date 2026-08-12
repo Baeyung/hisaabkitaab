@@ -7,6 +7,7 @@ import { ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.m
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 
 /**
  * The khata list: every party with their baqaya and which way it points.
@@ -15,7 +16,7 @@ import { PrintHeader } from '../../shared/print-header';
  */
 @Component({
   selector: 'app-ledger',
-  imports: [RouterLink, PrintHeader],
+  imports: [RouterLink, PrintHeader, WhatsAppButton],
   templateUrl: './ledger.html',
 })
 export class Ledger {

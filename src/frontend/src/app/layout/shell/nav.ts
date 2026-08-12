@@ -77,9 +77,10 @@ export const NAV: NavItem[] = [
       // read-only for them (see SettingsGeneral). No `writes`: a closed shop keeps this
       // screen, which is where its owner deletes it.
       { key: 'nav.settings.general', path: 'settings/general', requires: 'EDITOR' },
-      // The shop's people are the owner's alone — and freeing a seat is one way out of an
-      // overage, so this stays open on a closed shop too.
-      { key: 'nav.settings.users', path: 'settings/users', requires: 'OWNER' },
+      // Open to everyone: it is where each user edits their own account. The shop's people
+      // are still the owner's alone, and that half of the screen only appears for them.
+      // Freeing a seat is one way out of an overage, so this stays open on a closed shop too.
+      { key: 'nav.settings.users', path: 'settings/users' },
       { key: 'nav.settings.items', path: 'settings/items', requires: 'EDITOR', writes: true },
       { key: 'nav.settings.party', path: 'settings/party', requires: 'EDITOR', writes: true },
     ],

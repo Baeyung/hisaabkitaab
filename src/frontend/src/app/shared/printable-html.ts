@@ -17,6 +17,7 @@ export function printableHtml(): string {
   // original <style>/<link> elements are replaced wholesale by the collected CSS below.
   page.querySelectorAll('script, style, link[rel="stylesheet"]').forEach((el) => el.remove());
   carryFieldValues(page);
+  snapshotCanvases(page);
 
   const style = document.createElement('style');
   style.textContent = collectCss();
@@ -48,6 +49,38 @@ function collectCss(): string {
   }
 
   return [...imports, ...rules].join('\n');
+}
+
+/**
+ * Replace every chart with a picture of itself.
+ *
+ * A canvas holds its drawing in a bitmap rather than in its markup, so a cloned one
+ * serialises to an empty box — the dashboard's charts would reach the renderer as blank
+ * space. An `<img>` of what each canvas is currently showing is what the printout wanted
+ * anyway, and it costs the page nothing on screen.
+ *
+ * Silently leaves a canvas alone if it refuses to hand over its pixels (a tainted one, from
+ * a cross-origin image drawn into it): an empty chart is a worse printout, not a broken one.
+ */
+function snapshotCanvases(page: HTMLElement): void {
+  const live = document.querySelectorAll('canvas');
+
+  page.querySelectorAll('canvas').forEach((clone, i) => {
+    const source = live[i];
+    if (!(source instanceof HTMLCanvasElement) || !source.width || !source.height) {
+      return;
+    }
+    try {
+      const img = document.createElement('img');
+      img.src = source.toDataURL('image/png');
+      // The canvas was sized by CSS, which the image no longer inherits — it has to be told
+      // to fill the same box, or it prints at the bitmap's own pixel size.
+      img.setAttribute('style', 'width:100%;height:auto;display:block');
+      clone.replaceWith(img);
+    } catch {
+      // Tainted canvas — leave the blank one rather than losing the page.
+    }
+  });
 }
 
 /**

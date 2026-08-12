@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.github.baeyung.hisaabkitaab.dto.auth.SignupRequest;
+import io.github.baeyung.hisaabkitaab.dto.user.ProfileRequest;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.enums.UserStatus;
 import io.github.baeyung.hisaabkitaab.repository.UserRepository;
@@ -117,6 +118,27 @@ public class UserServiceImpl implements UserService
             sendVerificationEmail(saved);
         }
         return saved;
+    }
+
+    @Override
+    public User updateProfile(String userId, ProfileRequest request)
+    {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+
+        String contactNumber = request.contactNumber().trim();
+
+        // Unique in the database and usable as a username, so a collision has to be answered
+        // here rather than as a constraint violation on flush.
+        if (!contactNumber.equals(user.getContactNumber())
+                && userRepository.existsByContactNumber(contactNumber))
+        {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Contact number already in use");
+        }
+
+        user.setName(request.name().trim());
+        user.setContactNumber(contactNumber);
+        return userRepository.save(user);
     }
 
     @Override

@@ -9,6 +9,8 @@ import { DashboardService } from '../../core/store/dashboard.service';
 import { Dashboard as DashboardData } from '../../core/store/dashboard.models';
 import { daysAgoIso, todayIso } from '../../shared/date.util';
 import { ChartView } from '../../shared/chart/chart';
+import { PrintHeader } from '../../shared/print-header';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { FONT, PALETTES, compactMoney, shortDate } from '../../shared/chart/chart-theme';
 import { DateField } from '../../shared/date-field/date-field';
 import { urlFilters } from '../../shared/url-filters';
@@ -19,7 +21,7 @@ import { urlFilters } from '../../shared/url-filters';
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, ChartView, DateField],
+  imports: [RouterLink, ChartView, DateField, PrintHeader, WhatsAppButton],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
@@ -305,6 +307,10 @@ export class Dashboard {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  print(): void {
+    window.print();
   }
 
   /** Bar-fill width for a list row, as a percentage of the column's largest value. */

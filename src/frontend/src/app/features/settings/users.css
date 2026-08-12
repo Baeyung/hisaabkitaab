@@ -46,6 +46,37 @@
   height: 44px;
 }
 
+/* ── your own account ──────────────────────────────────────────────── */
+/* Two blocks on one page now (your account, then the shop's people), so each
+   gets a heading rather than the page title standing in for both. */
+.grp__title {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.acct + .grp__title {
+  margin-top: 28px;
+}
+.acct {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+  background: var(--kg-card);
+}
+.acct__note {
+  font-size: 12px;
+  color: var(--kg-faint);
+}
+.acct__ok {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-in);
+}
+
 /* ── the person cell ───────────────────────────────────────────────── */
 /* Name over address: the address is what access was granted against, so it stays
    visible even once there is a real name to show. */

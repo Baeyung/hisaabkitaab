@@ -44,6 +44,39 @@ export class AuthService {
   }
 
   /**
+   * The signed-in account, re-read from the server. Nothing but the credentials survives a
+   * page reload, so any screen that shows the user's own details has to ask for them.
+   */
+  async me(): Promise<User> {
+    const user = await firstValueFrom(this.http.get<User>(`${this.apiUrl}/auth/me`));
+    this.store.setUser(user);
+    return user;
+  }
+
+  /**
+   * Changes the account's own name and contact number. The email is fixed once verified —
+   * the backend does not accept one here.
+   */
+  async updateProfile(profile: { name: string; contactNumber: string }): Promise<User> {
+    const user = await firstValueFrom(this.http.put<User>(`${this.apiUrl}/users/me`, profile));
+
+    // The contact number doubles as a login identifier, so credentials built from the old one
+    // would 401 on the very next request. Re-key them when that is what they were made from.
+    const creds = this.store.credentials();
+    if (creds) {
+      const raw = atob(creds);
+      const split = raw.indexOf(':');
+      const identifier = raw.slice(0, split);
+      if (identifier !== user.email && identifier !== user.contactNumber) {
+        this.store.setCredentials(btoa(`${user.contactNumber}:${raw.slice(split + 1)}`));
+      }
+    }
+
+    this.store.setUser(user);
+    return user;
+  }
+
+  /**
    * Confirms the account with the 6-digit code from the verification email.
    * Rejects (404) if the code is wrong, expired, or burned by too many wrong guesses.
    */

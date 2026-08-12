@@ -1,27 +1,40 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { email as emailRule, form, FormField, pattern, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
+import { AuthService } from '../../core/auth/auth.service';
+import { AuthStore } from '../../core/auth/auth.store';
 import { MemberService } from '../../core/store/member.service';
+import { StoreService } from '../../core/store/store.service';
 import { PlanService } from '../../core/plan/plan.service';
 import { GrantableRole, InviteDraft, Member } from '../../core/store/member.models';
+import { PHONE_PATTERN } from '../../shared/digits-only';
+import { PhoneField } from '../../shared/phone-field/phone-field';
 
 const EMPTY_INVITE: InviteDraft = { email: '', role: 'EDITOR' };
 
 /**
- * Store Settings › Manage Users — who else may work in this shop.
+ * Store Settings › Manage Users — two screens in one, split by who is looking.
  *
- * Access is given against an email address whether or not anyone has signed up with it:
- * an unknown address is mailed an invite and shows here as pending until they join. What
- * a shared user may do is the role on their row, changeable in place; taking access away
- * removes the row and nothing else — their own account, and any shop of their own, are
- * untouched.
+ * Everyone gets the account block at the top: their own name and contact number, theirs
+ * alone to change. Nobody edits anybody else here, not even the owner — the backend takes
+ * the account from the credentials, so the block is self-service by construction. The email
+ * is shown but fixed: it is what the account verified against and where a password reset is
+ * mailed.
  *
- * Owner-only, behind `ownerGuard`: this is a screen about the shop, not in it.
+ * The owner also gets the list below it — who else may work in this shop. Access is given
+ * against an email address whether or not anyone has signed up with it: an unknown address
+ * is mailed an invite and shows as pending until they join. What a shared user may do is the
+ * role on their row, changeable in place; taking access away removes the row and nothing
+ * else — their own account, and any shop of their own, are untouched.
+ *
+ * Open to every role for the sake of the account block (the route's `ownerGuard` had to go),
+ * so everything below it is gated on {@link isOwner} instead — including the member fetch,
+ * which the backend refuses for anyone else.
  */
 @Component({
   selector: 'app-users',
-  imports: [FormField],
+  imports: [FormField, PhoneField],
   templateUrl: './users.html',
   styleUrls: ['./settings-table.css', './users.css'],
 })
@@ -29,6 +42,27 @@ export class SettingsUsers {
   protected readonly locale = inject(LocaleService);
   private readonly api = inject(MemberService);
   private readonly plan = inject(PlanService);
+  private readonly auth = inject(AuthService);
+  private readonly stores = inject(StoreService);
+
+  protected readonly isOwner = this.stores.isOwner;
+  protected readonly me = inject(AuthStore).currentUser;
+
+  protected readonly account = signal({ name: '', contactNumber: '' });
+  protected readonly accountForm = form(this.account, (path) => {
+    required(path.name);
+    required(path.contactNumber);
+    // Same pair as signup — the field strips non-digits as they are typed, this keeps
+    // the length in step with the backend @Pattern.
+    pattern(path.contactNumber, PHONE_PATTERN);
+  });
+  protected readonly savingAccount = signal(false);
+  protected readonly accountErrorKey = signal<TranslationKey | null>(null);
+  /** What was last saved, so the confirmation drops away the moment the fields move off it. */
+  private readonly savedSnapshot = signal<string | null>(null);
+  protected readonly accountSaved = computed(
+    () => this.savedSnapshot() === JSON.stringify(this.account()),
+  );
 
   /**
    * Whether one more *new* person would be refused. The count is the owner's across every shop
@@ -40,6 +74,11 @@ export class SettingsUsers {
   protected readonly members = signal<Member[] | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
+
+  /** Whether the shop's people belong on screen at all — the owner's half of it. */
+  protected readonly showPeople = computed(
+    () => this.isOwner() && !this.loading() && !this.loadError(),
+  );
 
   protected readonly inviting = signal(false);
   protected readonly saving = signal(false);
@@ -63,14 +102,42 @@ export class SettingsUsers {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      // The plan only decides whether the invite is offered, so failing to read it must not
-      // fail the screen — fall back to offering it and letting the server answer.
-      const [members] = await Promise.all([this.api.list(), this.plan.refresh().catch(() => null)]);
+      // The account is re-read rather than taken from the session: nothing but the credentials
+      // survives a page reload. The list is owner-only — the backend 403s anyone else — and the
+      // plan only decides whether the invite is offered, so failing to read it must not fail the
+      // screen; fall back to offering it and letting the server answer.
+      const [user, members] = await Promise.all([
+        this.auth.me(),
+        this.isOwner() ? this.api.list() : Promise.resolve(null),
+        this.plan.refresh().catch(() => null),
+      ]);
+      this.account.set({ name: user.name, contactNumber: user.contactNumber });
+      this.savedSnapshot.set(null);
       this.members.set(members);
     } catch {
       this.loadError.set(true);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async saveAccount(): Promise<void> {
+    if (this.accountForm().invalid()) {
+      return;
+    }
+    this.savingAccount.set(true);
+    this.accountErrorKey.set(null);
+    try {
+      const saved = { ...this.account(), name: this.account().name.trim() };
+      await this.auth.updateProfile(saved);
+      this.account.set(saved);
+      this.savedSnapshot.set(JSON.stringify(saved));
+    } catch (err) {
+      // The one the user can act on is a number that is already someone else's login.
+      const status = (err as { status?: number } | null)?.status;
+      this.accountErrorKey.set(status === 409 ? 'settings.users.account.duplicate' : 'error.generic');
+    } finally {
+      this.savingAccount.set(false);
     }
   }
 

@@ -81,11 +81,30 @@ class WhatsAppQuotaApiTest extends ApiTest
                 .andReturn()).get("id").asString();
     }
 
+    /** A send to one party, the shape every quota case here is measured on. */
     private ResultActions sendAttempt(String actor, String storeId, String partyId) throws Exception
     {
-        return mvc.perform(post(api(storeId, "/parties/" + partyId + "/whatsapp")).with(as(actor))
+        return sendTo(actor, storeId, party(partyId));
+    }
+
+    private static String party(String partyId)
+    {
+        return "{\"kind\":\"PARTY\",\"id\":\"%s\"}".formatted(partyId);
+    }
+
+    private static String user(String userId)
+    {
+        return "{\"kind\":\"USER\",\"id\":\"%s\"}".formatted(userId);
+    }
+
+    /** A send to whoever the given recipient objects name — one message charged for each. */
+    private ResultActions sendTo(String actor, String storeId, String... recipients) throws Exception
+    {
+        return mvc.perform(post(api(storeId, "/whatsapp")).with(as(actor))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"html\":\"<p>bill</p>\",\"filename\":\"bill.pdf\",\"action\":\"Bill\",\"locale\":\"en\"}"));
+                .content("""
+                        {"html":"<p>bill</p>","filename":"bill.pdf","action":"Bill","locale":"en",\
+                        "recipients":[%s]}""".formatted(String.join(",", recipients))));
     }
 
     private int used(String userId)
@@ -101,8 +120,8 @@ class WhatsAppQuotaApiTest extends ApiTest
         String store = createStore(OWNER, "Kiryana Store");
         String party = createParty(OWNER, store);
 
-        sendAttempt(OWNER, store, party).andExpect(status().isAccepted());
-        sendAttempt(OWNER, store, party).andExpect(status().isAccepted());
+        sendAttempt(OWNER, store, party).andExpect(status().isOk());
+        sendAttempt(OWNER, store, party).andExpect(status().isOk());
 
         assertEquals(2, used(ownerId));
         assertEquals(YearMonth.now().toString(),
@@ -118,8 +137,8 @@ class WhatsAppQuotaApiTest extends ApiTest
         String store = createStore(OWNER, "Kiryana Store");
         String party = createParty(OWNER, store);
 
-        sendAttempt(OWNER, store, party).andExpect(status().isAccepted());
-        sendAttempt(OWNER, store, party).andExpect(status().isAccepted());
+        sendAttempt(OWNER, store, party).andExpect(status().isOk());
+        sendAttempt(OWNER, store, party).andExpect(status().isOk());
         sendAttempt(OWNER, store, party).andExpect(status().isForbidden());
 
         // Refused, not merely reported: the count must not creep past the ceiling either.
@@ -158,7 +177,7 @@ class WhatsAppQuotaApiTest extends ApiTest
         spent.setWhatsappPeriod(YearMonth.now().minusMonths(1).toString());
         userPlanRepository.save(spent);
 
-        sendAttempt(OWNER, store, party).andExpect(status().isAccepted());
+        sendAttempt(OWNER, store, party).andExpect(status().isOk());
 
         assertEquals(1, used(ownerId));
     }
@@ -183,7 +202,7 @@ class WhatsAppQuotaApiTest extends ApiTest
 
         String party = createParty(OWNER, store);
 
-        sendAttempt(MEMBER, store, party).andExpect(status().isAccepted());
+        sendAttempt(MEMBER, store, party).andExpect(status().isOk());
 
         assertEquals(1, used(ownerId));
         assertEquals(0, used(memberId));
@@ -194,8 +213,8 @@ class WhatsAppQuotaApiTest extends ApiTest
      * template, a number Meta will not deliver to, or WhatsApp switched off entirely.
      *
      * <p>And it must not be reported as sent. The refund alone is invisible to the shopkeeper,
-     * who is looking at a button that says "Sent"; the status is the only thing that tells the
-     * screen otherwise.
+     * who is looking at a button that says "Sent"; the result body is the only thing that tells
+     * the screen otherwise.
      */
     @Test
     void givesTheMessageBackAndSaysSoWhenItDoesNotGoOut() throws Exception
@@ -207,7 +226,137 @@ class WhatsAppQuotaApiTest extends ApiTest
         String store = createStore(OWNER, "Kiryana Store");
         String party = createParty(OWNER, store);
 
-        sendAttempt(OWNER, store, party).andExpect(status().isBadGateway());
+        sendAttempt(OWNER, store, party)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sent").value(0))
+                .andExpect(jsonPath("$.failed[0]").value("Rehman"));
+
+        assertEquals(0, used(ownerId));
+    }
+
+    /**
+     * One press, several recipients: a message each, and the shop's own people are recipients
+     * as readily as the customer the document is about.
+     */
+    @Test
+    void chargesOneMessagePerRecipient() throws Exception
+    {
+        String ownerId = signup(OWNER);
+        plan(ownerId, PlanTier.BASIC, 5);
+        String store = createStore(OWNER, "Kiryana Store");
+        String party = createParty(OWNER, store);
+
+        sendTo(OWNER, store, party(party), user(ownerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sent").value(2))
+                .andExpect(jsonPath("$.failed").isEmpty());
+
+        assertEquals(2, used(ownerId));
+    }
+
+    /** The same person named twice is one message — a doubled-up list must not double-charge. */
+    @Test
+    void chargesOnceForARepeatedRecipient() throws Exception
+    {
+        String ownerId = signup(OWNER);
+        plan(ownerId, PlanTier.BASIC, 5);
+        String store = createStore(OWNER, "Kiryana Store");
+        String party = createParty(OWNER, store);
+
+        sendTo(OWNER, store, party(party), party(party))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sent").value(1));
+
+        assertEquals(1, used(ownerId));
+    }
+
+    /**
+     * Running out part-way through a list is not the same as running out before it. The
+     * messages that went out cannot be taken back, so the reply names who missed out instead
+     * of failing the whole request — and the count still stops at the ceiling.
+     */
+    @Test
+    void reportsWhoMissedOutWhenTheQuotaRunsOutMidList() throws Exception
+    {
+        String ownerId = signup(OWNER);
+        plan(ownerId, PlanTier.BASIC, 1);
+        String store = createStore(OWNER, "Kiryana Store");
+        String party = createParty(OWNER, store);
+
+        sendTo(OWNER, store, party(party), user(ownerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sent").value(1))
+                .andExpect(jsonPath("$.failed[0]").value("User " + OWNER));
+
+        assertEquals(1, used(ownerId));
+    }
+
+    /**
+     * A viewer may send. They can already print the page they are looking at, and putting it
+     * on WhatsApp is the same act — the quota it spends is the owner's either way.
+     */
+    @Test
+    void letsAViewerSend() throws Exception
+    {
+        String ownerId = signup(OWNER);
+        signup(MEMBER);
+        plan(ownerId, PlanTier.PREMIUM, 5);
+
+        String store = createStore(OWNER, "Kiryana Store");
+        mvc.perform(post(api(store, "/members")).with(as(OWNER))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"u%s@x.com\",\"role\":\"VIEWER\"}".formatted(MEMBER)))
+                .andExpect(status().isOk());
+
+        String party = createParty(OWNER, store);
+
+        sendAttempt(MEMBER, store, party).andExpect(status().isOk());
+
+        assertEquals(1, used(ownerId));
+    }
+
+    /**
+     * The picker's list: the owner, then everyone they have shared the shop with. Readable by
+     * a viewer, since a viewer may send — and carrying no phone numbers, since the send
+     * resolves those here and the client never needs one.
+     */
+    @Test
+    void listsTheShopsPeopleAsRecipients() throws Exception
+    {
+        String ownerId = signup(OWNER);
+        signup(MEMBER);
+        plan(ownerId, PlanTier.PREMIUM, 5);
+
+        String store = createStore(OWNER, "Kiryana Store");
+        mvc.perform(post(api(store, "/members")).with(as(OWNER))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"u%s@x.com\",\"role\":\"VIEWER\"}".formatted(MEMBER)))
+                .andExpect(status().isOk());
+
+        mvc.perform(get(api(store, "/whatsapp/recipients")).with(as(MEMBER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].name").value("User " + OWNER))
+                .andExpect(jsonPath("$[0].role").value("OWNER"))
+                .andExpect(jsonPath("$[1].name").value("User " + MEMBER))
+                .andExpect(jsonPath("$[1].role").value("VIEWER"))
+                .andExpect(jsonPath("$[0].contact").doesNotExist());
+    }
+
+    /**
+     * Someone else's shop is not a recipient list. An id from another store must not become a
+     * phone number here, which is the whole reason the request names people rather than
+     * addressing them.
+     */
+    @Test
+    void refusesARecipientFromAnotherShop() throws Exception
+    {
+        String ownerId = signup(OWNER);
+        plan(ownerId, PlanTier.PREMIUM, 5);
+        String store = createStore(OWNER, "Kiryana Store");
+        String elsewhere = createParty(OWNER, createStore(OWNER, "Kapra Ghar"));
+
+        sendTo(OWNER, store, party(elsewhere)).andExpect(status().isNotFound());
 
         assertEquals(0, used(ownerId));
     }
@@ -221,7 +370,7 @@ class WhatsAppQuotaApiTest extends ApiTest
         String store = createStore(OWNER, "Kiryana Store");
         String party = createParty(OWNER, store);
 
-        sendAttempt(OWNER, store, party).andExpect(status().isAccepted());
+        sendAttempt(OWNER, store, party).andExpect(status().isOk());
 
         mvc.perform(get("/api/plan/me").with(as(OWNER)))
                 .andExpect(status().isOk())

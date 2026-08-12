@@ -1,11 +1,15 @@
 <section class="set">
   <header class="set__head">
     <div class="set__titles">
-      <h1 class="set__title">{{ locale.t('nav.settings.users') }}</h1>
-      <p class="set__sub">{{ locale.t('settings.users.subtitle') }}</p>
+      <h1 class="set__title">
+        {{ locale.t(isOwner() ? 'nav.settings.users' : 'settings.users.titleShared') }}
+      </h1>
+      <p class="set__sub">
+        {{ locale.t(isOwner() ? 'settings.users.subtitle' : 'settings.users.subtitleShared') }}
+      </p>
     </div>
 
-    @if (!loading() && !loadError() && (members()?.length ?? 0) > 0) {
+    @if (isOwner() && !loading() && !loadError() && (members()?.length ?? 0) > 0) {
       <!-- At the plan's seat ceiling the control gives way to the reason, as the store picker
            does: the server refuses either way, so offering it would only waste the typing. -->
       @if (atUserLimit()) {
@@ -31,7 +35,65 @@
       <p role="alert" class="alert">{{ locale.t('settings.users.loadError') }}</p>
       <button type="button" class="btn btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
     </div>
-  } @else if ((members()?.length ?? 0) === 0 && !inviting()) {
+  } @else {
+    <!-- Your own account. Everyone gets this block and nobody else's — the server takes the
+         account from the credentials, so an owner cannot edit a shared user from here either. -->
+    <h2 class="grp__title">
+      {{ locale.t(isOwner() ? 'settings.users.account.ownerTitle' : 'settings.users.account.title') }}
+    </h2>
+    <form class="acct" (submit)="$event.preventDefault(); saveAccount()">
+      <div class="edit__fields">
+        <label class="efld">
+          <span class="efld__lbl">{{ locale.t('settings.users.account.name') }}</span>
+          <input class="fld__input" [formField]="accountForm.name" type="text" autocomplete="name" />
+          @if (accountForm.name().touched() && accountForm.name().invalid()) {
+            <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
+          }
+        </label>
+
+        <div class="efld">
+          <span class="efld__lbl" id="acct-contact-lbl">{{ locale.t('settings.users.account.contact') }}</span>
+          <app-phone-field inputId="acct-contact" [formField]="accountForm.contactNumber" />
+          @if (accountForm.contactNumber().touched() && accountForm.contactNumber().invalid()) {
+            <span role="alert" class="fld__err">{{ locale.t('validation.contact') }}</span>
+          }
+        </div>
+
+        <!-- Shown, not editable: it is what the account verified against and where a
+             password reset is mailed, so it is fixed once signed up. -->
+        <div class="efld">
+          <span class="efld__lbl" id="acct-email-lbl">{{ locale.t('settings.users.account.email') }}</span>
+          <input
+            class="fld__input"
+            type="email"
+            [value]="me()?.email ?? ''"
+            [attr.aria-labelledby]="'acct-email-lbl'"
+            [attr.aria-describedby]="'acct-email-note'"
+            disabled
+          />
+          <span class="acct__note" id="acct-email-note">{{ locale.t('settings.users.account.emailLocked') }}</span>
+        </div>
+      </div>
+
+      <div class="edit__foot">
+        <button type="submit" class="btn btn--primary btn--sm" [disabled]="savingAccount() || accountForm().invalid()">
+          {{ locale.t('settings.users.account.save') }}
+        </button>
+        @if (accountSaved()) {
+          <span class="acct__ok" role="status">{{ locale.t('settings.users.account.saved') }}</span>
+        }
+        @if (accountErrorKey(); as key) {
+          <span role="alert" class="fld__err">{{ locale.t(key) }}</span>
+        }
+      </div>
+    </form>
+
+    @if (isOwner()) {
+      <h2 class="grp__title">{{ locale.t('settings.users.people.title') }}</h2>
+    }
+  }
+
+  @if (showPeople() && (members()?.length ?? 0) === 0 && !inviting()) {
     <div class="state">
       <h2 class="state__title">{{ locale.t('settings.users.empty.title') }}</h2>
       <p class="state__body">{{ locale.t('settings.users.empty.body') }}</p>
@@ -43,7 +105,7 @@
         <button type="button" class="btn btn--primary" (click)="startInvite()">{{ locale.t('settings.users.empty.cta') }}</button>
       }
     </div>
-  } @else {
+  } @else if (showPeople()) {
     <div class="tablewrap">
       <table class="tbl">
         <thead>

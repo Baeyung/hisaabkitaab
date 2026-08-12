@@ -131,12 +131,13 @@ describe('store roles', () => {
     const paths = (role: StoreRole | null) =>
       navFor(role).flatMap((item) => (item.kind === 'link' ? [item.path] : item.children.map((c) => c.path)));
 
-    it('offers a viewer nothing that writes', () => {
+    it('offers a viewer nothing that writes in the shop', () => {
       const seen = paths('VIEWER');
       expect(seen).toContain('dashboard');
       expect(seen).toContain('ledger');
       expect(seen.some((p) => p.startsWith('new-entry'))).toBe(false);
-      expect(seen.some((p) => p.startsWith('settings'))).toBe(false);
+      // Their own account is the one thing they may change, and it lives here.
+      expect(seen.filter((p) => p.startsWith('settings'))).toEqual(['settings/users']);
     });
 
     it('offers an editor the entry screens but not the shop itself', () => {
@@ -145,7 +146,8 @@ describe('store roles', () => {
       expect(seen).toContain('settings/items');
       // General is in: the opening drawer balance on it is theirs to set.
       expect(seen).toContain('settings/general');
-      expect(seen).not.toContain('settings/users');
+      // In for their own account; the shop's people are gated inside the screen.
+      expect(seen).toContain('settings/users');
     });
 
     it('offers the owner everything', () => {
@@ -171,7 +173,7 @@ describe('store roles', () => {
     });
 
     it('drops a group once every child is above the role', () => {
-      expect(navFor('VIEWER').some((item) => item.kind === 'group' && item.key === 'nav.settings')).toBe(
+      expect(navFor('VIEWER').some((item) => item.kind === 'group' && item.key === 'nav.newEntry')).toBe(
         false,
       );
     });

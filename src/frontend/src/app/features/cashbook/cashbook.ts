@@ -8,6 +8,7 @@ import { EventService } from '../../core/store/event.service';
 import { todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
 import { PrintHeader } from '../../shared/print-header';
+import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { DateField } from '../../shared/date-field/date-field';
@@ -22,7 +23,7 @@ import { deleteErrorKey } from '../../core/store/delete-error';
  */
 @Component({
   selector: 'app-cashbook',
-  imports: [RouterLink, PrintHeader, PrintItemsSummary, DateField],
+  imports: [RouterLink, PrintHeader, PrintItemsSummary, DateField, WhatsAppButton],
   templateUrl: './cashbook.html',
 })
 export class Cashbook {

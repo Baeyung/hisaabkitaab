@@ -216,8 +216,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/settings/party').then((m) => m.SettingsParty),
       },
       {
+        // No role guard: this screen is where everyone edits their own account, and only the
+        // owner's half of it — the shop's people — is gated, inside the component. The member
+        // API stays owner-only on the backend regardless.
         path: 'settings/users',
-        canActivate: [ownerGuard],
         loadComponent: () => import('./features/settings/users').then((m) => m.SettingsUsers),
       },
       {

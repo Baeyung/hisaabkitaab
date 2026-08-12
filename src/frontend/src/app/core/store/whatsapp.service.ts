@@ -2,34 +2,46 @@ import { Service, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { StoreService } from './store.service';
+import { ShareRecipient, ShareResult, ShareTarget } from './whatsapp.models';
 
-/** Sends a party their bill or statement on WhatsApp, as the PDF the browser just rendered. */
+/** Sends the shop's printouts on WhatsApp, as the PDF the browser just rendered. */
 @Service()
 export class WhatsAppService {
   private readonly http = inject(HttpClient);
   private readonly stores = inject(StoreService);
 
+  /** Who this shop can send to: its owner and the people they have shared it with. */
+  recipients(): Promise<ShareRecipient[]> {
+    return firstValueFrom(
+      this.http.get<ShareRecipient[]>(this.stores.api('whatsapp/recipients')),
+    );
+  }
+
   /**
-   * Posts the page, not a file: the backend renders the PDF, so neither the document nor
-   * the recipient is the client's to choose — the number is read off the party there.
+   * Posts the page, not a file: the backend renders the PDF, so neither the document nor the
+   * recipients' numbers are the client's to choose — each recipient is named by id and
+   * resolved inside this store there.
    *
-   * @param action what is being shared, worded for the reader: "Bill", "Khata statement".
+   * @param action what is being shared, worded for the reader: "Bill", "Cashbook".
    *               Fills the template's action placeholder, so it is a noun in a sentence.
    * @param locale which language's approved template goes out.
+   * @returns how many messages went out, and who was missed — a send to several people can
+   *          succeed for some and not others, so this never throws for a failed recipient.
    */
-  send(
-    partyId: string,
+  share(
+    recipients: ShareTarget[],
     html: string,
     filename: string,
     action: string,
     locale: string,
-  ): Promise<void> {
+  ): Promise<ShareResult> {
     return firstValueFrom(
-      this.http.post<void>(this.stores.api(`parties/${partyId}/whatsapp`), {
+      this.http.post<ShareResult>(this.stores.api('whatsapp'), {
         html,
         filename,
         action,
         locale,
+        recipients,
       }),
     );
   }

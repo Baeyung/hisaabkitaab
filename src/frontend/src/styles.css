@@ -1067,7 +1067,10 @@ html[dir='rtl'] select.rm-input {
     font-size: 10px;
   }
   .rm-tbl tr,
-  .rm-stat {
+  .rm-stat,
+  /* Dashboard widgets: keep a chart or a list with the heading that names it. */
+  .dw-kpi,
+  .dw-card {
     break-inside: avoid;
   }
   .rm-subrow {

@@ -29,6 +29,10 @@
           </svg>
           {{ locale.t('common.print') }}
         </button>
+        <app-whatsapp-button
+          [document]="locale.t('whatsapp.doc.cashbook')"
+          [action]="locale.t('whatsapp.doc.cashbook')"
+        />
       }
     </div>
   </header>

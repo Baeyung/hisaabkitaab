@@ -12,12 +12,13 @@ import io.github.baeyung.hisaabkitaab.entity.Store;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Sends a party a document the shop produced — a bill, a khata statement, a cashbook — as a
- * PDF on WhatsApp, through the approved {@code document_share} template. The action-specific
- * service {@code WhatsAppService} asks callers to go through, mirroring {@code service/mail}.
+ * Sends a document the shop produced — a bill, a khata statement, a cashbook — as a PDF on
+ * WhatsApp, through the approved {@code document_share} template. The action-specific service
+ * {@code WhatsAppService} asks callers to go through, mirroring {@code service/mail}.
  * <p>
- * Anything with a store, a party and a PDF can call {@link #share}; nothing here is bill- or
- * ledger-specific beyond the {@code action} word the caller supplies.
+ * Anything with a store, an {@link Addressee} and a PDF can call {@link #share}; nothing here
+ * is bill- or ledger-specific beyond the {@code action} word the caller supplies, and nothing
+ * here cares whether the recipient is a customer or someone who works in the shop.
  */
 @Service
 @RequiredArgsConstructor
@@ -42,19 +43,29 @@ public class DocumentShareService
     }
 
     /**
-     * A party is only messageable on a number a person actually answers: no number at all, or
-     * the placeholder {@link Party#PLACEHOLDER_CONTACT} left by a party created in passing,
-     * means there is nowhere to send. Callers charge quota before sending, so they check this
-     * first — a message that cannot go out must not cost one.
-     *
-     * @throws IllegalArgumentException when the party has no real phone number.
+     * Whether there is anywhere to send: digits only, and not the placeholder
+     * {@link Party#PLACEHOLDER_CONTACT} left on a party created in passing. The digits rule
+     * also drops the synthetic {@code invited:…} number on an account nobody has signed up
+     * with yet — an invitee has an email address and no phone we know of.
      */
-    public static void requireSendable(Party party)
+    public static boolean isSendable(String contact)
     {
-        String contact = party.getContact();
-        if (contact == null || contact.isBlank() || Party.PLACEHOLDER_CONTACT.equals(contact))
+        return contact != null
+                && contact.matches("\\d{7,15}")
+                && !Party.PLACEHOLDER_CONTACT.equals(contact);
+    }
+
+    /**
+     * Callers charge quota before sending, so they check this first — a message that cannot
+     * go out must not cost one.
+     *
+     * @throws IllegalArgumentException when there is no real phone number to send to.
+     */
+    public static void requireSendable(String contact)
+    {
+        if (!isSendable(contact))
         {
-            throw new IllegalArgumentException("Party has no phone number to send to on WhatsApp");
+            throw new IllegalArgumentException("There is no phone number to send this to on WhatsApp");
         }
     }
 
@@ -66,31 +77,30 @@ public class DocumentShareService
      * @return whether Meta accepted the message. False for a send that was rejected or
      *         suppressed — the caller charges the account's WhatsApp quota for this message,
      *         and must give it back when nothing actually went out.
-     * @throws IllegalArgumentException when the party has no phone number to send to.
+     * @throws IllegalArgumentException when the recipient has no phone number to send to.
      */
-    public boolean share(Store store, Party party, String action, byte[] pdf, String filename, String locale)
+    public boolean share(Store store, Addressee to, String action, byte[] pdf, String filename, String locale)
     {
-        requireSendable(party);
-        String contact = party.getContact();
+        requireSendable(to.contact());
 
         // The names the approved template declares. Meta rejects the send if one is missing
         // or unknown, so these spellings are the contract — not the order.
         Map<String, String> body = new LinkedHashMap<>();
-        body.put("recepient_name", party.getName());
+        body.put("recepient_name", to.name());
         body.put("action", action);
         body.put("provider_name", store.getName());
         body.put("contact_number", storeContact(store));
 
         return whatsAppService.sendTemplateWithDocument(
-                contact,
+                to.contact(),
                 templateName,
                 templateLanguage(locale),
                 pdf,
                 filename,
                 body,
-                // The button URL's {{1}} and {{2}}, which stay positional: which shop, whose
-                // khata.
-                List.of(store.getId() + "/" + party.getId()));
+                // The button URL's parameter, which stays positional.
+                List.of(to.link())
+        );
     }
 
     /**
