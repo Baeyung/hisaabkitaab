@@ -107,83 +107,112 @@
       </div>
     </header>
 
-    <!-- what came out, and what one unit of it cost to make -->
-    <div class="rm-card">
-      <div class="rm-tablewrap">
-        <table class="rm-tbl">
-          <thead>
-            <tr>
-              <th scope="col">{{ locale.t('processing.list.col.output') }}</th>
-              <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
-              <th scope="col" class="end">{{ locale.t('processing.col.wastage') }}</th>
-              <th scope="col" class="end">{{ locale.t('processing.unitCost') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="rm-cell-head">
-                <span class="rm-tbl__name">{{ b.output?.name ?? '—' }}</span>
-                @if (b.output?.unit) {
-                  <span class="rm-tbl__meta">{{ b.output?.unit }}</span>
+    <!-- The batch read back in the order it was entered: raw + consumables → output. -->
+    <div class="rm-recipe">
+      @for (block of inputBlocks(); track block.title) {
+        <div class="rm-card">
+          <p class="rm-cardtitle">{{ locale.t(block.title) }}</p>
+          <div class="rm-tablewrap">
+            <table class="rm-tbl">
+              <thead>
+                <tr>
+                  <th scope="col">{{ locale.t('processing.col.name') }}</th>
+                  <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
+                  <th scope="col" class="end">{{ locale.t('processing.col.rate') }}</th>
+                  <th scope="col" class="end">{{ locale.t('processing.col.amount') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of block.rows; track $index) {
+                  <tr>
+                    <td class="rm-cell-head">
+                      <span class="rm-tbl__name">{{ row.name }}</span>
+                      @if (row.unit) {
+                        <span class="rm-tbl__meta">{{ row.unit }}</span>
+                      }
+                    </td>
+                    <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">
+                      {{ locale.qtyUnit(row.quantity ?? 0, row.unit) }}
+                    </td>
+                    <td class="end num" [attr.data-label]="locale.t('processing.col.rate')">
+                      {{ locale.money(row.pricePerUnit ?? 0) }}
+                    </td>
+                    <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(row.amount) }}</td>
+                  </tr>
                 }
-              </td>
-              <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">
-                {{ locale.qtyUnit(b.output?.quantity ?? 0, b.output?.unit ?? null) }}
-              </td>
-              <td class="end num" [attr.data-label]="locale.t('processing.col.wastage')">
-                {{ locale.qtyUnit(b.output?.wastage ?? 0, b.output?.unit ?? null) }}
-              </td>
-              <td class="end num rm-tbl__name rm-cell-amt">
-                {{ b.output?.unitCost != null ? locale.money(b.output!.unitCost!) : '—' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-    <!-- the recipe: raw material and consumables, each with what it contributed -->
-    <div class="rm-card" style="margin-top: 12px">
-      <div class="rm-tablewrap">
-        <table class="rm-tbl">
-          <thead>
-            <tr>
-              <th scope="col">{{ locale.t('processing.list.madeFrom') }}</th>
-              <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
-              <th scope="col" class="end">{{ locale.t('processing.col.rate') }}</th>
-              <th scope="col" class="end">{{ locale.t('processing.col.amount') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of inputs(); track $index) {
+        @if (!$last) {
+          <div class="flow" aria-hidden="true"><span class="flow__mark">+</span></div>
+        }
+      }
+
+      @if (inputBlocks().length > 0) {
+        <div class="flow" aria-hidden="true">
+          <span class="flow__mark flow__mark--arrow">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M12 5v14M6 13l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+        </div>
+      }
+
+      <!-- what came out, and what one unit of it cost to make -->
+      <div class="rm-card">
+        <p class="rm-cardtitle">{{ locale.t('processing.list.col.output') }}</p>
+        <div class="rm-tablewrap">
+          <table class="rm-tbl">
+            <thead>
+              <tr>
+                <th scope="col">{{ locale.t('processing.col.name') }}</th>
+                <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
+                <th scope="col" class="end">{{ locale.t('processing.col.wastage') }}</th>
+                <th scope="col" class="end">{{ locale.t('processing.unitCost') }}</th>
+              </tr>
+            </thead>
+            <tbody>
               <tr>
                 <td class="rm-cell-head">
-                  <span class="rm-tbl__name">{{ row.name }}</span>
-                  <span class="rm-tbl__meta">{{ locale.t(row.kind) }}</span>
+                  <span class="rm-tbl__name">{{ b.output?.name ?? '—' }}</span>
+                  @if (b.output?.unit) {
+                    <span class="rm-tbl__meta">{{ b.output?.unit }}</span>
+                  }
                 </td>
                 <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">
-                  {{ locale.qtyUnit(row.quantity ?? 0, row.unit) }}
+                  {{ locale.qtyUnit(b.output?.quantity ?? 0, b.output?.unit ?? null) }}
                 </td>
-                <td class="end num" [attr.data-label]="locale.t('processing.col.rate')">
-                  {{ locale.money(row.pricePerUnit ?? 0) }}
+                <td class="end num" [attr.data-label]="locale.t('processing.col.wastage')">
+                  {{ locale.qtyUnit(b.output?.wastage ?? 0, b.output?.unit ?? null) }}
                 </td>
-                <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(row.amount) }}</td>
+                <td class="end num rm-tbl__name rm-cell-amt">
+                  {{ b.output?.unitCost != null ? locale.money(b.output!.unitCost!) : '—' }}
+                </td>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <div class="rm-foot">
-        <span>
-          {{ locale.t('processing.totalCost') }}
-          <strong class="num">{{ locale.money(totalCost()) }}</strong>
-        </span>
-        <span>
-          {{ locale.t('processing.unitCost') }}
-          <strong class="num">{{
-            b.output?.unitCost != null ? locale.money(b.output!.unitCost!) : '—'
-          }}</strong>
-        </span>
+            </tbody>
+          </table>
+        </div>
+        <div class="rm-foot">
+          <span>
+            {{ locale.t('processing.totalCost') }}
+            <strong class="num">{{ locale.money(totalCost()) }}</strong>
+          </span>
+          <span>
+            {{ locale.t('processing.unitCost') }}
+            <strong class="num">{{
+              b.output?.unitCost != null ? locale.money(b.output!.unitCost!) : '—'
+            }}</strong>
+          </span>
+        </div>
       </div>
     </div>
 

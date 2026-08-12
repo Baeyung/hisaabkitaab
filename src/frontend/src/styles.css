@@ -463,7 +463,10 @@ html[dir='rtl'] .rm-back::before {
   background: var(--kg-card);
   border: 1px solid var(--kg-line-strong);
   border-radius: 10px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 .rm-input:hover:not(:focus):not(:disabled) {
   border-color: var(--kg-brand);
@@ -591,6 +594,58 @@ html[dir='rtl'] select.rm-input {
   background: var(--kg-cream);
   border-top: 1px solid var(--kg-line);
   font-size: 14px;
+}
+
+/* ── recipe blocks + flow marks ───────────────────────────────────────────
+   A batch is entered as raw + consumables → output, and reads back the same
+   way: cards for each side with a + and an arrow between them. Shared by the
+   processing entry form and the batch detail page. The marks are decoration
+   only — aria-hidden in the template, since each block is already titled. */
+.rm-recipe {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* Names the block on the card itself, not in the table head — below 640px the
+   head is hidden, and "raw material" or "made" is the one label that has to
+   survive there. Matches .pgrid__title on the entry form. */
+.rm-cardtitle {
+  margin: 0;
+  padding: 11px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--kg-ink);
+  border-bottom: 1px solid var(--kg-line);
+}
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -6px 0;
+}
+.flow::before,
+.flow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--kg-line);
+}
+.flow__mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--kg-brand);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 50%;
+}
+.flow__mark--arrow {
+  color: var(--kg-in);
 }
 
 /* empty / no-store / error blocks */
@@ -896,7 +951,12 @@ html[dir='rtl'] select.rm-input {
   height: 46px;
   margin: 12px 16px;
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);
+  background: linear-gradient(
+    90deg,
+    var(--kg-line) 25%,
+    var(--kg-fill-subtle) 37%,
+    var(--kg-line) 63%
+  );
   background-size: 400% 100%;
 }
 .rm-skel--short {
@@ -1248,7 +1308,6 @@ html[dir='rtl'] select.rm-input {
     background: var(--kg-tint-out);
   }
 }
-
 
 /* ── Dashboard (analytics home) ───────────────────────────────────────────── */
 /* One vertical rhythm for the whole page: every top-level block (header, KPIs,

@@ -44,17 +44,27 @@ export class ProcessedGoodsDetail {
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<TranslationKey | null>(null);
 
-  /** Both input sides in one table, each row labelled by which side it came from. */
-  protected readonly inputs = computed(() => {
+  /**
+   * The two input sides, each its own block, in the order the entry screen asks for them —
+   * a side with nothing on it drops out, so a batch made from raw material alone shows one
+   * block and no + between.
+   */
+  protected readonly inputBlocks = computed(() => {
     const b = this.batch();
-    const rows = (list: ProcessingRowInput[], kind: TranslationKey) =>
-      list.map((row) => ({ ...row, kind, amount: (row.quantity ?? 0) * (row.pricePerUnit ?? 0) }));
-    return b ? [...rows(b.rawItems, 'processing.raw'), ...rows(b.processingItems, 'processing.items')] : [];
+    const rows = (list: ProcessingRowInput[]) =>
+      list.map((row) => ({ ...row, amount: (row.quantity ?? 0) * (row.pricePerUnit ?? 0) }));
+    return [
+      { title: 'processing.raw' as TranslationKey, rows: rows(b?.rawItems ?? []) },
+      { title: 'processing.items' as TranslationKey, rows: rows(b?.processingItems ?? []) },
+    ].filter((block) => block.rows.length > 0);
   });
 
   /** What the batch consumed, in money — the figure its cost/unit was divided out of. */
   protected readonly totalCost = computed(() =>
-    this.inputs().reduce((sum, row) => sum + row.amount, 0),
+    this.inputBlocks().reduce(
+      (sum, block) => sum + block.rows.reduce((n, row) => n + row.amount, 0),
+      0,
+    ),
   );
 
   constructor() {

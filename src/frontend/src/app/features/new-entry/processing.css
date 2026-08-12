@@ -100,38 +100,8 @@
   grid-area: wastage;
 }
 
-/* ── flow marks ───────────────────────────────────────────────────────────
-   The + and the arrow between the three blocks. Decoration only: aria-hidden
-   in the template, the group labels already say which block is which. */
-.flow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: -6px 0;
-}
-.flow::before,
-.flow::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--kg-line);
-}
-.flow__mark {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--kg-brand);
-  background: var(--kg-card);
-  border: 1px solid var(--kg-line);
-  border-radius: 50%;
-}
-.flow__mark--arrow {
-  color: var(--kg-in);
-}
+/* The + and the arrow between the three blocks live in styles.css — the batch
+   detail page reads the same recipe back and uses the same marks. */
 
 /* Narrow: one field to a row, the remove button still down the right. */
 @container (max-width: 420px) {

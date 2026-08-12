@@ -439,7 +439,6 @@ export const ur: Record<TranslationKey, string> = {
   'processing.list.empty.cta': 'بیچ درج کریں',
   'processing.list.col.output': 'تیار مال',
   'processing.list.col.date': 'تاریخ',
-  'processing.list.madeFrom': 'کس سے بنا',
   'processing.list.deleteConfirm':
     '{{name}} کا یہ بیچ حذف کریں؟ اسٹاک واپس آ جائے گا، مگر جو قیمتیں نکالی گئیں وہ ویسی ہی رہیں گی۔',
   'processing.list.deleteError': 'یہ بیچ حذف نہیں ہو سکا۔ دوبارہ کوشش کریں۔',

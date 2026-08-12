@@ -445,7 +445,6 @@ export const en = {
   'processing.list.empty.cta': 'Record a batch',
   'processing.list.col.output': 'Made',
   'processing.list.col.date': 'Date',
-  'processing.list.madeFrom': 'Made from',
   // Says the one thing delete cannot undo, so it isn't a surprise afterwards.
   'processing.list.deleteConfirm':
     'Delete this batch of {{name}}? The stock it moved comes back, but the prices it worked out stay as they are.',
