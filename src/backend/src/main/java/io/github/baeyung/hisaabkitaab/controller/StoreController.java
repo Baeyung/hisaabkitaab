@@ -1,7 +1,9 @@
 package io.github.baeyung.hisaabkitaab.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,9 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.baeyung.hisaabkitaab.dto.opening.OpeningCashRequest;
+import io.github.baeyung.hisaabkitaab.dto.store.StoreComparison;
 import io.github.baeyung.hisaabkitaab.dto.store.StoreSummary;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
@@ -20,6 +24,7 @@ import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
+import io.github.baeyung.hisaabkitaab.service.query.DashboardQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -38,11 +43,46 @@ public class StoreController
 {
     private final StoreService storeService;
     private final OpeningEntryService openingEntryService;
+    private final DashboardQueryService dashboardQueryService;
 
     @GetMapping
     public ResponseEntity<List<StoreSummary>> list(@AuthenticationPrincipal UserPrincipal principal)
     {
         return ResponseEntity.ok(storeService.listForUser(principal.getId()));
+    }
+
+    /**
+     * Every shop the caller <em>owns</em>, each with its dashboard over the same window — the
+     * side-by-side view that answers "which of my shops is making the money?", which no
+     * single-shop screen can.
+     *
+     * <p>Owned only, on purpose: a shop shared with this user belongs to someone else's books,
+     * and rolling it into their comparison would be reporting on a business that isn't theirs.
+     * Closed shops stay in — their history is exactly what a comparison is for.
+     *
+     * <p>Access needs no {@code @CurrentStore}: {@code listForUser} has already narrowed the
+     * set to this principal's own shops, so every id handed on below is one they own.
+     *
+     * <p>ponytail: runs the existing per-shop dashboard once per shop rather than one
+     * cross-store query. The plan caps an account at six shops, so that is six reads of a
+     * query already fast enough for the home screen; revisit only if the ceiling moves.
+     */
+    @GetMapping("/compare")
+    public ResponseEntity<List<StoreComparison>> compare(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @AuthenticationPrincipal UserPrincipal principal)
+    {
+        // Same default window as the single-shop dashboard: the last 7 days, today inclusive.
+        LocalDate end = to != null ? to : LocalDate.now();
+        LocalDate start = from != null ? from : end.minusDays(6);
+        return ResponseEntity.ok(storeService.listForUser(principal.getId())
+                .stream()
+                .filter(summary -> summary.role() == StoreRole.OWNER)
+                .map(summary -> new StoreComparison(
+                        summary,
+                        dashboardQueryService.getDashboard(summary.id(), start, end)))
+                .toList());
     }
 
     /** The store's opening drawer balance — the cash on hand at onboarding (0 when none set). */

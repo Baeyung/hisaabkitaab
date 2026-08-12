@@ -54,6 +54,14 @@
   font-size: 13.5px;
   color: var(--kg-muted);
 }
+/* The header's controls — Compare and Add — kept together so they wrap as a pair
+   rather than one of them dropping under the title on its own. */
+.pick__acts {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 /* Stands where "Add a shop" would, so the answer is where the question was asked.
    Sized to the button's own line height to keep the header from shifting. */
 .pick__limit {
@@ -93,7 +101,10 @@
   border: 1px solid var(--kg-line);
   border-radius: 16px;
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.06s ease;
 }
 .card:hover {
   border-color: var(--kg-brand);
@@ -256,7 +267,12 @@
 
 .skel {
   border-radius: 16px;
-  background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);
+  background: linear-gradient(
+    90deg,
+    var(--kg-line) 25%,
+    var(--kg-fill-subtle) 37%,
+    var(--kg-line) 63%
+  );
   background-size: 400% 100%;
 }
 .skel--card {
@@ -280,6 +296,10 @@
   /* Full-bleed on its own row, matching the card stack beneath it. */
   .pick__head .btn {
     width: 100%;
+  }
+  .pick__acts {
+    flex-direction: column;
+    align-items: stretch;
   }
   .pick__limit {
     max-width: none;

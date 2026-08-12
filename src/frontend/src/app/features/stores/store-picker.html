@@ -30,18 +30,31 @@
     </div>
 
     @if (!loading() && !loadError() && list().length > 0) {
-      <!-- At the plan's ceiling the control stays visible but inert, and says why. Hiding it
-           would leave "how do I add another shop?" unanswered; the server refuses either way. -->
-      @if (atStoreLimit()) {
-        <span class="pick__limit">{{ locale.t('stores.addLimit') }}</span>
-      } @else {
-        <a class="btn btn--ghost" routerLink="/stores/new">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          {{ locale.t('stores.add') }}
-        </a>
-      }
+      <div class="pick__acts">
+        <!-- Only with a second shop of their own to compare it against. One shop has a
+             dashboard already, and comparing it with nothing is a page of the same numbers. -->
+        @if (canCompare()) {
+          <a class="btn btn--ghost" routerLink="/stores/compare">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+            </svg>
+            {{ locale.t('stores.compare') }}
+          </a>
+        }
+
+        <!-- At the plan's ceiling the control stays visible but inert, and says why. Hiding it
+             would leave "how do I add another shop?" unanswered; the server refuses either way. -->
+        @if (atStoreLimit()) {
+          <span class="pick__limit">{{ locale.t('stores.addLimit') }}</span>
+        } @else {
+          <a class="btn btn--ghost" routerLink="/stores/new">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {{ locale.t('stores.add') }}
+          </a>
+        }
+      </div>
     }
   </header>
 

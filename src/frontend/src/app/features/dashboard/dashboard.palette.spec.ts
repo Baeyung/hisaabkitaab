@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ChartPalette, PALETTES } from './dashboard';
+import { ChartPalette, PALETTES } from '../../shared/chart/chart-theme';
 
 /**
- * A canvas can't read a CSS custom property, so dashboard.ts keeps its own copy
+ * A canvas can't read a CSS custom property, so chart-theme.ts keeps its own copy
  * of the palette — the one place in the app where the theme colours are
  * duplicated, and so the one place they can silently drift out of step.
  *

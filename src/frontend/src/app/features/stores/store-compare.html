@@ -1,0 +1,163 @@
+<!-- Outside the app shell, like the picker it is reached from — no shop is chosen here. -->
+<app-outer-bar>
+  <a class="topbar__back" routerLink="/stores">{{ locale.t('compare.back') }}</a>
+</app-outer-bar>
+
+<section class="rm-page dw-page cmp">
+  <header class="rm-head">
+    <div>
+      <h1 class="rm-title">{{ locale.t('compare.title') }}</h1>
+      <p class="rm-sub">{{ locale.t('compare.subtitle') }}</p>
+    </div>
+    <div class="rm-toolbar rm-toolbar--filters">
+      <div class="rm-field">
+        <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
+        <app-date-field
+          [value]="filters.from()"
+          (valueChange)="filters.set('from', $event)"
+          [ariaLabel]="locale.t('bill.filter.from')"
+        />
+      </div>
+      <div class="rm-field">
+        <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
+        <app-date-field
+          [value]="filters.to()"
+          (valueChange)="filters.set('to', $event)"
+          [ariaLabel]="locale.t('bill.filter.to')"
+        />
+      </div>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state">
+      <p role="alert" class="rm-alert">{{ locale.t('compare.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">
+        {{ locale.t('stores.retry') }}
+      </button>
+    </div>
+  } @else if (isEmpty()) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('compare.empty.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('compare.empty.body') }}</p>
+    </div>
+  } @else {
+    <!-- The account added up: the shops' own numbers are below, this is the whole business. -->
+    <div class="dw-kpis">
+      <article class="dw-kpi dw-kpi--in">
+        <span class="dw-kpi__label">{{ locale.t('dash.sales') }}</span>
+        <span class="dw-kpi__value num amt--in">{{ locale.money(totals().sales) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('compare.allShops') }}</span>
+      </article>
+      <article class="dw-kpi dw-kpi--out">
+        <span class="dw-kpi__label">{{ locale.t('dash.spend') }}</span>
+        <span class="dw-kpi__value num amt--out">{{ locale.money(totals().spend) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('compare.allShops') }}</span>
+      </article>
+      <article class="dw-kpi dw-kpi--brand">
+        <span class="dw-kpi__label">{{ locale.t('dash.cash') }}</span>
+        <span class="dw-kpi__value num">{{ locale.money(totals().cash) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('compare.allShops') }}</span>
+      </article>
+      <article class="dw-kpi dw-kpi--in">
+        <span class="dw-kpi__label">{{ locale.t('dash.receivables') }}</span>
+        <span class="dw-kpi__value num amt--in">{{ locale.money(totals().receivables) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('auth.hero.theyOwe') }}</span>
+      </article>
+      <article class="dw-kpi dw-kpi--out">
+        <span class="dw-kpi__label">{{ locale.t('dash.payables') }}</span>
+        <span class="dw-kpi__value num amt--out">{{ locale.money(totals().payables) }}</span>
+        <span class="dw-kpi__hint">{{ locale.t('auth.hero.youOwe') }}</span>
+      </article>
+    </div>
+
+    <!-- One revenue line per shop. Line colours follow the card order below. -->
+    <section class="rm-card dw-card">
+      <header class="dw-card__head">
+        <h2 class="dw-card__title">{{ locale.t('compare.chart.title') }}</h2>
+        <span class="dw-card__hint">{{ locale.t('dash.byRevenue') }}</span>
+      </header>
+      <div class="dw-chart">
+        <app-chart [config]="revenueConfig()" [label]="revenueLabel()" />
+      </div>
+    </section>
+
+    <!-- One card per shop, best earner first, each carrying the way into it. -->
+    <div class="dw-grid">
+      @for (row of ranked(); track row.store.id; let i = $index) {
+        <section class="rm-card dw-card">
+          <header class="dw-card__head">
+            <h2 class="dw-card__title cmp-name">
+              <!-- Ties the card to its line in the chart above. Decorative: the shop's name is
+                   right beside it, so the colour never carries meaning on its own. -->
+              <span class="cmp-dot" [style.background]="colorAt(i)" aria-hidden="true"></span>
+              {{ row.store.name }}
+              @if (row.store.suspended) {
+                <span class="cmp-closed">{{ locale.t('stores.suspendedBadge') }}</span>
+              }
+            </h2>
+            <a
+              class="rm-btn rm-btn--ghost rm-btn--sm"
+              [routerLink]="['/s', row.store.id, 'dashboard']"
+            >
+              {{ locale.t('compare.open') }}
+            </a>
+          </header>
+
+          <p class="dw-note cmp-share">
+            {{ locale.t('compare.share', { pct: sharePct(row) + '' }) }}
+          </p>
+
+          <ul class="dw-list">
+            <li class="dw-row">
+              <span class="dw-row__name">{{ locale.t('dash.sales') }}</span>
+              <span class="dw-row__val num amt--in">{{ locale.money(row.dashboard.sales) }}</span>
+            </li>
+            <li class="dw-row">
+              <span class="dw-row__name">{{ locale.t('dash.spend') }}</span>
+              <span class="dw-row__val num amt--out">{{ locale.money(row.dashboard.spend) }}</span>
+            </li>
+            <li class="dw-row">
+              <span class="dw-row__name">{{ locale.t('dash.cash') }}</span>
+              <span class="dw-row__val num">{{ locale.money(row.dashboard.cashPosition) }}</span>
+            </li>
+            <li class="dw-row">
+              <span class="dw-row__name">{{ locale.t('dash.receivables') }}</span>
+              <span class="dw-row__val num amt--in">{{
+                locale.money(row.dashboard.receivablesTotal)
+              }}</span>
+            </li>
+            <li class="dw-row">
+              <span class="dw-row__name">{{ locale.t('dash.payables') }}</span>
+              <span class="dw-row__val num amt--out">{{
+                locale.money(row.dashboard.payablesTotal)
+              }}</span>
+            </li>
+          </ul>
+
+          <p class="dw-grouplabel">{{ locale.t('dash.topItems.title') }}</p>
+          <ul class="dw-list">
+            @for (item of row.dashboard.topItems; track item.itemId) {
+              <li class="dw-row dw-row--bar" [style.--fill.%]="itemPct(row, item.revenue)">
+                <span class="dw-row__fill dw-row__fill--in" aria-hidden="true"></span>
+                <span class="dw-row__name">{{ item.name }}</span>
+                <span class="dw-row__val num">
+                  {{ locale.money(item.revenue) }}
+                  <small class="num">{{ locale.qtyUnit(item.quantity, item.unit) }}</small>
+                </span>
+              </li>
+            } @empty {
+              <li class="dw-empty">{{ locale.t('dash.topItems.empty') }}</li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  }
+</section>

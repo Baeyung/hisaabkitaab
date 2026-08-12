@@ -1,3 +1,5 @@
+import { Store } from './store.models';
+
 /** Mirrors the backend `dto/dashboard` records (GET /api/dashboard). */
 export interface DashboardDailyPoint {
   date: string;
@@ -60,4 +62,13 @@ export interface Dashboard {
   topPayables: DashboardPartyRef[];
   staleReceivables: DashboardStaleParty[];
   topExpenses: DashboardExpenseGroup[];
+}
+
+/**
+ * One owned shop with its dashboard over the shared window, for the compare screen.
+ * Mirrors the backend `StoreComparison` (GET /api/stores/compare).
+ */
+export interface StoreComparison {
+  store: Store;
+  dashboard: Dashboard;
 }

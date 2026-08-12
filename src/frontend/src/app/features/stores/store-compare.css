@@ -1,0 +1,67 @@
+/* Store comparison — the picker's companion screen. Everything on the page is the
+   dashboard's own rm- and dw- primitives from styles.css; only the frame (which the
+   shell would otherwise provide) and the per-shop card's name row are here.
+   Namespaced cmp / topbar. */
+
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--kg-desk);
+}
+
+/* The way back to the picker, projected into <app-outer-bar> where the picker puts
+   Log out. Same shape as .topbar__logout there — one control, same slot. */
+.topbar__back {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding-inline: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+}
+.topbar__back:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.topbar__back:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+.cmp-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The swatch matching this shop's line in the chart above. */
+.cmp-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Same badge the picker puts on a closed shop's name, so it reads the same in both places. */
+.cmp-closed {
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--kg-muted);
+  background: var(--kg-fill-subtle);
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 999px;
+}
+
+/* Sits directly under the card head, above the numbers it describes, so it needs the
+   head's bottom padding rather than .dw-note's footnote spacing. */
+.cmp-share {
+  padding-top: 10px;
+}

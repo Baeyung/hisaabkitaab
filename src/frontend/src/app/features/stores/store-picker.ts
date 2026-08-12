@@ -64,6 +64,14 @@ export class StorePicker {
   protected readonly hasSuspended = computed(() => this.owned().some((s) => s.suspended));
 
   /**
+   * Whether there is anything to compare. Read off the owned shops, not the plan: the compare
+   * screen reports on the user's own books, and a shop shared with them belongs to someone
+   * else's. Nothing gates this beyond arithmetic — the plan already decides how many shops
+   * can exist, so having two is itself the entitlement.
+   */
+  protected readonly canCompare = computed(() => this.owned().length > 1);
+
+  /**
    * What the closed-shop notice says. Two different things: an account still over its plan is
    * being *asked* to choose, one that has already chosen is only being told where its shops
    * went. Keying both off `hasSuspended` alone left the demand standing after it was met.

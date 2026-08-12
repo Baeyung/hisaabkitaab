@@ -73,6 +73,13 @@ export const routes: Routes = [
     canActivate: [apexRedirectGuard, authGuard, storeGuard, planLimitGuard, editorGuard],
     loadComponent: () => import('./features/stores/store-setup').then((m) => m.StoreSetup),
   },
+  // Every owned shop's dashboard side by side. Sits beside the picker rather than in the
+  // shell: it is part of choosing a shop, and no store is selected while it is open.
+  {
+    path: 'stores/compare',
+    canActivate: [apexRedirectGuard, authGuard],
+    loadComponent: () => import('./features/stores/store-compare').then((m) => m.StoreCompare),
+  },
   {
     path: 'stores',
     canActivate: [apexRedirectGuard, authGuard],

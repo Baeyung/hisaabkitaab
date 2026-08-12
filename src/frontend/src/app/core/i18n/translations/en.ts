@@ -120,6 +120,23 @@ export const en = {
   'stores.subtitle': 'Pick the shop whose books you want to open.',
   'stores.add': 'Add a shop',
   'stores.addLimit': 'Your plan is full. Upgrade to add another shop.',
+
+  // Comparing shops. Only reachable with two of your own, so every string here may
+  // assume more than one shop and speak about the business rather than "a shop".
+  'stores.compare': 'Compare shops',
+  'compare.title': 'Compare your shops',
+  'compare.subtitle': 'The same numbers for every shop you own, side by side — best earner first.',
+  'compare.back': 'Your shops',
+  'compare.loadError': 'Couldn’t load the comparison. Please try again.',
+  'compare.empty.title': 'Nothing to compare yet',
+  'compare.empty.body':
+    'No shop recorded a sale or an expense in this period. Try a wider date range.',
+  'compare.allShops': 'All shops together',
+  'compare.chart.title': 'Revenue by shop',
+  'compare.chart.aria':
+    'Daily revenue for {{count}} shops. {{name}} leads the period with {{amount}}.',
+  'compare.share': '{{pct}}% of your revenue this period',
+  'compare.open': 'Open shop',
   'plan.endingSoon': 'Your plan ends on {{date}}. Renew it to keep your books open.',
   'plan.ended': 'Your plan has ended. Renew it to open shops of your own again.',
   // Named for how long it lasts: the strip is back next time the app is opened.
