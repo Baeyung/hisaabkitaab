@@ -16,7 +16,8 @@ export const en = {
   'auth.login.toSignup': 'Create an account',
   'auth.login.forgot': 'Forgot password?',
   'auth.login.invalid': 'Invalid credentials',
-  'auth.login.locked': 'Account locked after too many wrong passwords. Reset your password to unlock it.',
+  'auth.login.locked':
+    'Account locked after too many wrong passwords. Reset your password to unlock it.',
   'auth.login.planExpired':
     'Your plan has ended, so this account is closed for now. Renew it to get back in.',
   'auth.forgot.title': 'Forgot your password?',
@@ -24,7 +25,8 @@ export const en = {
   'auth.forgot.email': 'Email',
   'auth.forgot.submit': 'Send code',
   'auth.forgot.sentTitle': 'Check your email',
-  'auth.forgot.sentSubtitle': 'If that email matches an account, a 6-digit code is on its way. Enter it below.',
+  'auth.forgot.sentSubtitle':
+    'If that email matches an account, a 6-digit code is on its way. Enter it below.',
   'auth.forgot.sentTo': 'Sent to',
   'auth.forgot.otp': 'Reset code',
   'auth.forgot.otpInvalid': 'That code is wrong or has expired. Ask for a new one.',
@@ -37,7 +39,8 @@ export const en = {
   'auth.reset.doneTitle': 'Password reset',
   'auth.reset.doneSubtitle': 'Your password has been reset.',
   'auth.reset.autoLogin': 'Logging you in in {{seconds}}s…',
-  'auth.reset.autoLoginFailed': "Couldn't log you in automatically — please log in with your new password.",
+  'auth.reset.autoLoginFailed':
+    "Couldn't log you in automatically — please log in with your new password.",
   'auth.reset.password': 'New password',
   'auth.reset.confirm': 'Confirm new password',
   'auth.reset.submit': 'Reset password',
@@ -84,7 +87,8 @@ export const en = {
   'theme.light': 'Light',
   'theme.dark': 'Dark',
   'install.button': 'Install app',
-  'install.steps.ios': 'Tap the Share button at the bottom of Safari, then choose “Add to Home Screen”.',
+  'install.steps.ios':
+    'Tap the Share button at the bottom of Safari, then choose “Add to Home Screen”.',
   'install.steps.other':
     'Open your browser’s menu, then choose “Install app” or “Add to Home Screen”.',
   'nav.menu': 'Menu',
@@ -190,7 +194,8 @@ export const en = {
   'setup.shop.title': 'Open a shop',
   'setup.shop.help':
     'Each shop keeps its own cashbook, khatas, and stock — nothing is shared between them. Only the name is needed to start.',
-  'setup.shop.drawer.help': 'The cash in your drawer today. It becomes your cashbook’s opening balance.',
+  'setup.shop.drawer.help':
+    'The cash in your drawer today. It becomes your cashbook’s opening balance.',
   'setup.shop.name': 'Shop name',
   'setup.shop.next': 'Create shop',
   'setup.shop.creating': 'Creating…',
@@ -233,14 +238,16 @@ export const en = {
   'settings.general.newStore': 'New store',
   'settings.general.nameplateHint': 'Your shop, on every bill & khata',
   'settings.general.section.details': 'Store details',
-  'settings.general.details.help': 'The name, address, and number that appear on every bill and khata.',
+  'settings.general.details.help':
+    'The name, address, and number that appear on every bill and khata.',
   'settings.general.section.drawer': 'Opening drawer balance',
   'settings.general.drawer.help':
     "The cash in your drawer when you started — your cashbook's opening balance. Editing this updates it; it won't add a new entry each time.",
   'settings.general.drawer.label': 'Cash on hand',
   'settings.general.drawer.amountPh': 'Amount',
   'settings.general.section.branding': 'Branding',
-  'settings.general.branding.help': 'Your logo and watermark, shown on printed bills and statements.',
+  'settings.general.branding.help':
+    'Your logo and watermark, shown on printed bills and statements.',
   'settings.general.name': 'Store name',
   'settings.general.address': 'Address',
   'settings.general.contact': 'Contact number',
@@ -258,7 +265,8 @@ export const en = {
   'settings.general.imageType': 'Choose an image file.',
   'settings.general.imageTooBig': 'Image must be under 300 KB. Pick a smaller file.',
   'settings.general.section.danger': 'Deleting this store',
-  'settings.general.danger.help': 'Removes the store and everything in its books. There is no undo.',
+  'settings.general.danger.help':
+    'Removes the store and everything in its books. There is no undo.',
   'settings.general.danger.delete': 'Delete this store',
   'settings.general.danger.title': "Delete '{{name}}'?",
   'settings.general.danger.body':
@@ -279,7 +287,8 @@ export const en = {
   'settings.items.deleteAction': 'Delete',
   'settings.items.editRow.save': 'Save',
   'settings.items.editRow.cancel': 'Cancel',
-  'settings.items.delete.confirm': "Delete '{{name}}'? This also deletes any transactions that used it.",
+  'settings.items.delete.confirm':
+    "Delete '{{name}}'? This also deletes any transactions that used it.",
   'settings.items.delete.cancel': 'Cancel',
   'settings.items.delete.confirmBtn': 'Delete',
   'settings.items.empty.title': 'No items yet',
@@ -306,11 +315,13 @@ export const en = {
   'settings.party.deleteAction': 'Delete',
   'settings.party.editRow.save': 'Save',
   'settings.party.editRow.cancel': 'Cancel',
-  'settings.party.delete.confirm': "Delete '{{name}}'? This also deletes any transactions with them.",
+  'settings.party.delete.confirm':
+    "Delete '{{name}}'? This also deletes any transactions with them.",
   'settings.party.delete.cancel': 'Cancel',
   'settings.party.delete.confirmBtn': 'Delete',
   'settings.party.empty.title': 'No parties yet',
-  'settings.party.empty.body': 'Add the customers and suppliers you deal with — their name, contact, and address.',
+  'settings.party.empty.body':
+    'Add the customers and suppliers you deal with — their name, contact, and address.',
   'settings.party.empty.cta': 'Add your first party',
   'settings.party.loadError': "Couldn't load your parties. Please try again.",
   'settings.party.col.opening': 'Opening balance',
@@ -411,7 +422,8 @@ export const en = {
   'processing.billNumber': 'Batch no.',
   'processing.party': 'Party',
   'processing.party.ph': 'Who this batch is for — optional',
-  'processing.party.hint': "Shows in their khata. It moves no money, so their baqaya doesn't change.",
+  'processing.party.hint':
+    "Shows in their khata. It moves no money, so their baqaya doesn't change.",
   'processing.billNumber.ph': 'Optional',
   'processing.description': 'Note',
   'processing.description.ph': 'Optional',
@@ -424,7 +436,8 @@ export const en = {
   'processing.recent': 'Just entered',
   'processing.recent.label': 'Processed',
   'processing.recent.made': 'Made {{qty}}',
-  'processing.list.subtitle': 'Every batch you have run, newest first. Open one to see what went into it.',
+  'processing.list.subtitle':
+    'Every batch you have run, newest first. Open one to see what went into it.',
   'processing.list.loadError': "Couldn't load your batches. Please try again.",
   'processing.list.empty.title': 'No batches yet',
   'processing.list.empty.body':
@@ -481,7 +494,8 @@ export const en = {
   'expense.amount': 'Amount',
   'expense.details': 'Details',
   'expense.details.ph': 'What was it for? e.g. bijli bill',
-  'expense.details.hint': "Every expense needs details — it's what you'll read in the cashbook later.",
+  'expense.details.hint':
+    "Every expense needs details — it's what you'll read in the cashbook later.",
   'expense.category': 'Category',
   'expense.category.PARTS': 'Parts',
   'expense.category.ELECTRICITY': 'Electricity',
@@ -517,8 +531,8 @@ export const en = {
   'whatsapp.failed': "Couldn't send",
   'whatsapp.title': 'Send on WhatsApp',
   'whatsapp.confirm': '{{document}} goes to {{name}} on WhatsApp at {{contact}}.',
-  'whatsapp.noNumber': 'Add a phone number for {{name}} to send on WhatsApp',
-  'whatsapp.addNumber': 'Add number',
+  'whatsapp.noNumber':
+    "Enter {{name}}'s phone number — it is saved to their khata and the message goes there.",
   'whatsapp.notOnPlan': 'Sending on WhatsApp is not part of your plan',
   'whatsapp.quotaLeft': '{{left}} messages left on your plan this month.',
   'whatsapp.noQuota': "You've used all your plan's WhatsApp messages this month",
@@ -603,7 +617,8 @@ export const en = {
   'inventory.col.sale': 'Sale price',
   'inventory.service': 'Service',
   'inventory.empty.title': 'No items yet',
-  'inventory.empty.body': 'Add the cloth you stock and sell, then record entries to see stock here.',
+  'inventory.empty.body':
+    'Add the cloth you stock and sell, then record entries to see stock here.',
   'inventory.empty.cta': 'Add items',
   'inventory.loadError': "Couldn't load your stock. Please try again.",
   'inventory.detail.onHand': 'On hand',
@@ -655,7 +670,8 @@ export const en = {
   'dash.stale.yaxis': 'Amount owed',
   'dash.stale.days': '{{days}} days overdue',
   'dash.stale.empty': 'No aged dues — everyone who owed you has cleared up.',
-  'dash.stale.aria': 'Receivable aging. {{name}} is the stalest at {{amount}}, owed for {{days}} days.',
+  'dash.stale.aria':
+    'Receivable aging. {{name}} is the stalest at {{amount}}, owed for {{days}} days.',
   'bill.subtitle': 'Every sale, saved as a bill.',
   'bill.new': 'New sale',
   'bill.printAll': 'Print',
@@ -757,12 +773,13 @@ export const en = {
   'settings.users.invite.send': 'Give access',
   'settings.users.invite.cancel': 'Cancel',
   'settings.users.removeAction': 'Remove',
-  'settings.users.remove.confirm': "Remove {{email}} from this shop? They lose access straight away; their own account stays.",
+  'settings.users.remove.confirm':
+    'Remove {{email}} from this shop? They lose access straight away; their own account stays.',
   'settings.users.remove.cancel': 'Cancel',
   'settings.users.remove.confirmBtn': 'Remove',
   'settings.users.empty.title': "You're the only one here",
   'settings.users.empty.body':
-    "Give someone their own way in and the shop shows up in their app. They work in the books; deleting the shop, changing its settings and erasing old entries stay with you.",
+    'Give someone their own way in and the shop shows up in their app. They work in the books; deleting the shop, changing its settings and erasing old entries stay with you.',
   'settings.users.empty.cta': 'Add someone',
   'settings.users.loadError': "Couldn't load this shop's people. Please try again.",
   'settings.general.viewerNote': 'Only the shop owner can change these.',

@@ -18,7 +18,8 @@ export const ur: Record<TranslationKey, string> = {
   'auth.login.toSignup': 'نیا اکاؤنٹ بنائیں',
   'auth.login.forgot': 'پاس ورڈ بھول گئے؟',
   'auth.login.invalid': 'غلط تفصیلات',
-  'auth.login.locked': 'بار بار غلط پاس ورڈ کی وجہ سے اکاؤنٹ بند ہو گیا ہے۔ کھولنے کے لیے پاس ورڈ ری سیٹ کریں۔',
+  'auth.login.locked':
+    'بار بار غلط پاس ورڈ کی وجہ سے اکاؤنٹ بند ہو گیا ہے۔ کھولنے کے لیے پاس ورڈ ری سیٹ کریں۔',
   'auth.login.planExpired':
     'آپ کا پلان ختم ہو چکا ہے، اس لیے فی الحال یہ اکاؤنٹ بند ہے۔ دوبارہ کھولنے کے لیے پلان تجدید کریں۔',
   'auth.forgot.title': 'پاس ورڈ بھول گئے؟',
@@ -40,7 +41,8 @@ export const ur: Record<TranslationKey, string> = {
   'auth.reset.doneTitle': 'پاس ورڈ ری سیٹ ہو گیا',
   'auth.reset.doneSubtitle': 'آپ کا پاس ورڈ ری سیٹ ہو گیا ہے۔',
   'auth.reset.autoLogin': '{{seconds}} سیکنڈ میں آپ کو لاگ اِن کیا جا رہا ہے…',
-  'auth.reset.autoLoginFailed': 'خودکار لاگ اِن نہیں ہو سکا — براہِ کرم اپنے نئے پاس ورڈ سے لاگ اِن کریں۔',
+  'auth.reset.autoLoginFailed':
+    'خودکار لاگ اِن نہیں ہو سکا — براہِ کرم اپنے نئے پاس ورڈ سے لاگ اِن کریں۔',
   'auth.reset.password': 'نیا پاس ورڈ',
   'auth.reset.confirm': 'نئے پاس ورڈ کی تصدیق کریں',
   'auth.reset.submit': 'پاس ورڈ ری سیٹ کریں',
@@ -118,7 +120,8 @@ export const ur: Record<TranslationKey, string> = {
   'stores.subtitle': 'وہ دکان چنیں جس کا کھاتہ کھولنا ہے۔',
   'stores.add': 'نئی دکان شامل کریں',
   'stores.addLimit': 'آپ کے پلان کی گنجائش پوری ہو چکی ہے۔ مزید دکان کے لیے پلان بڑھائیں۔',
-  'plan.endingSoon': 'آپ کا پلان {{date}} کو ختم ہو رہا ہے۔ کھاتے کھلے رکھنے کے لیے پلان تجدید کریں۔',
+  'plan.endingSoon':
+    'آپ کا پلان {{date}} کو ختم ہو رہا ہے۔ کھاتے کھلے رکھنے کے لیے پلان تجدید کریں۔',
   'plan.ended': 'آپ کا پلان ختم ہو چکا ہے۔ اپنی نئی دکان کھولنے کے لیے پلان تجدید کریں۔',
   'plan.dismiss': 'اگلی بار تک چھپائیں',
 
@@ -135,7 +138,8 @@ export const ur: Record<TranslationKey, string> = {
   'plan.badge.lastDay': 'آخری دن',
   'plan.badge.ended': 'ختم ہو چکا',
   'stores.suspendedBadge': 'بند',
-  'stores.suspendedNote': 'آپ کا پلان اب سب دکانوں کو نہیں سنبھالتا۔ منتخب کریں کہ کون سی کھلی رہیں۔',
+  'stores.suspendedNote':
+    'آپ کا پلان اب سب دکانوں کو نہیں سنبھالتا۔ منتخب کریں کہ کون سی کھلی رہیں۔',
   'stores.suspendedSettled':
     'آپ کی کچھ دکانیں بند ہیں — ان کا کوئی حساب ضائع نہیں ہوا۔ دوبارہ کھولنے کے لیے اپنا پلان بڑھائیں۔',
   'stores.suspendedCta': 'دکانیں منتخب کریں',
@@ -184,7 +188,8 @@ export const ur: Record<TranslationKey, string> = {
   'setup.shop.title': 'نئی دکان کھولیں',
   'setup.shop.help':
     'ہر دکان کا اپنا روزنامچہ، کھاتے اور اسٹاک ہوتا ہے — کوئی چیز آپس میں سانجھی نہیں ہوتی۔ شروع کرنے کے لیے صرف نام درکار ہے۔',
-  'setup.shop.drawer.help': 'آج آپ کی دراز میں موجود نقدی۔ یہی آپ کے روزنامچے کی ابتدائی رقم بنے گی۔',
+  'setup.shop.drawer.help':
+    'آج آپ کی دراز میں موجود نقدی۔ یہی آپ کے روزنامچے کی ابتدائی رقم بنے گی۔',
   'setup.shop.name': 'دکان کا نام',
   'setup.shop.next': 'دکان بنائیں',
   'setup.shop.creating': 'بن رہی ہے…',
@@ -234,7 +239,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.general.drawer.label': 'موجودہ نقدی',
   'settings.general.drawer.amountPh': 'رقم',
   'settings.general.section.branding': 'برانڈنگ',
-  'settings.general.branding.help': 'آپ کا لوگو اور واٹر مارک، چھپے ہوئے بل اور اسٹیٹمنٹ پر دکھایا جاتا ہے۔',
+  'settings.general.branding.help':
+    'آپ کا لوگو اور واٹر مارک، چھپے ہوئے بل اور اسٹیٹمنٹ پر دکھایا جاتا ہے۔',
   'settings.general.name': 'دکان کا نام',
   'settings.general.address': 'پتہ',
   'settings.general.contact': 'رابطہ نمبر',
@@ -252,7 +258,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.general.imageType': 'تصویر کی فائل منتخب کریں۔',
   'settings.general.imageTooBig': 'تصویر 300 کلوبائٹ سے کم ہونی چاہیے۔ چھوٹی فائل منتخب کریں۔',
   'settings.general.section.danger': 'یہ دکان حذف کرنا',
-  'settings.general.danger.help': 'دکان اور اس کے کھاتوں کی ہر چیز ختم ہو جائے گی۔ اسے واپس نہیں لایا جا سکتا۔',
+  'settings.general.danger.help':
+    'دکان اور اس کے کھاتوں کی ہر چیز ختم ہو جائے گی۔ اسے واپس نہیں لایا جا سکتا۔',
   'settings.general.danger.delete': 'یہ دکان حذف کریں',
   'settings.general.danger.title': "'{{name}}' حذف کریں؟",
   'settings.general.danger.body':
@@ -273,15 +280,18 @@ export const ur: Record<TranslationKey, string> = {
   'settings.items.deleteAction': 'حذف کریں',
   'settings.items.editRow.save': 'محفوظ کریں',
   'settings.items.editRow.cancel': 'منسوخ',
-  'settings.items.delete.confirm': "'{{name}}' حذف کریں؟ اسے استعمال کرنے والی تمام لین دین بھی حذف ہو جائیں گی۔",
+  'settings.items.delete.confirm':
+    "'{{name}}' حذف کریں؟ اسے استعمال کرنے والی تمام لین دین بھی حذف ہو جائیں گی۔",
   'settings.items.delete.cancel': 'منسوخ',
   'settings.items.delete.confirmBtn': 'حذف کریں',
   'settings.items.empty.title': 'ابھی کوئی آئٹم نہیں',
-  'settings.items.empty.body': 'وہ کپڑا شامل کریں جو آپ رکھتے اور بیچتے ہیں — نام، یونٹ اور قیمتیں۔',
+  'settings.items.empty.body':
+    'وہ کپڑا شامل کریں جو آپ رکھتے اور بیچتے ہیں — نام، یونٹ اور قیمتیں۔',
   'settings.items.empty.cta': 'اپنا پہلا آئٹم شامل کریں',
   'settings.items.loadError': 'آپ کے آئٹمز لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔',
   'settings.items.service': 'سروس',
-  'settings.items.service.hint': 'وہ کام جو آپ بیچتے ہیں، جیسے ڈرائی کلیننگ — اس کا اسٹاک نہیں رکھا جاتا۔',
+  'settings.items.service.hint':
+    'وہ کام جو آپ بیچتے ہیں، جیسے ڈرائی کلیننگ — اس کا اسٹاک نہیں رکھا جاتا۔',
   'settings.items.col.opening': 'ابتدائی اسٹاک',
   'settings.items.openingAction': 'ابتدائی اسٹاک درج کریں',
   'settings.items.opening.set': '+ درج کریں',
@@ -300,11 +310,13 @@ export const ur: Record<TranslationKey, string> = {
   'settings.party.deleteAction': 'حذف کریں',
   'settings.party.editRow.save': 'محفوظ کریں',
   'settings.party.editRow.cancel': 'منسوخ',
-  'settings.party.delete.confirm': "'{{name}}' حذف کریں؟ ان کے ساتھ تمام لین دین بھی حذف ہو جائیں گی۔",
+  'settings.party.delete.confirm':
+    "'{{name}}' حذف کریں؟ ان کے ساتھ تمام لین دین بھی حذف ہو جائیں گی۔",
   'settings.party.delete.cancel': 'منسوخ',
   'settings.party.delete.confirmBtn': 'حذف کریں',
   'settings.party.empty.title': 'ابھی کوئی پارٹی نہیں',
-  'settings.party.empty.body': 'وہ گاہک اور بیوپاری شامل کریں جن سے آپ کا لین دین ہے — نام، رابطہ اور پتہ۔',
+  'settings.party.empty.body':
+    'وہ گاہک اور بیوپاری شامل کریں جن سے آپ کا لین دین ہے — نام، رابطہ اور پتہ۔',
   'settings.party.empty.cta': 'اپنی پہلی پارٹی شامل کریں',
   'settings.party.loadError': 'آپ کی پارٹیاں لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
   'settings.party.col.opening': 'ابتدائی بیلنس',
@@ -399,12 +411,14 @@ export const ur: Record<TranslationKey, string> = {
   'processing.line.remove': 'سطر ہٹائیں',
   'processing.totalCost': 'کل لاگت',
   'processing.unitCost': 'فی یونٹ لاگت',
-  'processing.unitCost.hint': 'فی یونٹ لاگت اور ضائع خود نکل آتے ہیں — اپنی مرضی کے لیے اوپر لکھ دیں۔',
+  'processing.unitCost.hint':
+    'فی یونٹ لاگت اور ضائع خود نکل آتے ہیں — اپنی مرضی کے لیے اوپر لکھ دیں۔',
   'processing.unitCost.locked': 'پہلے بننے والے یونٹ لکھیں، پھر فی یونٹ لاگت کھل جائے گی۔',
   'processing.billNumber': 'بیچ نمبر',
   'processing.party': 'پارٹی',
   'processing.party.ph': 'یہ بیچ کس کے لیے ہے — اختیاری',
-  'processing.party.hint': 'ان کے کھاتے میں نظر آئے گا۔ رقم کوئی نہیں چلتی، اس لیے بقایا وہی رہے گا۔',
+  'processing.party.hint':
+    'ان کے کھاتے میں نظر آئے گا۔ رقم کوئی نہیں چلتی، اس لیے بقایا وہی رہے گا۔',
   'processing.billNumber.ph': 'اختیاری',
   'processing.description': 'نوٹ',
   'processing.description.ph': 'اختیاری',
@@ -420,7 +434,8 @@ export const ur: Record<TranslationKey, string> = {
   'processing.list.subtitle': 'آپ کے تمام بیچ، نیا پہلے۔ تفصیل دیکھنے کے لیے کھولیں۔',
   'processing.list.loadError': 'بیچ لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔',
   'processing.list.empty.title': 'ابھی کوئی بیچ نہیں',
-  'processing.list.empty.body': 'خام مال سے جو تیار کریں وہ یہاں آئے گا — لاگت کے ساتھ، اسٹاک میں شامل۔',
+  'processing.list.empty.body':
+    'خام مال سے جو تیار کریں وہ یہاں آئے گا — لاگت کے ساتھ، اسٹاک میں شامل۔',
   'processing.list.empty.cta': 'بیچ درج کریں',
   'processing.list.col.output': 'تیار مال',
   'processing.list.col.date': 'تاریخ',
@@ -508,8 +523,8 @@ export const ur: Record<TranslationKey, string> = {
   'whatsapp.failed': 'نہیں بھیجا جا سکا',
   'whatsapp.title': 'واٹس ایپ پر بھیجیں',
   'whatsapp.confirm': '{{document}}، {{name}} کو واٹس ایپ نمبر {{contact}} پر بھیجا جائے گا۔',
-  'whatsapp.noNumber': 'واٹس ایپ پر بھیجنے کے لیے {{name}} کا فون نمبر شامل کریں',
-  'whatsapp.addNumber': 'نمبر شامل کریں',
+  'whatsapp.noNumber':
+    '{{name}} کا فون نمبر لکھیں — یہ اُن کے کھاتے میں محفوظ ہو جائے گا اور پیغام اسی پر جائے گا۔',
   'whatsapp.notOnPlan': 'واٹس ایپ پر بھیجنا آپ کے پلان میں شامل نہیں',
   'whatsapp.quotaLeft': 'اس مہینے آپ کے پلان میں {{left}} پیغام باقی ہیں۔',
   'whatsapp.noQuota': 'اس مہینے کے واٹس ایپ پیغامات آپ استعمال کر چکے ہیں',
@@ -745,7 +760,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.users.invite.send': 'رسائی دیں',
   'settings.users.invite.cancel': 'منسوخ',
   'settings.users.removeAction': 'ہٹا دیں',
-  'settings.users.remove.confirm': '{{email}} کو اس دکان سے ہٹا دیں؟ ان کی رسائی فوراً ختم ہو جائے گی؛ ان کا اپنا اکاؤنٹ باقی رہے گا۔',
+  'settings.users.remove.confirm':
+    '{{email}} کو اس دکان سے ہٹا دیں؟ ان کی رسائی فوراً ختم ہو جائے گی؛ ان کا اپنا اکاؤنٹ باقی رہے گا۔',
   'settings.users.remove.cancel': 'منسوخ',
   'settings.users.remove.confirmBtn': 'ہٹا دیں',
   'settings.users.empty.title': 'یہاں صرف آپ ہیں',

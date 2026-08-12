@@ -22,6 +22,10 @@ export class PartyService {
     return firstValueFrom(this.http.get<Party[]>(this.url));
   }
 
+  get(id: string): Promise<Party> {
+    return firstValueFrom(this.http.get<Party>(`${this.url}/${id}`));
+  }
+
   create(draft: PartyDraft): Promise<Party> {
     return firstValueFrom(this.http.post<Party>(this.url, draft));
   }
