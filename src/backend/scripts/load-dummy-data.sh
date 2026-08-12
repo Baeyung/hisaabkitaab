@@ -19,8 +19,9 @@
 # STORES (all under demo@, except Chai Dhaba)
 #   1. Kiryana Store   grocery: 7 parties, 20 items, ~46 entries over 30 days,
 #                      incl. the FIFO receipt demo. The big dataset.
-#   2. Kapra Ghar      cloth shop: 4 parties, 5 items (unit "gz"), ~13 entries,
-#                      credit + cash purchases for the PURCHASE screen.
+#   2. Kapra Ghar      cloth shop: 4 parties, 7 items (unit "gz"), ~13 entries,
+#                      credit + cash purchases for the PURCHASE screen, plus two
+#                      processed-goods batches (kora dyed into chamki).
 #   3. Hardware Point  thin store: 2 parties, 4 items, 6 entries, opening
 #                      balances/stock/cash set -- what a freshly onboarded
 #                      shop looks like.
@@ -139,6 +140,23 @@ settle() {
 expense() {
   publish_event "{\"transactionEvent\":\"EXPENSE\",\"cashAmount\":$1,\"description\":\"$4\",\"billNumber\":\"$3\",\"billDate\":\"$(days_ago "$2")\",\"expenseCategory\":\"$5\"}"
   info "$3 ($5)"
+}
+
+# --- processed goods --------------------------------------------------------
+# A batch has its own endpoint, not /event: it moves stock both ways at once and
+# answers 204, so publish_event's 200 check does not fit.
+raw_line()  { printf '{"name":"%s","unit":"%s","quantity":%s,"pricePerUnit":%s}' "$1" "$2" "$3" "$4"; }        # <name> <unit> <qty> <rate>
+used_line() { printf '{"itemId":"%s","name":"%s","unit":"%s","quantity":%s,"pricePerUnit":%s}' "$1" "$2" "$3" "$4" "$5"; }
+out_line()  { printf '{"itemId":"%s","name":"%s","unit":"%s","quantity":%s,"wastage":%s}' "$1" "$2" "$3" "$4" "$5"; } # empty itemId = create by name
+party_ref() { [ -n "$1" ] && printf '{"partyId":"%s","name":"%s"}' "$1" "$2" || printf 'null'; }
+
+# args: <days_ago> <billNo> <desc> <partyJson> <rawJson> <consumablesJson> <outputJson>
+# unitCost is left out on purpose -- the backend derives it from the inputs.
+batch() {
+  local resp code
+  resp=$(sreq POST /processing "{\"billNumber\":\"$2\",\"billDate\":\"$(days_ago "$1")\",\"description\":\"$3\",\"party\":$4,\"rawItems\":[$5],\"processingItems\":[$6],\"output\":$7}")
+  code=$(code_of "$resp"); [ "$code" = "204" ] || die "batch $2 failed (HTTP $code): $(body_of "$resp")"
+  info "$2"
 }
 
 # Onboarding openings -- set, not added, so re-runs leave them where they are.
@@ -495,6 +513,30 @@ counter_txn SALE 5200 5200 3 KG-SALE-004 "Linen, walk-in customer" \
 expense 1800 2 KG-EXP-003 "Electricity bill" "ELECTRICITY"
 txn SALE 0 9000 0 KG-SALE-005 "Silk on credit to Zainab Boutique" "$P2_ZAINAB" "Zainab Boutique" \
   "$(line "$I2_SILK" "Silk-303" 10 900)"
+
+# ---- Processed goods: greige cloth (KORA) dyed into chamki. The raw material is
+#      deliberately no catalogue item -- it only ever exists as a cost on the batch.
+say "Kapra Ghar: processing batches"
+
+I2_GREEN=$(get_or_create_item "Green Colour" "gram" 600 500)
+I2_COAL=$(get_or_create_item  "Wood/Coal"    "kg"   120 100)
+open_stock "$I2_GREEN" 100
+open_stock "$I2_COAL" 200
+info "2 consumables stocked."
+
+# Into an item that already has stock and a price: exercises the weighted-average
+# cost and the margin it keeps. (25000 + 2500 + 2000) / 90 = 327.7778 a gaz.
+batch 6 KG-PROC-001 "Kora dyed into chamki" "$(party_ref "" "")" \
+  "$(raw_line "KORA" "gz" 100 250)" \
+  "$(used_line "$I2_GREEN" "Green Colour" "gram" 5 500),$(used_line "$I2_COAL" "Wood/Coal" "kg" 20 100)" \
+  "$(out_line "$I2_CHAMKI" "Chamki-101" "gz" 90 10)"
+
+# Job work for a party: shows on Zainab's khata and leaves her baqaya untouched,
+# and her contact makes the batch WhatsApp-able. Output is a brand-new item.
+batch 2 KG-PROC-002 "Job work dyeing for Zainab Boutique" "$(party_ref "$P2_ZAINAB" "Zainab Boutique")" \
+  "$(raw_line "KORA" "gz" 200 260)" \
+  "$(used_line "$I2_GREEN" "Green Colour" "gram" 8 500),$(used_line "$I2_COAL" "Wood/Coal" "kg" 30 100)" \
+  "$(out_line "" "Chamki-707" "gz" 190 10)"
 
 # ===========================================================================
 # STORE 3 -- Hardware Point: a thin, freshly-onboarded shop
