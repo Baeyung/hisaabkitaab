@@ -40,20 +40,14 @@ spring:
           starttls:
             enable: true
 
-# Logging. Every line carries the request's trace id (see RequestLogFilter), which is also
-# returned to the caller as the X-Trace-Id header and in the JSON error body — so a reported
-# failure can be grepped straight out of the log file.
 logging:
   level:
     root: INFO
-    # TRACE also prints the stack trace behind every 4xx, not just 5xx.
     io.github.baeyung.hisaabkitaab: ${LOG_LEVEL:DEBUG}
-    # Flip these on when a request misbehaves before it reaches a controller / when SQL is suspect.
     org.springframework.web: ${WEB_LOG_LEVEL:INFO}
     org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
     org.hibernate.SQL: ${SQL_LOG_LEVEL:INFO}
   pattern:
-    # Slots into Spring Boot's default console/file patterns, so colours and defaults survive.
     correlation: "[%X{traceId:-        }] "
   file:
     name: ${LOG_FILE:logs/hisaabkitaab.log}
@@ -65,18 +59,11 @@ logging:
 
 app:
   whatsapp:
-    # Master switch for outgoing WhatsApp: off in dev, so nothing reaches Meta. Sending also
-    # stays off while phone-number-id or access-token is blank, whatever this says.
     enabled: ${WHATSAPP_ENABLED:false}
     phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
     access-token: ${WHATSAPP_ACCESS_TOKEN:}
-    # Graph API versions expire after ~2 years; bump here rather than in code.
     api-base-url: ${WHATSAPP_API_BASE_URL:https://graph.facebook.com/v25.0}
-    # Shared secret Meta echoes back on the webhook verification handshake.
     verify-token: ${WHATSAPP_VERIFY_TOKEN:}
-    # Approved template with a document header, used to send a party their bill, statement
-    # or cashbook. Approved once per language (en_US, ur) under the one name; override only
-    # to roll out a newly approved version without a deploy.
     document-template: ${WHATSAPP_DOCUMENT_TEMPLATE:document_share}
   pdf:
     renderer-url: ${PDF_RENDERER_URL:http://localhost:3000}
@@ -87,13 +74,6 @@ app:
   verification:
     enabled: ${app.email.enabled}
   plans:
-    # Gates plan *enforcement* only, and is read in exactly one place (PlanService.enabled).
-    # Plans are always recorded — every signup gets a trial — so switching this on later
-    # applies to the accounts already there.
-    #
-    # Off by default, and deliberately so: switching it on starts a one-month clock on every
-    # existing account, at the end of which they can no longer sign in. That is a decision to
-    # take on a date you picked, not one to inherit from a default on the next deploy.
     enabled: ${PLANS_ENABLED:true}
   admin:
     emails: ${ADMIN_EMAILS:t@t.com}
