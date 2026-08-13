@@ -55,7 +55,9 @@
             <span class="nav-icon">
               <ng-container [ngTemplateOutlet]="icon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
             </span>
-            <span class="nav-label">{{ locale.t(item.key) }}</span>
+            <!-- The shop's own name for it wins over the built-in translation. One string
+                 for both languages: a shop's word for something is its own word. -->
+            <span class="nav-label">{{ item.label || locale.t(item.key) }}</span>
           </a>
         } @else {
           <button
@@ -69,7 +71,7 @@
             <span class="nav-icon">
               <ng-container [ngTemplateOutlet]="icon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
             </span>
-            <span class="nav-label">{{ locale.t(item.key) }}</span>
+            <span class="nav-label">{{ item.label || locale.t(item.key) }}</span>
             @if (blocked(item)) {
               <span class="nav-tag">{{ locale.t('stores.suspendedBadge') }}</span>
             }
@@ -86,7 +88,7 @@
               @for (child of item.children; track child.key) {
                 @if (blocked(child)) {
                   <span class="nav-item nav-sub nav-item--off" aria-disabled="true" [attr.title]="locale.t('nav.closedHint')">
-                    <span class="nav-label">{{ locale.t(child.key) }}</span>
+                    <span class="nav-label">{{ child.label || locale.t(child.key) }}</span>
                     <span class="nav-tag">{{ locale.t('stores.suspendedBadge') }}</span>
                   </span>
                 } @else {
@@ -96,7 +98,7 @@
                     routerLinkActive="active"
                     (click)="closeOverlay()"
                   >
-                    <span class="nav-label">{{ locale.t(child.key) }}</span>
+                    <span class="nav-label">{{ child.label || locale.t(child.key) }}</span>
                   </a>
                 }
               }
@@ -109,7 +111,7 @@
     <div class="foot">
       <!-- Standing state, not somewhere to go — so it sits with the account controls
            rather than in the nav, and is not a link. -->
-      @if (planBadge(); as plan) {
+      @if (chrome().plan && planBadge(); as plan) {
         <div class="plan">
           <div class="plan-row">
             <span class="plan-label">{{ locale.t('plan.badge.label') }}</span>
@@ -129,9 +131,15 @@
           }
         </div>
       }
-      <app-theme-toggle />
+      @if (chrome().theme) {
+        <app-theme-toggle />
+      }
+      <!-- Never behind a shop setting. Everything else in this foot is a convenience; this
+           is the way out of a language you cannot read. -->
       <app-language-toggle />
-      <app-install-button />
+      @if (chrome().install) {
+        <app-install-button />
+      }
       <button type="button" class="logout" (click)="logout()">
         {{ locale.t('home.logout') }}
       </button>

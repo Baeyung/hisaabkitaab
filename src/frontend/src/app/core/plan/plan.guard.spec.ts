@@ -35,6 +35,7 @@ const storeWith = (id: string, role: StoreRole): Store => ({
   role,
   ownerName: 'Someone',
   suspended: false,
+  settings: { menu: [], hideChrome: [] },
 });
 
 /** Over its shop ceiling: two open against a plan covering one. */

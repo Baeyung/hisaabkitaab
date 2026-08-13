@@ -1,0 +1,21 @@
+--
+-- Name: stores.settings; Type: COLUMN; Schema: public; Owner: -
+--
+-- How this shop's owner has arranged the app for everyone working in it: the order of the
+-- menu, which of its entries are shown, what they are called, and which of the sidebar's
+-- controls are on. One JSON document in one text column, mapped by StoreSettingsConverter.
+--
+-- A column on stores rather than a store_settings table of its own: the row already exists
+-- for every shop, so a table would be a 1:1 join whose only extra state is "no row yet" —
+-- a case this column answers with null. Null is the whole default: a shop that has never
+-- been arranged reads as StoreSettings.EMPTY and gets the built-in menu.
+--
+-- Deliberately opaque to the database and nearly opaque to the backend, which caps the
+-- document's size and validates nothing else. What the keys inside it mean is the client's
+-- NAV table, and only the client can say whether 'nav.ledger' still exists — see
+-- applyMenu() in layout/shell/nav.ts, which reconciles a saved arrangement against the menu
+-- the running app actually has. Storing it as text keeps this column from having to be
+-- migrated every time a screen is added or renamed.
+--
+
+ALTER TABLE public.stores ADD COLUMN settings text;

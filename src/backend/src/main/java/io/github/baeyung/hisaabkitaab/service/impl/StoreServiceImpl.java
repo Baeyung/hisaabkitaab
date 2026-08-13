@@ -13,6 +13,7 @@ import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.enums.PlanCapacity;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
+import io.github.baeyung.hisaabkitaab.models.StoreSettings;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreAccessRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
@@ -112,6 +113,16 @@ public class StoreServiceImpl implements StoreService
         store.setWatermarkUri(changes.getWatermarkUri());
 
         // Only ever reached through @CurrentStore(OWNER), so the caller is the owner.
+        return StoreSummary.of(storeRepository.save(store), StoreRole.OWNER);
+    }
+
+    @Override
+    public StoreSummary updateSettings(String storeId, StoreSettings settings)
+    {
+        Store store = load(storeId);
+        store.setSettings(settings);
+
+        // Owner-only for the same reason as above (@CurrentStore(OWNER)).
         return StoreSummary.of(storeRepository.save(store), StoreRole.OWNER);
     }
 

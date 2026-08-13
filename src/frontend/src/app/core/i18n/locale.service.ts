@@ -4,9 +4,11 @@ import { en, TranslationKey } from './translations/en';
 import { ur } from './translations/ur';
 import { TransactionEventKind } from '../store/cashbook.models';
 
-type Locale = 'en' | 'ur';
+export type Locale = 'en' | 'ur';
 const LOCALE_KEY = 'hk.locale';
 const dictionaries: Record<Locale, Record<TranslationKey, string>> = { en, ur };
+/** Every language the app speaks, for the switcher to lay out. Order is the reading order. */
+const LOCALES: readonly Locale[] = ['en', 'ur'];
 
 @Injectable({ providedIn: 'root' })
 export class LocaleService {
@@ -17,6 +19,8 @@ export class LocaleService {
 
   readonly locale = this._locale.asReadonly();
   readonly dir = computed<'rtl' | 'ltr'>(() => (this._locale() === 'ur' ? 'rtl' : 'ltr'));
+  /** Mirrors ThemeService.options — what the switcher in the sidebar foot renders. */
+  readonly options = LOCALES;
 
   constructor() {
     effect(() => {

@@ -1,0 +1,210 @@
+<section class="set">
+  <header class="set__head">
+    <div class="set__titles">
+      <h1 class="set__title">{{ locale.t('nav.settings.menu') }}</h1>
+      <p class="set__sub">{{ locale.t('settings.menu.subtitle') }}</p>
+    </div>
+  </header>
+
+  <form class="set__card" (submit)="$event.preventDefault(); save()">
+    <!-- ── the menu itself ───────────────────────────────────────── -->
+    <section class="sec" aria-labelledby="sec-items">
+      <div class="sec__intro">
+        <h2 class="sec__eyebrow" id="sec-items">{{ locale.t('settings.menu.section.items') }}</h2>
+        <p class="sec__desc">{{ locale.t('settings.menu.items.help') }}</p>
+        <!-- Said plainly and once: an entry taken out of the menu is out of sight, not out
+             of reach. Who may open what is roles, and this screen does not touch them. -->
+        <p class="sec__note">{{ locale.t('settings.menu.items.notALock') }}</p>
+      </div>
+
+      <div class="sec__fields">
+        <ul class="rows" cdkDropList (cdkDropListDropped)="drop(null, $event)">
+          @for (item of items(); track item.key; let i = $index; let count = $count) {
+            <li class="row" [class.row--off]="item.hidden" cdkDrag cdkDragPreviewContainer="parent">
+              <div class="row__main">
+                <!-- Mouse and touch reordering. aria-hidden and not focusable: cdkDrag has
+                     no keyboard mode, so the arrows beside it are the keyboard path and
+                     announcing a handle that cannot be operated would be a dead end. -->
+                <span class="row__grip" cdkDragHandle aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+                    <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+                    <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+                  </svg>
+                </span>
+
+                <!-- The built-in name is the placeholder, so leaving the box empty visibly
+                     means "call it what it is called" rather than "call it nothing". -->
+                <input
+                  class="row__name"
+                  type="text"
+                  maxlength="24"
+                  [value]="item.label ?? ''"
+                  [placeholder]="locale.t(item.key)"
+                  [attr.aria-label]="locale.t('settings.menu.nameFor', { item: locale.t(item.key) })"
+                  (input)="rename(null, item.key, $event)"
+                />
+
+                <div class="row__moves">
+                  <button
+                    type="button"
+                    class="mv"
+                    [disabled]="i === 0"
+                    [attr.aria-label]="locale.t('settings.menu.up', { item: locale.t(item.key) })"
+                    (click)="nudge(null, i, -1)"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 15l6-6 6 6" /></svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="mv"
+                    [disabled]="i === count - 1"
+                    [attr.aria-label]="locale.t('settings.menu.down', { item: locale.t(item.key) })"
+                    (click)="nudge(null, i, 1)"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                </div>
+
+                <label
+                  class="sw"
+                  [class.sw--locked]="item.locked"
+                  [attr.title]="item.locked ? locale.t('settings.menu.lockedHint') : null"
+                >
+                  <input
+                    class="sw__box"
+                    type="checkbox"
+                    [checked]="!item.hidden"
+                    [disabled]="item.locked"
+                    (change)="setShown(null, item.key, $event)"
+                  />
+                  <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
+                  <span class="sw__text">{{ locale.t('settings.menu.show') }}</span>
+                </label>
+              </div>
+
+              <!-- A group's own entries, ordered inside it. Its own drop list, unconnected
+                   to the one above, so nothing can be dragged out of its group and into a
+                   place the menu has no shape for. -->
+              @if (item.kind === 'group') {
+                <ul class="rows rows--sub" cdkDropList (cdkDropListDropped)="drop(item, $event)">
+                  @for (child of item.children; track child.key; let j = $index; let subCount = $count) {
+                    <li class="row row--sub" [class.row--off]="child.hidden" cdkDrag cdkDragPreviewContainer="parent">
+                      <div class="row__main">
+                        <span class="row__grip" cdkDragHandle aria-hidden="true">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+                            <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+                            <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+                          </svg>
+                        </span>
+
+                        <input
+                          class="row__name"
+                          type="text"
+                          maxlength="24"
+                          [value]="child.label ?? ''"
+                          [placeholder]="locale.t(child.key)"
+                          [attr.aria-label]="locale.t('settings.menu.nameFor', { item: locale.t(child.key) })"
+                          (input)="rename(item, child.key, $event)"
+                        />
+
+                        <div class="row__moves">
+                          <button
+                            type="button"
+                            class="mv"
+                            [disabled]="j === 0"
+                            [attr.aria-label]="locale.t('settings.menu.up', { item: locale.t(child.key) })"
+                            (click)="nudge(item, j, -1)"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 15l6-6 6 6" /></svg>
+                          </button>
+                          <button
+                            type="button"
+                            class="mv"
+                            [disabled]="j === subCount - 1"
+                            [attr.aria-label]="locale.t('settings.menu.down', { item: locale.t(child.key) })"
+                            (click)="nudge(item, j, 1)"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6" /></svg>
+                          </button>
+                        </div>
+
+                        <label
+                          class="sw"
+                          [class.sw--locked]="child.locked"
+                          [attr.title]="child.locked ? locale.t('settings.menu.lockedHint') : null"
+                        >
+                          <input
+                            class="sw__box"
+                            type="checkbox"
+                            [checked]="!child.hidden"
+                            [disabled]="child.locked"
+                            (change)="setShown(item, child.key, $event)"
+                          />
+                          <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
+                          <span class="sw__text">{{ locale.t('settings.menu.show') }}</span>
+                        </label>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── the sidebar's own controls ────────────────────────────── -->
+    <section class="sec" aria-labelledby="sec-chrome">
+      <div class="sec__intro">
+        <h2 class="sec__eyebrow" id="sec-chrome">{{ locale.t('settings.menu.section.chrome') }}</h2>
+        <p class="sec__desc">{{ locale.t('settings.menu.chrome.help') }}</p>
+      </div>
+
+      <div class="sec__fields">
+        @for (control of chromeControls; track control.item) {
+          <label class="sw sw--wide">
+            <input
+              class="sw__box"
+              type="checkbox"
+              [checked]="chromeShown(control.item)"
+              (change)="setChrome(control.item, $event)"
+            />
+            <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
+            <span class="sw__text">{{ locale.t(control.label) }}</span>
+          </label>
+        }
+
+        <!-- Why the language switcher is not in the list above. Said here rather than left
+             for someone to wonder about: it is the way out of a language you cannot read,
+             and no shop setting may take it away. -->
+        <p class="sec__note sec__note--inline">{{ locale.t('settings.menu.chrome.languageWhy') }}</p>
+      </div>
+    </section>
+
+    <div class="set__foot">
+      <button type="submit" class="btn btn--primary" [disabled]="saving()">
+        {{ saving() ? locale.t('settings.menu.saving') : locale.t('settings.menu.save') }}
+      </button>
+      <button type="button" class="btn btn--ghost" (click)="reset()">
+        {{ locale.t('settings.menu.reset') }}
+      </button>
+      <span class="set__status" role="status" aria-live="polite">
+        @if (savedKey(); as key) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M4 12l5 5L20 6" />
+          </svg>
+          {{ locale.t(key) }}
+        } @else if (hiddenCount() > 0) {
+          <span class="set__count">{{ locale.t('settings.menu.hiddenCount', { n: hiddenCount().toString() }) }}</span>
+        }
+      </span>
+    </div>
+
+    @if (errorKey(); as key) {
+      <p role="alert" class="set__alert">{{ locale.t(key) }}</p>
+    }
+  </form>
+</section>

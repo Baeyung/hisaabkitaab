@@ -5,6 +5,7 @@ import java.util.List;
 import io.github.baeyung.hisaabkitaab.dto.store.StoreSummary;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
+import io.github.baeyung.hisaabkitaab.models.StoreSettings;
 
 /**
  * Stores are handed back as {@link StoreSummary}, never as the entity: the summary carries
@@ -31,6 +32,13 @@ public interface StoreService
     StoreSummary create(Store store, String ownerId);
 
     StoreSummary update(String storeId, Store changes);
+
+    /**
+     * Replace how the shop is arranged — the whole document, not a patch. The client holds
+     * the complete arrangement (it has to, to draw the menu) and sends it back, so there is
+     * nothing here to merge and no way for two half-updates to disagree.
+     */
+    StoreSummary updateSettings(String storeId, StoreSettings settings);
 
     /**
      * Cascade-deletes the store's transactions, items, parties and shared access, then the

@@ -23,6 +23,8 @@ const storeWith = (role: StoreRole, suspended = false): Store => ({
   role,
   ownerName: 'Rana',
   suspended,
+  // A shop nobody has arranged: the built-in menu, nothing hidden.
+  settings: { menu: [], hideChrome: [] },
 });
 
 /**

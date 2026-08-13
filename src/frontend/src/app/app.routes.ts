@@ -234,6 +234,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/settings/users').then((m) => m.SettingsUsers),
       },
       {
+        // How the shop's menu is arranged, which is the shop's own — so ownerGuard, not
+        // editorGuard. No plan gate either: it records nothing, and a closed shop should
+        // not have the app's layout frozen along with its books.
+        path: 'settings/menu',
+        canActivate: [ownerGuard],
+        loadComponent: () => import('./features/settings/menu').then((m) => m.SettingsMenu),
+      },
+      {
         path: 'settings/general',
         // managerGuard, not editorGuard: a closed shop keeps its own settings — that is
         // where its owner deletes it.

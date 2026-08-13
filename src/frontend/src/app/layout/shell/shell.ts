@@ -12,7 +12,8 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
 import { PlanService } from '../../core/plan/plan.service';
 import { PlanNotice } from '../../shared/plan-notice/plan-notice';
-import { NavLeaf, navFor } from './nav';
+import { ChromeItem } from '../../core/store/store.models';
+import { NavLeaf, mergeMenu, navFor, visible } from './nav';
 
 /**
  * One "used of allowed" line on the plan strip: the numbers as words, and the same numbers
@@ -42,8 +43,30 @@ export class Shell {
   protected readonly stores = inject(StoreService);
   private readonly plans = inject(PlanService);
 
-  /** Recomputes when the user switches shops — the same login can be owner in one, viewer in another. */
-  protected readonly nav = computed(() => navFor(this.stores.role()));
+  /**
+   * The sidebar: role first, then the shop's own arrangement, then drop what it hides.
+   *
+   * Recomputes when the user switches shops — the same login can be owner in one and viewer
+   * in another, and each shop carries its own arrangement. It also recomputes the instant an
+   * owner saves one, since that replaces the cached store this reads from.
+   */
+  protected readonly nav = computed(() =>
+    visible(mergeMenu(navFor(this.stores.role()), this.stores.current()?.settings?.menu)),
+  );
+
+  /**
+   * Which of the foot's controls this shop shows. The language switcher is deliberately not
+   * among them and never should be: it is the way out of a language you cannot read, and no
+   * shop setting may strand a member in one.
+   */
+  protected readonly chrome = computed(() => {
+    const hidden = new Set<ChromeItem>(this.stores.current()?.settings?.hideChrome ?? []);
+    return {
+      theme: !hidden.has('THEME'),
+      install: !hidden.has('INSTALL'),
+      plan: !hidden.has('PLAN'),
+    };
+  });
 
   /**
    * Whether a menu item is offered but not usable: it records something, and the owner's plan

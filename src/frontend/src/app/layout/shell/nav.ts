@@ -1,5 +1,5 @@
 import { TranslationKey } from '../../core/i18n/translations/en';
-import { StoreRole } from '../../core/store/store.models';
+import { MenuSetting, StoreRole } from '../../core/store/store.models';
 
 export type NavIcon = 'dashboard' | 'cashbook' | 'ledger' | 'entry' | 'stock' | 'bill' | 'settings';
 
@@ -23,6 +23,18 @@ export interface NavLeaf {
    * the shell relies on (see its `blocked`) and `nav.spec.ts` holds to.
    */
   writes?: true;
+  /**
+   * Set on the few items an owner may not hide, because hiding them is how you lock yourself
+   * out: the Settings group and the screen that does the arranging. Everything else is fair
+   * game — a shop that never counts stock should be able to lose Inventory from its menu.
+   */
+  locked?: true;
+
+  // ── Filled in by mergeMenu, never written in the table below ──────────
+  /** This shop's own name for the item, or undefined to use its translation. */
+  label?: string;
+  /** Arranged out of this shop's sidebar. `locked` items are never marked. */
+  hidden?: boolean;
 }
 
 export interface NavLink extends NavLeaf {
@@ -36,6 +48,9 @@ export interface NavGroup {
   icon: NavIcon;
   requires?: NavLeaf['requires'];
   writes?: NavLeaf['writes'];
+  locked?: NavLeaf['locked'];
+  label?: NavLeaf['label'];
+  hidden?: NavLeaf['hidden'];
   children: NavLeaf[];
 }
 
@@ -72,6 +87,10 @@ export const NAV: NavItem[] = [
     kind: 'group',
     key: 'nav.settings',
     icon: 'settings',
+    // The one group that cannot be arranged away. Everything a shop can undo lives behind
+    // it, including the screen that does the arranging — hiding this would leave an owner
+    // with a menu they can no longer change from inside the app.
+    locked: true,
     children: [
       // Editors get in for the opening drawer balance; the rest of the page is
       // read-only for them (see SettingsGeneral). No `writes`: a closed shop keeps this
@@ -83,6 +102,10 @@ export const NAV: NavItem[] = [
       { key: 'nav.settings.users', path: 'settings/users' },
       { key: 'nav.settings.items', path: 'settings/items', requires: 'EDITOR', writes: true },
       { key: 'nav.settings.party', path: 'settings/party', requires: 'EDITOR', writes: true },
+      // Owner-only, and locked for the same reason its group is: this is the screen that
+      // un-hides the others. No `writes` — arranging a menu records no business, so it stays
+      // usable on a shop the plan has closed.
+      { key: 'nav.settings.menu', path: 'settings/menu', requires: 'OWNER', locked: true },
     ],
   },
 ];
@@ -100,6 +123,94 @@ export function navFor(role: StoreRole | null): NavItem[] {
       return [item];
     }
     const children = item.children.filter(allowed);
+    return children.length ? [{ ...item, children }] : [];
+  });
+}
+
+/**
+ * One level of a menu in the order a shop asked for: the arranged order first, then anything
+ * this build has that the arrangement predates.
+ *
+ * Appending the unrecognised ones is the whole forward-compatibility story. A stored
+ * arrangement is a list of keys written at some past version, so it will eventually be missing
+ * an item (a screen shipped since) and holding one that is gone (a screen retired). Neither
+ * may break a menu: the missing ones surface at the end where they can be moved, and the
+ * departed ones fall out because nothing here matches them. A duplicate key — only reachable
+ * from a hand-edited document — is taken once.
+ */
+function ordered<T extends { key: TranslationKey }>(
+  items: readonly T[],
+  saved: readonly MenuSetting[],
+): T[] {
+  const byKey = new Map(items.map((item) => [item.key as string, item]));
+  const taken = new Set<string>();
+  const out: T[] = [];
+
+  for (const setting of saved) {
+    const item = byKey.get(setting.key);
+    if (item && !taken.has(setting.key)) {
+      taken.add(setting.key);
+      out.push(item);
+    }
+  }
+  out.push(...items.filter((item) => !taken.has(item.key)));
+  return out;
+}
+
+/** A shop's name for an item, or nothing — a blank override is not an override. */
+function labelOf(setting: MenuSetting | undefined): string | undefined {
+  return setting?.label?.trim() || undefined;
+}
+
+/**
+ * The menu this shop has arranged: `nav` reordered, renamed, and marked up with what is
+ * hidden. Every item is still here — hidden ones are flagged, not dropped, because the screen
+ * that does the arranging has to show them to bring them back. The sidebar pipes the result
+ * through {@link visible}; the settings screen uses it as it stands.
+ *
+ * Runs *after* `navFor`, never instead of it. Role decides what exists, the arrangement only
+ * decides how what exists is presented — so no arrangement can hand anyone a screen their
+ * role does not reach, whatever is in the stored document.
+ */
+export function mergeMenu(nav: readonly NavItem[], saved: readonly MenuSetting[] = []): NavItem[] {
+  const byKey = new Map(saved.map((setting) => [setting.key, setting]));
+
+  return ordered(nav, saved).map((item) => {
+    const setting = byKey.get(item.key);
+    const shown = { label: labelOf(setting), hidden: item.locked !== true && setting?.hidden === true };
+
+    if (item.kind === 'link') {
+      return { ...item, ...shown };
+    }
+
+    const childSettings = setting?.children ?? [];
+    const childByKey = new Map(childSettings.map((child) => [child.key, child]));
+    const children = ordered(item.children, childSettings).map((child) => {
+      const childSetting = childByKey.get(child.key);
+      return {
+        ...child,
+        label: labelOf(childSetting),
+        hidden: child.locked !== true && childSetting?.hidden === true,
+      };
+    });
+    return { ...item, ...shown, children };
+  });
+}
+
+/**
+ * What the sidebar actually draws: the arrangement minus everything hidden. A group whose
+ * children are all hidden goes with them, the same way `navFor` drops one emptied by role —
+ * a heading that opens onto nothing is worse than no heading.
+ */
+export function visible(items: readonly NavItem[]): NavItem[] {
+  return items.flatMap<NavItem>((item) => {
+    if (item.hidden) {
+      return [];
+    }
+    if (item.kind === 'link') {
+      return [item];
+    }
+    const children = item.children.filter((child) => !child.hidden);
     return children.length ? [{ ...item, children }] : [];
   });
 }

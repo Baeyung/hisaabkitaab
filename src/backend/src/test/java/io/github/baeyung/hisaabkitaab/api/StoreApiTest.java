@@ -138,4 +138,92 @@ class StoreApiTest extends ApiTest
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(0.0));
     }
+
+    /**
+     * A shop nobody has arranged answers with the empty arrangement, not null — the client
+     * has one shape to read whether or not the owner has ever opened the menu screen.
+     */
+    @Test
+    void settingsDefaultToEmpty() throws Exception
+    {
+        signup("3101000009");
+        String store = createStore("3101000009", "Rana Cloth");
+
+        mvc.perform(get("/api/stores/" + store).with(as("3101000009")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.settings.menu.length()").value(0))
+                .andExpect(jsonPath("$.settings.hideChrome.length()").value(0));
+    }
+
+    /**
+     * The whole point of the text column: whatever the client sends comes back as it was
+     * sent, through the converter and out of the database, nesting and all.
+     */
+    @Test
+    void settingsRoundTripThroughTheConverter() throws Exception
+    {
+        signup("3101000010");
+        String store = createStore("3101000010", "Rana Cloth");
+
+        mvc.perform(put(api(store, "/settings")).with(as("3101000010"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"menu":[
+                                   {"key":"nav.ledger","hidden":false,"label":"Khata"},
+                                   {"key":"nav.inventory","hidden":true},
+                                   {"key":"nav.newEntry","children":[{"key":"nav.sale","label":"Bikri"}]}],
+                                 "hideChrome":["THEME","PLAN"]}"""))
+                .andExpect(status().isOk());
+
+        // Read back on a fresh request, so the assertion is on what the column holds rather
+        // than on the object that was just handed in.
+        mvc.perform(get("/api/stores/" + store).with(as("3101000010")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.settings.menu[0].key").value("nav.ledger"))
+                .andExpect(jsonPath("$.settings.menu[0].label").value("Khata"))
+                .andExpect(jsonPath("$.settings.menu[1].hidden").value(true))
+                .andExpect(jsonPath("$.settings.menu[2].children[0].label").value("Bikri"))
+                .andExpect(jsonPath("$.settings.hideChrome.length()").value(2));
+    }
+
+    /** A label long enough to break a sidebar row is refused rather than stored. */
+    @Test
+    void settingsRejectAnOverlongLabel() throws Exception
+    {
+        signup("3101000011");
+        String store = createStore("3101000011", "Rana Cloth");
+
+        mvc.perform(put(api(store, "/settings")).with(as("3101000011"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"menu\":[{\"key\":\"nav.ledger\",\"label\":\"%s\"}]}"
+                                .formatted("x".repeat(25))))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * The arrangement is the shop's, so only its owner sets it. A shared user reads the menu
+     * the owner built and cannot rearrange somebody else's shop.
+     */
+    @Test
+    void onlyTheOwnerMayArrangeTheMenu() throws Exception
+    {
+        signup("3101000012");
+        signup("3101000013");
+        String store = createStore("3101000012", "Rana Cloth");
+
+        mvc.perform(post(api(store, "/members")).with(as("3101000012"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"u3101000013@x.com\",\"role\":\"EDITOR\"}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(put(api(store, "/settings")).with(as("3101000013"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"menu\":[{\"key\":\"nav.ledger\"}],\"hideChrome\":[]}"))
+                .andExpect(status().isForbidden());
+
+        // …but they do receive it, since it is the menu they are meant to be working in.
+        mvc.perform(get("/api/stores/" + store).with(as("3101000013")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.settings").exists());
+    }
 }

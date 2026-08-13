@@ -1,0 +1,363 @@
+/* Store Settings › Menu. The page frame, buttons and fields come from
+   settings-table.css (see styleUrls); this file is the arranging list itself.
+   Everything is written with logical properties — the whole screen mirrors under
+   Urdu, including which way the sub-items indent. */
+
+.set__titles {
+  min-width: 0;
+}
+
+.set__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── sections: intro rail (left) + controls (right) ─────────────────
+   Same grammar as Store Settings › General, so the two screens read as one
+   settings area rather than two designs. */
+.sec {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 10px 48px;
+  padding: 28px 0;
+  border-top: 1px solid var(--kg-line);
+}
+.sec:first-child {
+  border-top: 0;
+  padding-top: 8px;
+}
+.sec__eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.sec__desc {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--kg-muted);
+  max-width: 30ch;
+}
+/* The two things about this screen that are easy to get wrong: that hiding is not
+   locking, and that the language switcher is not on offer. Set apart from the
+   description so they read as caveats rather than more instructions. */
+.sec__note {
+  margin: 10px 0 0;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--kg-line-strong);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-faint);
+  max-width: 32ch;
+}
+.sec__note--inline {
+  margin-top: 4px;
+  max-width: 46ch;
+}
+.sec__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 520px;
+}
+
+/* ── the arranging list ─────────────────────────────────────────────
+   One row per menu entry, groups carrying their own nested list. */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rows--sub {
+  /* Indented from the group's own row, and mirrored under Urdu for free. */
+  margin: 6px 0 4px;
+  padding-inline-start: 26px;
+}
+
+.row {
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 12px;
+}
+/* Arranged out of the sidebar. A tint and a dashed edge rather than a blanket
+   opacity: the row's own controls are how it comes back, so they have to stay as
+   readable as every other row's. */
+.row--off {
+  background: var(--kg-fill-subtle);
+  border-style: dashed;
+}
+.row--off .row__name,
+.row--off .row__name::placeholder {
+  color: var(--kg-faint);
+}
+
+.row__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+}
+
+/* Drag handle. `touch-action: none` is what makes dragging work on a phone —
+   without it the browser claims the gesture for scrolling. */
+.row__grip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 2px;
+  color: var(--kg-faint);
+  cursor: grab;
+  touch-action: none;
+}
+.row__grip:active {
+  cursor: grabbing;
+}
+
+/* The name box. Borderless until touched so a column of them reads as a list of
+   menu entries rather than a wall of form fields; the built-in name sits in the
+   placeholder, which is what an empty box means here. */
+.row__name {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding-inline: 9px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+.row__name::placeholder {
+  color: var(--kg-muted);
+  font-weight: 600;
+  opacity: 1; /* Firefox dims placeholders by default; this text is the real label. */
+}
+.row__name:hover {
+  border-color: var(--kg-line);
+}
+.row__name:focus {
+  outline: none;
+  border-color: var(--kg-line-hover);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* The keyboard path for reordering. cdkDrag has no keyboard mode of its own, so
+   these are not a nicety — they are the only way through this screen without a
+   pointer, and they stay on screen at every width. */
+.row__moves {
+  flex: none;
+  display: flex;
+  gap: 3px;
+}
+.mv {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--kg-muted);
+  background: transparent;
+  border: 1px solid var(--kg-line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.mv:hover:not(:disabled) {
+  color: var(--kg-ink);
+  border-color: var(--kg-line-hover);
+}
+.mv:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mv:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── show/hide switch ───────────────────────────────────────────────
+   A real checkbox, clipped rather than hidden, so the keyboard and screen
+   readers get a checkbox and the eye gets a switch. */
+.sw {
+  flex: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding-inline: 4px;
+  cursor: pointer;
+}
+.sw--wide {
+  min-height: 40px;
+}
+.sw--locked {
+  cursor: not-allowed;
+}
+.sw__box {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+}
+.sw__track {
+  flex: none;
+  position: relative;
+  width: 34px;
+  height: 20px;
+  background: var(--kg-line-strong);
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+/* Positioned on the inline axis, not translated, so the knob slides toward the
+   reading edge under Urdu without a mirrored rule of its own. */
+.sw__knob {
+  position: absolute;
+  inset-block-start: 3px;
+  inset-inline-start: 3px;
+  width: 14px;
+  height: 14px;
+  background: var(--kg-card);
+  border-radius: 50%;
+  transition: inset-inline-start 0.15s ease;
+}
+.sw__text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+/* On carries a fill and the brand tint, never colour alone — the knob's position
+   says it too, which is what makes it legible without colour vision. */
+.sw__box:checked + .sw__track {
+  background: var(--kg-brand-solid);
+}
+.sw__box:checked + .sw__track .sw__knob {
+  inset-inline-start: 17px; /* 34 track − 3 inset − 14 knob */
+}
+.sw__box:checked ~ .sw__text {
+  color: var(--kg-ink);
+}
+.sw__box:disabled + .sw__track {
+  opacity: 0.5;
+}
+.sw__box:disabled ~ .sw__text {
+  color: var(--kg-faint);
+}
+.sw:has(.sw__box:focus-visible) .sw__track {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── dragging ───────────────────────────────────────────────────────
+   The preview is rendered into the list itself (cdkDragPreviewContainer="parent")
+   rather than the document body, so these component-scoped rules reach it and no
+   ::ng-deep is needed. */
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.16);
+}
+.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+.cdk-drag-animating,
+.cdk-drop-list-dragging .row:not(.cdk-drag-placeholder) {
+  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+/* Someone who has asked for less motion still gets the reorder, just not the slide. */
+@media (prefers-reduced-motion: reduce) {
+  .cdk-drag-animating,
+  .cdk-drop-list-dragging .row:not(.cdk-drag-placeholder),
+  .sw__track,
+  .sw__knob {
+    transition: none;
+  }
+}
+
+/* ── footer ─────────────────────────────────────────────────────── */
+.set__foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 26px;
+  border-top: 1px solid var(--kg-line);
+  padding-inline-start: 288px; /* 240 rail + 48 gap → sits under .sec__fields */
+}
+.set__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-in);
+}
+.set__count {
+  color: var(--kg-faint);
+  font-weight: 500;
+}
+.set__alert {
+  margin: 14px 0 0;
+  padding: 10px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kg-out);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
+  border-radius: 11px;
+}
+
+/* ── narrow ─────────────────────────────────────────────────────────
+   The intro rail stacks above its controls, and the row keeps its shape: the
+   name box shrinks but the arrows and the switch never wrap away, since they
+   are the only ways to do anything on this screen. */
+@media (max-width: 860px) {
+  .sec {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 22px 0;
+  }
+  .sec__desc,
+  .sec__note {
+    max-width: none;
+  }
+  .set__foot {
+    padding-inline-start: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .row__main {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .row__name {
+    flex-basis: 100%;
+    order: -1;
+  }
+  .sw__text {
+    /* Clipped, not removed: it stays the checkbox's accessible name, so a screen
+       reader still hears "Show in menu" where the eye reads the switch alone. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .sw--wide .sw__text {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+  }
+}

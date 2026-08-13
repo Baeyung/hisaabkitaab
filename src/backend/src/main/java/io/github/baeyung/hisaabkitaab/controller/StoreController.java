@@ -20,6 +20,7 @@ import io.github.baeyung.hisaabkitaab.dto.store.StoreComparison;
 import io.github.baeyung.hisaabkitaab.dto.store.StoreSummary;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
+import io.github.baeyung.hisaabkitaab.models.StoreSettings;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
 import io.github.baeyung.hisaabkitaab.service.OpeningEntryService;
@@ -119,6 +120,24 @@ public class StoreController
             @CurrentStore Store store)
     {
         return ResponseEntity.ok(storeService.update(store.getId(), changes));
+    }
+
+    /**
+     * Replace how this shop is arranged — menu order, what is shown, what it is called.
+     *
+     * <p>Owner-only, and store-wide: the arrangement is the shop's, not the reader's, so a
+     * member opens the menu the owner built. The role filtering the client already does runs
+     * on top of it — arranging a menu cannot hand anyone a screen their role does not reach.
+     *
+     * <p>{@code allowLocked} for the same reason Store Settings › General stays open on a
+     * closed shop: this records no business, and an owner sitting out a downgrade should not
+     * find the app's own layout frozen along with the books.
+     */
+    @PutMapping("/{storeId}/settings")
+    public ResponseEntity<StoreSummary> updateSettings(@Valid @RequestBody StoreSettings settings,
+            @CurrentStore(value = StoreRole.OWNER, allowLocked = true) Store store)
+    {
+        return ResponseEntity.ok(storeService.updateSettings(store.getId(), settings));
     }
 
     /**

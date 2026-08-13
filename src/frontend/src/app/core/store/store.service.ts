@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthStore } from '../auth/auth.store';
-import { Store, StoreDraft } from './store.models';
+import { Store, StoreDraft, StoreSettings } from './store.models';
 
 /**
  * The stores the signed-in user can reach, and which one they are currently in.
@@ -111,6 +111,19 @@ export class StoreService {
   async update(id: string, draft: StoreDraft): Promise<Store> {
     const store = await firstValueFrom(this.http.put<Store>(`${this.url}/${id}`, draft));
     this._stores.update((s) => (s ?? []).map((x) => (x.id === id ? store : x)));
+    return store;
+  }
+
+  /**
+   * Replace how the current shop is arranged — the whole document, not a patch, since the
+   * screen that edits it is holding all of it anyway.
+   *
+   * The response replaces the cached store, which is what makes the sidebar redraw the
+   * moment it is saved: the shell's menu is computed from `current()`.
+   */
+  async updateSettings(settings: StoreSettings): Promise<Store> {
+    const store = await firstValueFrom(this.http.put<Store>(this.api('settings'), settings));
+    this._stores.update((s) => (s ?? []).map((x) => (x.id === store.id ? store : x)));
     return store;
   }
 

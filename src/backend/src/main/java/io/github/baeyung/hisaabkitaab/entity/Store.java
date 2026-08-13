@@ -4,7 +4,10 @@ import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.github.baeyung.hisaabkitaab.converters.StoreSettingsConverter;
+import io.github.baeyung.hisaabkitaab.models.StoreSettings;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -56,6 +59,22 @@ public class Store
 
     @Column(columnDefinition = "text")
     private String watermarkUri;
+
+    /**
+     * How this shop's owner has arranged the app for everyone working in it — menu order,
+     * what is shown, what it is called. Null until they have arranged anything, which is
+     * the built-in menu; see {@link StoreSettings} for why the contents mean nothing here.
+     *
+     * <p>{@code @JsonIgnore} because this entity is only ever deserialised — it is the
+     * request body of create and update, and neither of those is where a menu is arranged.
+     * That is {@code PUT /api/stores/{id}/settings}, whose body is a {@link StoreSettings}
+     * and which is validated as one. Responses are always a {@code StoreSummary}, which
+     * carries the settings out.
+     */
+    @JsonIgnore
+    @Convert(converter = StoreSettingsConverter.class)
+    @Column(columnDefinition = "text")
+    private StoreSettings settings;
 
     /**
      * When the owner's plan stopped covering this shop, or null while it does. A suspended
