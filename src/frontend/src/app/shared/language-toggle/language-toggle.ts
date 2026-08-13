@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { Locale, LocaleService } from '../../core/i18n/locale.service';
 
 /**
@@ -8,8 +8,7 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
  * The old button said only where you would land ("اردو"), which asks someone who cannot read
  * the current language to work out which state they are in from a single word. Both cells
  * are always on screen with the live one filled, so the answer is visible rather than
- * inferred — and each language is written in its own script, readable to the person who
- * needs it whichever side is lit.
+ * inferred — labelled EN/UR, which stay put whichever language is live.
  *
  * Mirrors {@link ThemeToggle} down to the track and chip, since the two sit together and are
  * the same kind of choice. Radios rather than buttons for the same reasons: arrow keys move
@@ -21,7 +20,10 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
   selector: 'app-language-toggle',
   template: `
     <fieldset class="lg">
-      <legend class="lg__legend">{{ locale.t('lang.legend') }}</legend>
+      <!-- Shown only in the sidebar foot, where the caption keeps this track from reading as
+           another row of Appearance above it. In a bar the codes speak for themselves, so the
+           legend is there for screen readers alone. -->
+      <legend [class]="legend() ? 'lg__legend' : 'sr-only'">{{ locale.t('lang.legend') }}</legend>
       <div class="lg__seg">
         @for (option of locale.options; track option) {
           <label class="lg__opt" [class.lg__opt--on]="locale.locale() === option">
@@ -33,9 +35,7 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
               [checked]="locale.locale() === option"
               (change)="locale.setLocale(option)"
             />
-            <!-- Each language named in its own script, so the cell is legible to the person
-                 who would want to switch to it. -->
-            <span class="lg__name" [attr.lang]="option">{{ NAME[option] }}</span>
+            <span class="lg__name">{{ NAME[option] }}</span>
           </label>
         }
       </div>
@@ -48,6 +48,7 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
       border: 0;
       min-width: 0;
     }
+    /* Matches the Appearance legend it sits under. */
     .lg__legend {
       padding: 0 0 6px;
       font: 600 10.5px system-ui;
@@ -55,15 +56,18 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
       text-transform: uppercase;
       color: var(--kg-chrome-locked);
     }
-    /* Two equal cells in one inset track, matching Appearance above it. Grid, not flex, so
-       the two scripts (which measure very differently) can't shift the divide between them. */
+    /* Two equal cells in one inset track. The cells set their own width from the code plus
+       padding, so the track is a compact chip beside the bar's buttons; where the control
+       sits in a column (the sidebar foot) the 1fr columns stretch it to the track above. */
     .lg__seg {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(36px, 1fr));
       gap: 2px;
       padding: 2px;
       border-radius: 9px;
-      background: rgba(255, 255, 255, 0.06);
+      /* Mixed from the surrounding ink, not a fixed white tint: this control also sits on the
+         auth panel, which is cream in light mode where a white track disappears. */
+      background: color-mix(in srgb, currentColor 8%, transparent);
     }
     .lg__opt {
       /* Contains the clipped radio below. */
@@ -71,27 +75,20 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      /* 44px with the track's padding — the app's touch-target floor. */
-      min-height: 40px;
-      padding: 3px 2px;
+      /* 34px tall with the track's padding, matching the bar's buttons. */
+      min-height: 30px;
+      padding: 0 11px;
       border-radius: 7px;
-      color: var(--kg-chrome-dim);
-      line-height: 1.25;
-      text-align: center;
+      color: color-mix(in srgb, currentColor 72%, transparent);
       cursor: pointer;
     }
     .lg__name {
-      font: 600 12px system-ui;
-    }
-    /* Urdu needs its own size and a little headroom: the Nastaliq forms sit taller than the
-       Latin cap height and read as cramped at the same 12px. */
-    .lg__opt [lang='ur'] {
-      font-size: 14px;
-      line-height: 1.6;
+      font: 600 12px/1 system-ui;
+      letter-spacing: 0.06em;
     }
     .lg__opt:hover:not(.lg__opt--on) {
-      background: rgba(255, 255, 255, 0.07);
-      color: var(--kg-chrome-ink);
+      background: color-mix(in srgb, currentColor 10%, transparent);
+      color: inherit;
     }
     /* Selected carries a fill AND the brand tint, never colour alone. */
     .lg__opt--on {
@@ -108,18 +105,20 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
       margin: 0;
     }
     .lg__opt:has(.lg__radio:focus-visible) {
-      outline: 2px solid var(--kg-chrome-ink);
+      outline: 2px solid currentColor;
       outline-offset: 1px;
     }
   `,
 })
 export class LanguageToggle {
+  /** Show the "Language" caption — on in the sidebar foot, off in the bars. */
+  readonly legend = input(false);
+
   protected readonly locale = inject(LocaleService);
 
   /**
-   * Endonyms, not translations: each language is labelled the way its own readers write it,
-   * so neither cell changes when the language does. A control for leaving a language you
-   * cannot read must not be written in that language.
+   * ISO codes, not translations: neither cell changes when the language does, and a control
+   * for leaving a language you cannot read must not be written in that language.
    */
-  protected readonly NAME: Record<Locale, string> = { en: 'English', ur: 'اردو' };
+  protected readonly NAME: Record<Locale, string> = { en: 'EN', ur: 'UR' };
 }

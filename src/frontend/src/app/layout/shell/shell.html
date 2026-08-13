@@ -136,7 +136,7 @@
       }
       <!-- Never behind a shop setting. Everything else in this foot is a convenience; this
            is the way out of a language you cannot read. -->
-      <app-language-toggle />
+      <app-language-toggle [legend]="true" />
       @if (chrome().install) {
         <app-install-button />
       }

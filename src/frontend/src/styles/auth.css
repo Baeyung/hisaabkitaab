@@ -156,8 +156,9 @@
 }
 .auth__toggle {
   position: absolute;
-  inset-block-start: 18px;
-  inset-inline-end: 18px;
+  inset-block-start: 22px;
+  /* Same inset as the panel's padding, so the chip's edge lines up with the form below it. */
+  inset-inline-end: clamp(28px, 4vw, 44px);
   z-index: 1; /* sits above the kgfade-transformed brand/form siblings, else they cover the button */
 }
 
@@ -469,28 +470,6 @@
 }
 .auth__foot button:disabled:hover {
   text-decoration: none;
-}
-
-/* ── language toggle (shared button, restyled in this context) ─────
-   Higher specificity than the component-scoped `.lang-toggle` so this
-   context wins without !important. */
-.auth .auth__toggle .lang-toggle {
-  min-height: 36px;
-  padding-inline: 13px;
-  border-radius: 10px;
-  border: 1px solid var(--kg-line-strong);
-  background: var(--kg-card);
-  color: var(--kg-muted);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.auth .auth__toggle .lang-toggle:hover {
-  border-color: var(--kg-line-hover);
-}
-.auth .auth__toggle .lang-toggle:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--kg-focus);
 }
 
 /* ── entrance + cross-screen transition (respect reduced motion) ────
