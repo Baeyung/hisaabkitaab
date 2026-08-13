@@ -27,6 +27,7 @@
 - [x] processed goods feature
 - [x] processed goods whatsapp
 - [x] processed goods + -> ui improvement
+- [x] whatsApp integration, sending messages
+- [ ] monthly reports + party reminders, on email + whatsapp
+- 
 - [ ] enhance mobile UI for better UX.
-- [ ] whatsApp integration, sending messages
-- [ ] monthly reports, on email + whatsapp

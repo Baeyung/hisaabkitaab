@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,14 +18,18 @@ import io.github.baeyung.hisaabkitaab.dto.whatsapp.ShareRecipients;
 import io.github.baeyung.hisaabkitaab.dto.whatsapp.ShareRequest;
 import io.github.baeyung.hisaabkitaab.dto.whatsapp.ShareResult;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
+import io.github.baeyung.hisaabkitaab.enums.WhatsAppSendStatus;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
+import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
 import io.github.baeyung.hisaabkitaab.service.PlanService;
 import io.github.baeyung.hisaabkitaab.service.pdf.PdfRenderService;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.Addressee;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.DocumentShareService;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.ShareRecipientService;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.WhatsAppBlockService;
+import io.github.baeyung.hisaabkitaab.service.whatsapp.WhatsAppSendLogService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -63,6 +68,8 @@ public class WhatsAppShareController
 
     private final WhatsAppBlockService blockService;
 
+    private final WhatsAppSendLogService sendLog;
+
     /**
      * Who this shop can send to, for the picker the send button opens.
      *
@@ -86,8 +93,15 @@ public class WhatsAppShareController
      */
     @PostMapping
     public ResponseEntity<ShareResult> share(@Valid @RequestBody ShareRequest request,
-            @CurrentStore(StoreRole.VIEWER) Store store)
+            @CurrentStore(StoreRole.VIEWER) Store store,
+            @AuthenticationPrincipal UserPrincipal principal)
     {
+        // Every recipient below leaves a row in whatsapp_sends, whichever way their message
+        // went — the shop is asked "did you send it?" long after the fact, and the quota
+        // counts messages without remembering who got one. Written against whoever pressed
+        // the button, which is not always the owner whose quota pays for it.
+        User sender = principal.getUser();
+
         // Resolved and checked before anything is charged or rendered: an unknown recipient or
         // one with no usable number is the caller's mistake, and must cost neither a message
         // nor a trip to the renderer. Deduplicated so a doubled-up list cannot double-charge.
@@ -118,6 +132,7 @@ public class WhatsAppShareController
             if (blocks.has(to.recipientId(), to.contact()))
             {
                 optedOut.add(to.name());
+                sendLog.record(store, sender, to, request.filename(), WhatsAppSendStatus.BLOCKED);
             }
             else
             {
@@ -138,6 +153,7 @@ public class WhatsAppShareController
                 // worth raising — nothing has happened yet and the message explains itself.
                 // Part-way through a list it is not: messages have already gone out, and the
                 // honest reply is which ones did.
+                sendLog.record(store, sender, to, request.filename(), WhatsAppSendStatus.FAILED);
                 if (sent == 0 && failed.isEmpty())
                 {
                     throw e;
@@ -161,6 +177,7 @@ public class WhatsAppShareController
                 // Includes the renderer falling over: the message was charged a moment ago and
                 // nothing went out, so it goes back before the failure leaves here.
                 planService.releaseWhatsappMessage(ownerId, charged);
+                sendLog.record(store, sender, to, request.filename(), WhatsAppSendStatus.FAILED);
                 throw e;
             }
 
@@ -173,6 +190,9 @@ public class WhatsAppShareController
                 planService.releaseWhatsappMessage(ownerId, charged);
                 failed.add(to.name());
             }
+
+            sendLog.record(store, sender, to, request.filename(),
+                    delivered ? WhatsAppSendStatus.SENT : WhatsAppSendStatus.FAILED);
         }
 
         failed.addAll(optedOut);
