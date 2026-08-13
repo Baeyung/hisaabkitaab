@@ -29,20 +29,7 @@
       </div>
     </header>
 
-    <!-- who it was run for: optional, and it moves no money either way -->
-    <div class="fld">
-      <label class="fld__label" for="processing-party">{{ locale.t('processing.party') }}</label>
-      <app-combobox
-        inputId="processing-party"
-        [options]="partyNames()"
-        [value]="partyName()"
-        (valueChange)="partyName.set($event)"
-        [placeholder]="locale.t('processing.party.ph')"
-      />
-      <small class="fld__hint">{{ locale.t('processing.party.hint') }}</small>
-    </div>
-
-    <!-- raw material: typed free, never a catalogue item -->
+    <!-- raw material: an item like any other, off the shelf or bought in for the batch -->
     <div class="pgrid" role="group" [attr.aria-label]="locale.t('processing.raw')">
       <p class="pgrid__title">{{ locale.t('processing.raw') }}</p>
 
@@ -52,13 +39,13 @@
             <label class="fld__label" [attr.for]="'raw-name-' + line.key">
               {{ locale.t('processing.col.name') }}
             </label>
-            <input
-              class="fld__input fld__input--sm"
-              type="text"
-              [id]="'raw-name-' + line.key"
+            <app-combobox
+              [small]="true"
+              [inputId]="'raw-name-' + line.key"
+              [options]="itemNames()"
               [value]="line.name"
-              (input)="patchRaw(line.key, { name: $any($event.target).value })"
-              [attr.placeholder]="locale.t('processing.raw.ph')"
+              (valueChange)="setRawName(line.key, $event)"
+              [placeholder]="locale.t('processing.raw.ph')"
             />
           </div>
           <div class="fld">
@@ -126,6 +113,51 @@
             </svg>
           </button>
         </div>
+
+        <!-- bought in for this batch, rather than taken off the shelf -->
+        <button
+          type="button"
+          class="linkbtn linkbtn--sub"
+          [attr.aria-expanded]="line.open"
+          [attr.aria-controls]="'raw-party-box-' + line.key"
+          (click)="toggleRawParty(line.key)"
+        >
+          {{ line.open ? '−' : '+' }} {{ locale.t('processing.supplier.add') }}
+        </button>
+
+        @if (line.open) {
+          <div class="pgrid__party" [id]="'raw-party-box-' + line.key">
+            <div class="fld">
+              <label class="fld__label" [attr.for]="'raw-party-' + line.key">
+                {{ locale.t('processing.supplier') }}
+              </label>
+              <app-combobox
+                [small]="true"
+                [inputId]="'raw-party-' + line.key"
+                [options]="partyNames()"
+                [value]="line.party"
+                (valueChange)="patchRaw(line.key, { party: $event })"
+                [placeholder]="locale.t('processing.supplier.ph')"
+              />
+            </div>
+            <div class="fld">
+              <label class="fld__label" [attr.for]="'raw-paid-' + line.key">
+                {{ locale.t('processing.supplier.paid') }}
+              </label>
+              <input
+                class="fld__input fld__input--sm num"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                [id]="'raw-paid-' + line.key"
+                [value]="line.paid"
+                (input)="patchRaw(line.key, { paid: toNum($any($event.target).value) })"
+                [attr.placeholder]="'0'"
+              />
+            </div>
+            <p class="pgrid__hint">{{ locale.t('processing.supplier.hint') }}</p>
+          </div>
+        }
       }
 
       <button type="button" class="linkbtn" (click)="addRaw()">
@@ -220,6 +252,63 @@
             </svg>
           </button>
         </div>
+
+        <div class="pgrid__opts">
+          <!-- bought in for this batch, rather than taken off the shelf -->
+          <button
+            type="button"
+            class="linkbtn linkbtn--sub"
+            [attr.aria-expanded]="line.open"
+            [attr.aria-controls]="'proc-party-box-' + line.key"
+            (click)="toggleProcParty(line.key)"
+          >
+            {{ line.open ? '−' : '+' }} {{ locale.t('processing.supplier.add') }}
+          </button>
+          <!-- work rather than goods: it costs the batch, but nothing comes off a shelf -->
+          <label class="svc">
+            <input
+              class="svc__box"
+              type="checkbox"
+              [checked]="line.service"
+              (change)="patchProc(line.key, { service: $any($event.target).checked })"
+            />
+            {{ locale.t('processing.service') }}
+          </label>
+        </div>
+
+        @if (line.open) {
+          <div class="pgrid__party" [id]="'proc-party-box-' + line.key">
+            <div class="fld">
+              <label class="fld__label" [attr.for]="'proc-party-' + line.key">
+                {{ locale.t('processing.supplier') }}
+              </label>
+              <app-combobox
+                [small]="true"
+                [inputId]="'proc-party-' + line.key"
+                [options]="partyNames()"
+                [value]="line.party"
+                (valueChange)="patchProc(line.key, { party: $event })"
+                [placeholder]="locale.t('processing.supplier.ph')"
+              />
+            </div>
+            <div class="fld">
+              <label class="fld__label" [attr.for]="'proc-paid-' + line.key">
+                {{ locale.t('processing.supplier.paid') }}
+              </label>
+              <input
+                class="fld__input fld__input--sm num"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                [id]="'proc-paid-' + line.key"
+                [value]="line.paid"
+                (input)="patchProc(line.key, { paid: toNum($any($event.target).value) })"
+                [attr.placeholder]="'0'"
+              />
+            </div>
+            <p class="pgrid__hint">{{ locale.t('processing.supplier.hint') }}</p>
+          </div>
+        }
       }
 
       <button type="button" class="linkbtn" (click)="addProc()">
@@ -229,7 +318,14 @@
 
     <div class="flow" aria-hidden="true">
       <span class="flow__mark flow__mark--arrow">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <path d="M12 5v14M6 13l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </span>
@@ -357,6 +453,27 @@
       <h2 class="panel__title">{{ locale.t('processing.effect') }}</h2>
       @if (totalCost() > 0 || stockOut().length > 0) {
         <ul class="fx">
+          <!-- what the batch buys in on its way: one purchase per supplier, then consumed -->
+          @if (purchases().length > 0) {
+            <li class="fx__group">{{ locale.t('processing.effect.bought') }}</li>
+            @if (cashOut() > 0) {
+              <li class="fx__row fx__row--out">
+                <span class="fx__sign">▼</span>
+                <span class="fx__label">{{ locale.t('processing.effect.cashOut') }}</span>
+                <span class="fx__amt num">{{ locale.money(cashOut()) }}</span>
+              </li>
+            }
+            @for (p of purchases(); track p.name) {
+              @if (p.owed !== 0) {
+                <li class="fx__row fx__row--indent" [class.fx__row--out]="p.owed > 0">
+                  <span class="fx__sign">{{ p.owed > 0 ? '▼' : '▲' }}</span>
+                  <span class="fx__label">{{ p.name }}</span>
+                  <span class="fx__amt num">{{ locale.money(p.amount) }}</span>
+                </li>
+              }
+            }
+          }
+
           <li class="fx__group">{{ locale.t('processing.effect.stockOut') }}</li>
           @for (s of stockOut(); track s.key) {
             <li class="fx__row fx__row--indent fx__row--out">
@@ -370,9 +487,12 @@
             <li class="fx__row fx__row--indent fx__row--in">
               <span class="fx__sign">▲</span>
               <span class="fx__label"
-                >{{ outputName() }}<small class="fx__sub">{{ locale.money(unitCost()) }}</small></span
+                >{{ outputName()
+                }}<small class="fx__sub">{{ locale.money(unitCost()) }}</small></span
               >
-              <span class="fx__amt num">{{ locale.qtyUnit(outputQty() ?? 0, outputUnit() || null) }}</span>
+              <span class="fx__amt num">{{
+                locale.qtyUnit(outputQty() ?? 0, outputUnit() || null)
+              }}</span>
             </li>
           }
           @if (wastage() !== 0) {

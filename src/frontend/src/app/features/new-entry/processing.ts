@@ -3,6 +3,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { StoreItemService } from '../../core/store/store-item.service';
 import { PartyService } from '../../core/store/party.service';
 import { ProcessingService } from '../../core/store/processing.service';
+import { ProcessingInput } from '../../core/store/processing.models';
 import { StoreItem } from '../../core/store/store-item.models';
 import { Party } from '../../core/store/party.models';
 import { todayIso } from '../../shared/date.util';
@@ -10,26 +11,45 @@ import { RecentLog } from '../../shared/recent-log';
 import { Combobox } from '../../shared/combobox/combobox';
 import { DateField } from '../../shared/date-field/date-field';
 
-/** One input row. `key` is a stable id for @for tracking. */
+/**
+ * One input row. `key` is a stable id for @for tracking.
+ *
+ * `party` empty means the row comes off the shelf; named, it was bought in for the batch —
+ * `paid` is what was handed over for it, the rest staying on their khata.
+ */
 interface Line {
   key: number;
   name: string;
   unit: string;
   qty: number | null;
   rate: number | null;
+  party: string;
+  paid: number | null;
+  /** Whether the supplier boxes are showing — a row is bought-in far less often than not. */
+  open: boolean;
+  /** Work rather than goods: costs the batch, bills the supplier, keeps no stock. */
+  service: boolean;
 }
 
 /**
  * PROCESSING entry — a batch of raw material and consumables turned into a different item.
  *
- * Three sides, and they are not symmetrical. **Raw material** (the greige cloth) is typed
- * free: it is deliberately not a catalogue item, holds no stock, and only ever contributes
- * its cost. **Processing items** (dyes, fuel) are real items that come off the shelf, so
- * they autocomplete against the catalogue and are created when the name is new — the same
- * way a sale or purchase line is. **The output** is one item that goes onto the shelf,
- * priced at what the batch cost to make.
+ * Three sides. **Raw material** (the greige cloth) and **processing items** (dyes, fuel) are
+ * both real items that come off the shelf, autocompleting against the catalogue and created
+ * when the name is new — the same way a sale or purchase line is. **The output** is one item
+ * that goes onto the shelf, priced at what the batch cost to make.
  *
- * That price is the point of the screen:
+ * Any input row can name a **supplier**, for the common case of buying the cloth in for this
+ * batch rather than taking it off the shelf. That posts an ordinary purchase of its own — one
+ * per supplier, over all their rows — so the goods arrive, what was paid leaves the drawer,
+ * the rest sits on their khata, and the batch then consumes what it just bought. A row with
+ * no supplier simply comes off the shelf.
+ *
+ * A processing item can also be a **service** — the dyeing charge rather than the dye. That
+ * marks the catalogue item as one, which the whole app already reads as "keeps no stock": the
+ * row still costs the batch and still bills its supplier, it just holds no shelf quantity.
+ *
+ * The batch's price is the point of the screen:
  *
  * ```
  * cost/unit = (Σ raw qty × price + Σ processing qty × price) ÷ output units
@@ -42,8 +62,8 @@ interface Line {
  * Wastage is recorded but costs nothing: it prefills to raw units − output units and goes
  * free once touched, the same "suggest until edited" rhythm the cash box uses on a sale.
  *
- * No party and no cash — a batch moves goods and nothing else. Edits are not offered: the
- * repricing it does cannot be un-averaged, so correcting a batch is delete + re-enter.
+ * Edits are not offered: the repricing a batch does cannot be un-averaged, so correcting one
+ * is delete + re-enter.
  */
 @Component({
   selector: 'app-processing',
@@ -70,7 +90,6 @@ export class Processing {
   /** Party autocomplete; a name that matches nothing is created on save, as elsewhere. */
   protected readonly parties = signal<Party[]>([]);
   protected readonly partyNames = computed(() => this.parties().map((p) => p.name));
-  protected readonly partyName = signal('');
 
   protected readonly billNumber = signal('');
   protected readonly billDate = signal(todayIso());
@@ -79,9 +98,26 @@ export class Processing {
   protected readonly rawLines = signal<Line[]>([this.blankLine()]);
   protected readonly procLines = signal<Line[]>([this.blankLine()]);
 
-  protected readonly outputName = signal('');
+  protected readonly typedOutputName = signal('');
+  protected readonly outputNameTouched = signal(false);
   protected readonly outputUnit = signal('');
   protected readonly outputQty = signal<number | null>(null);
+
+  /**
+   * What the batch made, suggested from the first raw row it was made out of — a shop that
+   * dyes KORA into KORA-chamki starts from the name it already typed rather than retyping it.
+   * Clearing the box brings the suggestion back, so it can never be typed into a corner.
+   */
+  protected readonly suggestedOutputName = computed(
+    () =>
+      this.rawLines()
+        .find((l) => l.name.trim())
+        ?.name.trim() ?? '',
+  );
+
+  protected readonly outputName = computed(() =>
+    this.outputNameTouched() ? this.typedOutputName() : this.suggestedOutputName(),
+  );
 
   /** Typed-over cost and wastage, with the flag that says the suggestion no longer wins. */
   protected readonly typedUnitCost = signal<number | null>(null);
@@ -175,30 +211,33 @@ export class Processing {
     this.rawLines.update(patch(key, change));
   }
 
-  /** A matched processing item brings its unit and sale price with it, if the boxes are empty. */
-  setProcName(key: number, value: string): void {
-    const match = this.matchItem(value);
-    this.procLines.update((ls) =>
-      ls.map((l) =>
-        l.key === key
-          ? {
-              ...l,
-              name: value,
-              unit: l.unit || (match?.unit ?? ''),
-              rate: l.rate == null && match?.salePrice != null ? match.salePrice : l.rate,
-            }
-          : l,
-      ),
-    );
-  }
-
   patchProc(key: number, change: Partial<Line>): void {
     this.procLines.update(patch(key, change));
   }
 
+  /** A matched item brings its unit and sale price with it, if the boxes are empty. */
+  setRawName(key: number, value: string): void {
+    this.rawLines.update((ls) => ls.map(named(key, value, this.matchItem(value))));
+  }
+
+  setProcName(key: number, value: string): void {
+    this.procLines.update((ls) => ls.map(named(key, value, this.matchItem(value))));
+  }
+
+  /** Show or hide a row's supplier boxes; closing one forgets what was typed in them. */
+  toggleRawParty(key: number): void {
+    this.rawLines.update((ls) => ls.map(togglePartyOn(key)));
+  }
+
+  toggleProcParty(key: number): void {
+    this.procLines.update((ls) => ls.map(togglePartyOn(key)));
+  }
+
   /** The output's unit follows the item it names, until something is typed in the box. */
   setOutputName(value: string): void {
-    this.outputName.set(value);
+    this.typedOutputName.set(value);
+    // Emptying the box is not an edit, it is a retraction: the suggestion takes over again.
+    this.outputNameTouched.set(value.trim().length > 0);
     const unit = this.matchItem(value)?.unit;
     if (!this.outputUnit() && unit) {
       this.outputUnit.set(unit);
@@ -231,23 +270,11 @@ export class Processing {
 
     const outputName = this.outputName().trim();
     const outputQty = this.outputQty() as number;
-    const partyName = this.partyName().trim();
 
     try {
       await this.api.process({
-        rawItems: this.validRaw().map((l) => ({
-          name: l.name.trim(),
-          unit: l.unit.trim() || null,
-          quantity: l.qty as number,
-          pricePerUnit: l.rate ?? 0,
-        })),
-        processingItems: this.validProc().map((l) => ({
-          itemId: this.matchItem(l.name)?.id ?? null,
-          name: l.name.trim(),
-          unit: l.unit.trim() || null,
-          quantity: l.qty as number,
-          pricePerUnit: l.rate ?? 0,
-        })),
+        rawItems: this.validRaw().map((l) => this.toInput(l)),
+        processingItems: this.validProc().map((l) => this.toInput(l)),
         output: {
           itemId: this.matchItem(outputName)?.id ?? null,
           name: outputName,
@@ -259,9 +286,6 @@ export class Processing {
         billNumber: this.billNumber().trim() || null,
         billDate: this.billDate() || null,
         description: this.description().trim() || null,
-        party: partyName
-          ? { partyId: this.matchParty(partyName)?.id ?? null, name: partyName }
-          : null,
       });
 
       this.recent.push(
@@ -285,11 +309,11 @@ export class Processing {
 
   reset(): void {
     this.billNumber.set('');
-    this.partyName.set('');
     this.description.set('');
     this.rawLines.set([this.blankLine()]);
     this.procLines.set([this.blankLine()]);
-    this.outputName.set('');
+    this.typedOutputName.set('');
+    this.outputNameTouched.set(false);
     this.outputUnit.set('');
     this.outputQty.set(null);
     this.typedUnitCost.set(null);
@@ -302,14 +326,50 @@ export class Processing {
   }
 
   // ── effect panel view ───────────────────────────────────────────────────
-  /** What leaves the shelf: one row per consumable, quantity with its unit. */
+  /** Every filled input row, both sides — what the batch consumes. */
+  private readonly validInputs = computed(() => [...this.validRaw(), ...this.validProc()]);
+
+  /** What leaves the shelf: one row per input, quantity with its unit. A service holds none. */
   protected stockOut(): { key: number; name: string; qty: string }[] {
-    return this.validProc().map((l) => ({
-      key: l.key,
-      name: l.name.trim(),
-      qty: this.locale.qtyUnit(l.qty as number, l.unit.trim() || this.matchItem(l.name)?.unit || null),
-    }));
+    return this.validInputs()
+      .filter((l) => !l.service)
+      .map((l) => ({
+        key: l.key,
+        name: l.name.trim(),
+        qty: this.locale.qtyUnit(
+          l.qty as number,
+          l.unit.trim() || this.matchItem(l.name)?.unit || null,
+        ),
+      }));
   }
+
+  /**
+   * The purchases the batch will post on its way in — one per supplier, summed over their
+   * rows, the same grouping the backend does. Shown because they are the part of the entry
+   * that moves money, and the shopkeeper should see it before saving.
+   */
+  protected readonly purchases = computed(() => {
+    const byParty = new Map<string, { name: string; bill: number; paid: number }>();
+    for (const l of this.validInputs()) {
+      const name = l.party.trim();
+      if (!name) {
+        continue;
+      }
+      const row = byParty.get(name.toLowerCase()) ?? { name, bill: 0, paid: 0 };
+      row.bill += (l.qty as number) * (l.rate ?? 0);
+      row.paid += l.paid ?? 0;
+      byParty.set(name.toLowerCase(), row);
+    }
+    // `owed` is signed the khata's way — positive is what still goes on their account,
+    // negative is an overpayment they now owe back — and `amount` is what to print.
+    return [...byParty.values()].map((row) => {
+      const owed = row.bill - row.paid;
+      return { ...row, owed, amount: Math.abs(owed) };
+    });
+  });
+
+  /** Cash the batch takes out of the drawer, over every supplier on it. */
+  protected readonly cashOut = computed(() => this.purchases().reduce((sum, p) => sum + p.paid, 0));
 
   // ── helpers ─────────────────────────────────────────────────────────────
   private matchItem(name: string): StoreItem | undefined {
@@ -322,8 +382,33 @@ export class Processing {
     return q ? this.parties().find((p) => p.name.trim().toLowerCase() === q) : undefined;
   }
 
+  /** One row as the API takes it; a blank supplier means the row just comes off the shelf. */
+  private toInput(l: Line): ProcessingInput {
+    const party = l.party.trim();
+    return {
+      itemId: this.matchItem(l.name)?.id ?? null,
+      name: l.name.trim(),
+      unit: l.unit.trim() || null,
+      quantity: l.qty as number,
+      pricePerUnit: l.rate ?? 0,
+      party: party ? { partyId: this.matchParty(party)?.id ?? null, name: party } : null,
+      paid: party ? (l.paid ?? 0) : null,
+      service: l.service,
+    };
+  }
+
   private blankLine(): Line {
-    return { key: this.keySeq++, name: '', unit: '', qty: null, rate: null };
+    return {
+      key: this.keySeq++,
+      name: '',
+      unit: '',
+      qty: null,
+      rate: null,
+      party: '',
+      paid: null,
+      open: false,
+      service: false,
+    };
   }
 }
 
@@ -342,6 +427,32 @@ function sumQty(lines: Line[]): number {
 
 function patch(key: number, change: Partial<Line>): (lines: Line[]) => Line[] {
   return (lines) => lines.map((l) => (l.key === key ? { ...l, ...change } : l));
+}
+
+/** Name a row, taking the matched item's unit and price for whichever box is still empty. */
+function named(key: number, value: string, match: StoreItem | undefined): (l: Line) => Line {
+  return (l) =>
+    l.key === key
+      ? {
+          ...l,
+          name: value,
+          unit: l.unit || (match?.unit ?? ''),
+          rate: l.rate == null && match?.salePrice != null ? match.salePrice : l.rate,
+          // A service the catalogue already knows ticks its own box; a tick already made
+          // stands, so retyping the name never undoes it — the box itself does that.
+          service: l.service || (match?.service ?? false),
+        }
+      : l;
+}
+
+/** Open a row's supplier boxes, or close and clear them — a hidden supplier must not be sent. */
+function togglePartyOn(key: number): (l: Line) => Line {
+  return (l) =>
+    l.key === key
+      ? l.open
+        ? { ...l, open: false, party: '', paid: null }
+        : { ...l, open: true }
+      : l;
 }
 
 /** A section always keeps one row, so its last one is cleared rather than removed. */

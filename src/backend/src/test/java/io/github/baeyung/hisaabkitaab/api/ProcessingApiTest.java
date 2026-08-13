@@ -10,7 +10,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -71,11 +70,12 @@ class ProcessingApiTest extends ApiTest
         JsonNode stock = tree(mvc.perform(get(api(store, "/inventory")).with(as(USER)))
                 .andExpect(status().isOk()).andReturn());
 
-        // Consumables came off the shelf; the raw material was never on it.
+        // Consumables came off the shelf; so did the raw material, which nothing bought in —
+        // the shop is saying it already had cloth the books never saw it buy.
         assertPrice("400", byName(stock, "Green colour"), "currentStock");
         assertPrice("300", byName(stock, "Blue colour"), "currentStock");
         assertPrice("450", byName(stock, "Wood/coal"), "currentStock");
-        assertNull(byName(stock, "KORA"), "a raw material must never reach the catalogue");
+        assertPrice("-10000", byName(stock, "KORA"), "currentStock");
 
         // (43×10000 + 500×100 + 450×200 + 100×50) ÷ 9500 = 60.5263
         JsonNode made = byName(stock, "chamki-100");
@@ -179,13 +179,14 @@ class ProcessingApiTest extends ApiTest
     }
 
     /**
-     * A batch run for a party shows in their khata and links back to itself, but must leave
-     * their baqaya exactly where it was — job work moves no money on its own, the bill for it
-     * is a separate sale. That is what the zero-valued NONE party line buys, and this is the
-     * test that would catch it going back to IN/OUT.
+     * A row bought in for the batch is a purchase and nothing cleverer: it books the ordinary
+     * PURCHASE entry, so the goods land on the shelf, what was paid leaves the drawer and the
+     * rest sits on the supplier's khata. The batch then consumes what it just bought, which is
+     * why the shelf ends where it started — and this is the test that catches either half of
+     * that pair going missing.
      */
     @Test
-    void aBatchShowsInThePartysKhataWithoutMovingTheirBalance() throws Exception
+    void aRowBoughtInForTheBatchIsPurchasedThenConsumed() throws Exception
     {
         signup(USER);
         String store = createStore(USER, "Rana Processing");
@@ -197,52 +198,204 @@ class ProcessingApiTest extends ApiTest
                 .andExpect(status().isOk()).andReturn();
         String party = tree(created).get("id").asString();
 
+        // 100 metres of cloth at 60 = 6000, of which 2000 was handed over.
         String batch = """
                 {
-                  "rawItems":[{"name":"KORA","unit":"meter","quantity":100,"pricePerUnit":60}],
+                  "rawItems":[{
+                    "name":"KORA","unit":"meter","quantity":100,"pricePerUnit":60,
+                    "party":{"partyId":"%s","name":"Rana Textiles"},"paid":2000
+                  }],
                   "processingItems":[
                     {"itemId":"%s","name":"Dye","unit":"grams","quantity":10,"pricePerUnit":100}
                   ],
                   "output":{"name":"chamki-100","unit":"meter","quantity":100},
-                  "party":{"partyId":"%s","name":"Rana Textiles"}
+                  "billDate":"%s"
                 }
-                """.formatted(dye, party);
+                """.formatted(party, dye, LocalDate.now());
 
         mvc.perform(post(api(store, "/processing")).with(as(USER))
                         .contentType(MediaType.APPLICATION_JSON).content(batch))
                 .andExpect(status().isNoContent());
 
-        MvcResult listed = mvc.perform(get(api(store, "/processing")).with(as(USER)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].partyName").value("Rana Textiles"))
-                .andReturn();
-        String entryId = tree(listed).get(0).get("transactionId").asString();
+        // Bought in and used up in the same breath: the shelf is exactly where it started.
+        JsonNode stock = tree(mvc.perform(get(api(store, "/inventory")).with(as(USER)))
+                .andExpect(status().isOk()).andReturn());
+        assertPrice("0", byName(stock, "KORA"), "currentStock");
+        assertPrice("40", byName(stock, "Dye"), "currentStock");
+        assertPrice("100", byName(stock, "chamki-100"), "currentStock");
 
-        // The khata carries the batch as a row — and nothing else.
+        // 4000 still owing, on an ordinary purchase row — not a special processing one.
         mvc.perform(get(api(store, "/ledger/" + party)).with(as(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rows.length()").value(1))
-                .andExpect(jsonPath("$.rows[0].event").value("PROCESSING"))
-                .andExpect(jsonPath("$.rows[0].transactionId").value(entryId))
-                // Named by what it made, not by the dye it burned.
-                .andExpect(jsonPath("$.rows[0].itemSummary").value("chamki-100 × 100"))
-                .andExpect(jsonPath("$.rows[0].amount").value(0.0))
-                .andExpect(jsonPath("$.rows[0].runningBalance.direction").value("SETTLED"))
-                .andExpect(jsonPath("$.currentBalance.amount").value(0.0))
-                .andExpect(jsonPath("$.currentBalance.direction").value("SETTLED"));
+                .andExpect(jsonPath("$.rows[0].event").value("PURCHASE"))
+                .andExpect(jsonPath("$.rows[0].amount").value(4000.0))
+                .andExpect(jsonPath("$.currentBalance.amount").value(4000.0))
+                .andExpect(jsonPath("$.currentBalance.direction").value("YOU_OWE_THEM"));
 
-        // …and the party list agrees: still square.
-        mvc.perform(get(api(store, "/ledger")).with(as(USER)))
+        // …and the 2000 that was paid left the drawer.
+        mvc.perform(get(api(store, "/cashbook")).with(as(USER)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].balance.amount").value(0.0))
-                .andExpect(jsonPath("$[0].balance.direction").value("SETTLED"));
+                .andExpect(jsonPath("$.totalOut").value(2000.0));
 
-        // Clicking that row opens the batch on its own page.
+        // The batch reads back with the supplier on the row it was bought for.
+        MvcResult listed = mvc.perform(get(api(store, "/processing")).with(as(USER)))
+                .andExpect(status().isOk()).andReturn();
+        String entryId = tree(listed).get(0).get("transactionId").asString();
+
         mvc.perform(get(api(store, "/processing/" + entryId)).with(as(USER)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.partyId").value(party))
+                .andExpect(jsonPath("$.partyId").doesNotExist())
                 .andExpect(jsonPath("$.output.name").value("chamki-100"))
-                .andExpect(jsonPath("$.rawItems[0].name").value("KORA"));
+                .andExpect(jsonPath("$.rawItems.length()").value(1))
+                .andExpect(jsonPath("$.rawItems[0].name").value("KORA"))
+                .andExpect(jsonPath("$.rawItems[0].partyName").value("Rana Textiles"))
+                .andExpect(jsonPath("$.processingItems.length()").value(1))
+                .andExpect(jsonPath("$.processingItems[0].name").value("Dye"))
+                .andExpect(jsonPath("$.processingItems[0].partyName").doesNotExist());
+    }
+
+    /**
+     * Buy 100 metres of cloth in, dye it, and call what comes out by the same name — one item
+     * that goes up, comes down and goes up again, ending on 100. The cost has to be the batch's
+     * own 70, not an average against the 100 it just bought and is about to consume: those are
+     * the same metres, counted once, and a purchase leaves no cost price behind to average with.
+     */
+    @Test
+    void buyingInTheItemTheBatchMakesLeavesOneLotAtTheBatchsCost() throws Exception
+    {
+        signup(USER);
+        String store = createStore(USER, "Rana Processing");
+
+        MvcResult created = mvc.perform(post(api(store, "/parties")).with(as(USER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Rana Textiles\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String party = tree(created).get("id").asString();
+
+        // 100 KORA @ 60 bought in, plus 10 dye @ 100, making 100 KORA: (6000 + 1000) ÷ 100 = 70.
+        String batch = """
+                {
+                  "rawItems":[{
+                    "name":"KORA","unit":"meter","quantity":100,"pricePerUnit":60,
+                    "party":{"partyId":"%s","name":"Rana Textiles"},"paid":6000
+                  }],
+                  "processingItems":[
+                    {"name":"Dye","unit":"grams","quantity":10,"pricePerUnit":100}
+                  ],
+                  "output":{"name":"KORA","unit":"meter","quantity":100}
+                }
+                """.formatted(party);
+
+        mvc.perform(post(api(store, "/processing")).with(as(USER))
+                        .contentType(MediaType.APPLICATION_JSON).content(batch))
+                .andExpect(status().isNoContent());
+
+        // +100 bought, −100 consumed, +100 made.
+        JsonNode kora = byName(tree(mvc.perform(get(api(store, "/inventory")).with(as(USER)))
+                .andExpect(status().isOk()).andReturn()), "KORA");
+        assertPrice("100", kora, "currentStock");
+        assertPrice("70", kora, "costPrice");
+    }
+
+    /**
+     * One supplier named on two rows settles as one purchase, because that is how the shopkeeper
+     * settles with them — two rows in their khata for one delivery would be two things to chase.
+     */
+    @Test
+    void oneSupplierAcrossTwoRowsBooksOnePurchase() throws Exception
+    {
+        signup(USER);
+        String store = createStore(USER, "Rana Processing");
+
+        MvcResult created = mvc.perform(post(api(store, "/parties")).with(as(USER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Rana Textiles\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String party = tree(created).get("id").asString();
+
+        // 100×60 on the raw row plus 10×100 on the dye = 7000, nothing paid.
+        String batch = """
+                {
+                  "rawItems":[{
+                    "name":"KORA","unit":"meter","quantity":100,"pricePerUnit":60,
+                    "party":{"partyId":"%s","name":"Rana Textiles"}
+                  }],
+                  "processingItems":[{
+                    "name":"Dye","unit":"grams","quantity":10,"pricePerUnit":100,
+                    "party":{"partyId":"%s","name":"Rana Textiles"}
+                  }],
+                  "output":{"name":"chamki-100","unit":"meter","quantity":100}
+                }
+                """.formatted(party, party);
+
+        mvc.perform(post(api(store, "/processing")).with(as(USER))
+                        .contentType(MediaType.APPLICATION_JSON).content(batch))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(get(api(store, "/ledger/" + party)).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].amount").value(7000.0))
+                .andExpect(jsonPath("$.currentBalance.amount").value(7000.0));
+
+        // Nothing was paid, so the drawer never opened.
+        mvc.perform(get(api(store, "/cashbook")).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalOut").value(0.0));
+    }
+
+    /**
+     * A consumable row can be work rather than goods — the dyeing charge, not the dye. It costs
+     * the batch and it bills the supplier like any other row; what it does not do is keep a
+     * shelf quantity, which is the item's {@code service} flag and nothing more.
+     */
+    @Test
+    void aServiceRowCostsTheBatchAndBillsItsSupplierButKeepsNoStock() throws Exception
+    {
+        signup(USER);
+        String store = createStore(USER, "Rana Processing");
+        String kora = itemWithStock(store, "KORA", "meter", 100);
+
+        MvcResult created = mvc.perform(post(api(store, "/parties")).with(as(USER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Rangsaz\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String party = tree(created).get("id").asString();
+
+        // 100 metres off the shelf at 60, plus a 3000 dyeing charge on credit: 9000 ÷ 100 = 90.
+        String batch = """
+                {
+                  "rawItems":[
+                    {"itemId":"%s","name":"KORA","unit":"meter","quantity":100,"pricePerUnit":60}
+                  ],
+                  "processingItems":[{
+                    "name":"Dyeing charges","unit":"job","quantity":1,"pricePerUnit":3000,
+                    "service":true,"party":{"partyId":"%s","name":"Rangsaz"}
+                  }],
+                  "output":{"name":"chamki-100","unit":"meter","quantity":100}
+                }
+                """.formatted(kora, party);
+
+        mvc.perform(post(api(store, "/processing")).with(as(USER))
+                        .contentType(MediaType.APPLICATION_JSON).content(batch))
+                .andExpect(status().isNoContent());
+
+        // The charge carries no on-hand quantity; the cloth and the output still do.
+        JsonNode stock = tree(mvc.perform(get(api(store, "/inventory")).with(as(USER)))
+                .andExpect(status().isOk()).andReturn());
+        assertEquals(true, byName(stock, "Dyeing charges").get("service").asBoolean());
+        assertEquals(true, byName(stock, "Dyeing charges").get("currentStock").isNull());
+        assertPrice("0", byName(stock, "KORA"), "currentStock");
+        assertPrice("100", byName(stock, "chamki-100"), "currentStock");
+        assertPrice("90", byName(stock, "chamki-100"), "costPrice");
+
+        // …and the 3000 sits on the dyer's khata, unpaid, as an ordinary purchase.
+        mvc.perform(get(api(store, "/ledger/" + party)).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].event").value("PURCHASE"))
+                .andExpect(jsonPath("$.currentBalance.amount").value(3000.0));
     }
 
     @Test

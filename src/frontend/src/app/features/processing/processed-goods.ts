@@ -44,6 +44,18 @@ export class ProcessedGoods {
     void this.load();
   }
 
+  /**
+   * Who the batch bought from, deduped — a supplier named on three rows is one name here.
+   * Falls back to the batch's own party, which only batches booked before the supplier moved
+   * onto the rows still carry.
+   */
+  protected parties(batch: ProcessingRow): string {
+    const names = [...batch.rawItems, ...batch.processingItems]
+      .map((row) => row.partyName)
+      .filter((name): name is string => !!name);
+    return [...new Set(names)].join(', ') || (batch.partyName ?? '—');
+  }
+
   async load(): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);

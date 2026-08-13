@@ -14,11 +14,13 @@ public record ProcessingResponse(
         LocalDate date,
         String billNumber,
         String description,
-        /** Who it was run for, or null — a batch does not need a party. */
+        /**
+         * Who the whole batch was run for. Only ever set on batches booked before the party
+         * moved onto the individual rows; null on every new one, where {@link InputRow#partyName}
+         * carries it instead.
+         */
         String partyId,
         String partyName,
-        /** The party's phone number, so the batch screen can offer to WhatsApp it to them. */
-        String partyContact,
         List<InputRow> rawItems,
         List<InputRow> processingItems,
         OutputRow output,
@@ -26,7 +28,15 @@ public record ProcessingResponse(
         boolean recent
 )
 {
-    public record InputRow(String name, String unit, BigDecimal quantity, BigDecimal pricePerUnit)
+    /** An input row; {@code partyId} is set when it was bought in rather than taken off the shelf. */
+    public record InputRow(
+            String name,
+            String unit,
+            BigDecimal quantity,
+            BigDecimal pricePerUnit,
+            String partyId,
+            String partyName
+    )
     {
         /** What this row contributed to the batch's cost. */
         public BigDecimal amount()

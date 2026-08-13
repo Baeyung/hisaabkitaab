@@ -43,15 +43,12 @@
           </svg>
           {{ locale.t('common.print') }}
         </button>
-        @if (b.partyId) {
-          <app-whatsapp-button
-            [partyId]="b.partyId"
-            [partyName]="b.partyName ?? ''"
-            [contact]="b.partyContact"
-            [document]="locale.t('whatsapp.doc.batch') + (b.billNumber ? ' ' + b.billNumber : '')"
-            [action]="locale.t('whatsapp.doc.batch')"
-          />
-        }
+        <!-- No party recipient: a batch is the shop's own working paper, and its suppliers
+             already have the purchase entry it booked for them. -->
+        <app-whatsapp-button
+          [document]="locale.t('whatsapp.doc.batch') + (b.billNumber ? ' ' + b.billNumber : '')"
+          [action]="locale.t('whatsapp.doc.batch')"
+        />
         @if (stores.canEdit()) {
           <button type="button" class="rm-btn rm-btn--danger" (click)="askDelete()">
             {{ locale.t('common.delete') }}
@@ -117,6 +114,7 @@
               <thead>
                 <tr>
                   <th scope="col">{{ locale.t('processing.col.name') }}</th>
+                  <th scope="col">{{ locale.t('processing.supplier') }}</th>
                   <th scope="col" class="end">{{ locale.t('processing.col.qty') }}</th>
                   <th scope="col" class="end">{{ locale.t('processing.col.rate') }}</th>
                   <th scope="col" class="end">{{ locale.t('processing.col.amount') }}</th>
@@ -129,6 +127,16 @@
                       <span class="rm-tbl__name">{{ row.name }}</span>
                       @if (row.unit) {
                         <span class="rm-tbl__meta">{{ row.unit }}</span>
+                      }
+                    </td>
+                    <td [attr.data-label]="locale.t('processing.supplier')">
+                      @if (row.partyId) {
+                        <a class="rm-noprint" [routerLink]="stores.link('ledger', row.partyId)">{{
+                          row.partyName
+                        }}</a>
+                        <span class="rm-printonly">{{ row.partyName }}</span>
+                      } @else {
+                        —
                       }
                     </td>
                     <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">

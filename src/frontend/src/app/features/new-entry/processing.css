@@ -64,6 +64,62 @@
   justify-self: end;
 }
 
+/* The supplier boxes: folded away under their row, because a row is taken off the
+   shelf far more often than it is bought in for the batch. Indented and hairlined
+   so what shows when it opens reads as belonging to the row above it, not as a
+   sixth field of the card. */
+.linkbtn--sub {
+  align-self: flex-start;
+  margin: -4px 0 0 12px;
+  font-size: 11px;
+}
+
+/* A consumable row's two exceptions, side by side under it: bought in for the batch,
+   and work rather than goods. Both are the uncommon case, so they read as small print. */
+.pgrid__opts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: -4px;
+  margin-inline-start: 12px;
+}
+.pgrid__opts > .linkbtn--sub {
+  margin: 0;
+}
+
+.svc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  cursor: pointer;
+}
+.svc__box {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--kg-brand);
+  cursor: pointer;
+}
+
+.pgrid__party {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: end;
+  margin-inline-start: 12px;
+  padding: 12px;
+  border: 1px solid var(--kg-line);
+  border-inline-start-width: 3px;
+  border-radius: 10px;
+}
+.pgrid__party > .pgrid__hint {
+  grid-column: 1 / -1;
+}
+
 /* The amount cell is a read-out, not a box, but it keeps an input's height so its
    label lines up with the labels beside it. */
 .pgrid__amount .grid__amount {
@@ -122,5 +178,8 @@
       'qty'
       'cost'
       'wastage';
+  }
+  .pgrid__party {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
