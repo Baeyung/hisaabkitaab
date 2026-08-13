@@ -98,8 +98,9 @@ public class DocumentShareService
                 pdf,
                 filename,
                 body,
-                // The button URL's parameter, which stays positional.
-                List.of(to.link())
+                // The button URL's parameter, which stays positional. It is the opt-out link
+                // Meta requires the template to carry — see Addressee.blockToken.
+                List.of(to.blockToken())
         );
     }
 

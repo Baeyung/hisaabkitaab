@@ -19,19 +19,18 @@
 
     <div class="flex flex-1 flex-col md:flex-row">
       <nav
-        class="bg-panel border-b border-[var(--rule)] md:w-60 md:shrink-0 md:border-b-0 md:border-r
-               flex flex-col"
+        class="bg-panel border-b border-[var(--rule)] md:w-60 md:shrink-0 md:border-b-0 md:border-r flex flex-col"
         aria-label="Back office"
       >
         <p class="eyebrow px-5 pt-5 pb-2.5 md:px-6 max-md:hidden">Menu</p>
 
-        <!-- One destination, so the item marks the current page rather than
-             linking anywhere. It becomes an anchor when there is a second. -->
-        <span
-          class="flex items-center gap-2.5 mx-3 my-2 md:my-0 md:mx-3 px-3 py-2.5 rounded
-                 bg-[color-mix(in_srgb,var(--color-pine)_12%,transparent)]
-                 border-l-2 border-pine text-sm font-500 text-ink"
-          aria-current="page"
+        <!-- routerLinkActive carries the whole of "which room you are in": the
+             resting item is plain, the current one takes the pine rule. -->
+        <a
+          routerLink="/users"
+          routerLinkActive="bg-[color-mix(in_srgb,var(--color-pine)_12%,transparent)] border-pine text-ink"
+          ariaCurrentWhenActive="page"
+          class="flex items-center gap-2.5 mx-3 my-2 md:my-0 md:mx-3 px-3 py-2.5 rounded border-l-2 border-transparent text-sm font-500 text-muted no-underline hover:text-ink"
         >
           <svg
             width="17"
@@ -47,7 +46,29 @@
             <path d="M3 10h18M8 5v14" />
           </svg>
           User plan management
-        </span>
+        </a>
+
+        <a
+          routerLink="/whatsapp-blocks"
+          routerLinkActive="bg-[color-mix(in_srgb,var(--color-pine)_12%,transparent)] border-pine text-ink"
+          ariaCurrentWhenActive="page"
+          class="flex items-center gap-2.5 mx-3 my-2 md:my-0 md:mx-3 px-3 py-2.5 rounded border-l-2 border-transparent text-sm font-500 text-muted no-underline hover:text-ink"
+        >
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            class="text-pine shrink-0"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M5.6 5.6l12.8 12.8" />
+          </svg>
+          WhatsApp blocks
+        </a>
 
         <div class="mt-auto px-6 py-4 border-t border-[var(--rule)] max-md:hidden">
           <p class="eyebrow mb-1">Signed in</p>
@@ -56,7 +77,7 @@
       </nav>
 
       <main class="flex-1 min-w-0">
-        <app-users />
+        <router-outlet />
       </main>
     </div>
   </div>

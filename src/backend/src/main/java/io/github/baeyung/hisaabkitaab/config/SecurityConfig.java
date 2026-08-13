@@ -63,7 +63,12 @@ public class SecurityConfig
                             // otherwise be enough to reach it.
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
                             // WhatsApp calls these unauthenticated; the verify token is the gate.
-                            .requestMatchers("/api/webhooks/whatsapp").permitAll();
+                            .requestMatchers("/api/webhooks/whatsapp").permitAll()
+                            // The opt-out a WhatsApp message links to. Reached by the shop's
+                            // customers, who have no account here — the unguessable
+                            // storeId:recipientId token is the gate. See
+                            // WhatsAppBlockController for what it does and does not expose.
+                            .requestMatchers("/api/block/**").permitAll();
                     // With verification on, everything else needs a *verified* account:
                     // unverified logins authenticate but hold only ROLE_UNVERIFIED, so they
                     // fall through to the 403 access-denied handler. With it off, plain

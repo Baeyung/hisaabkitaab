@@ -1,0 +1,82 @@
+<div class="px-5 py-7 md:px-8 md:py-9 max-w-4xl">
+  <header class="mb-6">
+    <p class="eyebrow">Opt-outs</p>
+    <h1 class="mt-1.5 font-display text-3xl font-600 tracking-tight text-ink">WhatsApp blocks</h1>
+    <p class="mt-1.5 text-sm text-muted">
+      People who used the opt-out link on a WhatsApp message. The shop cannot reach them at that
+      number again, and cannot undo it — this screen is the only way back.
+    </p>
+  </header>
+
+  @if (error()) {
+    <p
+      class="mb-5 rounded border-l-2 border-vermilion bg-[color-mix(in_srgb,var(--color-vermilion)_10%,transparent)] px-4 py-2.5 text-sm text-ink"
+      role="alert"
+    >
+      {{ error() }}
+    </p>
+  }
+
+  @if (loading()) {
+    <p class="font-mono text-sm text-faint">Loading blocks…</p>
+  } @else if (blocks().length === 0) {
+    <div class="hairline pt-6 text-sm text-muted">
+      Nobody has opted out yet. This page fills itself as people use the link on their messages.
+    </div>
+  } @else {
+    <p class="mb-5 font-mono text-xs text-faint" aria-live="polite">
+      {{ blocks().length }} {{ blocks().length === 1 ? 'block' : 'blocks' }}
+    </p>
+
+    <ul class="space-y-2.5">
+      @for (block of blocks(); track block.id) {
+        <li
+          class="row rounded bg-card border border-[var(--rule)] hover:border-[var(--rule-strong)]"
+        >
+          <div class="p-4 md:p-5 flex flex-wrap items-center gap-x-5 gap-y-4">
+            <div class="min-w-0 flex-1 basis-56">
+              <p class="font-500 text-ink truncate">
+                {{ block.recipientName || 'Deleted record' }}
+              </p>
+              <p class="mt-0.5 font-mono text-xs text-muted truncate">
+                {{ block.contact }} · {{ block.storeName }}
+              </p>
+              <p class="mt-2 font-mono text-xs text-faint">blocked {{ block.blockedAt }}</p>
+            </div>
+
+            <!-- Two presses, because there is no undo for the undo: putting someone back on
+                 starts messages arriving on a phone whose owner asked for them to stop. -->
+            @if (confirming() === block.id) {
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-muted">Did they ask for this?</span>
+                <button
+                  type="button"
+                  [disabled]="working() === block.id"
+                  (click)="unblock(block)"
+                  class="rounded bg-pine-deep px-4 py-2 font-display text-sm font-600 tracking-wider uppercase text-white hover:bg-pine hover:text-desk disabled:opacity-60"
+                >
+                  {{ working() === block.id ? 'Working…' : 'Yes, unblock' }}
+                </button>
+                <button
+                  type="button"
+                  (click)="confirming.set(null)"
+                  class="text-sm text-faint underline underline-offset-2 hover:text-ink"
+                >
+                  Cancel
+                </button>
+              </div>
+            } @else {
+              <button
+                type="button"
+                (click)="confirming.set(block.id)"
+                class="rounded border border-[var(--rule-strong)] px-4 py-2 font-display text-sm font-600 tracking-wider uppercase text-ink hover:border-pine hover:text-pine"
+              >
+                Unblock
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

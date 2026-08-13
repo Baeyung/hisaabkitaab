@@ -49,6 +49,20 @@ export interface AssignPlanRequest {
   whatsappQuota?: number | null;
 }
 
+/**
+ * One person's standing "stop sending me this shop's documents on WhatsApp", made from the
+ * opt-out link on the message itself. Undoing one is what this back office is for — the page
+ * they confirmed on says so.
+ */
+export interface WhatsAppBlock {
+  id: string;
+  storeName: string;
+  /** Null when the party or member has since been deleted; the block stands regardless. */
+  recipientName: string | null;
+  contact: string;
+  blockedAt: string;
+}
+
 const CREDENTIALS_KEY = 'hk-admin-credentials';
 
 /**
@@ -107,6 +121,24 @@ export class AdminApi {
   assignPlan(userId: string, request: AssignPlanRequest): Promise<Plan> {
     return firstValueFrom(
       this.http.put<Plan>(`${this.base}/users/${userId}/plan`, request, {
+        headers: this.authenticated(),
+      }),
+    );
+  }
+
+  /** Everyone who has opted out of a shop's WhatsApp messages, newest first. */
+  whatsappBlocks(): Promise<WhatsAppBlock[]> {
+    return firstValueFrom(
+      this.http.get<WhatsAppBlock[]>(`${this.base}/whatsapp-blocks`, {
+        headers: this.authenticated(),
+      }),
+    );
+  }
+
+  /** Puts them back on. The opt-out page tells people this is the only way, so it is. */
+  unblockWhatsapp(blockId: string): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<void>(`${this.base}/whatsapp-blocks/${blockId}`, {
         headers: this.authenticated(),
       }),
     );

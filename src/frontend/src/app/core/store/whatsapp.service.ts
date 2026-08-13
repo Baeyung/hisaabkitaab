@@ -2,7 +2,7 @@ import { Service, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { StoreService } from './store.service';
-import { ShareRecipient, ShareResult, ShareTarget } from './whatsapp.models';
+import { ShareRecipients, ShareResult, ShareTarget } from './whatsapp.models';
 
 /** Sends the shop's printouts on WhatsApp, as the PDF the browser just rendered. */
 @Service()
@@ -10,10 +10,17 @@ export class WhatsAppService {
   private readonly http = inject(HttpClient);
   private readonly stores = inject(StoreService);
 
-  /** Who this shop can send to: its owner and the people they have shared it with. */
-  recipients(): Promise<ShareRecipient[]> {
+  /**
+   * Who this shop can send to: its owner and the people they have shared it with.
+   *
+   * @param partyId the party the screen is about, when it is about one — asked after only so
+   *                the dialog can say up front that they have opted out.
+   */
+  recipients(partyId: string | null): Promise<ShareRecipients> {
     return firstValueFrom(
-      this.http.get<ShareRecipient[]>(this.stores.api('whatsapp/recipients')),
+      this.http.get<ShareRecipients>(this.stores.api('whatsapp/recipients'), {
+        params: partyId ? { partyId } : {},
+      }),
     );
   }
 

@@ -3,6 +3,7 @@ package io.github.baeyung.hisaabkitaab.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,7 +16,9 @@ import io.github.baeyung.hisaabkitaab.dto.plan.AdminUserResponse;
 import io.github.baeyung.hisaabkitaab.dto.plan.AssignPlanRequest;
 import io.github.baeyung.hisaabkitaab.dto.plan.PlanResponse;
 import io.github.baeyung.hisaabkitaab.dto.plan.PlanTierResponse;
+import io.github.baeyung.hisaabkitaab.dto.whatsapp.AdminBlockResponse;
 import io.github.baeyung.hisaabkitaab.service.PlanService;
+import io.github.baeyung.hisaabkitaab.service.whatsapp.WhatsAppOptOutService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +36,8 @@ import lombok.RequiredArgsConstructor;
 public class AdminController
 {
     private final PlanService planService;
+
+    private final WhatsAppOptOutService optOutService;
 
     /** Every account and the plan it is on, optionally narrowed by name, email or number. */
     @GetMapping("/users")
@@ -54,5 +59,27 @@ public class AdminController
     public ResponseEntity<List<PlanTierResponse>> planTiers()
     {
         return ResponseEntity.ok(PlanTierResponse.all());
+    }
+
+    /**
+     * Everyone who has opted out of a shop's WhatsApp messages. Unfiltered — the opt-out page
+     * tells people it cannot be undone except by asking us, so this list is the size of how
+     * often that is asked. It gets a query parameter when it stops fitting on a screen.
+     */
+    @GetMapping("/whatsapp-blocks")
+    public ResponseEntity<List<AdminBlockResponse>> whatsappBlocks()
+    {
+        return ResponseEntity.ok(optOutService.all());
+    }
+
+    /**
+     * Puts someone back on. The only unblock there is: the page a customer confirms on says
+     * plainly that undoing it means asking us, and this is us.
+     */
+    @DeleteMapping("/whatsapp-blocks/{blockId}")
+    public ResponseEntity<Void> unblock(@PathVariable String blockId)
+    {
+        optOutService.unblock(blockId);
+        return ResponseEntity.noContent().build();
     }
 }

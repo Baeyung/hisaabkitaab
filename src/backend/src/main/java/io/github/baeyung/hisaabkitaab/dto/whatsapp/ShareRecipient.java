@@ -10,9 +10,12 @@ import io.github.baeyung.hisaabkitaab.enums.StoreRole;
  * <p>Deliberately without a phone number. The send resolves the recipient's number here on
  * the server, so nothing is gained by handing every viewer their colleagues' numbers.
  *
- * @param name the person's own name — {@code null} is impossible here, since an account with
- *             no name behind it is an outstanding invite and has no number to send to either.
+ * @param name    the person's own name — {@code null} is impossible here, since an account with
+ *                no name behind it is an outstanding invite and has no number to send to either.
+ * @param blocked whether they have told this shop to stop messaging them. The send refuses
+ *                either way; this is so the picker can say so before the button is pressed
+ *                rather than after.
  */
-public record ShareRecipient(String userId, String name, StoreRole role)
+public record ShareRecipient(String userId, String name, StoreRole role, boolean blocked)
 {
 }

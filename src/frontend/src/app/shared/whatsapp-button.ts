@@ -86,18 +86,21 @@ const ROLE_LABELS: Record<StoreRole, TranslationKey> = {
         <fieldset class="wa-set">
           <legend class="wa-group">{{ locale.t('whatsapp.group.party') }}</legend>
           <label class="wa-row">
-          <input
-            type="checkbox"
+            <input
+              type="checkbox"
               [checked]="partyPicked()"
+              [disabled]="partyBlocked()"
               (change)="toggleParty(id)"
             />
             <span class="wa-row__name">{{ partyName() }}</span>
-            @if (!hasNumber()) {
+            @if (partyBlocked()) {
+              <span class="wa-row__note">{{ locale.t('whatsapp.optedOut') }}</span>
+            } @else if (!hasNumber()) {
               <span class="wa-row__note">{{ locale.t('whatsapp.needsNumber') }}</span>
             }
           </label>
 
-          @if (partyPicked() && !hasNumber()) {
+          @if (partyPicked() && !partyBlocked() && !hasNumber()) {
             <div class="wa-field">
               <p class="rm-dialog__body">
                 {{ locale.t('whatsapp.noNumber', { name: partyName() }) }}
@@ -120,10 +123,13 @@ const ROLE_LABELS: Record<StoreRole, TranslationKey> = {
               <input
                 type="checkbox"
                 [checked]="userPicked(person.userId)"
+                [disabled]="person.blocked"
                 (change)="toggleUser(person.userId)"
               />
               <span class="wa-row__name">{{ person.name }}</span>
-              <span class="wa-row__note">{{ locale.t(roleLabel(person.role)) }}</span>
+              <span class="wa-row__note">{{
+                person.blocked ? locale.t('whatsapp.optedOut') : locale.t(roleLabel(person.role))
+              }}</span>
             </label>
           }
         }
@@ -232,6 +238,13 @@ export class WhatsAppButton {
   protected readonly people = signal<ShareRecipient[]>([]);
   protected readonly loadingPeople = signal(false);
   private loaded = false;
+
+  /**
+   * Whether this screen's party has told the shop to stop messaging them. Known only once the
+   * dialog has been opened and the list fetched, so it starts false — which is also what it
+   * stays for a screen that is about no party at all.
+   */
+  protected readonly partyBlocked = signal(false);
 
   /** Who is ticked right now. */
   protected readonly picked = signal<ReadonlySet<Pick>>(new Set());
@@ -402,7 +415,14 @@ export class WhatsAppButton {
     }
     this.loadingPeople.set(true);
     try {
-      this.people.set(await this.api.recipients());
+      const recipients = await this.api.recipients(this.partyId());
+      this.people.set(recipients.people);
+      this.partyBlocked.set(recipients.partyBlocked);
+      // The party is ticked before this answer arrives (see `ask`), so an opt-out has to
+      // untick it — the alternative is a pre-ticked row that the send then refuses.
+      if (recipients.partyBlocked) {
+        this.picked.set(new Set());
+      }
       this.loaded = true;
     } catch {
       this.people.set([]);

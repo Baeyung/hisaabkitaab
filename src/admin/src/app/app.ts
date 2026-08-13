@@ -2,18 +2,19 @@ import { Component, computed, inject } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
 import { filter } from 'rxjs';
 
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
 import { AdminApi } from './admin-api';
 import { Login } from './login';
-import { Users } from './users';
 
 /**
- * Two screens and no router: signed out you get the login, signed in you get the back office
- * frame with its menu. There is one destination in that menu, so there is no URL worth owning
- * yet — the router goes in when a second screen does.
+ * Signed out you get the login, signed in the back office frame with its menu and whichever
+ * room the URL names. Signing in is deliberately not a route: there is one way in and it is a
+ * state of the app rather than a place in it, so the router only ever sees a signed-in admin.
  */
 @Component({
   selector: 'app-root',
-  imports: [Login, Users],
+  imports: [Login, RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './app.html',
 })
 export class App {

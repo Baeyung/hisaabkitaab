@@ -567,6 +567,27 @@ export const en = {
   'whatsapp.doc.khataList': 'Khata list',
   'whatsapp.doc.expenses': 'Expense report',
   'whatsapp.doc.inventory': 'Stock list',
+  'whatsapp.optedOut': 'Blocked these messages',
+  // The opt-out page (/block/:token). Read by the shop's customers, not by shopkeepers —
+  // plainer wording than the rest of the app, and no accounting words at all.
+  'block.loading': 'Loading…',
+  'block.invalid.title': 'This link no longer works',
+  'block.invalid.body':
+    'It may have been changed on the way, or the record it points to has since been removed. Reply STOP to the WhatsApp message, or write to us, and we will sort it out.',
+  'block.ask.title': 'Stop WhatsApp messages from {{store}}?',
+  'block.facts.store': 'Shop',
+  'block.facts.name': 'Name on their records',
+  'block.facts.number': 'Your number',
+  'block.warning':
+    'This cannot be undone — not by you, and not by the shop. If you change your mind later, the only way back is to write to our support team.',
+  'block.confirm': 'Yes, stop all future messages',
+  'block.confirming': 'Stopping…',
+  'block.failed': "That didn't go through. Please try again.",
+  'block.keep':
+    'Nothing else changes. Your account with the shop stays exactly as it is — only these WhatsApp messages stop.',
+  'block.done.title': 'Messages stopped',
+  'block.done.body': '{{store}} will not send any more WhatsApp messages to {{number}}.',
+  'block.support': 'Changed your mind? Only our support team can undo this:',
   'common.printDetails.title': 'Bill details',
   'common.printDetails.confirm': "Include each bill's item details as sub-rows?",
   'common.printDetails.with': 'With details',

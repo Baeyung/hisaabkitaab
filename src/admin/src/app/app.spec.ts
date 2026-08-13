@@ -1,11 +1,13 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { EMPTY } from 'rxjs';
 
 import { App } from './app';
 import { AdminApi } from './admin-api';
+import { routes } from './app.routes';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -15,6 +17,7 @@ describe('App', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter(routes),
         // The real SwUpdate is only provided when a service worker is registered,
         // which never happens under test.
         { provide: SwUpdate, useValue: { versionUpdates: EMPTY } },
@@ -40,8 +43,21 @@ describe('App', () => {
     TestBed.inject(AdminApi).credentials.set('dGVzdDp0ZXN0');
 
     const fixture = TestBed.createComponent(App);
+    await TestBed.inject(Router).navigate(['/users']);
     await fixture.whenStable();
 
     expect((fixture.nativeElement as HTMLElement).querySelector('app-users')).toBeTruthy();
+  });
+
+  it('opens the blocks screen from its own URL', async () => {
+    TestBed.inject(AdminApi).credentials.set('dGVzdDp0ZXN0');
+
+    const fixture = TestBed.createComponent(App);
+    await TestBed.inject(Router).navigate(['/whatsapp-blocks']);
+    await fixture.whenStable();
+
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('app-blocks')).toBeTruthy();
+    expect(page.querySelector('app-users')).toBeFalsy();
   });
 });

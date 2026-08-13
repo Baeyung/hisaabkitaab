@@ -19,6 +19,7 @@ import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.repository.UserRepository;
+import io.github.baeyung.hisaabkitaab.repository.WhatsAppBlockRepository;
 import io.github.baeyung.hisaabkitaab.security.RequiresPlanCapacity;
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
@@ -36,6 +37,7 @@ public class StoreServiceImpl implements StoreService
     private final UserRepository userRepository;
     private final StoreAccessRepository storeAccessRepository;
     private final ExpenseCategoryService expenseCategoryService;
+    private final WhatsAppBlockRepository whatsAppBlockRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -124,6 +126,9 @@ public class StoreServiceImpl implements StoreService
         partyRepository.deleteAll(partyRepository.findByStoreId(storeId));
         expenseCategoryService.deleteByStore(storeId);
         storeAccessRepository.deleteByStoreId(storeId);
+        // A block outlives the party it was made for, but not the shop it was made against:
+        // there is nothing left to be blocked from once the shop is gone.
+        whatsAppBlockRepository.deleteByStoreId(storeId);
         storeRepository.delete(store);
     }
 

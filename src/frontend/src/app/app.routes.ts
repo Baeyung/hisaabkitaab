@@ -22,6 +22,14 @@ export const routes: Routes = [
     data: { doc: 'terms-and-conditions' },
     loadComponent: () => import('./features/policy/policy').then((m) => m.Policy),
   },
+  // The way out of a shop's WhatsApp messages, linked from the button on every one of them.
+  // Public and unguarded like the policy pages, and for a stronger reason: whoever opens it is
+  // a customer of the shop with no account here. `:token` is `storeId:partyId` — the link
+  // arrives percent-encoded from WhatsApp (…/block/1%3A2) and the router hands it over decoded.
+  {
+    path: 'block/:token',
+    loadComponent: () => import('./features/block/block').then((m) => m.Block),
+  },
   {
     path: 'login',
     canActivate: [apexAppRedirectGuard, publicOnlyGuard],
@@ -108,7 +116,8 @@ export const routes: Routes = [
       },
       {
         path: 'ledger/category/:key',
-        loadComponent: () => import('./features/ledger/category-detail').then((m) => m.CategoryDetail),
+        loadComponent: () =>
+          import('./features/ledger/category-detail').then((m) => m.CategoryDetail),
       },
       {
         path: 'ledger/:partyId',
@@ -193,7 +202,9 @@ export const routes: Routes = [
       {
         path: 'processing/:transactionId',
         loadComponent: () =>
-          import('./features/processing/processed-goods-detail').then((m) => m.ProcessedGoodsDetail),
+          import('./features/processing/processed-goods-detail').then(
+            (m) => m.ProcessedGoodsDetail,
+          ),
       },
       {
         path: 'bill-management',

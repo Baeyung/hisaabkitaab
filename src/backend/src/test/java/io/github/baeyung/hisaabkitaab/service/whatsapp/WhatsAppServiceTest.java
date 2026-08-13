@@ -157,7 +157,7 @@ class WhatsAppServiceTest
                 // …and the dynamic URL button last, addressed by its index in the template.
                 .andExpect(jsonPath("$.template.components[2].type").value("button"))
                 .andExpect(jsonPath("$.template.components[2].sub_type").value("url"))
-                .andExpect(jsonPath("$.template.components[2].index").value("0"))
+                .andExpect(jsonPath("$.template.components[2].index").value("1"))
                 .andExpect(jsonPath("$.template.components[2].parameters[0].text").value("store-3"))
                 .andExpect(jsonPath("$.template.components[2].parameters[1].text").value("party-7"))
                 .andRespond(withSuccess("{\"messages\":[{\"id\":\"wamid.6\"}]}", MediaType.APPLICATION_JSON));

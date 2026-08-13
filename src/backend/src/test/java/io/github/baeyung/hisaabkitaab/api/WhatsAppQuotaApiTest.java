@@ -335,12 +335,14 @@ class WhatsAppQuotaApiTest extends ApiTest
 
         mvc.perform(get(api(store, "/whatsapp/recipients")).with(as(MEMBER)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("User " + OWNER))
-                .andExpect(jsonPath("$[0].role").value("OWNER"))
-                .andExpect(jsonPath("$[1].name").value("User " + MEMBER))
-                .andExpect(jsonPath("$[1].role").value("VIEWER"))
-                .andExpect(jsonPath("$[0].contact").doesNotExist());
+                .andExpect(jsonPath("$.people.length()").value(2))
+                .andExpect(jsonPath("$.people[0].name").value("User " + OWNER))
+                .andExpect(jsonPath("$.people[0].role").value("OWNER"))
+                .andExpect(jsonPath("$.people[0].blocked").value(false))
+                .andExpect(jsonPath("$.people[1].name").value("User " + MEMBER))
+                .andExpect(jsonPath("$.people[1].role").value("VIEWER"))
+                .andExpect(jsonPath("$.people[0].contact").doesNotExist())
+                .andExpect(jsonPath("$.partyBlocked").value(false));
     }
 
     /**

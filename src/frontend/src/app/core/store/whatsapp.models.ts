@@ -9,6 +9,15 @@ export interface ShareRecipient {
   userId: string;
   name: string;
   role: StoreRole;
+  /** They have opted out of this shop's messages. The send refuses them either way. */
+  blocked: boolean;
+}
+
+/** Everything the send dialog needs to draw itself: the shop's people, and the party's opt-out. */
+export interface ShareRecipients {
+  people: ShareRecipient[];
+  /** False whenever the screen is not about a party — the shop's own printouts. */
+  partyBlocked: boolean;
 }
 
 /**

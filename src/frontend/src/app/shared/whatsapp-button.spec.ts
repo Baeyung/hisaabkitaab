@@ -20,8 +20,8 @@ const PARTY = {
 } as Party;
 
 const PEOPLE: ShareRecipient[] = [
-  { userId: 'u1', name: 'Owner Sahib', role: 'OWNER' },
-  { userId: 'u2', name: 'Bilal', role: 'EDITOR' },
+  { userId: 'u1', name: 'Owner Sahib', role: 'OWNER', blocked: false },
+  { userId: 'u2', name: 'Bilal', role: 'EDITOR', blocked: false },
 ];
 
 @Component({
@@ -50,7 +50,14 @@ interface Internals {
   send(event: Event): Promise<void>;
 }
 
-function setup(options: { updateFails?: boolean; result?: ShareResult } = {}) {
+function setup(
+  options: {
+    updateFails?: boolean;
+    result?: ShareResult;
+    people?: ShareRecipient[];
+    partyBlocked?: boolean;
+  } = {},
+) {
   const updates: PartyDraft[] = [];
   const sent: ShareTarget[][] = [];
 
@@ -72,12 +79,14 @@ function setup(options: { updateFails?: boolean; result?: ShareResult } = {}) {
       {
         provide: WhatsAppService,
         useValue: {
-          recipients: () => Promise.resolve(PEOPLE),
+          recipients: () =>
+            Promise.resolve({
+              people: options.people ?? PEOPLE,
+              partyBlocked: options.partyBlocked ?? false,
+            }),
           share: (recipients: ShareTarget[]) => {
             sent.push(recipients);
-            return Promise.resolve(
-              options.result ?? { sent: recipients.length, failed: [] },
-            );
+            return Promise.resolve(options.result ?? { sent: recipients.length, failed: [] });
           },
         },
       },
@@ -181,6 +190,25 @@ describe('WhatsAppButton recipient picker', () => {
         { kind: 'USER', id: 'u2' },
       ],
     ]);
+  });
+
+  it('unticks the party and refuses to tick anyone who has opted out', async () => {
+    const { fixture, button, sent } = setup({
+      partyBlocked: true,
+      people: [PEOPLE[0], { ...PEOPLE[1], blocked: true }],
+    });
+    await open(fixture, button);
+
+    // The party is ticked on open, before the answer arrives — an opt-out has to take it back
+    // off, or the dialog offers a send the backend will refuse.
+    const boxes: HTMLInputElement[] = Array.from(
+      fixture.nativeElement.querySelectorAll('input[type="checkbox"]'),
+    );
+    expect(boxes.map((box) => box.checked)).toEqual([false, false, false]);
+    expect(boxes.map((box) => box.disabled)).toEqual([true, false, true]);
+
+    await button.send(new Event('click'));
+    expect(sent).toEqual([]);
   });
 
   it('counts out a send that only reached some of them', async () => {

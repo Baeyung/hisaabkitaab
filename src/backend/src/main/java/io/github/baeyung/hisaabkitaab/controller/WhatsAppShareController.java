@@ -9,10 +9,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import io.github.baeyung.hisaabkitaab.dto.whatsapp.ShareRecipient;
+import io.github.baeyung.hisaabkitaab.dto.whatsapp.ShareRecipients;
 import io.github.baeyung.hisaabkitaab.dto.whatsapp.ShareRequest;
 import io.github.baeyung.hisaabkitaab.dto.whatsapp.ShareResult;
 import io.github.baeyung.hisaabkitaab.entity.Store;
@@ -23,6 +24,7 @@ import io.github.baeyung.hisaabkitaab.service.pdf.PdfRenderService;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.Addressee;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.DocumentShareService;
 import io.github.baeyung.hisaabkitaab.service.whatsapp.ShareRecipientService;
+import io.github.baeyung.hisaabkitaab.service.whatsapp.WhatsAppBlockService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -59,11 +61,21 @@ public class WhatsAppShareController
 
     private final PlanService planService;
 
-    /** Who this shop can send to, for the picker the send button opens. */
+    private final WhatsAppBlockService blockService;
+
+    /**
+     * Who this shop can send to, for the picker the send button opens.
+     *
+     * @param partyId the party the screen is about, when it is about one. Only its opt-out is
+     *                asked after — the party itself is already on the screen.
+     */
     @GetMapping("/recipients")
-    public ResponseEntity<List<ShareRecipient>> recipients(@CurrentStore(StoreRole.VIEWER) Store store)
+    public ResponseEntity<ShareRecipients> recipients(@CurrentStore(StoreRole.VIEWER) Store store,
+            @RequestParam(required = false) String partyId)
     {
-        return ResponseEntity.ok(shareRecipientService.list(store));
+        return ResponseEntity.ok(new ShareRecipients(
+                shareRecipientService.list(store),
+                partyId != null && shareRecipientService.isBlocked(store, partyId)));
     }
 
     /**
@@ -93,7 +105,27 @@ public class WhatsAppShareController
         int sent = 0;
         List<String> failed = new ArrayList<>();
 
+        // Anyone who has opted out is dropped here, ahead of the quota and the renderer, and
+        // named back like any other recipient we did not reach. This is the rule, not the
+        // picker's greying-out: a screen held open since before someone blocked would still
+        // offer them, and a send is the last moment we can honour it. Kept apart from `failed`
+        // until the end so that dropping them does not read, below, as a send having started.
+        WhatsAppBlockService.Blocks blocks = blockService.in(store.getId());
+        List<String> optedOut = new ArrayList<>();
+        List<Addressee> reachable = new ArrayList<>();
         for (Addressee to : addressees)
+        {
+            if (blocks.has(to.recipientId(), to.contact()))
+            {
+                optedOut.add(to.name());
+            }
+            else
+            {
+                reachable.add(to);
+            }
+        }
+
+        for (Addressee to : reachable)
         {
             String charged;
             try
@@ -143,6 +175,7 @@ public class WhatsAppShareController
             }
         }
 
+        failed.addAll(optedOut);
         return ResponseEntity.ok(new ShareResult(sent, failed));
     }
 }
