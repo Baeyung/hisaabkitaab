@@ -155,8 +155,27 @@
                         (input)="openingQty.set($any($event.target).valueAsNumber || null)"
                         [attr.placeholder]="locale.t('settings.items.opening.qtyPh')"
                       />
+                      <!-- Counted in whatever unit is to hand — "four than" — and converted
+                           into the item's own unit before it reaches the shelf. -->
                       @if (item.unit) {
-                        <span class="opening__unit">{{ item.unit }}</span>
+                        <input
+                          class="fld__input fld__input--sm opening__unit opening__unit--edit"
+                          [class.opening__unit--off]="openingFactor() !== null"
+                          type="text"
+                          list="unit-suggestions"
+                          [value]="openingUnit()"
+                          (input)="openingUnit.set($any($event.target).value)"
+                          (change)="askOpeningUnit(item)"
+                          [attr.aria-label]="locale.t('units.field.entered')"
+                          [attr.placeholder]="item.unit"
+                        />
+                        <app-unit-note
+                          [qty]="openingQty()"
+                          [unit]="openingUnit()"
+                          [stockUnit]="item.unit"
+                          [factor]="openingFactor()"
+                          (editRate)="askOpeningUnit(item, true)"
+                        />
                       }
                       <span class="opening__actions">
                         <button type="button" class="btn btn--ghost btn--sm" (click)="cancelOpening()">

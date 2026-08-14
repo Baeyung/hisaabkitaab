@@ -164,7 +164,7 @@
           <div class="grid__qty">
             <input
               class="fld__input fld__input--sm num"
-              [class.fld__input--unit]="lineUnit(line.design)"
+              [class.fld__input--unit]="line.unit || lineUnit(line.design)"
               type="number"
               inputmode="decimal"
               min="0"
@@ -172,12 +172,24 @@
               (input)="setQty(line.key, $any($event.target).value)"
               [attr.placeholder]="locale.t(config().labels.colQty)"
               [attr.aria-label]="
-                locale.t(config().labels.colQty) +
-                (lineUnit(line.design) ? ' — ' + lineUnit(line.design) : '')
+                locale.t(config().labels.colQty) + (line.unit ? ' — ' + line.unit : '')
               "
             />
-            @if (lineUnit(line.design); as u) {
-              <span class="grid__unit" aria-hidden="true">{{ u }}</span>
+            <!-- The unit hint that used to sit here, made writable in place: a line sold in
+                 another unit is typed over rather than moved to a column of its own, and the
+                 slip opens when the box is left. Amber while it differs from the shelf's. -->
+            @if (line.unit || lineUnit(line.design)) {
+              <input
+                class="grid__unit grid__unit--edit"
+                [class.grid__unit--off]="line.unit && lineUnit(line.design) && line.factor !== null"
+                type="text"
+                list="unit-suggestions"
+                [value]="line.unit"
+                (input)="setUnit(line.key, $any($event.target).value)"
+                (change)="askUnit(line.key)"
+                [attr.aria-label]="locale.t('units.field.entered')"
+                [attr.placeholder]="lineUnit(line.design)"
+              />
             }
           </div>
           <input
@@ -211,7 +223,28 @@
             </svg>
           </button>
         </div>
+
+        <!-- what this line will actually take off the shelf, once it has been converted -->
+        @if (line.factor) {
+          <div class="grid__conv">
+            <app-unit-note
+              [qty]="line.qty"
+              [unit]="line.unit"
+              [stockUnit]="lineUnit(line.design)"
+              [factor]="line.factor"
+              (editRate)="askUnit(line.key, true)"
+            />
+          </div>
+        }
       }
+
+      <!-- the unit boxes above suggest from one list: the measures the app can convert
+           between, then the trade units a shop has to teach it -->
+      <datalist id="unit-suggestions">
+        @for (u of unitOptions; track u) {
+          <option [value]="u"></option>
+        }
+      </datalist>
 
       <button type="button" class="linkbtn" (click)="addLine()">
         + {{ locale.t(config().labels.lineAdd) }}

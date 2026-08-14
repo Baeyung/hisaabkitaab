@@ -52,12 +52,16 @@
             <label class="fld__label" [attr.for]="'raw-unit-' + line.key">
               {{ locale.t('processing.col.unit') }}
             </label>
+            <!-- committed on change, not on input: a modal on every keystroke of "Meter"
+                 would open five times before the word is finished -->
             <input
               class="fld__input fld__input--sm"
               type="text"
+              list="unit-suggestions"
               [id]="'raw-unit-' + line.key"
               [value]="line.unit"
               (input)="patchRaw(line.key, { unit: $any($event.target).value })"
+              (change)="askRawUnit(line.key)"
               [attr.placeholder]="locale.t('processing.col.unit.ph')"
             />
           </div>
@@ -114,16 +118,26 @@
           </button>
         </div>
 
-        <!-- bought in for this batch, rather than taken off the shelf -->
-        <button
-          type="button"
-          class="linkbtn linkbtn--sub"
-          [attr.aria-expanded]="line.open"
-          [attr.aria-controls]="'raw-party-box-' + line.key"
-          (click)="toggleRawParty(line.key)"
-        >
-          {{ line.open ? '−' : '+' }} {{ locale.t('processing.supplier.add') }}
-        </button>
+        <div class="pgrid__opts">
+          <!-- bought in for this batch, rather than taken off the shelf -->
+          <button
+            type="button"
+            class="linkbtn linkbtn--sub"
+            [attr.aria-expanded]="line.open"
+            [attr.aria-controls]="'raw-party-box-' + line.key"
+            (click)="toggleRawParty(line.key)"
+          >
+            {{ line.open ? '−' : '+' }} {{ locale.t('processing.supplier.add') }}
+          </button>
+          <!-- what this row will actually take off the shelf, once it has been converted -->
+          <app-unit-note
+            [qty]="line.qty"
+            [unit]="line.unit"
+            [stockUnit]="stockUnit(line.name)"
+            [factor]="line.factor"
+            (editRate)="askRawUnit(line.key, true)"
+          />
+        </div>
 
         @if (line.open) {
           <div class="pgrid__party" [id]="'raw-party-box-' + line.key">
@@ -194,9 +208,11 @@
             <input
               class="fld__input fld__input--sm"
               type="text"
+              list="unit-suggestions"
               [id]="'proc-unit-' + line.key"
               [value]="line.unit"
               (input)="patchProc(line.key, { unit: $any($event.target).value })"
+              (change)="askProcUnit(line.key)"
               [attr.placeholder]="locale.t('processing.col.unit.ph')"
             />
           </div>
@@ -274,6 +290,13 @@
             />
             {{ locale.t('processing.service') }}
           </label>
+          <app-unit-note
+            [qty]="line.qty"
+            [unit]="line.unit"
+            [stockUnit]="stockUnit(line.name)"
+            [factor]="line.factor"
+            (editRate)="askProcUnit(line.key, true)"
+          />
         </div>
 
         @if (line.open) {
@@ -351,9 +374,11 @@
           <input
             class="fld__input fld__input--sm"
             type="text"
+            list="unit-suggestions"
             id="output-unit"
             [value]="outputUnit()"
             (input)="outputUnit.set($any($event.target).value)"
+            (change)="askOutputUnit()"
             [attr.placeholder]="locale.t('processing.col.unit.ph')"
           />
         </div>
@@ -401,10 +426,27 @@
           />
         </div>
       </div>
-      <p class="pgrid__hint" id="output-cost-lock">
-        {{ locale.t(hasOutputQty() ? 'processing.unitCost.hint' : 'processing.unitCost.locked') }}
-      </p>
+      <div class="pgrid__opts">
+        <p class="pgrid__hint" id="output-cost-lock">
+          {{ locale.t(hasOutputQty() ? 'processing.unitCost.hint' : 'processing.unitCost.locked') }}
+        </p>
+        <app-unit-note
+          [qty]="outputQty()"
+          [unit]="outputUnit()"
+          [stockUnit]="stockUnit(outputName())"
+          [factor]="outputFactor()"
+          (editRate)="askOutputUnit(true)"
+        />
+      </div>
     </div>
+
+    <!-- the unit boxes above all suggest from one list: the measures the app can convert
+         between, then the trade units a shop has to teach it -->
+    <datalist id="unit-suggestions">
+      @for (u of unitOptions; track u) {
+        <option [value]="u"></option>
+      }
+    </datalist>
 
     <!-- totals -->
     <div class="totals">
@@ -491,7 +533,7 @@
                 }}<small class="fx__sub">{{ locale.money(unitCost()) }}</small></span
               >
               <span class="fx__amt num">{{
-                locale.qtyUnit(outputQty() ?? 0, outputUnit() || null)
+                locale.qtyUnit(outputShelf().qty, outputShelf().unit)
               }}</span>
             </li>
           }

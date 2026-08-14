@@ -332,6 +332,16 @@ th.num {
   font-size: 13px;
   color: var(--kg-muted);
 }
+/* The unit the opening figure is being counted in — an ordinary field, kept narrow because it
+   is a word and not a sentence. */
+.opening__unit--edit {
+  max-width: 110px;
+}
+/* Not the unit this item is stocked in: the quantity beside it is being converted. */
+.opening__unit--off {
+  color: var(--kg-amber);
+  border-color: var(--kg-amber);
+}
 .opening__actions {
   display: inline-flex;
   gap: 8px;

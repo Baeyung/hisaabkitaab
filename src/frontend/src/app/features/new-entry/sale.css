@@ -220,6 +220,46 @@ select.fld__input {
   pointer-events: none;
 }
 
+/* The unit hint, made writable in place rather than given a column of its own — a line's unit
+   is read a hundred times for every time it is changed, so it keeps the hint's size and
+   position and only takes on an input's affordances when it is reached for. */
+.grid__unit--edit {
+  padding: 1px 0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: end;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  pointer-events: auto;
+  cursor: text;
+}
+.grid__unit--edit::placeholder {
+  color: var(--kg-faint);
+  opacity: 1;
+}
+.grid__unit--edit:hover {
+  border-bottom-color: var(--kg-line-hover);
+}
+.grid__unit--edit:focus-visible {
+  outline: 2px solid var(--kg-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* Not the unit this item is stocked in: the quantity beside it is being converted on the way
+   to the shelf, and the amber says so without needing to be read. */
+.grid__unit--off {
+  color: var(--kg-amber);
+}
+
+/* The standing conversion note, one line under the row it belongs to. */
+.grid__conv {
+  margin-top: -2px;
+  padding-inline-start: 4px;
+}
+
 /* ── totals + money ──────────────────────────────────────────────────────── */
 .totals {
   display: flex;

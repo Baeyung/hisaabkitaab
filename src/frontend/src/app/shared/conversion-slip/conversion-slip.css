@@ -1,0 +1,300 @@
+/* The conversion slip. Everything here serves one idea: this is a sum, not a form.
+   The three rows share a column of figures, a rule is drawn above the answer, and the only
+   writable thing is the rate — so the shopkeeper reads a calculation they can check, then
+   agrees to it, rather than filling in fields and hoping. */
+
+.slip {
+  /* Tailwind's preflight zeroes every margin, including the `margin: auto` the UA uses to
+     centre a modal <dialog> — put it back or the box sticks to the inline-start corner. */
+  margin: auto;
+  width: min(94vw, 430px);
+  padding: 24px;
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 16px;
+  box-shadow: var(--kg-shadow-dialog);
+}
+.slip::backdrop {
+  background: var(--kg-backdrop);
+}
+
+/* Amber, not pine: this is the app noticing something, not the app succeeding at something. */
+.slip__eyebrow {
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--kg-amber);
+}
+.slip__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.slip__body {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--kg-muted);
+}
+
+/* ── the sum ──────────────────────────────────────────────────────────────── */
+.calc {
+  display: flex;
+  flex-direction: column;
+  margin: 18px 0 14px;
+  padding: 12px 16px;
+  background: var(--kg-cream);
+  border: 1px solid var(--kg-line);
+  border-radius: 12px;
+}
+
+/* Operator gutter, what the row is, the figure. The figures share the last column, so they
+   stack into one right-aligned run — which is what makes three lines read as one sum. */
+.calc__row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 0;
+}
+
+.calc__op {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kg-faint);
+  text-align: center;
+}
+
+.calc__key {
+  font-size: 12px;
+  color: var(--kg-muted);
+}
+/* "Meter per Gaz" — what the rate is measured in, kept out of the figure column so the three
+   numbers can share one. */
+.calc__per {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--kg-faint);
+}
+
+.calc__fig {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+
+.calc__num {
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The unit slot is a fixed width even when empty. That is what puts the three numbers in one
+   right-aligned column — the thing that makes three rows read as one sum rather than as three
+   unrelated readouts. */
+.calc__unit {
+  flex: none;
+  width: 46px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--kg-faint);
+}
+
+/* The rate is written over, not typed into: underlined rather than boxed, so the block stays
+   a sum. It is still an ordinary input with an ordinary label — focusable, announced, and
+   ringed on focus like every other field. */
+.calc__input {
+  width: 92px;
+  padding: 1px 0 3px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  color: var(--kg-ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid var(--kg-line-hover);
+  border-radius: 0;
+}
+.calc__input:hover,
+.calc__input:focus {
+  border-bottom-color: var(--kg-brand);
+}
+/* Empty, and therefore the question being asked — the underline matches the amber prompt
+   below it, so the field and the sentence telling you to fill it are visibly the same thing. */
+.calc__input--ask {
+  border-bottom-color: var(--kg-amber);
+}
+.calc__input:focus-visible {
+  outline: 2px solid var(--kg-focus);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+/* Spinners would put two arrow stubs in the middle of a written figure. */
+.calc__input::-webkit-outer-spin-button,
+.calc__input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.calc__input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* The answer, under a ruled line. Drawn as a pseudo-element rather than a border so it can be
+   swept in — see the writing sequence below. */
+.calc__row--result {
+  position: relative;
+  margin-top: 3px;
+  padding-top: 13px;
+}
+.calc__row--result::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: var(--kg-line-strong);
+}
+.calc__row--result .calc__key {
+  font-weight: 600;
+  color: var(--kg-ink);
+}
+.calc__row--result .calc__num {
+  font-size: 22px;
+  color: var(--kg-brand);
+}
+/* A result with nothing in it yet is absent, not an answer — it must not wear the answer's
+   colour. Scoped to the result row to outrank the rule above. */
+.calc__row--result .calc__num--void {
+  color: var(--kg-placeholder);
+}
+.calc__row--result .calc__unit {
+  color: var(--kg-brand);
+  opacity: 0.72;
+}
+
+/* ── where the rate came from ─────────────────────────────────────────────── */
+/* Two states only, because only two things matter here: the rate is established, or it is
+   yours to decide. Pine for the first, amber for the second — the same two meanings the
+   eyebrow uses. */
+.slip__source {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin: 0 0 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--kg-muted);
+}
+.slip__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--kg-brand);
+}
+.slip__source[data-source='typed'] .slip__dot,
+.slip__source--ask .slip__dot {
+  background: var(--kg-amber);
+}
+.slip__source--ask {
+  color: var(--kg-amber);
+}
+
+/* ── keeping it ───────────────────────────────────────────────────────────── */
+.slip__keep {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin: 0 0 18px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.slip__box {
+  flex: none;
+  margin-top: 3px;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--kg-brand);
+}
+.slip__keep-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--kg-faint);
+}
+
+.slip__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ── the sum being written ────────────────────────────────────────────────── */
+/* One orchestrated moment, on open only: quantity, then rate, then the rule sweeps out from
+   the middle and the answer lands. It is the gesture the dialog is asking the shopkeeper to
+   follow, so it is worth the 400ms — and it is the only motion in here. */
+@media (prefers-reduced-motion: no-preference) {
+  .slip[open] .calc__row {
+    animation: slip-write 240ms cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  }
+  .slip[open] .calc__row:nth-child(1) {
+    animation-delay: 40ms;
+  }
+  .slip[open] .calc__row:nth-child(2) {
+    animation-delay: 110ms;
+  }
+  .slip[open] .calc__row:nth-child(3) {
+    animation-delay: 190ms;
+  }
+  .slip[open] .calc__row--result::before {
+    /* From the centre out: direction-neutral, so it reads the same in Urdu. */
+    animation: slip-rule 260ms cubic-bezier(0.2, 0.7, 0.3, 1) 170ms backwards;
+  }
+}
+
+@keyframes slip-write {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slip-rule {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Under 380px the label and the figure stop fitting on one line; stack them and drop the
+   operator gutter, which has nothing to line up with once the rows are two lines tall. */
+@media (max-width: 380px) {
+  .calc__row {
+    grid-template-columns: 18px minmax(0, 1fr);
+  }
+  .calc__fig {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+  .calc__input {
+    width: 78px;
+    text-align: start;
+  }
+}

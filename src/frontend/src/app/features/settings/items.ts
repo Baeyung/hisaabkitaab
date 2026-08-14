@@ -6,6 +6,10 @@ import { StoreService } from '../../core/store/store.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreItemService } from '../../core/store/store-item.service';
 import { StoreItem, StoreItemDraft } from '../../core/store/store-item.models';
+import { UnitConversionService } from '../../core/units/unit-conversion.service';
+import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
+import { UnitNote } from '../../shared/conversion-slip/unit-note';
+import { UNIT_SUGGESTIONS, convertQty, sameUnit } from '../../core/units/units';
 
 /** Form-facing shape: `unit` is a non-null string for the text input (blank → null on send). */
 interface ItemForm {
@@ -18,7 +22,14 @@ interface ItemForm {
   openingStock: number | null;
 }
 
-const EMPTY_FORM: ItemForm = { name: '', unit: '', salePrice: null, costPrice: null, service: false, openingStock: null };
+const EMPTY_FORM: ItemForm = {
+  name: '',
+  unit: '',
+  salePrice: null,
+  costPrice: null,
+  service: false,
+  openingStock: null,
+};
 
 /**
  * Store catalog CRUD. Rows edit in place: "Add item" opens a blank editable row,
@@ -31,7 +42,7 @@ const EMPTY_FORM: ItemForm = { name: '', unit: '', salePrice: null, costPrice: n
  */
 @Component({
   selector: 'app-items',
-  imports: [FormField, NgTemplateOutlet],
+  imports: [FormField, NgTemplateOutlet, UnitNote],
   templateUrl: './items.html',
   styleUrl: './items.css',
 })
@@ -40,6 +51,8 @@ export class SettingsItems {
   private readonly api = inject(StoreItemService);
   /** Deleting an item is the owner's — it erases everything booked against it. */
   protected readonly stores = inject(StoreService);
+  private readonly conversions = inject(UnitConversionService);
+  private readonly slip = inject(ConversionSlipService);
 
   protected readonly items = signal<StoreItem[] | null>(null);
   protected readonly loading = signal(true);
@@ -50,6 +63,16 @@ export class SettingsItems {
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly openingId = signal<string | null>(null);
   protected readonly openingQty = signal<number | null>(null);
+  /**
+   * The unit the opening quantity is being counted in, prefilled from the item. Opening stock
+   * is the one figure a shopkeeper is most likely to have in trade units — the shelf holds
+   * four than of this, whatever a than turns out to be in metres — so it is worth asking about
+   * here even though the item's own unit is being set two rows above.
+   */
+  protected readonly openingUnit = signal('');
+  protected readonly openingFactor = signal<number | null>(null);
+  /** The pair that rate was agreed for, so switching to a third unit asks again. */
+  private readonly openingFactorFor = signal<string | null>(null);
   /** What the row's opening stock was when the editor opened — only a change is sent. */
   private readonly openingBefore = signal<number | null>(null);
   protected readonly saving = signal(false);
@@ -61,11 +84,17 @@ export class SettingsItems {
     min(p.openingStock, 0);
   });
 
-  /** Common cloth units as free-text datalist hints; the shopkeeper can type any. */
-  protected readonly unitSuggestions = ['Meter', 'Than', 'Gaz', 'Piece', 'Roll'];
+  /**
+   * Free-text datalist hints; the shopkeeper can still type any. Shared with the entry screens
+   * so the same names are offered everywhere — a unit typed one way here and another way on a
+   * sale is a unit the app has to be taught twice.
+   */
+  protected readonly unitSuggestions = UNIT_SUGGESTIONS;
 
   constructor() {
     this.load();
+    // For the opening-stock editor below; swallows its own failure.
+    void this.conversions.load();
   }
 
   async load(): Promise<void> {
@@ -117,9 +146,14 @@ export class SettingsItems {
       const saved = editId ? await this.api.update(editId, draft) : await this.api.create(draft);
       // Create/update do not carry opening stock, so it rides its own endpoint —
       // and only when it actually moved. A service holds none, so it clears.
-      const withOpening = { ...saved, openingStock: await this.syncOpening(saved.id, draft.service) };
+      const withOpening = {
+        ...saved,
+        openingStock: await this.syncOpening(saved.id, draft.service),
+      };
       if (editId) {
-        this.items.update((list) => (list ?? []).map((it) => (it.id === editId ? withOpening : it)));
+        this.items.update((list) =>
+          (list ?? []).map((it) => (it.id === editId ? withOpening : it)),
+        );
       } else {
         this.items.update((list) => [withOpening, ...(list ?? [])]);
       }
@@ -143,8 +177,11 @@ export class SettingsItems {
 
   startOpening(item: StoreItem): void {
     this.resetRowState();
-    // Prefill from the current opening so re-opening shows what was entered.
+    // Prefill from the current opening so re-opening shows what was entered. The stored figure
+    // is always in the item's own unit, so the editor starts there with nothing to convert.
     this.openingQty.set(item.openingStock ?? null);
+    this.openingUnit.set(item.unit?.trim() ?? '');
+    this.openingFactor.set(null);
     this.openingId.set(item.id);
   }
 
@@ -152,17 +189,59 @@ export class SettingsItems {
     this.resetRowState();
   }
 
-  async saveOpening(id: string): Promise<void> {
-    const qty = this.openingQty();
-    if (qty == null || qty < 0) {
+  /**
+   * The opening editor's unit box was left. Same bargain as the entry screens: anything but
+   * the item's own unit is converted through the slip, and declining puts the box back.
+   */
+  async askOpeningUnit(item: StoreItem, force = false): Promise<void> {
+    const stock = item.unit?.trim() ?? '';
+    const entered = this.openingUnit().trim();
+
+    const pair = `${entered.toLowerCase()}>${stock.toLowerCase()}`;
+
+    if (!stock || !entered || sameUnit(entered, stock)) {
+      this.openingFactor.set(null);
+      this.openingFactorFor.set(null);
       return;
     }
+    if (!force && this.openingFactorFor() === pair) {
+      return;
+    }
+
+    const answer = await this.slip.open({
+      itemName: item.name,
+      from: entered,
+      to: stock,
+      qty: this.openingQty(),
+    });
+
+    if (answer === null) {
+      this.openingUnit.set(stock);
+      this.openingFactor.set(null);
+      this.openingFactorFor.set(null);
+    } else {
+      this.openingFactor.set(answer.factor);
+      this.openingFactorFor.set(pair);
+    }
+  }
+
+  async saveOpening(id: string): Promise<void> {
+    const typed = this.openingQty();
+    if (typed == null || typed < 0) {
+      return;
+    }
+    // Opening stock is stock: it lands on the shelf in the item's own unit, whatever unit it
+    // was counted in.
+    const factor = this.openingFactor();
+    const qty = factor ? convertQty(typed, factor) : typed;
     this.saving.set(true);
     this.rowErrorKey.set(null);
     try {
       const stored = await this.api.setOpeningStock(id, qty);
       const openingStock = stored > 0 ? stored : null;
-      this.items.update((list) => (list ?? []).map((it) => (it.id === id ? { ...it, openingStock } : it)));
+      this.items.update((list) =>
+        (list ?? []).map((it) => (it.id === id ? { ...it, openingStock } : it)),
+      );
       this.resetRowState();
     } catch {
       this.rowErrorKey.set('error.generic');
@@ -203,7 +282,10 @@ export class SettingsItems {
    * Per-unit profit (sale − cost) for the margin column, as signed amount, percent,
    * and a tone for colour. Null when either price is missing — nothing to compute.
    */
-  protected marginView(sale: number | null, cost: number | null): { amount: string; pct: string; tone: 'pos' | 'neg' | 'zero' } | null {
+  protected marginView(
+    sale: number | null,
+    cost: number | null,
+  ): { amount: string; pct: string; tone: 'pos' | 'neg' | 'zero' } | null {
     if (sale == null || cost == null) {
       return null;
     }
@@ -222,6 +304,9 @@ export class SettingsItems {
     this.editingId.set(null);
     this.confirmingId.set(null);
     this.openingId.set(null);
+    this.openingUnit.set('');
+    this.openingFactor.set(null);
+    this.openingFactorFor.set(null);
     this.rowErrorKey.set(null);
   }
 

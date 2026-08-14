@@ -498,6 +498,33 @@ export const en = {
   'processing.list.deleteError': "Couldn't delete this batch. Please try again.",
   'processing.detail.for': 'Run for',
   'processing.detail.notFound': 'This batch was not found.',
+
+  // ── unit conversion ────────────────────────────────────────────────────
+  // Every quantity is stored in the unit its item is stocked in. When a row is entered in
+  // another one, this is the wording that says so, works out the sum, and asks.
+  'units.field.entered': 'Entered in',
+  'units.field.stocked': 'Stock is kept in {{unit}}.',
+  'units.slip.eyebrow': 'Different unit',
+  'units.slip.title': '{{item}} is kept in {{unit}}',
+  'units.slip.body.known':
+    'You entered {{from}}. Stock is counted in {{to}}, so this row is converted before it saves.',
+  'units.slip.body.unknown':
+    'Nobody has set what one {{from}} is worth in {{to}}. Enter it once and this shop keeps it.',
+  'units.slip.entered': 'You entered',
+  'units.slip.shelf': 'Goes on the shelf',
+  'units.slip.rate': 'Rate',
+  'units.slip.rate.per': '{{to}} per {{from}}',
+  'units.slip.source.standard': 'Standard rate',
+  'units.slip.source.shop': "Your shop's rate",
+  'units.slip.source.derived': 'Worked out through {{via}}',
+  'units.slip.source.typed': 'Your rate',
+  'units.slip.needRate': 'Enter how many {{to}} make one {{from}}.',
+  'units.slip.remember': 'Remember for this shop',
+  'units.slip.remember.hint': 'Every entry uses it until you change it.',
+  'units.slip.cancel': 'Cancel',
+  'units.slip.convert': 'Convert to {{unit}}',
+  'units.note.onShelf': 'on the shelf',
+  'units.note.aria': 'Converted: {{entered}} goes on the shelf as {{shelf}}. Change the rate.',
   'receipt.newEntry': 'New entry',
   'receipt.party': 'Party',
   'receipt.party.ph': 'Type an existing party name…',

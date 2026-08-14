@@ -10,6 +10,10 @@ import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { Combobox } from '../../shared/combobox/combobox';
 import { DateField } from '../../shared/date-field/date-field';
+import { UnitConversionService } from '../../core/units/unit-conversion.service';
+import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
+import { UnitNote } from '../../shared/conversion-slip/unit-note';
+import { UNIT_SUGGESTIONS, convertQty, resolveFactor, sameUnit } from '../../core/units/units';
 
 /**
  * One input row. `key` is a stable id for @for tracking.
@@ -29,6 +33,23 @@ interface Line {
   open: boolean;
   /** Work rather than goods: costs the batch, bills the supplier, keeps no stock. */
   service: boolean;
+  /**
+   * The rate this row's unit was converted at, agreed in the slip — null when the row is
+   * already in the unit its item is stocked in, which is nearly always. Multiplying by it is
+   * what turns what was typed into what the shelf is told; see {@link Processing.toInput}.
+   */
+  factor: number | null;
+  /**
+   * The pair {@link factor} was agreed for, as `"gaz>meter"`. Kept because a row can change
+   * underneath its own rate: retype the name, and the same "Gaz" in the unit box is suddenly
+   * being measured against an item stocked in pieces. Comparing the pair is what notices.
+   */
+  factorFor: string | null;
+}
+
+/** How a converted pair is keyed on a row — folded, so case never makes it look like a new one. */
+function pairKey(from: string, to: string): string {
+  return `${from.trim().toLowerCase()}>${to.trim().toLowerCase()}`;
 }
 
 /**
@@ -62,6 +83,17 @@ interface Line {
  * Wastage is recorded but costs nothing: it prefills to raw units − output units and goes
  * free once touched, the same "suggest until edited" rhythm the cash box uses on a sale.
  *
+ * **Units.** A batch is where they diverge most: greige comes in by the metre and the dyed
+ * cloth goes onto the shelf by the gaz. Stock is always kept in the unit the catalogue item
+ * names, so a row entered in anything else is converted before it is posted — through the
+ * conversion slip, which shows the sum and asks. What each row keeps afterwards is its
+ * `factor`, and three things follow from it:
+ *
+ * - the quantity is multiplied by it on the way out ({@link toInput});
+ * - the price is divided back out of it, derived from the row's amount rather than scaled, so
+ *   a batch that reads Rs 12,000 on screen costs Rs 12,000 in the khata to the paisa;
+ * - wastage compares like with like, which mixed units made impossible before.
+ *
  * Edits are not offered: the repricing a batch does cannot be un-averaged, so correcting one
  * is delete + re-enter.
  */
@@ -69,13 +101,18 @@ interface Line {
   selector: 'app-processing',
   templateUrl: './processing.html',
   styleUrls: ['./sale.css', './processing.css'],
-  imports: [Combobox, DateField],
+  imports: [Combobox, DateField, UnitNote],
 })
 export class Processing {
   protected readonly locale = inject(LocaleService);
   private readonly itemApi = inject(StoreItemService);
   private readonly partyApi = inject(PartyService);
   private readonly api = inject(ProcessingService);
+  private readonly conversions = inject(UnitConversionService);
+  private readonly slip = inject(ConversionSlipService);
+
+  /** Offered under every unit box, so a trade unit is a choice and not a guess. */
+  protected readonly unitOptions = UNIT_SUGGESTIONS;
 
   /** Batch-number box — where the cursor goes after a Save + Next. */
   private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
@@ -102,6 +139,10 @@ export class Processing {
   protected readonly outputNameTouched = signal(false);
   protected readonly outputUnit = signal('');
   protected readonly outputQty = signal<number | null>(null);
+  /** The output's agreed rate into its item's stock unit; null when it needs none. */
+  protected readonly outputFactor = signal<number | null>(null);
+  /** The pair that rate was agreed for — the output row's half of {@link Line.factorFor}. */
+  protected readonly outputFactorFor = signal<string | null>(null);
 
   /**
    * What the batch made, suggested from the first raw row it was made out of — a shop that
@@ -157,10 +198,38 @@ export class Processing {
     this.unitCostTouched() ? (this.typedUnitCost() ?? 0) : this.computedUnitCost(),
   );
 
-  /** Raw in, output out — what the batch lost along the way, until the box is touched. */
-  protected readonly suggestedWastage = computed(
-    () => sumQty(this.validRaw()) - (this.outputQty() ?? 0),
-  );
+  /**
+   * Raw in, output out — what the batch lost along the way, until the box is touched.
+   *
+   * Both sides have to be in one unit before subtracting means anything, and the one to use is
+   * the output row's: it is what the shopkeeper is looking at, and what the wastage box is
+   * therefore read and typed in. A raw row in another unit is carried across at whatever rate
+   * the shop and the fixed table know between them.
+   *
+   * When there is no rate — cloth in metres against an output counted in pieces — the
+   * subtraction is not merely unknown, it is meaningless. Nothing is suggested then, and the
+   * box stays the shopkeeper's own. Guessing here used to be the bug: metres minus gaz came
+   * out as a confident number that was not wastage.
+   */
+  protected readonly suggestedWastage = computed(() => {
+    const outUnit = this.outputUnit().trim() || this.stockUnit(this.outputName()) || '';
+    let raw = 0;
+
+    for (const l of this.validRaw()) {
+      const unit = l.unit.trim() || this.stockUnit(l.name) || '';
+      if (!outUnit || !unit || sameUnit(unit, outUnit)) {
+        raw += l.qty as number;
+        continue;
+      }
+      const carried = resolveFactor(unit, outUnit, this.conversions.rates());
+      if (!carried) {
+        return 0;
+      }
+      raw += (l.qty as number) * carried.value;
+    }
+
+    return Math.round((raw - (this.outputQty() ?? 0)) * 100) / 100;
+  });
 
   protected readonly wastage = computed(() =>
     this.wastageTouched() ? (this.typedWastage() ?? 0) : this.suggestedWastage(),
@@ -182,6 +251,9 @@ export class Processing {
       .list()
       .catch(() => [] as Party[])
       .then((parties) => this.parties.set(parties));
+    // The shop's own rates, so a than the shopkeeper already explained is not asked about
+    // again. Swallows its own failure — the fixed table still answers metre and gaz.
+    void this.conversions.load();
   }
 
   private async loadItems(): Promise<void> {
@@ -224,6 +296,114 @@ export class Processing {
     this.procLines.update((ls) => ls.map(named(key, value, this.matchItem(value))));
   }
 
+  // ── units ──────────────────────────────────────────────────────────────
+  /**
+   * The unit an item's stock is counted in — the unit every quantity has to reach the backend
+   * in. Null for a name the catalogue doesn't hold yet (it will be created in whatever unit
+   * the row names) or for an item nobody gave a unit to.
+   */
+  protected stockUnit(name: string): string | null {
+    return this.matchItem(name)?.unit?.trim() || null;
+  }
+
+  /** A row's unit box was left — ask about it if it no longer matches the item's own unit. */
+  async askRawUnit(key: number, force = false): Promise<void> {
+    await this.askForLine(this.rawLines(), key, (change) => this.patchRaw(key, change), force);
+  }
+
+  async askProcUnit(key: number, force = false): Promise<void> {
+    await this.askForLine(this.procLines(), key, (change) => this.patchProc(key, change), force);
+  }
+
+  /**
+   * Open the slip for one row and keep what it settles on.
+   *
+   * Normally silent for a pair the row has already agreed on, so leaving the unit box without
+   * changing it asks nothing; `force` is the note under the row asking to be reopened, which
+   * is the shopkeeper deliberately revisiting a rate.
+   *
+   * Declining puts the unit box back to the shelf's unit rather than leaving the row as it
+   * was: a quantity sitting in a unit nothing converts is the exact mistake this feature
+   * exists to prevent, and it must not be possible to walk away holding one.
+   */
+  private async askForLine(
+    lines: Line[],
+    key: number,
+    apply: (change: Partial<Line>) => void,
+    force = false,
+  ): Promise<void> {
+    const line = lines.find((l) => l.key === key);
+    if (!line) {
+      return;
+    }
+
+    const stock = this.stockUnit(line.name);
+    const entered = line.unit.trim();
+    if (!stock || !entered || sameUnit(entered, stock)) {
+      apply({ factor: null, factorFor: null });
+      return;
+    }
+    if (!force && line.factorFor === pairKey(entered, stock)) {
+      return; // already agreed, for this very pair
+    }
+
+    const answer = await this.slip.open({
+      itemName: line.name.trim(),
+      from: entered,
+      to: stock,
+      qty: line.qty,
+    });
+
+    apply(
+      answer === null
+        ? { unit: stock, factor: null, factorFor: null }
+        : { factor: answer.factor, factorFor: pairKey(entered, stock) },
+    );
+  }
+
+  /** The output's unit box was left — the same question, about what the batch made. */
+  async askOutputUnit(force = false): Promise<void> {
+    const name = this.outputName();
+    const stock = this.stockUnit(name);
+    const entered = this.outputUnit().trim();
+
+    if (!stock || !entered || sameUnit(entered, stock)) {
+      this.outputFactor.set(null);
+      this.outputFactorFor.set(null);
+      return;
+    }
+    if (!force && this.outputFactorFor() === pairKey(entered, stock)) {
+      return;
+    }
+
+    const answer = await this.slip.open({
+      itemName: name.trim(),
+      from: entered,
+      to: stock,
+      qty: this.outputQty(),
+    });
+
+    if (answer === null) {
+      this.outputUnit.set(stock);
+      this.outputFactor.set(null);
+      this.outputFactorFor.set(null);
+    } else {
+      this.outputFactor.set(answer.factor);
+      this.outputFactorFor.set(pairKey(entered, stock));
+    }
+  }
+
+  /**
+   * What a row actually moves on the shelf: the quantity and the unit stock will record, which
+   * is what the Effect panel has to show — a row that reads "120 Gaz" and books 109.73 Meter
+   * would otherwise be describing something the shopkeeper cannot see.
+   */
+  protected shelf(l: Line): { qty: number; unit: string | null } {
+    return l.factor
+      ? { qty: convertQty(l.qty ?? 0, l.factor), unit: this.stockUnit(l.name) }
+      : { qty: l.qty ?? 0, unit: l.unit.trim() || this.stockUnit(l.name) };
+  }
+
   /** Show or hide a row's supplier boxes; closing one forgets what was typed in them. */
   toggleRawParty(key: number): void {
     this.rawLines.update((ls) => ls.map(togglePartyOn(key)));
@@ -261,8 +441,46 @@ export class Processing {
   toNum = toNum;
 
   // ── save ───────────────────────────────────────────────────────────────
+  /**
+   * Last check before posting: every row still in a unit its item is not stocked in, and not
+   * already agreed for that exact pair, gets asked about now.
+   *
+   * The live path on the unit box catches nearly all of these, so this normally asks nothing.
+   * It exists for the row that changed underneath its own answer — a name retyped after the
+   * unit was settled, pointing the same "Gaz" at an item counted in pieces. Returns false if
+   * anything was declined, and the save stops rather than going through on a row the
+   * shopkeeper has just watched change.
+   */
+  private async reconcileUnits(): Promise<boolean> {
+    const before = [
+      ...this.rawLines().map((l) => l.unit),
+      ...this.procLines().map((l) => l.unit),
+      this.outputUnit(),
+    ];
+
+    for (const l of this.validRaw()) {
+      await this.askForLine(this.rawLines(), l.key, (c) => this.patchRaw(l.key, c));
+    }
+    for (const l of this.validProc()) {
+      await this.askForLine(this.procLines(), l.key, (c) => this.patchProc(l.key, c));
+    }
+    await this.askOutputUnit();
+
+    const after = [
+      ...this.rawLines().map((l) => l.unit),
+      ...this.procLines().map((l) => l.unit),
+      this.outputUnit(),
+    ];
+    // A declined slip is the only thing that rewrites a unit box, so an unchanged list means
+    // everything was either already settled or agreed to just now.
+    return before.length === after.length && before.every((u, i) => u === after[i]);
+  }
+
   async save(): Promise<void> {
     if (!this.canSave()) {
+      return;
+    }
+    if (!(await this.reconcileUnits())) {
       return;
     }
     this.saving.set(true);
@@ -270,6 +488,13 @@ export class Processing {
 
     const outputName = this.outputName().trim();
     const outputQty = this.outputQty() as number;
+    const outputFactor = this.outputFactor();
+    // The output goes onto the shelf in its item's unit, so quantity, cost and wastage all
+    // move together. Cost per unit is re-derived from the batch's total rather than divided by
+    // the factor: the shelf rounds the quantity to two places, and a cost worked out against
+    // the unrounded one would leave the batch costing a few paisa more or less than it did.
+    const shelfQty = outputFactor ? convertQty(outputQty, outputFactor) : outputQty;
+    const batchCost = outputQty * this.unitCost();
 
     try {
       await this.api.process({
@@ -278,10 +503,10 @@ export class Processing {
         output: {
           itemId: this.matchItem(outputName)?.id ?? null,
           name: outputName,
-          unit: this.outputUnit().trim() || null,
-          quantity: outputQty,
-          unitCost: this.unitCost(),
-          wastage: this.wastage(),
+          unit: (outputFactor ? this.stockUnit(outputName) : this.outputUnit().trim()) || null,
+          quantity: shelfQty,
+          unitCost: outputFactor && shelfQty > 0 ? batchCost / shelfQty : this.unitCost(),
+          wastage: outputFactor ? convertQty(this.wastage(), outputFactor) : this.wastage(),
         },
         billNumber: this.billNumber().trim() || null,
         billDate: this.billDate() || null,
@@ -291,7 +516,11 @@ export class Processing {
       this.recent.push(
         `${this.locale.t('processing.recent.label')} · ${outputName} · ${this.locale.money(this.unitCost())}`,
         this.locale.t('processing.recent.made', {
-          qty: this.locale.qtyUnit(outputQty, this.outputUnit() || null),
+          // What went on the shelf, not what was typed — the log is a record, not an echo.
+          qty: this.locale.qtyUnit(
+            shelfQty,
+            (outputFactor ? this.stockUnit(outputName) : this.outputUnit()) || null,
+          ),
         }),
       );
       // A new output item is now in the catalogue, and consumables may have been created
@@ -316,6 +545,8 @@ export class Processing {
     this.outputNameTouched.set(false);
     this.outputUnit.set('');
     this.outputQty.set(null);
+    this.outputFactor.set(null);
+    this.outputFactorFor.set(null);
     this.typedUnitCost.set(null);
     this.unitCostTouched.set(false);
     this.typedWastage.set(null);
@@ -329,19 +560,33 @@ export class Processing {
   /** Every filled input row, both sides — what the batch consumes. */
   private readonly validInputs = computed(() => [...this.validRaw(), ...this.validProc()]);
 
-  /** What leaves the shelf: one row per input, quantity with its unit. A service holds none. */
+  /**
+   * What leaves the shelf: one row per input, quantity with its unit, as stock will record
+   * them. A converted row shows the converted figure — this panel is the screen's promise
+   * about what is going to happen, so it has to be in the units it will happen in.
+   * A service holds no stock and so appears nowhere here.
+   */
   protected stockOut(): { key: number; name: string; qty: string }[] {
     return this.validInputs()
       .filter((l) => !l.service)
-      .map((l) => ({
-        key: l.key,
-        name: l.name.trim(),
-        qty: this.locale.qtyUnit(
-          l.qty as number,
-          l.unit.trim() || this.matchItem(l.name)?.unit || null,
-        ),
-      }));
+      .map((l) => {
+        const shelf = this.shelf(l);
+        return {
+          key: l.key,
+          name: l.name.trim(),
+          qty: this.locale.qtyUnit(shelf.qty, shelf.unit),
+        };
+      });
   }
+
+  /** The output as the shelf will hold it — the same promise, for what the batch made. */
+  protected readonly outputShelf = computed(() => {
+    const factor = this.outputFactor();
+    const qty = this.outputQty() ?? 0;
+    return factor
+      ? { qty: convertQty(qty, factor), unit: this.stockUnit(this.outputName()) }
+      : { qty, unit: this.outputUnit().trim() || this.stockUnit(this.outputName()) };
+  });
 
   /**
    * The purchases the batch will post on its way in — one per supplier, summed over their
@@ -382,15 +627,28 @@ export class Processing {
     return q ? this.parties().find((p) => p.name.trim().toLowerCase() === q) : undefined;
   }
 
-  /** One row as the API takes it; a blank supplier means the row just comes off the shelf. */
+  /**
+   * One row as the API takes it; a blank supplier means the row just comes off the shelf.
+   *
+   * A converted row is sent in the unit its item is stocked in — quantity multiplied by the
+   * agreed rate, unit replaced by the shelf's. The price is then re-derived from the row's own
+   * amount rather than divided by the rate, and that difference matters: the shelf rounds the
+   * quantity to two places, so a price scaled by the rate would multiply back to a few paisa
+   * off the total the shopkeeper just read on screen. Deriving it from `qty × rate` keeps the
+   * row's money exactly where it was, which is the one thing a unit change must never move.
+   */
   private toInput(l: Line): ProcessingInput {
     const party = l.party.trim();
+    const qty = l.qty as number;
+    const rate = l.rate ?? 0;
+    const shelfQty = l.factor ? convertQty(qty, l.factor) : qty;
+
     return {
       itemId: this.matchItem(l.name)?.id ?? null,
       name: l.name.trim(),
-      unit: l.unit.trim() || null,
-      quantity: l.qty as number,
-      pricePerUnit: l.rate ?? 0,
+      unit: (l.factor ? this.stockUnit(l.name) : l.unit.trim()) || null,
+      quantity: shelfQty,
+      pricePerUnit: l.factor && shelfQty > 0 ? (qty * rate) / shelfQty : rate,
       party: party ? { partyId: this.matchParty(party)?.id ?? null, name: party } : null,
       paid: party ? (l.paid ?? 0) : null,
       service: l.service,
@@ -408,6 +666,8 @@ export class Processing {
       paid: null,
       open: false,
       service: false,
+      factor: null,
+      factorFor: null,
     };
   }
 }
@@ -419,10 +679,6 @@ function isFilled(l: Line): boolean {
 
 function sumAmount(lines: Line[]): number {
   return lines.reduce((sum, l) => sum + (l.qty as number) * (l.rate ?? 0), 0);
-}
-
-function sumQty(lines: Line[]): number {
-  return lines.reduce((sum, l) => sum + (l.qty as number), 0);
 }
 
 function patch(key: number, change: Partial<Line>): (lines: Line[]) => Line[] {
