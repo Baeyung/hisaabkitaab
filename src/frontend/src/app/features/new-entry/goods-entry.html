@@ -146,6 +146,7 @@
       <div class="grid__head" aria-hidden="true">
         <span>{{ locale.t(config().labels.colDesign) }}</span>
         <span class="num">{{ locale.t(config().labels.colQty) }}</span>
+        <span>{{ locale.t(config().labels.colUnit) }}</span>
         <span class="num">{{ locale.t(config().labels.colRate) }}</span>
         <span class="num grid__head-amount">{{ locale.t(config().labels.colAmount) }}</span>
         <span></span>
@@ -161,25 +162,25 @@
             [placeholder]="locale.t(config().labels.colDesignPh)"
             [ariaLabel]="locale.t(config().labels.colDesign)"
           />
-          <div class="grid__qty">
-            <input
-              class="fld__input fld__input--sm num"
-              [class.fld__input--unit]="lineUnit(line.design)"
-              type="number"
-              inputmode="decimal"
-              min="0"
-              [value]="line.qty"
-              (input)="setQty(line.key, $any($event.target).value)"
-              [attr.placeholder]="locale.t(config().labels.colQty)"
-              [attr.aria-label]="
-                locale.t(config().labels.colQty) +
-                (lineUnit(line.design) ? ' — ' + lineUnit(line.design) : '')
-              "
-            />
-            @if (lineUnit(line.design); as u) {
-              <span class="grid__unit" aria-hidden="true">{{ u }}</span>
-            }
-          </div>
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            [value]="line.qty"
+            (input)="setQty(line.key, $any($event.target).value)"
+            [attr.placeholder]="locale.t(config().labels.colQty)"
+            [attr.aria-label]="locale.t(config().labels.colQty)"
+          />
+          <app-combobox
+            [small]="true"
+            [options]="unitOptions"
+            [value]="line.unit"
+            (valueChange)="setUnit(line.key, $event)"
+            (focusout)="askUnit(line.key)"
+            [placeholder]="lineUnit(line.design)"
+            [ariaLabel]="locale.t(config().labels.colUnit)"
+          />
           <input
             class="fld__input fld__input--sm num"
             type="number"
@@ -211,6 +212,20 @@
             </svg>
           </button>
         </div>
+
+        <!-- what this line will actually take off the shelf, once it has been converted -->
+        @if (line.factor) {
+          <div class="grid__conv">
+            <app-unit-note
+              [qty]="line.qty"
+              [unit]="line.unit"
+              [stockUnit]="lineUnit(line.design)"
+              [factor]="line.factor"
+              [direction]="stockFlow()"
+              (editRate)="askUnit(line.key, true)"
+            />
+          </div>
+        }
       }
 
       <button type="button" class="linkbtn" (click)="addLine()">

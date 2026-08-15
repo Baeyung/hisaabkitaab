@@ -172,7 +172,8 @@ select.fld__input {
 .grid__head,
 .grid__row {
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(70px, 1.2fr) 40px;
+  grid-template-columns:
+    minmax(0, 2fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(70px, 1.1fr) 40px;
   gap: 8px;
   align-items: center;
 }
@@ -196,28 +197,10 @@ select.fld__input {
   overflow-wrap: anywhere;
 }
 
-/* Qty cell carries the catalog unit as a trailing hint inside the field, so a
-   number like 100 reads as "100 Gaz". */
-.grid__qty {
-  position: relative;
-  display: flex;
-}
-.fld__input--unit {
-  padding-inline-end: 48px;
-}
-.grid__unit {
-  position: absolute;
-  inset-inline-end: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  max-width: 40px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--kg-faint);
-  pointer-events: none;
+/* The standing conversion note, one line under the row it belongs to. */
+.grid__conv {
+  margin-top: -2px;
+  padding-inline-start: 4px;
 }
 
 /* ── totals + money ──────────────────────────────────────────────────────── */
@@ -472,7 +455,8 @@ select.fld__input {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
     grid-template-areas:
       'design design remove'
-      'qty rate amount';
+      'qty unit amount'
+      'rate rate amount';
     gap: 8px;
     padding: 10px;
     border: 1px solid var(--kg-line);
@@ -485,6 +469,9 @@ select.fld__input {
     grid-area: qty;
   }
   .grid__row > :nth-child(3) {
+    grid-area: unit;
+  }
+  .grid__row > :nth-child(4) {
     grid-area: rate;
   }
   .grid__amount {

@@ -8,6 +8,7 @@ import { LanguageToggle } from '../../shared/language-toggle/language-toggle';
 import { ThemeToggle } from '../../shared/theme-toggle/theme-toggle';
 import { InstallButton } from '../../shared/install-button/install-button';
 import { PrintDetailsDialog } from '../../shared/print-details-dialog';
+import { ConversionSlip } from '../../shared/conversion-slip/conversion-slip';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
 import { PlanService } from '../../core/plan/plan.service';
@@ -31,7 +32,7 @@ function gauge(key: TranslationKey, used: number, max: number) {
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, BrandMark, LanguageToggle, ThemeToggle, InstallButton, PrintDetailsDialog, PlanNotice],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, BrandMark, LanguageToggle, ThemeToggle, InstallButton, PrintDetailsDialog, ConversionSlip, PlanNotice],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
   host: { '(document:keydown.escape)': 'closeOverlay()' },

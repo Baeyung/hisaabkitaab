@@ -28,6 +28,7 @@ export class Sale {
       colDesign: 'sale.col.design',
       colDesignPh: 'sale.col.design.ph',
       colQty: 'sale.col.qty',
+      colUnit: 'sale.col.unit',
       colRate: 'sale.col.rate',
       colAmount: 'sale.col.amount',
       lineRemove: 'sale.line.remove',

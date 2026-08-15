@@ -102,6 +102,7 @@ export const NAV: NavItem[] = [
       { key: 'nav.settings.users', path: 'settings/users' },
       { key: 'nav.settings.items', path: 'settings/items', requires: 'EDITOR', writes: true },
       { key: 'nav.settings.party', path: 'settings/party', requires: 'EDITOR', writes: true },
+      { key: 'nav.settings.units', path: 'settings/units', requires: 'EDITOR', writes: true },
       // Owner-only, and locked for the same reason its group is: this is the screen that
       // un-hides the others. No `writes` — arranging a menu records no business, so it stays
       // usable on a shop the plan has closed.

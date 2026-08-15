@@ -15,6 +15,10 @@ import { Combobox } from '../../shared/combobox/combobox';
 import { PrintHeader } from '../../shared/print-header';
 import { DateField } from '../../shared/date-field/date-field';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
+import { UnitConversionService } from '../../core/units/unit-conversion.service';
+import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
+import { UnitNote } from '../../shared/conversion-slip/unit-note';
+import { UNIT_SUGGESTIONS, convertQty, sameUnit } from '../../core/units/units';
 
 /** One line of cloth on the bill. `key` is a stable id for @for tracking. */
 interface Line {
@@ -22,6 +26,21 @@ interface Line {
   design: string;
   qty: number | null;
   rate: number | null;
+  /**
+   * The unit this line is being sold or bought in. Prefills from the item's own unit, which is
+   * what it stays at on all but the odd line — a shop that stocks by the gaz and sells a roll
+   * by the metre is the case this exists for.
+   */
+  unit: string;
+  /** The rate agreed in the slip, from {@link unit} to the item's stock unit; null when none. */
+  factor: number | null;
+  /** The pair that rate was agreed for, so retyping the design re-asks. See processing.ts. */
+  factorFor: string | null;
+}
+
+/** How a converted pair is keyed on a line — folded, so case never looks like a new pair. */
+function pairKey(from: string, to: string): string {
+  return `${from.trim().toLowerCase()}>${to.trim().toLowerCase()}`;
 }
 
 /**
@@ -41,6 +60,7 @@ export interface GoodsEntryLabels {
   colDesign: TranslationKey;
   colDesignPh: TranslationKey;
   colQty: TranslationKey;
+  colUnit: TranslationKey;
   colRate: TranslationKey;
   colAmount: TranslationKey;
   lineRemove: TranslationKey;
@@ -106,12 +126,19 @@ export interface GoodsEntryConfig {
  *
  * Money: billAmount = sum(qty × rate); cashAmount = moved. No kaat yet — see
  * docs/tickets/HK-sale-kaat-discount.md.
+ *
+ * Units: each line carries the unit it was sold or bought in, prefilled from the item and
+ * usually left there. Sell in another one — a shop that stocks by the gaz handing over a roll
+ * by the metre — and the conversion slip asks before the line is allowed to post, because
+ * stock is only ever counted in the unit the catalogue item names. The bill is unaffected: it
+ * prints and totals in the unit the customer bought in, at the rate they agreed, and only what
+ * comes off the shelf is converted.
  */
 @Component({
   selector: 'app-goods-entry',
   templateUrl: './goods-entry.html',
   styleUrl: './sale.css',
-  imports: [Combobox, PrintHeader, DateField, WhatsAppButton],
+  imports: [Combobox, PrintHeader, DateField, WhatsAppButton, UnitNote],
 })
 export class GoodsEntry {
   readonly config = input.required<GoodsEntryConfig>();
@@ -122,6 +149,11 @@ export class GoodsEntry {
   private readonly events = inject(EventService);
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
+  private readonly conversions = inject(UnitConversionService);
+  private readonly slip = inject(ConversionSlipService);
+
+  /** Offered under every unit box — the measures the app converts, then the trade units. */
+  protected readonly unitOptions = UNIT_SUGGESTIONS;
 
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
@@ -196,12 +228,19 @@ export class GoodsEntry {
     return this.cashParty() || !name ? this.locale.t(this.config().labels.partyCash) : name;
   });
 
-  /** Valid lines flattened for the print-only bill table. */
+  /**
+   * Valid lines flattened for the print-only bill table.
+   *
+   * In the unit the line was sold in, at the rate that was agreed — not the converted figures.
+   * The bill is the customer's copy of what they bought: someone handed forty metres of cloth
+   * across a counter, and a bill that says 43.74 Gaz because that is how the shop counts its
+   * shelf is a bill they cannot check against what is in their hands.
+   */
   protected readonly printLines = computed(() =>
     this.validLines().map((l) => ({
       name: l.design.trim(),
       qty: l.qty as number,
-      unit: this.lineUnit(l.design),
+      unit: l.unit.trim() || this.lineUnit(l.design),
       rate: l.rate as number,
       amount: (l.qty as number) * (l.rate as number),
     })),
@@ -239,6 +278,10 @@ export class GoodsEntry {
   }
 
   private async loadSources(): Promise<void> {
+    // The shop's own rates, so a than it already explained is not asked about again. Loaded
+    // alongside rather than awaited: it swallows its own failure, and the fixed table still
+    // answers gaz and metre without it.
+    void this.conversions.load();
     // Both lists 404 before a store exists; that's not an error here — you can
     // still type free-text names, they just won't match an id.
     const [parties, items] = await Promise.all([
@@ -265,11 +308,16 @@ export class GoodsEntry {
       // doesn't override it with the total.
       this.cash.set(e.cashAmount);
       this.cashTouched.set(true);
+      // A saved line is already in its item's unit — that is the only way a quantity is ever
+      // stored — so it reopens in that unit with nothing to convert.
       const lines = e.items.map<Line>((item) => ({
         key: this.keySeq++,
         design: item.name,
         qty: item.quantity,
         rate: item.itemSoldAt,
+        unit: this.lineUnit(item.name),
+        factor: null,
+        factorFor: null,
       }));
       this.lines.set(lines.length > 0 ? lines : [this.blankLine()]);
     } catch {
@@ -299,13 +347,58 @@ export class GoodsEntry {
   }
 
   setDesign(key: number, value: string): void {
-    // On a match, prefill the rate from the catalog (only if still blank).
-    const prefill = this.matchItem(value)?.[this.config().ratePrefill];
+    // On a match, prefill the rate and the unit from the catalog (only where still blank).
+    const match = this.matchItem(value);
+    const prefill = match?.[this.config().ratePrefill];
     this.patchLine(key, (l) => ({
       ...l,
       design: value,
       rate: l.rate == null && prefill != null ? prefill : l.rate,
+      unit: l.unit || (match?.unit?.trim() ?? ''),
     }));
+  }
+
+  /** Keep the typed unit; the ask waits for the box to be left. See {@link askUnit}. */
+  setUnit(key: number, value: string): void {
+    this.patchLine(key, (l) => ({ ...l, unit: value }));
+  }
+
+  /**
+   * The unit box was left. Anything but the item's own unit has to be agreed before the line
+   * can post, so the slip opens; declining puts the box back to the shelf's unit, because a
+   * quantity in a unit nothing converts is exactly the mistake being guarded against.
+   *
+   * Silent when the pair is already agreed, so tabbing through a line asks nothing; `force` is
+   * the note under the line asking to be reopened.
+   */
+  async askUnit(key: number, force = false): Promise<void> {
+    const line = this.lines().find((l) => l.key === key);
+    if (!line) {
+      return;
+    }
+
+    const stock = this.lineUnit(line.design);
+    const entered = line.unit.trim();
+    if (!stock || !entered || sameUnit(entered, stock)) {
+      this.patchLine(key, (l) => ({ ...l, factor: null, factorFor: null }));
+      return;
+    }
+    if (!force && line.factorFor === pairKey(entered, stock)) {
+      return;
+    }
+
+    const answer = await this.slip.open({
+      itemName: line.design.trim(),
+      from: entered,
+      to: stock,
+      qty: line.qty,
+    });
+
+    this.patchLine(key, (l) =>
+      answer === null
+        ? { ...l, unit: stock, factor: null, factorFor: null }
+        : { ...l, factor: answer.factor, factorFor: pairKey(entered, stock) },
+    );
   }
 
   setQty(key: number, value: string): void {
@@ -325,15 +418,45 @@ export class GoodsEntry {
     return (l.qty ?? 0) * (l.rate ?? 0);
   }
 
-  /** The catalog unit for a design (e.g. "Gaz", "Meter"), so a qty of 100 reads as
-   *  100 of that unit. Empty for a new/unmatched design — no unit is known yet. */
+  /** The catalog unit for a design (e.g. "Gaz", "Meter") — the unit its stock is counted in,
+   *  and so the unit every quantity has to reach the backend in. Empty for a new/unmatched
+   *  design, which is created in whatever unit the line names. */
   lineUnit(design: string): string {
-    return this.matchItem(design)?.unit ?? '';
+    return this.matchItem(design)?.unit?.trim() ?? '';
+  }
+
+  /** What a line moves on the shelf: the quantity and unit stock will actually record. */
+  private shelf(l: Line): { qty: number; unit: string } {
+    return l.factor
+      ? { qty: convertQty(l.qty ?? 0, l.factor), unit: this.lineUnit(l.design) }
+      : { qty: l.qty ?? 0, unit: l.unit.trim() || this.lineUnit(l.design) };
   }
 
   // ── save ───────────────────────────────────────────────────────────────
+  /**
+   * Last check before posting: any line still in a unit its item is not stocked in, and not
+   * already agreed for that exact pair, gets asked about now.
+   *
+   * Leaving the unit box catches nearly all of these, so this normally asks nothing. It is
+   * here for the line that changed underneath its own answer — a design retyped after the unit
+   * was settled. Returns false if anything was declined, and the save stops rather than going
+   * through on a line the shopkeeper has just watched change.
+   */
+  private async reconcileUnits(): Promise<boolean> {
+    const before = this.lines().map((l) => l.unit);
+    for (const l of this.validLines()) {
+      await this.askUnit(l.key);
+    }
+    const after = this.lines().map((l) => l.unit);
+    // A declined slip is the only thing that rewrites a unit box.
+    return before.length === after.length && before.every((u, i) => u === after[i]);
+  }
+
   async save(): Promise<void> {
     if (!this.canSave()) {
+      return;
+    }
+    if (!(await this.reconcileUnits())) {
       return;
     }
     this.saving.set(true);
@@ -355,12 +478,23 @@ export class GoodsEntry {
         this.cashParty() || !name ? null : { partyId: this.matchParty(name)?.id ?? null, name },
       // `itemSoldAt` is the wire name for the line rate on both events — what you
       // sold it at on a sale, what you bought it at on a purchase.
-      items: this.validLines().map((l) => ({
-        itemId: this.matchItem(l.design)?.id ?? null,
-        name: l.design.trim(),
-        quantity: l.qty as number,
-        itemSoldAt: l.rate as number,
-      })),
+      //
+      // A converted line ships the shelf's quantity, and its rate is re-derived from the
+      // line's own amount rather than divided by the factor: the shelf rounds the quantity to
+      // two places, so a scaled rate would multiply back to a few paisa off the bill the
+      // customer just agreed to. `billAmount` above is the entered figures, untouched — the
+      // bill is in the unit it was sold in, and only the stock moves in another.
+      items: this.validLines().map((l) => {
+        const qty = l.qty as number;
+        const rate = l.rate as number;
+        const shelfQty = this.shelf(l).qty;
+        return {
+          itemId: this.matchItem(l.design)?.id ?? null,
+          name: l.design.trim(),
+          quantity: shelfQty,
+          itemSoldAt: l.factor && shelfQty > 0 ? (qty * rate) / shelfQty : rate,
+        };
+      }),
     };
 
     try {
@@ -404,12 +538,16 @@ export class GoodsEntry {
 
   // ── effect panel view ───────────────────────────────────────────────────
   /** Per-item stock movement: the quantity (with unit, when the item is known)
-   *  entering or leaving stock for each valid line. */
+   *  entering or leaving stock for each valid line — converted where the line was, since this
+   *  panel is the screen's promise about what is going to happen to the shelf. */
   protected stockView(): { key: number; name: string; qty: string }[] {
     return this.validLines().map((l) => {
-      const unit = this.matchItem(l.design)?.unit ?? '';
-      const qty = this.locale.formatNumber(l.qty as number);
-      return { key: l.key, name: l.design.trim(), qty: unit ? `${qty} ${unit}` : qty };
+      const shelf = this.shelf(l);
+      return {
+        key: l.key,
+        name: l.design.trim(),
+        qty: this.locale.qtyUnit(shelf.qty, shelf.unit || null),
+      };
     });
   }
 
@@ -460,6 +598,14 @@ export class GoodsEntry {
   }
 
   private blankLine(): Line {
-    return { key: this.keySeq++, design: '', qty: null, rate: null };
+    return {
+      key: this.keySeq++,
+      design: '',
+      qty: null,
+      rate: null,
+      unit: '',
+      factor: null,
+      factorFor: null,
+    };
   }
 }

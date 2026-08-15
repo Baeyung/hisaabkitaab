@@ -52,13 +52,16 @@
             <label class="fld__label" [attr.for]="'raw-unit-' + line.key">
               {{ locale.t('processing.col.unit') }}
             </label>
-            <input
-              class="fld__input fld__input--sm"
-              type="text"
-              [id]="'raw-unit-' + line.key"
+            <!-- committed on focusout, not on input: a modal on every keystroke of "Meter"
+                 would open five times before the word is finished -->
+            <app-combobox
+              [small]="true"
+              [inputId]="'raw-unit-' + line.key"
+              [options]="unitOptions"
               [value]="line.unit"
-              (input)="patchRaw(line.key, { unit: $any($event.target).value })"
-              [attr.placeholder]="locale.t('processing.col.unit.ph')"
+              (valueChange)="patchRaw(line.key, { unit: $event })"
+              (focusout)="askRawUnit(line.key)"
+              [placeholder]="locale.t('processing.col.unit.ph')"
             />
           </div>
           <div class="fld">
@@ -114,16 +117,27 @@
           </button>
         </div>
 
-        <!-- bought in for this batch, rather than taken off the shelf -->
-        <button
-          type="button"
-          class="linkbtn linkbtn--sub"
-          [attr.aria-expanded]="line.open"
-          [attr.aria-controls]="'raw-party-box-' + line.key"
-          (click)="toggleRawParty(line.key)"
-        >
-          {{ line.open ? '−' : '+' }} {{ locale.t('processing.supplier.add') }}
-        </button>
+        <div class="pgrid__opts">
+          <!-- bought in for this batch, rather than taken off the shelf -->
+          <button
+            type="button"
+            class="linkbtn linkbtn--sub"
+            [attr.aria-expanded]="line.open"
+            [attr.aria-controls]="'raw-party-box-' + line.key"
+            (click)="toggleRawParty(line.key)"
+          >
+            {{ line.open ? '−' : '+' }} {{ locale.t('processing.supplier.add') }}
+          </button>
+          <!-- what this row will actually take off the shelf, once it has been converted -->
+          <app-unit-note
+            [qty]="line.qty"
+            [unit]="line.unit"
+            [stockUnit]="stockUnit(line.name)"
+            [factor]="line.factor"
+            direction="out"
+            (editRate)="askRawUnit(line.key, true)"
+          />
+        </div>
 
         @if (line.open) {
           <div class="pgrid__party" [id]="'raw-party-box-' + line.key">
@@ -191,13 +205,14 @@
             <label class="fld__label" [attr.for]="'proc-unit-' + line.key">
               {{ locale.t('processing.col.unit') }}
             </label>
-            <input
-              class="fld__input fld__input--sm"
-              type="text"
-              [id]="'proc-unit-' + line.key"
+            <app-combobox
+              [small]="true"
+              [inputId]="'proc-unit-' + line.key"
+              [options]="unitOptions"
               [value]="line.unit"
-              (input)="patchProc(line.key, { unit: $any($event.target).value })"
-              [attr.placeholder]="locale.t('processing.col.unit.ph')"
+              (valueChange)="patchProc(line.key, { unit: $event })"
+              (focusout)="askProcUnit(line.key)"
+              [placeholder]="locale.t('processing.col.unit.ph')"
             />
           </div>
           <div class="fld">
@@ -274,6 +289,14 @@
             />
             {{ locale.t('processing.service') }}
           </label>
+          <app-unit-note
+            [qty]="line.qty"
+            [unit]="line.unit"
+            [stockUnit]="stockUnit(line.name)"
+            [factor]="line.factor"
+            direction="out"
+            (editRate)="askProcUnit(line.key, true)"
+          />
         </div>
 
         @if (line.open) {
@@ -348,13 +371,14 @@
         </div>
         <div class="fld">
           <label class="fld__label" for="output-unit">{{ locale.t('processing.col.unit') }}</label>
-          <input
-            class="fld__input fld__input--sm"
-            type="text"
-            id="output-unit"
+          <app-combobox
+            [small]="true"
+            inputId="output-unit"
+            [options]="unitOptions"
             [value]="outputUnit()"
-            (input)="outputUnit.set($any($event.target).value)"
-            [attr.placeholder]="locale.t('processing.col.unit.ph')"
+            (valueChange)="outputUnit.set($event)"
+            (focusout)="askOutputUnit()"
+            [placeholder]="locale.t('processing.col.unit.ph')"
           />
         </div>
         <!-- units made comes before cost/unit: it is what unlocks the box below -->
@@ -401,9 +425,19 @@
           />
         </div>
       </div>
-      <p class="pgrid__hint" id="output-cost-lock">
-        {{ locale.t(hasOutputQty() ? 'processing.unitCost.hint' : 'processing.unitCost.locked') }}
-      </p>
+      <div class="pgrid__opts">
+        <p class="pgrid__hint" id="output-cost-lock">
+          {{ locale.t(hasOutputQty() ? 'processing.unitCost.hint' : 'processing.unitCost.locked') }}
+        </p>
+        <app-unit-note
+          [qty]="outputQty()"
+          [unit]="outputUnit()"
+          [stockUnit]="stockUnit(outputName())"
+          [factor]="outputFactor()"
+          direction="in"
+          (editRate)="askOutputUnit(true)"
+        />
+      </div>
     </div>
 
     <!-- totals -->
@@ -491,7 +525,7 @@
                 }}<small class="fx__sub">{{ locale.money(unitCost()) }}</small></span
               >
               <span class="fx__amt num">{{
-                locale.qtyUnit(outputQty() ?? 0, outputUnit() || null)
+                locale.qtyUnit(outputShelf().qty, outputShelf().unit)
               }}</span>
             </li>
           }

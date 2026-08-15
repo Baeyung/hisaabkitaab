@@ -28,6 +28,7 @@
 - [x] processed goods whatsapp
 - [x] processed goods + -> ui improvement
 - [x] whatsApp integration, sending messages
+- [x] conversions in store settings, with import export options. also includes most renown conversions
+- [ ] purchase screen
 - [ ] monthly reports + party reminders, on email + whatsapp
-- 
 - [ ] enhance mobile UI for better UX.

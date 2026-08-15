@@ -112,6 +112,7 @@ export const en = {
   'nav.settings.users': 'Manage Users',
   'nav.settings.items': 'Items',
   'nav.settings.party': 'Parties',
+  'nav.settings.units': 'Unit Conversions',
   'nav.settings.menu': 'Menu',
   // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
   // same two things `stores.suspendedSettled` says on the picker, in one line.
@@ -346,6 +347,30 @@ export const en = {
   'settings.items.opening.save': 'Save',
   'settings.items.opening.cancel': 'Cancel',
 
+  'settings.units.subtitle': 'How the units this shop uses turn into one another.',
+  'settings.units.standard.title': 'Standard conversions',
+  'settings.units.standard.subtitle':
+    'Built in — the same in every shop, so there is nothing to add for these.',
+  'settings.units.custom.title': "This shop's conversions",
+  'settings.units.custom.subtitle':
+    'Trade units your suppliers use — a than, a bori, a roll — only this shop can say what one is worth.',
+  'settings.units.add': 'Add conversion',
+  'settings.units.examples.title': 'Try one:',
+  'settings.units.col.from': 'From',
+  'settings.units.col.to': 'To',
+  'settings.units.col.factor': 'Rate',
+  'settings.units.col.actions': 'Actions',
+  'settings.units.save': 'Save',
+  'settings.units.sameUnit': 'Pick two different units — a unit already converts to itself.',
+  'settings.units.empty.body':
+    'Nothing taught yet. Add one below, or answer the conversion slip the first time you use it on an entry.',
+  'settings.units.loadError': "Couldn't load your conversions. Please try again.",
+  'settings.units.copy.button': 'Copy to other stores',
+  'settings.units.copy.hint':
+    "Copies every rate above into the stores you pick — it overwrites a rate they already have for the same pair, and leaves everything else in them alone.",
+  'settings.units.copy.confirm': 'Copy',
+  'settings.units.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
+
   'settings.party.subtitle': 'The customers and suppliers you keep an account with.',
   'settings.party.add': 'Add party',
   'settings.party.col.name': 'Name',
@@ -385,6 +410,7 @@ export const en = {
   'sale.col.design': 'Design no.',
   'sale.col.design.ph': 'Type a design number…',
   'sale.col.qty': 'Qty',
+  'sale.col.unit': 'Unit',
   'sale.col.rate': 'Rate',
   'sale.col.amount': 'Amount',
   'sale.line.remove': 'Remove line',
@@ -416,6 +442,7 @@ export const en = {
   'purchase.col.design': 'Design no.',
   'purchase.col.design.ph': 'Type a design number…',
   'purchase.col.qty': 'Qty',
+  'purchase.col.unit': 'Unit',
   'purchase.col.rate': 'Rate',
   'purchase.col.amount': 'Amount',
   'purchase.line.remove': 'Remove line',
@@ -498,6 +525,35 @@ export const en = {
   'processing.list.deleteError': "Couldn't delete this batch. Please try again.",
   'processing.detail.for': 'Run for',
   'processing.detail.notFound': 'This batch was not found.',
+
+  // ── unit conversion ────────────────────────────────────────────────────
+  // Every quantity is stored in the unit its item is stocked in. When a row is entered in
+  // another one, this is the wording that says so, works out the sum, and asks.
+  'units.field.entered': 'Entered in',
+  'units.field.stocked': 'Stock is kept in {{unit}}.',
+  'units.slip.eyebrow': 'Different unit',
+  'units.slip.title': '{{item}} is kept in {{unit}}',
+  'units.slip.body.known':
+    'You entered {{from}}. Stock is counted in {{to}}, so this row is converted before it saves.',
+  'units.slip.body.unknown':
+    'Nobody has set what one {{from}} is worth in {{to}}. Enter it once and this shop keeps it.',
+  'units.slip.entered': 'You entered',
+  'units.slip.shelf': 'Goes on the shelf',
+  'units.slip.rate': 'Rate',
+  'units.slip.rate.per': '{{to}} per {{from}}',
+  'units.slip.source.standard': 'Standard rate',
+  'units.slip.source.shop': "Your shop's rate",
+  'units.slip.source.derived': 'Worked out through {{via}}',
+  'units.slip.source.typed': 'Your rate',
+  'units.slip.needRate': 'Enter how many {{to}} make one {{from}}.',
+  'units.slip.remember': 'Remember for this shop',
+  'units.slip.remember.hint': 'Every entry uses it until you change it.',
+  'units.slip.cancel': 'Cancel',
+  'units.slip.convert': 'Convert to {{unit}}',
+  'units.note.onShelf': 'on the shelf',
+  'units.note.offShelf': 'off the shelf',
+  'units.note.aria': 'Converted: {{entered}} goes on the shelf as {{shelf}}. Change the rate.',
+  'units.note.ariaOff': 'Converted: {{entered}} goes off the shelf as {{shelf}}. Change the rate.',
   'receipt.newEntry': 'New entry',
   'receipt.party': 'Party',
   'receipt.party.ph': 'Type an existing party name…',

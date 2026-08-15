@@ -1,0 +1,135 @@
+<dialog
+  #dlg
+  class="slip"
+  [attr.aria-label]="locale.t('units.slip.eyebrow')"
+  (cancel)="cancel($event)"
+  (click)="onBackdrop($event)"
+>
+  @if (slip.ask(); as ask) {
+    <p class="slip__eyebrow">{{ locale.t('units.slip.eyebrow') }}</p>
+    <h2 class="slip__title">
+      {{ locale.t('units.slip.title', { item: ask.itemName, unit: ask.to }) }}
+    </h2>
+    <p class="slip__body">
+      {{
+        suggested()
+          ? locale.t('units.slip.body.known', { from: ask.from, to: ask.to })
+          : locale.t('units.slip.body.unknown', { from: ask.from, to: ask.to })
+      }}
+    </p>
+
+    <!-- the sum, written the way it would be written by hand: quantity, rate, rule, answer -->
+    <div class="calc">
+      <div class="calc__row">
+        <span class="calc__op" aria-hidden="true"></span>
+        <span class="calc__key">{{ locale.t('units.slip.entered') }}</span>
+        <span class="calc__fig">
+          @if (ask.qty !== null) {
+            <span class="calc__num">{{ locale.formatNumber(ask.qty) }}</span>
+          } @else {
+            <span class="calc__num calc__num--void" aria-hidden="true">—</span>
+          }
+          <span class="calc__unit">{{ ask.from }}</span>
+        </span>
+      </div>
+
+      <!-- "Meter per Gaz" sits with the label, not with the figure: the three figures share one
+           right-aligned column, and a phrase that long in the figure column would knock the
+           numbers out of line and stop the block reading as a sum. -->
+      <div class="calc__row">
+        <span class="calc__op" aria-hidden="true">×</span>
+        <label class="calc__key" for="slip-rate">
+          {{ locale.t('units.slip.rate') }}
+          <small class="calc__per" id="slip-rate-per">
+            {{ locale.t('units.slip.rate.per', { to: ask.to, from: ask.from }) }}
+          </small>
+        </label>
+        <span class="calc__fig">
+          <input
+            #rateBox
+            id="slip-rate"
+            class="calc__input"
+            [class.calc__input--ask]="!canConvert()"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            autocomplete="off"
+            [value]="rateText()"
+            (input)="setRate($any($event.target).value)"
+            aria-describedby="slip-rate-per"
+          />
+          <span class="calc__unit" aria-hidden="true"></span>
+        </span>
+      </div>
+
+      <div class="calc__row calc__row--result">
+        <span class="calc__op" aria-hidden="true">=</span>
+        <span class="calc__key">{{ locale.t('units.slip.shelf') }}</span>
+        <span class="calc__fig" aria-live="polite">
+          @if (result(); as shelf) {
+            <span class="calc__num">{{ locale.formatNumber(shelf) }}</span>
+            <span class="calc__unit">{{ ask.to }}</span>
+          } @else {
+            <span class="calc__num calc__num--void" aria-hidden="true">—</span>
+          }
+        </span>
+      </div>
+    </div>
+
+    <!-- where the number in the box came from; a rate nobody typed has to account for itself -->
+    @if (canConvert()) {
+      <p class="slip__source" [attr.data-source]="source()">
+        <span class="slip__dot" aria-hidden="true"></span>
+        @switch (source()) {
+          @case ('standard') {
+            {{ locale.t('units.slip.source.standard') }}
+          }
+          @case ('shop') {
+            {{ locale.t('units.slip.source.shop') }}
+          }
+          @case ('derived') {
+            {{ locale.t('units.slip.source.derived', { via: via() }) }}
+          }
+          @default {
+            {{ locale.t('units.slip.source.typed') }}
+          }
+        }
+      </p>
+    } @else {
+      <p class="slip__source slip__source--ask">
+        <span class="slip__dot" aria-hidden="true"></span>
+        {{ locale.t('units.slip.needRate', { to: ask.to, from: ask.from }) }}
+      </p>
+    }
+
+    @if (offerRemember()) {
+      <label class="slip__keep">
+        <input
+          type="checkbox"
+          class="slip__box"
+          [checked]="remember()"
+          (change)="remember.set($any($event.target).checked)"
+        />
+        <span>
+          {{ locale.t('units.slip.remember') }}
+          <small class="slip__keep-hint">{{ locale.t('units.slip.remember.hint') }}</small>
+        </span>
+      </label>
+    }
+
+    <div class="slip__actions">
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="cancel($event)">
+        {{ locale.t('units.slip.cancel') }}
+      </button>
+      <button
+        type="button"
+        class="rm-btn rm-btn--primary"
+        [disabled]="!canConvert()"
+        (click)="convert($event)"
+      >
+        {{ locale.t('units.slip.convert', { unit: ask.to }) }}
+      </button>
+    </div>
+  }
+</dialog>
