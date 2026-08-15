@@ -146,6 +146,7 @@
       <div class="grid__head" aria-hidden="true">
         <span>{{ locale.t(config().labels.colDesign) }}</span>
         <span class="num">{{ locale.t(config().labels.colQty) }}</span>
+        <span>{{ locale.t(config().labels.colUnit) }}</span>
         <span class="num">{{ locale.t(config().labels.colRate) }}</span>
         <span class="num grid__head-amount">{{ locale.t(config().labels.colAmount) }}</span>
         <span></span>
@@ -161,37 +162,25 @@
             [placeholder]="locale.t(config().labels.colDesignPh)"
             [ariaLabel]="locale.t(config().labels.colDesign)"
           />
-          <div class="grid__qty">
-            <input
-              class="fld__input fld__input--sm num"
-              [class.fld__input--unit]="line.unit || lineUnit(line.design)"
-              type="number"
-              inputmode="decimal"
-              min="0"
-              [value]="line.qty"
-              (input)="setQty(line.key, $any($event.target).value)"
-              [attr.placeholder]="locale.t(config().labels.colQty)"
-              [attr.aria-label]="
-                locale.t(config().labels.colQty) + (line.unit ? ' — ' + line.unit : '')
-              "
-            />
-            <!-- The unit hint that used to sit here, made writable in place: a line sold in
-                 another unit is typed over rather than moved to a column of its own, and the
-                 slip opens when the box is left. Amber while it differs from the shelf's. -->
-            @if (line.unit || lineUnit(line.design)) {
-              <input
-                class="grid__unit grid__unit--edit"
-                [class.grid__unit--off]="line.unit && lineUnit(line.design) && line.factor !== null"
-                type="text"
-                list="unit-suggestions"
-                [value]="line.unit"
-                (input)="setUnit(line.key, $any($event.target).value)"
-                (change)="askUnit(line.key)"
-                [attr.aria-label]="locale.t('units.field.entered')"
-                [attr.placeholder]="lineUnit(line.design)"
-              />
-            }
-          </div>
+          <input
+            class="fld__input fld__input--sm num"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            [value]="line.qty"
+            (input)="setQty(line.key, $any($event.target).value)"
+            [attr.placeholder]="locale.t(config().labels.colQty)"
+            [attr.aria-label]="locale.t(config().labels.colQty)"
+          />
+          <app-combobox
+            [small]="true"
+            [options]="unitOptions"
+            [value]="line.unit"
+            (valueChange)="setUnit(line.key, $event)"
+            (focusout)="askUnit(line.key)"
+            [placeholder]="lineUnit(line.design)"
+            [ariaLabel]="locale.t(config().labels.colUnit)"
+          />
           <input
             class="fld__input fld__input--sm num"
             type="number"
@@ -237,14 +226,6 @@
           </div>
         }
       }
-
-      <!-- the unit boxes above suggest from one list: the measures the app can convert
-           between, then the trade units a shop has to teach it -->
-      <datalist id="unit-suggestions">
-        @for (u of unitOptions; track u) {
-          <option [value]="u"></option>
-        }
-      </datalist>
 
       <button type="button" class="linkbtn" (click)="addLine()">
         + {{ locale.t(config().labels.lineAdd) }}

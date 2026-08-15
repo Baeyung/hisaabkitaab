@@ -60,6 +60,7 @@ export interface GoodsEntryLabels {
   colDesign: TranslationKey;
   colDesignPh: TranslationKey;
   colQty: TranslationKey;
+  colUnit: TranslationKey;
   colRate: TranslationKey;
   colAmount: TranslationKey;
   lineRemove: TranslationKey;

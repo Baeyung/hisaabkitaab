@@ -52,17 +52,16 @@
             <label class="fld__label" [attr.for]="'raw-unit-' + line.key">
               {{ locale.t('processing.col.unit') }}
             </label>
-            <!-- committed on change, not on input: a modal on every keystroke of "Meter"
+            <!-- committed on focusout, not on input: a modal on every keystroke of "Meter"
                  would open five times before the word is finished -->
-            <input
-              class="fld__input fld__input--sm"
-              type="text"
-              list="unit-suggestions"
-              [id]="'raw-unit-' + line.key"
+            <app-combobox
+              [small]="true"
+              [inputId]="'raw-unit-' + line.key"
+              [options]="unitOptions"
               [value]="line.unit"
-              (input)="patchRaw(line.key, { unit: $any($event.target).value })"
-              (change)="askRawUnit(line.key)"
-              [attr.placeholder]="locale.t('processing.col.unit.ph')"
+              (valueChange)="patchRaw(line.key, { unit: $event })"
+              (focusout)="askRawUnit(line.key)"
+              [placeholder]="locale.t('processing.col.unit.ph')"
             />
           </div>
           <div class="fld">
@@ -205,15 +204,14 @@
             <label class="fld__label" [attr.for]="'proc-unit-' + line.key">
               {{ locale.t('processing.col.unit') }}
             </label>
-            <input
-              class="fld__input fld__input--sm"
-              type="text"
-              list="unit-suggestions"
-              [id]="'proc-unit-' + line.key"
+            <app-combobox
+              [small]="true"
+              [inputId]="'proc-unit-' + line.key"
+              [options]="unitOptions"
               [value]="line.unit"
-              (input)="patchProc(line.key, { unit: $any($event.target).value })"
-              (change)="askProcUnit(line.key)"
-              [attr.placeholder]="locale.t('processing.col.unit.ph')"
+              (valueChange)="patchProc(line.key, { unit: $event })"
+              (focusout)="askProcUnit(line.key)"
+              [placeholder]="locale.t('processing.col.unit.ph')"
             />
           </div>
           <div class="fld">
@@ -371,15 +369,14 @@
         </div>
         <div class="fld">
           <label class="fld__label" for="output-unit">{{ locale.t('processing.col.unit') }}</label>
-          <input
-            class="fld__input fld__input--sm"
-            type="text"
-            list="unit-suggestions"
-            id="output-unit"
+          <app-combobox
+            [small]="true"
+            inputId="output-unit"
+            [options]="unitOptions"
             [value]="outputUnit()"
-            (input)="outputUnit.set($any($event.target).value)"
-            (change)="askOutputUnit()"
-            [attr.placeholder]="locale.t('processing.col.unit.ph')"
+            (valueChange)="outputUnit.set($event)"
+            (focusout)="askOutputUnit()"
+            [placeholder]="locale.t('processing.col.unit.ph')"
           />
         </div>
         <!-- units made comes before cost/unit: it is what unlocks the box below -->
@@ -439,14 +436,6 @@
         />
       </div>
     </div>
-
-    <!-- the unit boxes above all suggest from one list: the measures the app can convert
-         between, then the trade units a shop has to teach it -->
-    <datalist id="unit-suggestions">
-      @for (u of unitOptions; track u) {
-        <option [value]="u"></option>
-      }
-    </datalist>
 
     <!-- totals -->
     <div class="totals">

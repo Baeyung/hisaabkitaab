@@ -28,6 +28,7 @@ export class Purchase {
       colDesign: 'purchase.col.design',
       colDesignPh: 'purchase.col.design.ph',
       colQty: 'purchase.col.qty',
+      colUnit: 'purchase.col.unit',
       colRate: 'purchase.col.rate',
       colAmount: 'purchase.col.amount',
       lineRemove: 'purchase.line.remove',
