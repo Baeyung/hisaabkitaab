@@ -1,3 +1,4 @@
+import { TranslationKey } from '../../core/i18n/translations/en';
 import { MenuSetting } from '../../core/store/store.models';
 import { BOARD, BoardTab, BoardTile, boardFor } from './board';
 import { NAV, NavGroup, arranged } from './nav';
@@ -94,8 +95,14 @@ describe('boardFor', () => {
   it('surfaces a screen no tab claims instead of losing it', () => {
     // The forward-compatibility bargain, from the other side: a screen shipped after this
     // table was written has to turn up somewhere it can be pressed.
+    //
+    // The cast is the whole point of the case. In the build that ships this screen the key is
+    // an ordinary TranslationKey, added with its screen; here it stands for one this build has
+    // never heard of, which is the only way to write down "a key BOARD does not name" while
+    // every key BOARD *does* name is in the union.
+    const shippedSinceThisBuild = 'nav.somethingNew' as unknown as TranslationKey;
     const board = boardFor([
-      { kind: 'link', key: 'nav.somethingNew', path: 'something-new', icon: 'stock' },
+      { kind: 'link', key: shippedSinceThisBuild, path: 'something-new', icon: 'stock' },
     ]);
 
     expect(tabKeys(board)).toEqual(['board.tab.more']);
