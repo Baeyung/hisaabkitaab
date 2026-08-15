@@ -87,6 +87,16 @@ export class StoreService {
   }
 
   /**
+   * Same shape as {@link api}, for a store other than the current one — the one caller so
+   * far is copying a setting (unit conversions) from this store into another the user also
+   * has a hand in. No membership check here: the backend's `@CurrentStore` on the receiving
+   * end refuses anything the caller doesn't actually have `id` for, same as every other call.
+   */
+  apiFor(id: string, path: string): string {
+    return `${this.url}/${id}/${path}`;
+  }
+
+  /**
    * A router link into the current store: `link('ledger', partyId)` →
    * `['/s', id, 'ledger', partyId]`. A segment may itself be a path
    * (`link('new-entry/sale')`), which is split — one array entry containing a

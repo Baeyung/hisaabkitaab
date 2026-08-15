@@ -112,6 +112,7 @@ export const en = {
   'nav.settings.users': 'Manage Users',
   'nav.settings.items': 'Items',
   'nav.settings.party': 'Parties',
+  'nav.settings.units': 'Unit Conversions',
   'nav.settings.menu': 'Menu',
   // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
   // same two things `stores.suspendedSettled` says on the picker, in one line.
@@ -345,6 +346,30 @@ export const en = {
   'settings.items.opening.qtyPh': 'Quantity',
   'settings.items.opening.save': 'Save',
   'settings.items.opening.cancel': 'Cancel',
+
+  'settings.units.subtitle': 'How the units this shop uses turn into one another.',
+  'settings.units.standard.title': 'Standard conversions',
+  'settings.units.standard.subtitle':
+    'Built in — the same in every shop, so there is nothing to add for these.',
+  'settings.units.custom.title': "This shop's conversions",
+  'settings.units.custom.subtitle':
+    'Trade units your suppliers use — a than, a bori, a roll — only this shop can say what one is worth.',
+  'settings.units.add': 'Add conversion',
+  'settings.units.examples.title': 'Try one:',
+  'settings.units.col.from': 'From',
+  'settings.units.col.to': 'To',
+  'settings.units.col.factor': 'Rate',
+  'settings.units.col.actions': 'Actions',
+  'settings.units.save': 'Save',
+  'settings.units.sameUnit': 'Pick two different units — a unit already converts to itself.',
+  'settings.units.empty.body':
+    'Nothing taught yet. Add one below, or answer the conversion slip the first time you use it on an entry.',
+  'settings.units.loadError': "Couldn't load your conversions. Please try again.",
+  'settings.units.copy.button': 'Copy to other stores',
+  'settings.units.copy.hint':
+    "Copies every rate above into the stores you pick — it overwrites a rate they already have for the same pair, and leaves everything else in them alone.",
+  'settings.units.copy.confirm': 'Copy',
+  'settings.units.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
   'settings.party.subtitle': 'The customers and suppliers you keep an account with.',
   'settings.party.add': 'Add party',

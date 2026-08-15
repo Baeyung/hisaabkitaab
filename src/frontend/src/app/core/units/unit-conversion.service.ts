@@ -86,14 +86,60 @@ export class UnitConversionService {
    *
    * Failing to save is not failing to convert. The entry the shopkeeper is in the middle of
    * has its factor and goes through; all that is lost is being asked once more next time, so
-   * the error is swallowed rather than thrown into the middle of a sale.
+   * the error is swallowed rather than thrown into the middle of a sale — callers that only
+   * want the conversion to proceed can ignore the returned flag.
+   *
+   * The Store Settings conversions screen is the one caller that does care, since there a
+   * failure is the whole point of the click rather than a footnote to it — it reads the flag
+   * and reports the failure instead of pretending the rate was saved.
    */
-  async teach(draft: UnitConversionDraft): Promise<void> {
+  async teach(draft: UnitConversionDraft): Promise<boolean> {
     try {
       const saved = await firstValueFrom(this.http.put<UnitConversionRate>(this.url, draft));
       this._rates.update((rates) => [...rates.filter((r) => r.id !== saved.id), saved]);
+      return true;
     } catch {
-      // Left for the next entry to ask about again.
+      return false;
     }
+  }
+
+  /**
+   * Copy this store's rates into other stores the caller also has a hand in — a shop with
+   * five branches teaches its than/bori/roll once rather than five times. Same `PUT`, one
+   * call per rate per store, so a store that already has a rate for a pair gets it
+   * overwritten rather than duplicated — copying is deliberately not additive.
+   *
+   * Best-effort per store: one rate failing to save does not stop the rest from trying, and
+   * one store failing does not stop the others. Returns the ids that came back with at least
+   * one failure, so the caller can say which stores need a retry.
+   */
+  async copyTo(storeIds: readonly string[]): Promise<string[]> {
+    const rates = this._rates();
+    const failed: string[] = [];
+
+    await Promise.all(
+      storeIds.map(async (id) => {
+        const url = this.stores.apiFor(id, 'unit-conversions');
+        let ok = true;
+        for (const rate of rates) {
+          try {
+            await firstValueFrom(
+              this.http.put(url, {
+                fromUnit: rate.fromUnit,
+                toUnit: rate.toUnit,
+                factor: rate.factor,
+              } satisfies UnitConversionDraft),
+            );
+          } catch {
+            ok = false;
+          }
+        }
+        if (!ok) {
+          failed.push(id);
+        }
+      }),
+    );
+
+    return failed;
   }
 }

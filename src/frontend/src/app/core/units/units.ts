@@ -174,6 +174,36 @@ export const UNIT_SUGGESTIONS: readonly string[] = [
 ];
 
 /**
+ * A handful of the fixed table's rates, picked to show a shopkeeper what "a conversion" looks
+ * like before they have taught the app any of their own — g → kg, gaz → metre, dozen → piece.
+ * Shown for reference on the Store Settings conversions screen; nothing to add for these, since
+ * {@link BUILT_IN} already answers them everywhere, for free.
+ */
+export const EXAMPLE_CONVERSIONS: readonly { from: string; to: string }[] = [
+  { from: 'gram', to: 'kilogram' },
+  { from: 'gaz', to: 'meter' },
+  { from: 'inch', to: 'foot' },
+  { from: 'tola', to: 'gram' },
+  { from: 'maund', to: 'kilogram' },
+  { from: 'milliliter', to: 'liter' },
+  { from: 'dozen', to: 'piece' },
+];
+
+/**
+ * Trade units with no fixed rate — the ones a shop actually has to teach, offered on the same
+ * screen as a shortcut into the "add conversion" form. Only the pair is a suggestion; the rate
+ * itself is never guessed, only asked for.
+ */
+export const TRADE_UNIT_EXAMPLES: readonly { from: string; to: string }[] = [
+  { from: 'than', to: 'meter' },
+  { from: 'bori', to: 'kilogram' },
+  { from: 'roll', to: 'meter' },
+  { from: 'bale', to: 'kilogram' },
+  { from: 'carton', to: 'piece' },
+  { from: 'packet', to: 'piece' },
+];
+
+/**
  * How a unit is keyed everywhere: trimmed and lower-cased, so "Meter", "meter" and " METER "
  * are one unit. Matches `UnitConversionService.fold` on the backend, which has to agree with
  * this or a rate taught under one spelling would be invisible under another.
