@@ -54,7 +54,7 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
       font: 600 10.5px system-ui;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: var(--kg-chrome-locked);
+      color: color-mix(in srgb, currentColor 58%, transparent);
     }
     /* Two equal cells in one inset track. The cells set their own width from the code plus
        padding, so the track is a compact chip beside the bar's buttons; where the control

@@ -120,6 +120,35 @@ export const en = {
   // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
   // same two things `stores.suspendedSettled` says on the picker, in one line.
   'nav.closedHint': 'This shop is closed — your plan no longer covers it. Nothing has been lost.',
+
+  // ── The board (easy mode) ────────────────────────────────────────────
+  // Tabs are named for what you came to do, not for what the app calls its modules: a
+  // shopkeeper reaching for the board is thinking "I need to write this down", "I need to
+  // look something up", or "I need to change something", and those are the three tabs.
+  'board.title': 'Menu',
+  'board.subtitle': 'Every screen in this shop, on one page.',
+  'board.tabs': 'Sections',
+  'board.tab.entry': 'Entry',
+  'board.tab.reports': 'Reports',
+  'board.tab.setup': 'Setup',
+  // Where a screen no tab has been told about turns up, so nothing is ever lost off the board.
+  'board.tab.more': 'More',
+  'board.band.other': 'Other screens',
+  // The bands. The two that move money are named for the direction, because that is what the
+  // rule beside them is saying and the words have to agree with it. The rest are single
+  // nouns for what you are looking at — never a list of the buttons underneath, which is how
+  // "Bills & purchases" came to sit directly on top of Bill Management and Purchases and say
+  // nothing either of them had not already said.
+  'board.band.moneyIn': 'Money in',
+  'board.band.moneyOut': 'Money out',
+  'board.band.jobWork': 'Job work',
+  'board.band.books': 'Books',
+  'board.band.papers': 'Documents',
+  'board.band.goods': 'Stock',
+  'board.band.shop': 'Shop',
+  'board.band.people': 'People',
+  'board.band.catalogue': 'Catalogue',
+
   'common.comingSoon': 'Coming soon',
   'stores.title': 'Your shops',
   'stores.subtitle': 'Pick the shop whose books you want to open.',
@@ -262,6 +291,11 @@ export const en = {
   'settings.general.section.details': 'Store details',
   'settings.general.details.help':
     'The name, address, and number that appear on every bill and khata.',
+  'settings.general.section.easy': 'Getting around',
+  'settings.general.easy.help': 'How everyone working here moves around the app.',
+  'settings.general.easy.label': 'Easy mode',
+  'settings.general.easy.note':
+    "Easy mode swaps the sidebar for the board: one page of big buttons, grouped by what you came to do. Every screen stays exactly where it was, and Setup on the board is the way back to this page.",
   'settings.general.section.drawer': 'Opening drawer balance',
   'settings.general.drawer.help':
     "The cash in your drawer when you started — your cashbook's opening balance. Editing this updates it; it won't add a new entry each time.",

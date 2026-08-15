@@ -42,6 +42,36 @@
   background: rgba(255, 255, 255, 0.16);
 }
 
+.hamburger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* Easy mode's way home, in the slot the hamburger has in every other shop. Wider
+   than that square and named, because it is the only navigation left in the frame
+   and it should not have to be guessed at from a glyph. */
+.boardlink {
+  width: auto;
+  gap: 9px;
+  padding-inline: 12px;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+/* Under ~560px the store's name needs the room more than the word "Menu" does —
+   the board mark carries it, and the button keeps its 40px square. */
+@media (max-width: 560px) {
+  .boardlink {
+    padding-inline: 0;
+    width: 40px;
+    justify-content: center;
+  }
+  .boardlink__label {
+    display: none;
+  }
+}
+
 .topbar-brand {
   display: flex;
   align-items: center;

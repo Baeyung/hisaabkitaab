@@ -146,8 +146,10 @@ export class StoreSetup {
 
   /** Leaving early is allowed: into this shop once it exists, else back to the picker. */
   protected readonly exitLink = computed(() => {
+    // The shop's root, not its dashboard: the redirect there is what knows whether this shop
+    // opens on the board or on the dashboard.
     const id = this.shop()?.id;
-    return id ? ['/s', id, 'dashboard'] : ['/stores'];
+    return id ? ['/s', id] : ['/stores'];
   });
 
   /**

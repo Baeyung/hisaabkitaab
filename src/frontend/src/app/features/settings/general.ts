@@ -24,7 +24,8 @@ type ImageField = 'logoUri' | 'watermarkUri';
   selector: 'app-general',
   imports: [FormField, PhoneField, RouterLink],
   templateUrl: './general.html',
-  styleUrl: './general.css',
+  // The switch is shared with Store Settings › Menu rather than drawn twice.
+  styleUrls: ['./general.css', './settings-switch.css'],
 })
 export class SettingsGeneral {
   protected readonly locale = inject(LocaleService);
@@ -41,6 +42,17 @@ export class SettingsGeneral {
 
   /** Opening drawer balance — cash on hand at onboarding. null = field empty (clears it). */
   protected readonly openingCash = signal<number | null>(null);
+
+  /**
+   * Navigate from the board instead of the sidebar. Owner-only and shop-wide, like the rest
+   * of the arrangement — it is the counter tablet everyone shares that this is for, so it
+   * would be the wrong thing to set per person.
+   *
+   * It rides on this screen's Save rather than switching the moment it is flipped: the change
+   * takes the sidebar away, and doing that under someone mid-sentence in the name field would
+   * be a surprise. The board's own settings tile is how a shop gets back here to turn it off.
+   */
+  protected readonly easyMode = signal(false);
 
   /**
     * A shared user reaches this screen for the opening drawer balance, which is theirs to
@@ -88,6 +100,7 @@ export class SettingsGeneral {
     effect(() => {
       this.model();
       this.openingCash();
+      this.easyMode();
       this.savedKey.set(null);
     });
     // A native <dialog> so focus-trap, Escape and the backdrop come for free.
@@ -120,6 +133,7 @@ export class SettingsGeneral {
       }
       const cash = await this.stores.getOpeningCash();
       this.openingCash.set(cash > 0 ? cash : null);
+      this.easyMode.set(store.settings?.easyMode === true);
       // Backend nullable columns can arrive as null; forms want strings.
       this.model.set({
         name: store.name ?? '',
@@ -152,6 +166,7 @@ export class SettingsGeneral {
       // disabled for them, and the backend would refuse the update anyway.
       if (this.isOwner()) {
         await this.stores.update(store.id, this.model());
+        await this.saveEasyMode();
       }
       await this.stores.setOpeningCash(this.openingCash() ?? 0);
       this.savedKey.set('settings.general.saved');
@@ -160,6 +175,24 @@ export class SettingsGeneral {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /**
+   * How the shop navigates, on its own endpoint — the arrangement is one document and this is
+   * a field in it, so the rest of it is read back and sent along unchanged. Skipped entirely
+   * when nothing moved, which is most saves of this screen: the settings endpoint is
+   * owner-only and replaces the whole arrangement, and there is no reason to rewrite a shop's
+   * menu because somebody corrected a phone number.
+   *
+   * Read *after* the store update above, not before: that call replaces the cached store, and
+   * a document captured ahead of it would be the one from before the response landed.
+   */
+  private async saveEasyMode(): Promise<void> {
+    const settings = this.stores.current()?.settings;
+    if (!settings || (settings.easyMode === true) === this.easyMode()) {
+      return;
+    }
+    await this.stores.updateSettings({ ...settings, easyMode: this.easyMode() });
   }
 
   async onFile(event: Event, field: ImageField): Promise<void> {

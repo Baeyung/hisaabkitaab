@@ -168,7 +168,11 @@ describe('store roles', () => {
     it('marks what a closed shop refuses, and nothing else', () => {
       const settings = NAV.find((item) => item.key === 'nav.settings');
       const marked = settings?.kind === 'group' ? settings.children.filter((c) => c.writes) : [];
-      expect(marked.map((c) => c.path)).toEqual(['settings/items', 'settings/party']);
+      expect(marked.map((c) => c.path)).toEqual([
+        'settings/items',
+        'settings/party',
+        'settings/units',
+      ]);
       // The way out of a closed shop — deleting it, or freeing a seat — stays open.
       expect(marked.map((c) => c.path)).not.toContain('settings/general');
       expect(NAV.some((item) => item.key === 'nav.newEntry' && item.writes)).toBe(true);

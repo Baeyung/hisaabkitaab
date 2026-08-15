@@ -1,0 +1,97 @@
+<section class="eb">
+  <header class="eb__head">
+    <h1 class="eb__title">{{ stores.current()?.name }}</h1>
+    <p class="eb__sub">
+      {{ locale.t(stores.current()?.suspended ? 'nav.closedHint' : 'board.subtitle') }}
+    </p>
+  </header>
+
+  <!-- The divider tabs of a bound register: the open one shares the sheet's paper and drops
+       its bottom edge, so the two read as one surface. Manual activation — the arrows walk
+       the strip, Enter or Space opens what they land on. -->
+  <div class="eb__strip" role="tablist" [attr.aria-label]="locale.t('board.tabs')" (keydown)="onStripKey($event)">
+    @for (tab of tabs(); track tab.key; let i = $index) {
+      <button
+        type="button"
+        role="tab"
+        class="eb__tab"
+        [class.eb__tab--on]="tab === active()"
+        [attr.data-tab-index]="i"
+        [id]="'eb-tab-' + i"
+        [attr.aria-selected]="tab === active()"
+        [attr.aria-controls]="'eb-sheet'"
+        [attr.tabindex]="i === focused() ? 0 : -1"
+        (focus)="focused.set(i)"
+        (click)="open(tab.key)"
+      >
+        {{ locale.t(tab.key) }}
+      </button>
+    }
+  </div>
+
+  <!-- One card, not three. The tabs join its top edge, the sheet is its body, and the rail
+       is its foot behind a ruled line — the way a page of a register carries its own total
+       line rather than having a second object slid under it. -->
+  <div class="eb__page">
+  @if (active(); as sheet) {
+    <div
+      class="eb__sheet"
+      id="eb-sheet"
+      role="tabpanel"
+      [attr.aria-labelledby]="'eb-tab-' + tabs().indexOf(sheet)"
+    >
+      @for (band of sheet.bands; track band.key) {
+        <section class="eb__band" [attr.data-tone]="band.tone">
+          <h2 class="eb__bandname">{{ locale.t(band.key) }}</h2>
+
+          <ul class="eb__tiles">
+            @for (tile of band.tiles; track tile.key) {
+              <li>
+                @if (blocked(tile)) {
+                  <!-- Shown greyed rather than dropped: the button was there yesterday, and a
+                       board that quietly sheds half of itself reads as the app being broken
+                       instead of as the plan having lapsed. -->
+                  <span class="eb__tile eb__tile--off" aria-disabled="true" [attr.title]="locale.t('nav.closedHint')">
+                    <span class="eb__mark"><app-nav-icon [name]="tile.icon" [size]="26" [weight]="1.7" /></span>
+                    <span class="eb__name">{{ label(tile) }}</span>
+                    <span class="eb__closed">{{ locale.t('stores.suspendedBadge') }}</span>
+                  </span>
+                } @else {
+                  <a class="eb__tile" [routerLink]="stores.link(tile.path)">
+                    <span class="eb__mark"><app-nav-icon [name]="tile.icon" [size]="26" [weight]="1.7" /></span>
+                    <span class="eb__name">{{ label(tile) }}</span>
+                    <!-- The number key that opens it. Printed on the button because the digit
+                         is only true of the sheet you are looking at. -->
+                    @if (tile.digit) {
+                      <kbd class="eb__key num" aria-hidden="true">{{ tile.digit }}</kbd>
+                    }
+                  </a>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  }
+
+    <!-- In easy mode there is no sidebar, so its foot is this rail: the same controls, the
+         same shop setting deciding which of them show, and the way out at the far end where
+         nothing else can be hit by mistake. On paper rather than on the dark frame, so the
+         three controls take their ink from the page they are sitting on. -->
+    <footer class="eb__foot">
+      <div class="eb__controls">
+        <app-language-toggle />
+        @if (chrome().theme) {
+          <app-theme-toggle />
+        }
+        @if (chrome().install) {
+          <app-install-button />
+        }
+      </div>
+      <button type="button" class="eb__signout" (click)="logout()">
+        {{ locale.t('home.logout') }}
+      </button>
+    </footer>
+  </div>
+</section>

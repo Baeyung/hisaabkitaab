@@ -39,6 +39,16 @@ export interface MenuSetting {
 export interface StoreSettings {
   menu: MenuSetting[];
   hideChrome: ChromeItem[];
+  /**
+   * Navigate from the board — one screen of big buttons — instead of the sidebar. A shop
+   * setting rather than a personal one, because the counter tablet is shared: whoever is
+   * standing at it gets the same app. Presentation only, like `hidden` above; the board is
+   * built from the same arranged `menu`, so it inherits the order, names and hiding.
+   *
+   * Optional on the way in only because an arrangement saved before the board existed has no
+   * field for it. Absent reads as off, which is the sidebar those shops already had.
+   */
+  easyMode?: boolean;
 }
 
 /**

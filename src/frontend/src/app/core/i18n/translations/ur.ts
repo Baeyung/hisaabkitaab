@@ -119,6 +119,29 @@ export const ur: Record<TranslationKey, string> = {
   'nav.settings.units': 'یونٹ تبدیلی',
   'nav.settings.menu': 'مینو',
   'nav.closedHint': 'یہ دکان بند ہے — آپ کا پلان اب اسے نہیں سنبھالتا۔ کچھ ضائع نہیں ہوا۔',
+
+  // ── بورڈ (آسان موڈ) ────────────────────────────────────────────────
+  // ٹیب کے نام اس کام کے مطابق ہیں جو دکاندار کرنے آیا ہے: کچھ لکھنا، کچھ دیکھنا، یا کچھ بدلنا۔
+  'board.title': 'مینو',
+  'board.subtitle': 'دکان کی ہر اسکرین، ایک ہی صفحے پر۔',
+  'board.tabs': 'حصے',
+  'board.tab.entry': 'انٹری',
+  'board.tab.reports': 'رپورٹس',
+  'board.tab.setup': 'ترتیبات',
+  'board.tab.more': 'مزید',
+  'board.band.other': 'دیگر اسکرینیں',
+  // رقم کے دونوں رخ سیدھے الفاظ میں، کیونکہ ساتھ والی لکیر کا رنگ بھی یہی کہہ رہا ہے۔
+  // باقی عنوانات ایک ایک لفظ کے ہیں — نیچے والے بٹنوں کے نام دہرانے کے بجائے۔
+  'board.band.moneyIn': 'رقم اندر',
+  'board.band.moneyOut': 'رقم باہر',
+  'board.band.jobWork': 'جاب ورک',
+  'board.band.books': 'کھاتے',
+  'board.band.papers': 'دستاویزات',
+  'board.band.goods': 'اسٹاک',
+  'board.band.shop': 'دکان',
+  'board.band.people': 'لوگ',
+  'board.band.catalogue': 'فہرست',
+
   'common.comingSoon': 'جلد آ رہا ہے',
   'stores.title': 'آپ کی دکانیں',
   'stores.subtitle': 'وہ دکان چنیں جس کا کھاتہ کھولنا ہے۔',
@@ -251,6 +274,11 @@ export const ur: Record<TranslationKey, string> = {
   'settings.general.nameplateHint': 'ہر بل اور کھاتہ پر آپ کی دکان',
   'settings.general.section.details': 'دکان کی تفصیلات',
   'settings.general.details.help': 'وہ نام، پتہ اور نمبر جو ہر بل اور کھاتہ پر آتے ہیں۔',
+  'settings.general.section.easy': 'ایپ کا انداز',
+  'settings.general.easy.help': 'یہاں کام کرنے والے سب لوگ ایپ میں کیسے گھومیں گے۔',
+  'settings.general.easy.label': 'آسان موڈ',
+  'settings.general.easy.note':
+    'آسان موڈ میں سائیڈ بار کی جگہ بورڈ آ جاتا ہے: بڑے بٹنوں کا ایک صفحہ، کام کے حساب سے گروپ کیا ہوا۔ ہر اسکرین اپنی جگہ پر ہی رہتی ہے، اور اس صفحے پر واپسی بورڈ کے ”ترتیبات“ ٹیب سے ہوتی ہے۔',
   'settings.general.section.drawer': 'ابتدائی دراز کی رقم',
   'settings.general.drawer.help':
     'شروع میں آپ کی دراز میں موجود نقدی — آپ کے روزنامچے کی ابتدائی رقم۔ اسے تبدیل کرنے سے یہ اپڈیٹ ہوتی ہے؛ ہر بار نئی اندراج نہیں بنتی۔',

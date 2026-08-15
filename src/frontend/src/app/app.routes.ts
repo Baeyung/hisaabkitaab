@@ -1,4 +1,6 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
+import { StoreService } from './core/store/store.service';
 import { authGuard, publicOnlyGuard } from './core/auth/auth.guard';
 import { apexAppRedirectGuard, apexRedirectGuard } from './core/auth/apex.guard';
 import { editorGuard, managerGuard, ownerGuard, storeGuard } from './core/store/store.guard';
@@ -101,7 +103,25 @@ export const routes: Routes = [
     canActivate: [apexRedirectGuard, authGuard, storeGuard, planLimitGuard],
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      // Where a shop opens depends on how it navigates: the board for a counter, the
+      // dashboard for a desk. Resolved per navigation rather than at build time, so switching
+      // easy mode on takes effect on the next visit without anything being reloaded — and so
+      // that a user in two shops lands correctly in each. storeGuard has already selected the
+      // store by the time this runs, which is what makes the setting readable here.
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: () =>
+          inject(StoreService).current()?.settings?.easyMode ? 'board' : 'dashboard',
+      },
+      // Easy mode's home: every screen in the shop as one page of buttons. No guard — it is
+      // a menu, and it shows each caller only what their role already reaches (see
+      // `boardFor`). A shop that is not in easy mode can still open it; there is simply
+      // nothing pointing here.
+      {
+        path: 'board',
+        loadComponent: () => import('./features/board/easy-board').then((m) => m.EasyBoard),
+      },
       {
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),

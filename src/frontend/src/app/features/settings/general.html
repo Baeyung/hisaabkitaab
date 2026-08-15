@@ -147,6 +147,33 @@
       </section>
       }
 
+      <!-- How the shop gets around. Owner-only and shop-wide: it changes the app for
+           everyone working here, which is the point — the counter tablet is shared. -->
+      @if (isOwner()) {
+      <section class="sec" aria-labelledby="sec-easy">
+        <div class="sec__intro">
+          <h2 class="sec__eyebrow" id="sec-easy">{{ locale.t('settings.general.section.easy') }}</h2>
+          <p class="sec__desc">{{ locale.t('settings.general.easy.help') }}</p>
+        </div>
+
+        <div class="sec__fields">
+          <label class="sw sw--wide">
+            <input
+              class="sw__box"
+              type="checkbox"
+              [checked]="easyMode()"
+              (change)="easyMode.set($any($event.target).checked)"
+            />
+            <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
+            <span class="sw__text">{{ locale.t('settings.general.easy.label') }}</span>
+          </label>
+          <!-- Said before it is switched on rather than discovered after: the sidebar goes,
+               and this screen is one of the buttons you come back to it through. -->
+          <p class="sec__note">{{ locale.t('settings.general.easy.note') }}</p>
+        </div>
+      </section>
+      }
+
       <!-- Opening drawer balance -->
       <section class="sec" aria-labelledby="sec-drawer">
         <div class="sec__intro">

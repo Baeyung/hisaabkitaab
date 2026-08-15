@@ -113,9 +113,15 @@ export class StorePicker {
     this.loading.set(false);
   }
 
-  /** Enter a store. Everything downstream reads the id back out of the URL. */
+  /**
+   * Enter a store. Everything downstream reads the id back out of the URL.
+   *
+   * The shop's root rather than its dashboard: which screen a shop opens on is the shop's own
+   * setting (board or dashboard), and the redirect on that route is the one place that reads
+   * it. Naming a screen here would send a counter shop past its own board on the way in.
+   */
   open(store: Store): void {
-    void this.router.navigate(['/s', store.id, 'dashboard']);
+    void this.router.navigate(['/s', store.id]);
   }
 
   /** The mark shown on a card: the store's logo, else the first letter of its name. */

@@ -36,8 +36,9 @@ const CHROME: ReadonlyArray<{ item: ChromeItem; label: TranslationKey }> = [
   selector: 'app-settings-menu',
   imports: [CdkDropList, CdkDrag, CdkDragHandle],
   templateUrl: './menu.html',
-  // The page frame, buttons and fields, shared with Manage Users rather than copied again.
-  styleUrls: ['./settings-table.css', './menu.css'],
+  // The page frame, buttons and fields, shared with Manage Users rather than copied again;
+  // the switch, shared with General, which is the other screen that turns things on.
+  styleUrls: ['./settings-table.css', './settings-switch.css', './menu.css'],
 })
 export class SettingsMenu {
   protected readonly locale = inject(LocaleService);
@@ -209,6 +210,10 @@ export class SettingsMenu {
         item.kind === 'group' ? { ...row(item), children: item.children.map(row) } : row(item),
       ),
       hideChrome: [...this.hideChrome()],
+      // Carried through untouched. The endpoint replaces the whole document, and this screen
+      // does not edit how the shop navigates — General does. Rebuilding the document without
+      // it would switch a counter shop back to the sidebar on the next menu save.
+      easyMode: this.saved()?.easyMode === true,
     };
   }
 

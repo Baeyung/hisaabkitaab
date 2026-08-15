@@ -47,18 +47,22 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
       font: 600 10.5px system-ui;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: var(--kg-chrome-locked);
+      color: color-mix(in srgb, currentColor 58%, transparent);
     }
     /* One inset track holding three equal cells, so the selected cell reads as a
        raised chip against it. Grid, not flex: equal columns keep the three labels
-       from jostling as the language changes their widths. */
+       from jostling as the language changes their widths.
+       Mixed from the surrounding ink rather than a fixed white tint, matching the
+       language toggle beside it: this control sits on the dark sidebar foot in one
+       place and on the board's paper foot in another, and a white wash vanishes on
+       cream. Everything below reads currentColor for the same reason. */
     .th__seg {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 2px;
       padding: 2px;
       border-radius: 9px;
-      background: rgba(255, 255, 255, 0.06);
+      background: color-mix(in srgb, currentColor 8%, transparent);
     }
     .th__opt {
       /* Contains the clipped radio below — without it the input positions
@@ -73,7 +77,7 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
       min-height: 40px;
       padding: 3px 2px;
       border-radius: 7px;
-      color: var(--kg-chrome-dim);
+      color: color-mix(in srgb, currentColor 72%, transparent);
       font: 600 10.5px system-ui;
       line-height: 1.25;
       text-align: center;
@@ -84,8 +88,8 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
       line-height: 1;
     }
     .th__opt:hover:not(.th__opt--on) {
-      background: rgba(255, 255, 255, 0.07);
-      color: var(--kg-chrome-ink);
+      background: color-mix(in srgb, currentColor 10%, transparent);
+      color: inherit;
     }
     /* Selected state carries a fill AND the brand tint, never colour alone. */
     .th__opt--on {
@@ -102,7 +106,7 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
       margin: 0;
     }
     .th__opt:has(.th__radio:focus-visible) {
-      outline: 2px solid var(--kg-chrome-ink);
+      outline: 2px solid currentColor;
       outline-offset: 1px;
     }
   `,

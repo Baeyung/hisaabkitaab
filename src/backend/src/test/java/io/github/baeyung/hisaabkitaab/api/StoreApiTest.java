@@ -152,7 +152,56 @@ class StoreApiTest extends ApiTest
         mvc.perform(get("/api/stores/" + store).with(as("3101000009")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.settings.menu.length()").value(0))
-                .andExpect(jsonPath("$.settings.hideChrome.length()").value(0));
+                .andExpect(jsonPath("$.settings.hideChrome.length()").value(0))
+                .andExpect(jsonPath("$.settings.easyMode").value(false));
+    }
+
+    /**
+     * An arrangement written before the board existed has no {@code easyMode} in it, and a
+     * shop that was working yesterday must not change how it navigates because the app
+     * shipped. Absent reads as off — the sidebar, which is what those shops already had.
+     */
+    @Test
+    void settingsWithoutEasyModeReadAsSidebar() throws Exception
+    {
+        signup("3101000014");
+        String store = createStore("3101000014", "Rana Cloth");
+
+        mvc.perform(put(api(store, "/settings")).with(as("3101000014"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"menu\":[{\"key\":\"nav.ledger\"}],\"hideChrome\":[]}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/stores/" + store).with(as("3101000014")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.settings.easyMode").value(false));
+    }
+
+    /**
+     * How a shop navigates is the shop's, like the rest of the arrangement: everyone working
+     * in it gets the board, not just the owner who switched it on.
+     */
+    @Test
+    void easyModeRoundTripsAndReachesSharedUsers() throws Exception
+    {
+        signup("3101000015");
+        signup("3101000016");
+        String store = createStore("3101000015", "Rana Cloth");
+
+        mvc.perform(post(api(store, "/members")).with(as("3101000015"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"u3101000016@x.com\",\"role\":\"EDITOR\"}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(put(api(store, "/settings")).with(as("3101000015"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"menu\":[],\"hideChrome\":[],\"easyMode\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.settings.easyMode").value(true));
+
+        mvc.perform(get("/api/stores/" + store).with(as("3101000016")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.settings.easyMode").value(true));
     }
 
     /**

@@ -26,13 +26,20 @@ import jakarta.validation.constraints.Size;
  *                   next month's new screen.
  * @param hideChrome the sidebar-foot controls this shop has switched off. Empty means all of
  *                   them are shown, which is what a shop that has never been arranged gets.
+ * @param easyMode   whether this shop navigates from the board — one screen of big buttons
+ *                   instead of the sidebar. Lives here rather than on the user because it is
+ *                   the shop's own way of working: the counter tablet everybody shares is
+ *                   what it is for. Presentation only, like everything else here — every
+ *                   route stays exactly as reachable, and the board is built from the same
+ *                   arranged {@code menu} above, so hiding an entry hides its button too.
  */
 public record StoreSettings(
         @Size(max = 64) List<@Valid MenuSetting> menu,
-        Set<ChromeItem> hideChrome)
+        Set<ChromeItem> hideChrome,
+        boolean easyMode)
 {
     /** What a shop with a null {@code settings} column means: the built-in menu, nothing hidden. */
-    public static final StoreSettings EMPTY = new StoreSettings(List.of(), EnumSet.noneOf(ChromeItem.class));
+    public static final StoreSettings EMPTY = new StoreSettings(List.of(), EnumSet.noneOf(ChromeItem.class), false);
 
     /**
      * Null-safe by construction, so nothing downstream — the converter, the client, a future

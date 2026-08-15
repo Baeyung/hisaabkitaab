@@ -145,6 +145,19 @@
   color: var(--kg-muted);
   max-width: 30ch;
 }
+/* The one thing about easy mode that has to be said before it is switched on, not
+   found out afterwards. Set apart from the description above so it reads as a
+   caveat rather than as more instructions — same treatment it gets on the Menu
+   screen, which has two of its own. */
+.sec__note {
+  margin: 4px 0 0;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--kg-line-strong);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-faint);
+  max-width: 46ch;
+}
 .sec__fields {
   display: flex;
   flex-direction: column;
@@ -450,7 +463,8 @@
     gap: 12px;
     padding: 22px 0;
   }
-  .sec__desc {
+  .sec__desc,
+  .sec__note {
     max-width: none;
   }
   .set__foot {

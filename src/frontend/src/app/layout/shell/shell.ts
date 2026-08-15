@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -14,7 +13,8 @@ import { StoreService } from '../../core/store/store.service';
 import { PlanService } from '../../core/plan/plan.service';
 import { PlanNotice } from '../../shared/plan-notice/plan-notice';
 import { ChromeItem } from '../../core/store/store.models';
-import { NavLeaf, mergeMenu, navFor, visible } from './nav';
+import { NavIconMark } from '../../shared/nav-icon/nav-icon';
+import { NavLeaf, arranged } from './nav';
 
 /**
  * One "used of allowed" line on the plan strip: the numbers as words, and the same numbers
@@ -32,7 +32,7 @@ function gauge(key: TranslationKey, used: number, max: number) {
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, BrandMark, LanguageToggle, ThemeToggle, InstallButton, PrintDetailsDialog, ConversionSlip, PlanNotice],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, BrandMark, LanguageToggle, ThemeToggle, InstallButton, PrintDetailsDialog, ConversionSlip, PlanNotice, NavIconMark],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
   host: { '(document:keydown.escape)': 'closeOverlay()' },
@@ -52,8 +52,23 @@ export class Shell {
    * owner saves one, since that replaces the cached store this reads from.
    */
   protected readonly nav = computed(() =>
-    visible(mergeMenu(navFor(this.stores.role()), this.stores.current()?.settings?.menu)),
+    arranged(this.stores.role(), this.stores.current()?.settings?.menu),
   );
+
+  /**
+   * Whether this shop navigates from the board instead of the sidebar.
+   *
+   * In easy mode the frame gets out of the way entirely: no sidebar, no hamburger, and a
+   * Menu button in its place that goes home to the board. Half a sidebar behind a toggle
+   * would leave two menus disagreeing about which one you were meant to be using, and the
+   * board carries the foot's controls itself.
+   *
+   * The plan strip is the one thing that does not move across, deliberately. It is standing
+   * state, not a control, and the part of it that ever needs acting on — the shop running
+   * past what the plan covers — is `<app-plan-notice>` below, which sits outside `<main>`
+   * and shows on the board like it does everywhere else.
+   */
+  protected readonly easy = computed(() => this.stores.current()?.settings?.easyMode === true);
 
   /**
    * Which of the foot's controls this shop shows. The language switcher is deliberately not

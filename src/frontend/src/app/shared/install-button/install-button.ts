@@ -54,29 +54,30 @@ import { InstallService } from '../../core/pwa/install.service';
       flex-direction: column;
       gap: 7px;
     }
-    /* Matches .logout in shell.css so the foot reads as one group of controls. */
+    /* Matches .logout in shell.css so the sidebar foot reads as one group of controls,
+       and mixed off currentColor so the same button also works on the board's paper foot. */
     .ib__btn {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 7px;
       min-height: 40px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
       border-radius: 8px;
       background: transparent;
-      color: var(--kg-chrome-ink);
+      color: inherit;
       cursor: pointer;
       font: 600 13px system-ui;
     }
     .ib__btn:hover {
-      background: rgba(255, 255, 255, 0.06);
+      background: color-mix(in srgb, currentColor 8%, transparent);
     }
     .ib__steps {
       margin: 0;
       padding: 8px 10px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--kg-chrome-dim);
+      background: color-mix(in srgb, currentColor 8%, transparent);
+      color: color-mix(in srgb, currentColor 78%, transparent);
       font: 400 12px/1.5 system-ui;
     }
   `,

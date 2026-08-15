@@ -1,7 +1,8 @@
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { MenuSetting, StoreRole } from '../../core/store/store.models';
+import { NavIcon } from '../../shared/nav-icon/nav-icon';
 
-export type NavIcon = 'dashboard' | 'cashbook' | 'ledger' | 'entry' | 'stock' | 'bill' | 'settings';
+export type { NavIcon };
 
 export interface NavLeaf {
   key: TranslationKey;
@@ -215,4 +216,16 @@ export function visible(items: readonly NavItem[]): NavItem[] {
     const children = item.children.filter((child) => !child.hidden);
     return children.length ? [{ ...item, children }] : [];
   });
+}
+
+/**
+ * The finished menu for one person in one shop: role first, then the shop's arrangement,
+ * then drop what it hides. The three steps always run in that order and always all three, so
+ * they are spelled out once here rather than at each of the two screens that draw a menu.
+ *
+ * Both the sidebar and the board start from this, which is what stops them drifting: an owner
+ * arranging the menu is arranging both, and neither can offer a screen the other refuses.
+ */
+export function arranged(role: StoreRole | null, saved?: readonly MenuSetting[]): NavItem[] {
+  return visible(mergeMenu(navFor(role), saved));
 }
