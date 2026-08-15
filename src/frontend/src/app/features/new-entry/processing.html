@@ -134,6 +134,7 @@
             [unit]="line.unit"
             [stockUnit]="stockUnit(line.name)"
             [factor]="line.factor"
+            direction="out"
             (editRate)="askRawUnit(line.key, true)"
           />
         </div>
@@ -293,6 +294,7 @@
             [unit]="line.unit"
             [stockUnit]="stockUnit(line.name)"
             [factor]="line.factor"
+            direction="out"
             (editRate)="askProcUnit(line.key, true)"
           />
         </div>
@@ -432,6 +434,7 @@
           [unit]="outputUnit()"
           [stockUnit]="stockUnit(outputName())"
           [factor]="outputFactor()"
+          direction="in"
           (editRate)="askOutputUnit(true)"
         />
       </div>

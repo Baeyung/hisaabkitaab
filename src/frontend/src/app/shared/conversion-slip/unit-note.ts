@@ -23,7 +23,7 @@ import { convertQty } from '../../core/units/units';
         class="uconv"
         (click)="editRate.emit()"
         [attr.aria-label]="
-          locale.t('units.note.aria', {
+          locale.t(direction() === 'out' ? 'units.note.ariaOff' : 'units.note.aria', {
             entered: locale.qtyUnit(qty() ?? 0, unit()),
             shelf: locale.qtyUnit(shelfQty(), stockUnit() ?? ''),
           })
@@ -44,7 +44,9 @@ import { convertQty } from '../../core/units/units';
           <path d="M4 8h15l-4-4M20 16H5l4 4" />
         </svg>
         <span class="uconv__fig">{{ locale.qtyUnit(shelfQty(), stockUnit() ?? '') }}</span>
-        <span class="uconv__tail">{{ locale.t('units.note.onShelf') }}</span>
+        <span class="uconv__tail">{{
+          locale.t(direction() === 'out' ? 'units.note.offShelf' : 'units.note.onShelf')
+        }}</span>
       </button>
     }
   `,
@@ -106,6 +108,8 @@ export class UnitNote {
   readonly stockUnit = input<string | null>(null);
   /** The agreed rate from {@link unit} to {@link stockUnit}; null when nothing was converted. */
   readonly factor = input<number | null>(null);
+  /** Which way this row moves stock: 'in' adds to the shelf, 'out' takes from it. */
+  readonly direction = input<'in' | 'out'>('in');
 
   /** Reopen the slip for this row, to correct the rate. */
   readonly editRate = output<void>();

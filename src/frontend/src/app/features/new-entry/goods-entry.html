@@ -221,6 +221,7 @@
               [unit]="line.unit"
               [stockUnit]="lineUnit(line.design)"
               [factor]="line.factor"
+              [direction]="stockFlow()"
               (editRate)="askUnit(line.key, true)"
             />
           </div>
