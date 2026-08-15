@@ -1,5 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { LocaleService } from '../core/i18n/locale.service';
+import { TranslationKey } from '../core/i18n/translations/en';
 import { BillDetail } from '../core/store/bill.models';
 
 export interface ItemMovement {
@@ -10,11 +11,11 @@ export interface ItemMovement {
 }
 
 /**
- * Roll a run of bills up into one line per item — how much of it left the shelf
- * and what it brought in. Keyed by item *and* unit: the same item sold by bag
- * and by kg can't have its quantities added, so those stay separate rows.
- * Biggest earner first. A line with no quantity (a flat-priced entry) still
- * counts towards the amount.
+ * Roll a run of documents up into one line per item — how much of it crossed the
+ * shelf and what that came to. Keyed by item *and* unit: the same item moved by
+ * bag and by kg can't have its quantities added, so those stay separate rows.
+ * Biggest first. A line with no quantity (a flat-priced entry) still counts
+ * towards the amount.
  */
 export function sumItems(bills: BillDetail[]): ItemMovement[] {
   const byItem = new Map<string, ItemMovement>();
@@ -32,18 +33,21 @@ export function sumItems(bills: BillDetail[]): ItemMovement[] {
 }
 
 /**
- * Print-only "items sold" table closing a cashbook / bill report: what moved
- * across every bill in the printed range, so the shopkeeper reads the stock
- * story without paging through each bill. Hidden on screen (:host), like
+ * Print-only "items sold" table closing a cashbook / bill / purchase report: what
+ * moved across every document in the printed range, so the shopkeeper reads the
+ * stock story without paging through each one. Hidden on screen (:host), like
  * <app-print-header>. Kept off a page boundary where it fits, and its header
  * repeats if it doesn't.
+ *
+ * `title` says which way the goods went — sold, or bought — and defaults to the
+ * sale wording every caller that predates purchases means.
  */
 @Component({
   selector: 'app-print-items-summary',
   template: `
     @if (items().length) {
       <section class="pi-wrap">
-        <h2 class="pi-title">{{ locale.t('print.items.title') }}</h2>
+        <h2 class="pi-title">{{ locale.t(title()) }}</h2>
         <table class="rm-tbl">
           <thead>
             <tr>
@@ -94,6 +98,7 @@ export function sumItems(bills: BillDetail[]): ItemMovement[] {
 })
 export class PrintItemsSummary {
   readonly bills = input.required<BillDetail[]>();
+  readonly title = input<TranslationKey>('print.items.title');
 
   protected readonly locale = inject(LocaleService);
   protected readonly items = computed(() => sumItems(this.bills()));

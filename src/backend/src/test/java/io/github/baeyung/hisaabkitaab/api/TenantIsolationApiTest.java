@@ -150,7 +150,8 @@ class TenantIsolationApiTest extends ApiTest
 
         for (String path : new String[] {
                 "/parties", "/store-items", "/ledger", "/ledger/expense-categories", "/inventory",
-                "/cashbook", "/dashboard", "/transactions/bills", "/expense-categories", "/opening-cash" })
+                "/cashbook", "/dashboard", "/transactions/bills", "/transactions/purchases",
+                "/expense-categories", "/opening-cash" })
         {
             mvc.perform(get(api(ownersStore, path)).with(as(INTRUDER)))
                     .andExpect(status().isNotFound());

@@ -17,13 +17,14 @@ export function isEditableEntry(event: TransactionEventKind): boolean {
 /** The screen each event that has a record of its own opens read-only. */
 const DETAIL_SCREEN: Partial<Record<TransactionEventKind, string>> = {
   SALE: 'bill-management',
+  PURCHASE: 'purchases',
   PROCESSING: 'processing',
 };
 
 /**
- * Route segments to an entry's own page — the bill for a sale, the batch for a processed-
- * goods entry — or null for an event that has none (a receipt is only ever a ledger row).
- * Store-relative, like {@link entryEditLink}.
+ * Route segments to an entry's own page — the bill for a sale, the supplier's record for
+ * a purchase, the batch for a processed-goods entry — or null for an event that has none
+ * (a receipt is only ever a ledger row). Store-relative, like {@link entryEditLink}.
  */
 export function entryDetailLink(
   event: TransactionEventKind,

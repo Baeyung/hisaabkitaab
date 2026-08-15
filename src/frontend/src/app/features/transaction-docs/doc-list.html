@@ -1,15 +1,17 @@
 <section class="rm-page">
-  <!-- Report layout only — each invoice carries its own letterhead. -->
+  <!-- Report layout only — each document carries its own letterhead. -->
   @if (reportMode()) {
     <app-print-header />
     <p class="rm-sub rm-printonly">{{ locale.t('cashbook.print.period', { from: filters.from(), to: filters.to() }) }}</p>
   }
   <header class="rm-head rm-noprint">
     <div>
-      <h1 class="rm-title">{{ locale.t('nav.billManagement') }}</h1>
-      <p class="rm-sub">{{ locale.t('bill.subtitle') }}</p>
+      <h1 class="rm-title">{{ locale.t(config().labels.title) }}</h1>
+      <p class="rm-sub">{{ locale.t(config().labels.subtitle) }}</p>
     </div>
-    <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{ locale.t('bill.new') }}</a>
+    @if (stores.canEdit()) {
+      <a class="rm-btn rm-btn--primary" [routerLink]="stores.link(config().entryRoute)">{{ locale.t(config().labels.new) }}</a>
+    }
   </header>
 
   @if (loading()) {
@@ -20,17 +22,19 @@
     </div>
   } @else if (loadError()) {
     <div class="rm-state">
-      <p role="alert" class="rm-alert">{{ locale.t('bill.loadError') }}</p>
+      <p role="alert" class="rm-alert">{{ locale.t(config().labels.loadError) }}</p>
       <button type="button" class="rm-btn rm-btn--ghost" (click)="load({ partyId: filters.party(), itemId: filters.item() })">{{ locale.t('settings.general.retry') }}</button>
     </div>
   } @else if ((bills()?.length ?? 0) === 0 && !hasServerFilter()) {
     <div class="rm-state">
-      <h2 class="rm-state__title">{{ locale.t('bill.empty.title') }}</h2>
-      <p class="rm-state__body">{{ locale.t('bill.empty.body') }}</p>
-      <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{ locale.t('bill.empty.cta') }}</a>
+      <h2 class="rm-state__title">{{ locale.t(config().labels.emptyTitle) }}</h2>
+      <p class="rm-state__body">{{ locale.t(config().labels.emptyBody) }}</p>
+      @if (stores.canEdit()) {
+        <a class="rm-btn rm-btn--primary" [routerLink]="stores.link(config().entryRoute)">{{ locale.t(config().labels.emptyCta) }}</a>
+      }
     </div>
   } @else {
-    <!-- The list itself prints only in report layout; invoices print instead. -->
+    <!-- The list itself prints only in report layout; the documents print instead. -->
     <div class="rm-card" [class.rm-noprint]="!reportMode()">
       <div class="rm-toolbar rm-toolbar--filters rm-noprint">
         <input
@@ -39,41 +43,41 @@
           [value]="filters.q()"
           (input)="filters.replace({ q: searchInput.value })"
           #searchInput
-          [attr.placeholder]="locale.t('bill.search.ph')"
-          [attr.aria-label]="locale.t('bill.search.ph')"
+          [attr.placeholder]="locale.t(config().labels.searchPh)"
+          [attr.aria-label]="locale.t(config().labels.searchPh)"
         />
         <div class="rm-field">
-          <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
+          <span class="rm-field__label">{{ locale.t(config().labels.filterFrom) }}</span>
           <app-date-field
             [value]="filters.from()"
             (valueChange)="filters.set('from', $event)"
-            [ariaLabel]="locale.t('bill.filter.from')"
+            [ariaLabel]="locale.t(config().labels.filterFrom)"
           />
         </div>
         <div class="rm-field">
-          <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
+          <span class="rm-field__label">{{ locale.t(config().labels.filterTo) }}</span>
           <app-date-field
             [value]="filters.to()"
             (valueChange)="filters.set('to', $event)"
-            [ariaLabel]="locale.t('bill.filter.to')"
+            [ariaLabel]="locale.t(config().labels.filterTo)"
           />
         </div>
         <label class="rm-field">
-          <span class="rm-field__label">{{ locale.t('bill.filter.party') }}</span>
+          <span class="rm-field__label">{{ locale.t(config().labels.filterParty) }}</span>
           <app-select
             [options]="partyOptions()"
             [value]="filters.party()"
             (valueChange)="filters.set('party', $event)"
-            [ariaLabel]="locale.t('bill.filter.party')"
+            [ariaLabel]="locale.t(config().labels.filterParty)"
           />
         </label>
         <label class="rm-field">
-          <span class="rm-field__label">{{ locale.t('bill.filter.item') }}</span>
+          <span class="rm-field__label">{{ locale.t(config().labels.filterItem) }}</span>
           <app-select
             [options]="itemOptions()"
             [value]="filters.item()"
             (valueChange)="filters.set('item', $event)"
-            [ariaLabel]="locale.t('bill.filter.item')"
+            [ariaLabel]="locale.t(config().labels.filterItem)"
           />
         </label>
         <button
@@ -85,11 +89,11 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
           </svg>
-          {{ locale.t('bill.printAll') }}
+          {{ locale.t(config().labels.printAll) }}
         </button>
       </div>
       @if (printError()) {
-        <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t('bill.printError') }}</p>
+        <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t(config().labels.printError) }}</p>
       }
       @if (deleteError(); as key) {
         <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t(key) }}</p>
@@ -98,23 +102,23 @@
         <table class="rm-tbl">
           <thead>
             <tr>
-              <th scope="col">{{ locale.t('bill.col.number') }}</th>
-              <th scope="col">{{ locale.t('bill.col.date') }}</th>
-              <th scope="col">{{ locale.t('bill.col.party') }}</th>
-              <th scope="col" class="end">{{ locale.t('bill.col.amount') }}</th>
-              <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t('bill.col.actions') }}</span></th>
+              <th scope="col">{{ locale.t(config().labels.colNumber) }}</th>
+              <th scope="col">{{ locale.t(config().labels.colDate) }}</th>
+              <th scope="col">{{ locale.t(config().labels.colParty) }}</th>
+              <th scope="col" class="end">{{ locale.t(config().labels.colAmount) }}</th>
+              <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t(config().labels.colActions) }}</span></th>
             </tr>
           </thead>
           <tbody>
             @for (bill of filtered(); track bill.id) {
               <tr class="rm-rowlink" (click)="open(bill.id)">
                 <td class="rm-cell-head">
-                  <a [routerLink]="stores.link('bill-management', bill.id)" class="rm-tbl__name num">
+                  <a [routerLink]="docLink(bill.id)" class="rm-tbl__name num">
                     {{ bill.billNumber || '—' }}
                   </a>
                 </td>
                 <td class="num">{{ bill.date }}</td>
-                <td [attr.data-label]="locale.t('bill.col.party')">{{ bill.partyName || locale.t('bill.cashSale') }}</td>
+                <td [attr.data-label]="locale.t(config().labels.colParty)">{{ bill.partyName || locale.t(config().invoice.noParty) }}</td>
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(bill.amount) }}</td>
                 <td class="end rm-noprint">
                   @if (stores.canEdit()) {
@@ -122,7 +126,7 @@
                     type="button"
                     class="rm-iconbtn rm-iconbtn--danger"
                     (click)="$event.stopPropagation(); askDelete(bill.id)"
-                    [attr.aria-label]="locale.t('bill.deleteAction') + ' — ' + (bill.billNumber || locale.t('bill.cashSale'))"
+                    [attr.aria-label]="locale.t(config().labels.deleteAction) + ' — ' + (bill.billNumber || locale.t(config().invoice.noParty))"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                       <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
@@ -149,10 +153,10 @@
                 <tr class="rm-subrow rm-subrow--tot">
                   <td></td>
                   <td colspan="3" class="rm-subrow__tot">
-                    <span>{{ locale.t('bill.detail.goodsTotal') }} <b class="num">{{ locale.money(detail.goodsTotal) }}</b></span>
-                    <span>{{ locale.t('bill.detail.cashReceived') }} <b class="num amt--in">{{ locale.money(detail.cashReceived) }}</b></span>
+                    <span>{{ locale.t(config().invoice.goodsTotal) }} <b class="num">{{ locale.money(detail.goodsTotal) }}</b></span>
+                    <span>{{ locale.t(config().invoice.cash) }} <b class="num amt--in">{{ locale.money(detail.cashReceived) }}</b></span>
                     @if (detail.outstanding.direction !== 'SETTLED') {
-                      <span>{{ locale.t(detail.partyName ? 'bill.detail.outstanding' : 'bill.detail.discount') }} <b class="num">{{ locale.money(detail.outstanding.amount) }}</b></span>
+                      <span>{{ locale.t(detail.partyName ? config().invoice.outstanding : config().invoice.discount) }} <b class="num">{{ locale.money(detail.outstanding.amount) }}</b></span>
                     }
                   </td>
                   <td class="rm-noprint"></td>
@@ -164,14 +168,14 @@
                   <td colspan="5">
                     <div class="rm-confirm">
                       <span class="rm-confirm__msg">
-                        {{ locale.t('bill.delete.confirm', { name: bill.billNumber || locale.t('bill.cashSale') }) }}
+                        {{ locale.t(config().labels.deleteConfirm, { name: bill.billNumber || locale.t(config().invoice.noParty) }) }}
                       </span>
                       <span class="rm-confirm__actions">
                         <button type="button" class="rm-btn rm-btn--ghost rm-btn--sm" (click)="cancelDelete()">
-                          {{ locale.t('bill.delete.cancel') }}
+                          {{ locale.t(config().labels.deleteCancel) }}
                         </button>
                         <button type="button" class="rm-btn rm-btn--danger rm-btn--sm" (click)="confirmDelete(bill.id)" [disabled]="deleting()">
-                          {{ locale.t('bill.delete.confirmBtn') }}
+                          {{ locale.t(config().labels.deleteConfirmBtn) }}
                         </button>
                       </span>
                     </div>
@@ -180,7 +184,7 @@
               }
             } @empty {
               <tr>
-                <td colspan="5">{{ locale.t('bill.search.none') }}</td>
+                <td colspan="5">{{ locale.t(config().labels.searchNone) }}</td>
               </tr>
             }
           </tbody>
@@ -190,24 +194,24 @@
         <div class="rm-printonly">
           <div class="rm-foot">
             <span>
-              {{ locale.t('bill.printTotals.bills') }}
+              {{ locale.t(config().labels.printCount) }}
               <strong class="num">{{ locale.formatNumber(printTotals().count) }}</strong>
             </span>
             <span>
-              {{ locale.t('bill.printTotals.revenue') }}
+              {{ locale.t(config().labels.printTotal) }}
               <strong class="num">{{ locale.money(printTotals().revenue) }}</strong>
             </span>
             <span>
-              {{ locale.t('bill.detail.cashReceived') }}
+              {{ locale.t(config().invoice.cash) }}
               <strong class="num amt--in">{{ locale.money(printTotals().cash) }}</strong>
             </span>
             <span>
-              {{ locale.t('bill.detail.outstanding') }}
+              {{ locale.t(config().invoice.outstanding) }}
               <strong class="num">{{ locale.money(printTotals().khata) }}</strong>
             </span>
             @if (printTotals().discount) {
               <span>
-                {{ locale.t('bill.detail.discount') }}
+                {{ locale.t(config().invoice.discount) }}
                 <strong class="num">{{ locale.money(printTotals().discount) }}</strong>
               </span>
             }
@@ -216,17 +220,17 @@
       }
     </div>
     @if (reportMode()) {
-      <app-print-items-summary [bills]="printBills()" />
+      <app-print-items-summary [bills]="printBills()" [title]="config().labels.printItems" />
     }
   }
 
-  <!-- Print-only: one invoice per filtered bill, each on its own page. -->
+  <!-- Print-only: one document per filtered row, each on its own page. -->
   @if (!reportMode()) {
     <div class="rm-printonly">
       @for (b of printBills(); track b.id) {
         <div class="rm-print-invoice">
           <app-print-header />
-          <app-bill-invoice [bill]="b" />
+          <app-bill-invoice [bill]="b" [labels]="config().invoice" />
         </div>
       }
     </div>

@@ -109,6 +109,8 @@ export const ur: Record<TranslationKey, string> = {
   'nav.payment': 'ادائیگی',
   'nav.inventory': 'اسٹاک',
   'nav.billManagement': 'بل مینجمنٹ',
+  // 'nav.purchase' (خرید) وہ اسکرین ہے جو ایک خرید درج کرتی ہے؛ یہ درج شدہ خریداری کی فہرست ہے۔
+  'nav.purchases': 'خریداری',
   'nav.settings': 'ترتیبات',
   'nav.settings.general': 'عام',
   'nav.settings.users': 'صارفین',
@@ -612,6 +614,7 @@ export const ur: Record<TranslationKey, string> = {
   'entry.delete.confirmBtn': 'حذف کریں',
   'entry.delete.error': 'اندراج حذف نہیں ہو سکا۔ دوبارہ کوشش کریں۔',
   'print.items.title': 'اس مدت میں فروخت ہونے والے آئٹمز',
+  'print.items.bought': 'اس مدت میں خریدے گئے آئٹمز',
   'whatsapp.send': 'واٹس ایپ پر بھیجیں',
   'whatsapp.sending': 'بھیجا جا رہا ہے…',
   'whatsapp.sent': 'بھیج دیا',
@@ -632,6 +635,7 @@ export const ur: Record<TranslationKey, string> = {
   'whatsapp.noQuota': 'اس مہینے کے واٹس ایپ پیغامات آپ استعمال کر چکے ہیں',
   'whatsapp.doc.statement': 'کھاتہ گوشوارہ',
   'whatsapp.doc.bill': 'بل',
+  'whatsapp.doc.purchase': 'خرید کا ریکارڈ',
   'whatsapp.doc.batch': 'پروسیسنگ بیچ',
   'whatsapp.doc.cashbook': 'روزنامچہ',
   'whatsapp.doc.dashboard': 'دکان کا خلاصہ',
@@ -844,6 +848,40 @@ export const ur: Record<TranslationKey, string> = {
   'bill.detail.empty': 'اس بل میں کوئی آئٹم نہیں۔',
   'bill.detail.loadError': 'یہ بل لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔',
   'bill.detail.notFound': 'یہ بل نہیں ملا۔',
+
+  // خریداری کی فہرست — بل کی اسکرینوں کا خریدنے کی طرف کا آئینہ۔ صرف وہ الفاظ یہاں ہیں
+  // جو مختلف پڑھے جاتے ہیں؛ جو کالم اور فلٹر بل جیسے ہی ہیں وہ اوپر کی `bill.*` کنجیاں
+  // ہی استعمال کرتے ہیں۔
+  'purchases.subtitle': 'ہر خرید، آنے والے مال کے ریکارڈ کی صورت میں۔',
+  'purchases.new': 'نئی خرید',
+  'purchases.printError': 'پرنٹ کے لیے خریداری لوڈ نہیں ہو سکی۔ دوبارہ کوشش کریں۔',
+  'purchases.printLayout.body':
+    'ہر خرید الگ صفحے پر پرنٹ کریں، یا سب کو ایک رپورٹ میں آئٹمز کی تفصیل کے ساتھ؟',
+  'purchases.printLayout.records': 'الگ الگ ریکارڈ',
+  'purchases.printTotals.count': 'خریداری',
+  'purchases.printTotals.total': 'کل خرید',
+  'purchases.search.ph': 'بل نمبر یا سپلائر سے تلاش کریں…',
+  'purchases.search.none': 'تلاش سے کوئی خرید نہیں ملی۔',
+  'purchases.filter.supplier': 'سپلائر',
+  'purchases.filter.allSuppliers': 'تمام سپلائرز',
+  'purchases.col.supplier': 'سپلائر',
+  'purchases.delete.confirm':
+    'خرید {{name}} حذف کریں؟ اس سے خرید اور اس کے آئٹمز مستقل طور پر حذف ہو جائیں گے، اور سپلائر کے کھاتے، ادا شدہ نقد اور اسٹاک پر اس کا اثر ختم ہو جائے گا۔',
+  'purchases.delete.error': 'یہ خرید حذف نہیں ہو سکی۔ دوبارہ کوشش کریں۔',
+  'purchases.cashPurchase': 'نقد خرید',
+  'purchases.empty.title': 'ابھی کوئی خرید نہیں',
+  'purchases.empty.body': 'خرید درج کریں، وہ یہاں نظر آئے گی۔',
+  'purchases.empty.cta': 'نئی خرید',
+  'purchases.loadError': 'خریداری لوڈ نہیں ہو سکی۔ دوبارہ کوشش کریں۔',
+  'purchases.detail.boughtFrom': 'از',
+  // نقد باہر، اندر نہیں — 'bill.detail.cashReceived' کا آئینہ۔
+  'purchases.detail.cashPaid': 'نقد ادا',
+  'purchases.detail.outstanding': 'کھاتے میں',
+  // نقد خرید جس کی پوری ادائیگی نہ ہوئی: سپلائر کی دی ہوئی رعایت۔
+  'purchases.detail.discount': 'رعایت',
+  'purchases.detail.empty': 'اس خرید میں کوئی آئٹم نہیں۔',
+  'purchases.detail.loadError': 'یہ خرید لوڈ نہیں ہو سکی۔ دوبارہ کوشش کریں۔',
+  'purchases.detail.notFound': 'یہ خرید نہیں ملی۔',
 
   'auto.SALE': 'فروخت',
   'auto.SALE.party': '{{party}} کو فروخت',

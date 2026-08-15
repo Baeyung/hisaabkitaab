@@ -107,6 +107,9 @@ export const en = {
   'nav.payment': 'Payment',
   'nav.inventory': 'Inventory',
   'nav.billManagement': 'Bill Management',
+  // The list of purchases made, as against 'nav.purchase', the screen that records one —
+  // the same split the two processed-goods entries above make.
+  'nav.purchases': 'Purchases',
   'nav.settings': 'Store Settings',
   'nav.settings.general': 'General',
   'nav.settings.users': 'Manage Users',
@@ -627,6 +630,7 @@ export const en = {
   'entry.delete.confirmBtn': 'Delete',
   'entry.delete.error': "Couldn't delete this entry. Please try again.",
   'print.items.title': 'Items sold in this period',
+  'print.items.bought': 'Items bought in this period',
   'whatsapp.send': 'Send on WhatsApp',
   'whatsapp.sending': 'Sending…',
   'whatsapp.sent': 'Sent',
@@ -647,6 +651,7 @@ export const en = {
   'whatsapp.noQuota': "You've used all your plan's WhatsApp messages this month",
   'whatsapp.doc.statement': 'Khata statement',
   'whatsapp.doc.bill': 'Bill',
+  'whatsapp.doc.purchase': 'Purchase record',
   'whatsapp.doc.batch': 'Processing batch',
   'whatsapp.doc.cashbook': 'Cashbook',
   'whatsapp.doc.dashboard': 'Shop summary',
@@ -865,6 +870,40 @@ export const en = {
   'bill.detail.empty': 'No items on this bill.',
   'bill.detail.loadError': "Couldn't load this bill. Please try again.",
   'bill.detail.notFound': 'This bill was not found.',
+
+  // The purchase list, the bill screens' mirror on the buying side. Only what reads
+  // differently is here — the columns and filters a purchase shares with a bill reuse
+  // the `bill.*` keys above rather than saying "Date" twice.
+  'purchases.subtitle': 'Every purchase, saved as a record of what came in.',
+  'purchases.new': 'New purchase',
+  'purchases.printError': "Couldn't load purchases to print. Please try again.",
+  'purchases.printLayout.body':
+    'Print each purchase on its own page, or the whole list as one report?',
+  'purchases.printLayout.records': 'Separate records',
+  'purchases.printTotals.count': 'Purchases',
+  'purchases.printTotals.total': 'Total purchases',
+  'purchases.search.ph': 'Search by bill no. or supplier…',
+  'purchases.search.none': 'No purchases match your search.',
+  'purchases.filter.supplier': 'Supplier',
+  'purchases.filter.allSuppliers': 'All suppliers',
+  'purchases.col.supplier': 'Supplier',
+  'purchases.delete.confirm':
+    'Delete purchase {{name}}? This permanently removes the purchase and its items, and undoes its effect on the supplier khata, cash paid, and stock.',
+  'purchases.delete.error': "Couldn't delete this purchase. Please try again.",
+  'purchases.cashPurchase': 'Cash purchase',
+  'purchases.empty.title': 'No purchases yet',
+  'purchases.empty.body': 'Record a purchase and it shows up here.',
+  'purchases.empty.cta': 'New purchase',
+  'purchases.loadError': "Couldn't load your purchases. Please try again.",
+  'purchases.detail.boughtFrom': 'Bought from',
+  // Cash out, not in — the mirror of 'bill.detail.cashReceived'.
+  'purchases.detail.cashPaid': 'Cash paid',
+  'purchases.detail.outstanding': 'On khata',
+  // A cash purchase you paid less than in full for: a discount the supplier gave you.
+  'purchases.detail.discount': 'Discount',
+  'purchases.detail.empty': 'No items on this purchase.',
+  'purchases.detail.loadError': "Couldn't load this purchase. Please try again.",
+  'purchases.detail.notFound': 'This purchase was not found.',
 
   // Auto-worded rows: an entry saved without a note. `.party` variants are used
   // when the row carries a party name (see LocaleService.describe).

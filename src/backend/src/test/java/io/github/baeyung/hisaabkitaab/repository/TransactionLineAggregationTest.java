@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -130,9 +131,19 @@ class TransactionLineAggregationTest
         expense("Chai", 50.0, TODAY);
 
         List<TransactionLine> lines = transactionLineRepository.findExpenseLinesByStore(store.getId());
+        List<Double> values = lines.stream().map(TransactionLine::getValue).toList();
 
-        // Only the three EXPENSE cash lines, chronological — the SALE's CASH/IN is not one.
-        assertEquals(List.of(900.0, 1100.0, 50.0), lines.stream().map(TransactionLine::getValue).toList());
+        // Only the three EXPENSE cash lines — the SALE's CASH/IN and the RECEIPT's are not.
+        assertEquals(3, values.size());
+        assertEquals(Set.of(900.0, 1100.0, 50.0), Set.copyOf(values));
+        // Chronological across days: yesterday's bijli leads.
+        assertEquals(900.0, values.getFirst());
+        // The two saved today are deliberately not pinned against each other. They tie on
+        // eventDate, and `createdAt` is only as fine-grained as the clock that stamped
+        // them — saved back to back, they can land in the same tick, leaving the query's
+        // last resort `tl.id asc`, which is a random UUID. Asserting an order the query
+        // never promised makes this test fail on nothing but suite timing.
+        assertEquals(Set.of(1100.0, 50.0), Set.copyOf(values.subList(1, 3)));
     }
 
     @Test

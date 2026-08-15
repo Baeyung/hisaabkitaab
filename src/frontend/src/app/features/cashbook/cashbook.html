@@ -89,11 +89,11 @@
             </thead>
             <tbody>
               @for (row of cb.rows; track row.transactionId + row.occurredAt) {
-                <tr [class.rm-rowlink]="row.event === 'SALE'" (click)="row.event === 'SALE' && openBill(row.transactionId)">
+                <tr [class.rm-rowlink]="!!detailLink(row.event, row.transactionId)" (click)="openDetail(row.event, row.transactionId)">
                   <td class="num">{{ time(row.occurredAt) }}</td>
                   <td class="rm-cell-head">
-                    @if (row.event === 'SALE') {
-                      <a [routerLink]="stores.link('bill-management', row.transactionId)" (click)="$event.stopPropagation()" class="rm-tbl__name">{{ locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</a>
+                    @if (detailLink(row.event, row.transactionId); as link) {
+                      <a [routerLink]="link" (click)="$event.stopPropagation()" class="rm-tbl__name">{{ locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</a>
                     } @else {
                       <span class="rm-tbl__name">{{ locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</span>
                     }

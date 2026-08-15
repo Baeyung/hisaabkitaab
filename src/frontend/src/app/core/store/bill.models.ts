@@ -1,6 +1,14 @@
 import { Balance } from './balance.models';
 
-/** Mirrors the backend `dto/transaction` bill records (GET /api/transactions/bills). */
+/**
+ * Which goods document is being read, and the path segment it is read from:
+ * `bills` are SALEs, `purchases` are PURCHASEs. The two share every model below —
+ * a purchase is the same paper read from the other side, so `cashReceived` is the
+ * cash you paid out and `outstanding` is what you still owe.
+ */
+export type DocKind = 'bills' | 'purchases';
+
+/** Mirrors the backend `dto/transaction` bill records (GET /api/transactions/{kind}). */
 export interface BillSummary {
   id: string;
   billNumber: string | null;

@@ -1,4 +1,4 @@
-import { sumBills } from './bill-management';
+import { sumBills } from './doc-totals';
 import { BillDetail } from '../../core/store/bill.models';
 import { BalanceDirection } from '../../core/store/balance.models';
 
@@ -52,5 +52,33 @@ describe('sumBills', () => {
 
   it('is zero for an empty run', () => {
     expect(sumBills([])).toEqual({ count: 0, revenue: 0, cash: 0, khata: 0, discount: 0 });
+  });
+
+  // A purchase run is the same arithmetic read from the other side: what is unpaid is
+  // money you owe, so it has to total positive there too.
+  it('totals an unpaid purchase run positively when owing runs the other way', () => {
+    const t = sumBills(
+      [
+        bill(800, 300, 'YOU_OWE_THEM', 500, 'Bilal Traders'),
+        bill(200, 200, 'SETTLED', 0, 'Bilal Traders'),
+      ],
+      'YOU_OWE_THEM',
+    );
+    expect(t).toEqual({ count: 2, revenue: 1000, cash: 500, khata: 500, discount: 0 });
+  });
+
+  it('nets an overpaid purchase off, and books a short-paid cash purchase to discount', () => {
+    const t = sumBills(
+      [
+        bill(800, 300, 'YOU_OWE_THEM', 500, 'Bilal Traders'),
+        // Paid the supplier more than the goods came to — they owe you the difference.
+        bill(500, 600, 'THEY_OWE_YOU', 100, 'Rafiq'),
+        // No supplier on it and short-paid: a discount you were given.
+        bill(300, 280, 'YOU_OWE_THEM', 20, null),
+      ],
+      'YOU_OWE_THEM',
+    );
+    expect(t.khata).toBe(400);
+    expect(t.discount).toBe(20);
   });
 });

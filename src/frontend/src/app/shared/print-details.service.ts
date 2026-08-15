@@ -66,7 +66,7 @@ export class PrintDetailsService {
     }
 
     if (withDetails) {
-      const results = await Promise.allSettled(saleIds.map((id) => this.api.getDetail(id)));
+      const results = await Promise.allSettled(saleIds.map((id) => this.api.getDetail('bills', id)));
       const map = new Map<string, BillDetail>();
       for (const r of results) {
         if (r.status === 'fulfilled') {

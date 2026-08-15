@@ -21,10 +21,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Bills, which are simply SALE transactions read back as invoices. Bill amounts
- * are recomputed as Σ(quantity × rate) over the STOCK lines — the same number
- * the entry screen showed — because a STOCK line's {@code value} only repeats
- * the transaction's cash amount.
+ * Goods documents: a transaction with stock lines read back as the paper it stands
+ * for — a SALE as the bill you handed the customer, a PURCHASE as the record of what
+ * a supplier delivered. Both sides answer the same questions (what moved, what cash
+ * changed hands, what is still owed), so they share one shape: {@code cashReceived}
+ * is cash paid out on a purchase, and {@code outstanding} runs the other way.
+ *
+ * Amounts are recomputed as Σ(quantity × rate) over the STOCK lines — the same number
+ * the entry screen showed — because a STOCK line's {@code value} only repeats the
+ * transaction's cash amount.
  */
 @Service
 @RequiredArgsConstructor
@@ -33,10 +38,10 @@ public class TransactionQueryService
 {
     private final TransactionRepository transactionRepository;
 
-    public List<BillSummaryResponse> listBills(String storeId, String partyId, String itemId)
+    public List<BillSummaryResponse> list(String storeId, TransactionEvent event, String partyId, String itemId)
     {
         return transactionRepository
-                .findBillsFiltered(storeId, TransactionEvent.SALE, blankToNull(partyId), blankToNull(itemId))
+                .findBillsFiltered(storeId, event, blankToNull(partyId), blankToNull(itemId))
                 .stream()
                 .map(transaction -> new BillSummaryResponse(
                         transaction.getId(),
@@ -48,22 +53,23 @@ public class TransactionQueryService
                 .toList();
     }
 
-    public BillDetailResponse getBillDetail(String storeId, String transactionId)
+    public BillDetailResponse getDetail(String storeId, TransactionEvent event, String transactionId)
     {
-        // Scoped by store id, and a non-SALE id is "not found" — bills are only ever sales.
+        // Scoped by store id, and an id of the wrong event is "not found" — a purchase is not
+        // a bill, so asking the bills endpoint for one gets the same answer as asking for junk.
         Transaction transaction = transactionRepository.findByIdAndStoreId(transactionId, storeId)
-                .filter(t -> t.getEvent() == TransactionEvent.SALE)
-                .orElseThrow(() -> ResourceNotFoundException.forEntity("Bill", transactionId));
+                .filter(t -> t.getEvent() == event)
+                .orElseThrow(() -> ResourceNotFoundException.forEntity(label(event), transactionId));
 
         return toBillDetail(transaction);
     }
 
     /**
-     * Details for many bills in one round-trip — the "print all bills" printout. Ids that aren't
-     * SALE bills in this store are silently dropped; the result keeps the caller's id order so the
-     * invoices print in the order the list showed them.
+     * Details for many documents in one round-trip — the "print all" printout. Ids that aren't
+     * this event's documents in this store are silently dropped; the result keeps the caller's
+     * id order so the pages print in the order the list showed them.
      */
-    public List<BillDetailResponse> getBillDetails(String storeId, List<String> transactionIds)
+    public List<BillDetailResponse> getDetails(String storeId, TransactionEvent event, List<String> transactionIds)
     {
         if (transactionIds == null || transactionIds.isEmpty())
         {
@@ -72,7 +78,7 @@ public class TransactionQueryService
 
         Map<String, Transaction> byId = transactionRepository.findByIdInAndStoreId(transactionIds, storeId)
                 .stream()
-                .filter(t -> t.getEvent() == TransactionEvent.SALE)
+                .filter(t -> t.getEvent() == event)
                 .collect(Collectors.toMap(Transaction::getId, t -> t));
 
         return transactionIds.stream()
@@ -80,6 +86,12 @@ public class TransactionQueryService
                 .filter(Objects::nonNull)
                 .map(this::toBillDetail)
                 .toList();
+    }
+
+    /** What a missing document is called in its 404 — "Bill not found" reads wrong for a purchase. */
+    private static String label(TransactionEvent event)
+    {
+        return event == TransactionEvent.PURCHASE ? "Purchase" : "Bill";
     }
 
     private BillDetailResponse toBillDetail(Transaction transaction)

@@ -66,6 +66,7 @@ export const NAV: NavItem[] = [
   { kind: 'link', key: 'nav.inventory', path: 'inventory', icon: 'stock' },
   { kind: 'link', key: 'nav.processedGoods', path: 'processing', icon: 'stock' },
   { kind: 'link', key: 'nav.billManagement', path: 'bill-management', icon: 'bill' },
+  { kind: 'link', key: 'nav.purchases', path: 'purchases', icon: 'bill' },
   {
     kind: 'group',
     key: 'nav.newEntry',

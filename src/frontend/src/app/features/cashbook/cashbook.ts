@@ -12,7 +12,7 @@ import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { DateField } from '../../shared/date-field/date-field';
-import { entryEditLink, isEditableEntry } from '../../shared/entry-route';
+import { entryDetailLink, entryEditLink, isEditableEntry } from '../../shared/entry-route';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
 
@@ -84,9 +84,21 @@ export class Cashbook {
     void this.printer.printWithDetails(saleIds);
   }
 
-  /** A sale row's transactionId is the bill's id — open its detail. */
-  openBill(transactionId: string): void {
-    void this.router.navigate(this.stores.link('bill-management', transactionId));
+  /**
+   * The row's own page, when it has one: the bill for a sale, the supplier's record for a
+   * purchase, the batch for a processed-goods entry. Null elsewhere, and the template
+   * leaves those rows unlinked.
+   */
+  protected detailLink(event: TransactionEventKind, transactionId: string): string[] | null {
+    const link = entryDetailLink(event, transactionId);
+    return link ? this.stores.link(...link) : null;
+  }
+
+  openDetail(event: TransactionEventKind, transactionId: string): void {
+    const link = this.detailLink(event, transactionId);
+    if (link) {
+      void this.router.navigate(link);
+    }
   }
 
   /** Open the entry's screen in edit mode, prefilled. */

@@ -1,11 +1,11 @@
 @if (bill(); as b) {
   <header class="rm-head">
     <div>
-      <h1 class="rm-title num">{{ b.billNumber || locale.t('nav.billManagement') }}</h1>
+      <h1 class="rm-title num">{{ b.billNumber || locale.t(labels().fallbackTitle) }}</h1>
       <p class="rm-sub num">{{ b.date }}</p>
       <p class="rm-billto">
-        <span class="rm-billto__label">{{ locale.t('bill.detail.billTo') }}</span>
-        <span class="rm-billto__name">{{ b.partyName || locale.t('bill.cashSale') }}</span>
+        <span class="rm-billto__label">{{ locale.t(labels().counterparty) }}</span>
+        <span class="rm-billto__name">{{ b.partyName || locale.t(labels().noParty) }}</span>
       </p>
     </div>
   </header>
@@ -13,17 +13,17 @@
   <div class="rm-card">
     @if (b.lines.length === 0) {
       <div class="rm-state" style="border: 0">
-        <p class="rm-state__body">{{ locale.t('bill.detail.empty') }}</p>
+        <p class="rm-state__body">{{ locale.t(labels().empty) }}</p>
       </div>
     } @else {
       <div class="rm-tablewrap">
         <table class="rm-tbl">
           <thead>
             <tr>
-              <th scope="col">{{ locale.t('bill.detail.col.item') }}</th>
-              <th scope="col" class="end">{{ locale.t('bill.detail.col.qty') }}</th>
-              <th scope="col" class="end">{{ locale.t('bill.detail.col.rate') }}</th>
-              <th scope="col" class="end">{{ locale.t('bill.detail.col.amount') }}</th>
+              <th scope="col">{{ locale.t(labels().colItem) }}</th>
+              <th scope="col" class="end">{{ locale.t(labels().colQty) }}</th>
+              <th scope="col" class="end">{{ locale.t(labels().colRate) }}</th>
+              <th scope="col" class="end">{{ locale.t(labels().colAmount) }}</th>
             </tr>
           </thead>
           <tbody>
@@ -35,8 +35,8 @@
                     <span class="rm-tbl__meta">{{ line.unit }}</span>
                   }
                 </td>
-                <td class="end num" [attr.data-label]="locale.t('bill.detail.col.qty')">{{ line.quantity != null ? locale.formatNumber(line.quantity) : '—' }}</td>
-                <td class="end num" [attr.data-label]="locale.t('bill.detail.col.rate')">{{ locale.money(line.rate) }}</td>
+                <td class="end num" [attr.data-label]="locale.t(labels().colQty)">{{ line.quantity != null ? locale.formatNumber(line.quantity) : '—' }}</td>
+                <td class="end num" [attr.data-label]="locale.t(labels().colRate)">{{ locale.money(line.rate) }}</td>
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(line.amount) }}</td>
               </tr>
             }
@@ -46,22 +46,22 @@
     }
     <div class="rm-foot">
       <span>
-        {{ locale.t('bill.detail.goodsTotal') }}
+        {{ locale.t(labels().goodsTotal) }}
         <strong class="num">{{ locale.money(b.goodsTotal) }}</strong>
       </span>
       <span>
-        {{ locale.t('bill.detail.cashReceived') }}
+        {{ locale.t(labels().cash) }}
         <strong class="num amt--in">{{ locale.money(b.cashReceived) }}</strong>
       </span>
       @if (b.outstanding.direction !== 'SETTLED') {
         @if (!b.partyName) {
           <span>
-            {{ locale.t('bill.detail.discount') }}
+            {{ locale.t(labels().discount) }}
             <strong class="num">{{ locale.money(b.outstanding.amount) }}</strong>
           </span>
         } @else {
           <span>
-            {{ locale.t('bill.detail.outstanding') }}
+            {{ locale.t(labels().outstanding) }}
             <strong class="num" [class]="directionClass(b.outstanding.direction)">
               {{ locale.money(b.outstanding.amount) }}
             </strong>

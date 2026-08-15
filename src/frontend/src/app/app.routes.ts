@@ -216,6 +216,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/bill-management/bill-detail').then((m) => m.BillDetail),
       },
+      // The bill screens' mirror, on the buying side — same two screens, same shape.
+      {
+        path: 'purchases',
+        loadComponent: () => import('./features/purchases/purchases').then((m) => m.Purchases),
+      },
+      {
+        path: 'purchases/:purchaseId',
+        loadComponent: () =>
+          import('./features/purchases/purchase-detail').then((m) => m.PurchaseDetail),
+      },
       {
         path: 'settings/items',
         canActivate: [editorGuard],

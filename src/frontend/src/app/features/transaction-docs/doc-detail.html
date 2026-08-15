@@ -1,6 +1,6 @@
 <section class="rm-page">
   <app-print-header />
-  <a class="rm-back rm-noprint" [routerLink]="stores.link('bill-management')">{{
+  <a class="rm-back rm-noprint" [routerLink]="stores.link(config().route)">{{
     locale.t('common.back')
   }}</a>
 
@@ -12,15 +12,15 @@
     </div>
   } @else if (notFound()) {
     <div class="rm-state">
-      <h2 class="rm-state__title">{{ locale.t('bill.detail.notFound') }}</h2>
-      <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('bill-management')">{{
+      <h2 class="rm-state__title">{{ locale.t(config().labels.notFound) }}</h2>
+      <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link(config().route)">{{
         locale.t('common.back')
       }}</a>
     </div>
   } @else if (loadError()) {
     <div class="rm-state">
-      <p role="alert" class="rm-alert">{{ locale.t('bill.detail.loadError') }}</p>
-      <button type="button" class="rm-btn rm-btn--ghost" (click)="load(billId())">
+      <p role="alert" class="rm-alert">{{ locale.t(config().labels.detailLoadError) }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load(docId())">
         {{ locale.t('settings.general.retry') }}
       </button>
     </div>
@@ -48,12 +48,17 @@
             [partyId]="b.partyId"
             [partyName]="b.partyName ?? ''"
             [contact]="b.partyContact"
-            [document]="locale.t('whatsapp.doc.bill') + (b.billNumber ? ' ' + b.billNumber : '')"
-            [action]="locale.t('whatsapp.doc.bill')"
+            [document]="
+              locale.t(config().labels.whatsappDoc) + (b.billNumber ? ' ' + b.billNumber : '')
+            "
+            [action]="locale.t(config().labels.whatsappDoc)"
           />
         }
         @if (stores.canEdit()) {
-          <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('new-entry/sale', billId())">
+          <a
+            class="rm-btn rm-btn--ghost"
+            [routerLink]="stores.link(config().entryRoute, docId())"
+          >
             <svg
               width="16"
               height="16"
@@ -81,7 +86,7 @@
                 d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"
               />
             </svg>
-            {{ locale.t('bill.deleteAction') }}
+            {{ locale.t(config().labels.deleteAction) }}
           </button>
         }
       </div>
@@ -90,11 +95,15 @@
     @if (confirming()) {
       <div class="rm-confirm rm-confirm--card rm-noprint">
         <span class="rm-confirm__msg">
-          {{ locale.t('bill.delete.confirm', { name: b.billNumber || locale.t('bill.cashSale') }) }}
+          {{
+            locale.t(config().labels.deleteConfirm, {
+              name: b.billNumber || locale.t(config().invoice.noParty),
+            })
+          }}
         </span>
         <span class="rm-confirm__actions">
           <button type="button" class="rm-btn rm-btn--ghost rm-btn--sm" (click)="cancelDelete()">
-            {{ locale.t('bill.delete.cancel') }}
+            {{ locale.t(config().labels.deleteCancel) }}
           </button>
           <button
             type="button"
@@ -102,7 +111,7 @@
             (click)="confirmDelete()"
             [disabled]="deleting()"
           >
-            {{ locale.t('bill.delete.confirmBtn') }}
+            {{ locale.t(config().labels.deleteConfirmBtn) }}
           </button>
         </span>
       </div>
@@ -111,6 +120,6 @@
       <p role="alert" class="rm-alert" style="margin-bottom: 12px">{{ locale.t(key) }}</p>
     }
 
-    <app-bill-invoice [bill]="b" />
+    <app-bill-invoice [bill]="b" [labels]="config().invoice" />
   }
 </section>
