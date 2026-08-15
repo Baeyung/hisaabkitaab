@@ -103,6 +103,14 @@
   --kg-page-pad: clamp(20px, 3vw, 34px);
   --kg-page-max: 1180px;
 
+  /* One height for every small control that can end up in a row beside
+     another one — segmented tracks, ghost buttons, the way out of a foot.
+     Each of those used to size itself, so a bar of three sat at three
+     different heights; sizing them all off this keeps their top and bottom
+     edges on one line wherever they are put together, and it is also the
+     app's touch-target floor. */
+  --kg-control-h: 40px;
+
   /* The entry screens are the one place that earns more: a form beside a
      ledger rail. The form column stops at --kg-entry-form so a wide monitor
      feeds the rail instead — the Effect and recent log grow into a companion

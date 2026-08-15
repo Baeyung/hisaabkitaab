@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 
@@ -16,7 +16,11 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
   selector: 'app-theme-toggle',
   template: `
     <fieldset class="th">
-      <legend class="th__legend">{{ locale.t('theme.legend') }}</legend>
+      <!-- Shown only in the sidebar foot, where the controls are stacked and each needs
+           saying what it is. In a row the three cells read as one control on sight, and a
+           caption above just one of them is what threw the row's alignment off — so there
+           the legend is there for screen readers alone. -->
+      <legend [class]="legend() ? 'th__legend' : 'sr-only'">{{ locale.t('theme.legend') }}</legend>
       <div class="th__seg">
         @for (option of theme.options; track option) {
           <label class="th__opt" [class.th__opt--on]="theme.preference() === option">
@@ -73,9 +77,10 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
       align-items: center;
       justify-content: center;
       gap: 1px;
-      /* 44px total with the track's padding — the app's touch-target floor. */
-      min-height: 40px;
-      padding: 3px 2px;
+      /* --kg-control-h tall once the track's 2px padding is added back, so this sits at
+         exactly the height of the language track and the buttons beside it. */
+      min-height: calc(var(--kg-control-h) - 4px);
+      padding: 3px 8px;
       border-radius: 7px;
       color: color-mix(in srgb, currentColor 72%, transparent);
       font: 600 10.5px system-ui;
@@ -112,6 +117,9 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
   `,
 })
 export class ThemeToggle {
+  /** Show the "Appearance" caption — on in the sidebar foot, off in the bars. */
+  readonly legend = input(false);
+
   protected readonly locale = inject(LocaleService);
   protected readonly theme = inject(ThemeService);
 

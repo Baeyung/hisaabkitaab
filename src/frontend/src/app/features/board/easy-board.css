@@ -320,21 +320,23 @@ html[dir='rtl'] .eb__closed {
    column. It carries what the sidebar foot carries, on paper rather than on
    the dark frame — the three controls take their fills and their ink from
    currentColor, so they follow the surface they are put on with no override
-   needed here. */
+   needed here. Every control in it is cut to --kg-control-h, so the strip is
+   one band of equal buttons rather than four objects of four heights, and its
+   block padding is even above and below that band. */
 
 .eb__foot {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
-  padding: 10px clamp(16px, 2.4cqw, 26px);
+  padding: 12px clamp(16px, 2.4cqw, 26px);
   border-block-start: 1px solid var(--kg-line);
 }
 
 .eb__controls {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
   min-width: 0;
 }
@@ -345,15 +347,16 @@ html[dir='rtl'] .eb__closed {
    fourth kind of button. */
 .eb__signout {
   margin-inline-start: auto;
-  min-height: 40px;
-  padding: 0 18px;
+  min-height: var(--kg-control-h);
+  padding: 0 16px;
   border: 1px solid var(--kg-line-strong);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--kg-card);
   color: var(--kg-ink);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  /* The type of the row, not of the page: the same size and face as the Install
+     button and the toggle labels beside it, so the strip reads as one set of
+     controls. Weight is where it stays apart — it is the way out. */
+  font: 700 13px system-ui;
   cursor: pointer;
   transition: border-color 0.14s ease;
 }

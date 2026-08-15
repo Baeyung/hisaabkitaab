@@ -61,7 +61,10 @@ import { InstallService } from '../../core/pwa/install.service';
       align-items: center;
       justify-content: center;
       gap: 7px;
-      min-height: 40px;
+      min-height: var(--kg-control-h);
+      /* Side padding, because in a row this button is only as wide as its own label —
+         in the stacked sidebar foot it was stretched and never showed the lack. */
+      padding: 0 14px;
       border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
       border-radius: 8px;
       background: transparent;

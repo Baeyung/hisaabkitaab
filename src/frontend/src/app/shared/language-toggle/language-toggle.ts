@@ -48,7 +48,7 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
       border: 0;
       min-width: 0;
     }
-    /* Matches the Appearance legend it sits under. */
+    /* Matches the Appearance legend it sits beside. */
     .lg__legend {
       padding: 0 0 6px;
       font: 600 10.5px system-ui;
@@ -75,9 +75,10 @@ import { Locale, LocaleService } from '../../core/i18n/locale.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      /* 34px tall with the track's padding, matching the bar's buttons. */
-      min-height: 30px;
-      padding: 0 11px;
+      /* --kg-control-h tall once the track's 2px padding is added back — the one height
+         the appearance track and the buttons beside it are also cut to. */
+      min-height: calc(var(--kg-control-h) - 4px);
+      padding: 0 12px;
       border-radius: 7px;
       color: color-mix(in srgb, currentColor 72%, transparent);
       cursor: pointer;
