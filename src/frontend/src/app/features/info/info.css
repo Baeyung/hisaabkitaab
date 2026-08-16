@@ -748,7 +748,7 @@
 }
 .pricing__subtitle {
   margin: 0 auto clamp(40px, 6vh, 64px);
-  max-width: 34ch;
+  max-width: 48ch;
   color: var(--muted);
   font-size: clamp(15px, 1.7vw, 17px);
   line-height: 1.55;
@@ -764,7 +764,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: clamp(24px, 4vw, 36px);
+  padding: clamp(24px, 4vw, 34px) clamp(20px, 3vw, 28px);
   background: var(--paper);
   border: 1px solid var(--paper-edge);
   border-radius: 12px;
@@ -792,33 +792,45 @@
 }
 .plan__name {
   display: block;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 500;
   font-size: clamp(18px, 2.4vw, 22px);
   color: var(--ink);
 }
+.plan__note {
+  margin: 0 auto 16px;
+  max-width: 24ch;
+  min-height: 2.9em;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+/* The row must stay on one line at every width: the three cards read as a
+   table, and a wrapped "/ month" pushes one card's whole column out of step. */
 .plan__price {
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  gap: 5px;
   margin-bottom: 6px;
 }
 .plan__currency {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--muted);
 }
 .plan__amount {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 600;
-  font-size: clamp(32px, 5vw, 42px);
+  font-size: clamp(30px, 4.2vw, 38px);
   line-height: 1;
   color: var(--ink);
 }
 .plan__period {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--faint);
 }
 .plan__trial {
@@ -829,6 +841,54 @@
   color: var(--green);
   font-weight: 500;
 }
+/* The metered limits, set the way a ledger sets a column: a ruled head with the
+   figure written under it. These three numbers are the only real difference
+   between the plans, so they get the page's one numeric voice (Fraunces) and
+   the checklist below stays plain text. */
+.plan__limits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0 0 20px;
+  border-bottom: 1px solid var(--line);
+}
+.plan__limits > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.plan__limits dt {
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.plan__limits dd {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(19px, 2.4vw, 23px);
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.plan__unit {
+  margin-inline-start: 3px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--faint);
+}
+/* Urdu letters join; tracking them apart breaks the word. */
+:host([dir='rtl']) .plan__limits dt {
+  letter-spacing: normal;
+  font-size: 11.5px;
+}
+
 .plan__features {
   list-style: none;
   margin: 0;
@@ -838,7 +898,8 @@
 }
 .plan__features li {
   position: relative;
-  padding: 8px 0 8px 28px;
+  padding-block: 8px;
+  padding-inline: 28px 0;
   font-size: 14.5px;
   line-height: 1.45;
   color: var(--ink);
@@ -846,7 +907,7 @@
 .plan__features li::before {
   content: '✓';
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 8px;
   width: 20px;
   height: 20px;
@@ -895,6 +956,77 @@
   background: var(--pine-deep);
   border-color: var(--pine-deep);
   transform: translateY(-2px);
+}
+
+/* Enterprise has no figures to print, so it isn't a fourth column of blanks —
+   it's the note written under the ruled table, on the same sheet. */
+.enterprise {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(18px, 3vw, 32px);
+  margin-top: clamp(16px, 3vw, 24px);
+  padding: clamp(22px, 3.4vw, 30px) clamp(24px, 4vw, 36px);
+  border: 1px solid var(--paper-edge);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--pine) 5%, var(--paper));
+  text-align: start;
+}
+.enterprise__text {
+  flex: 1 1 340px;
+}
+/* inline-block, as the chapter kickers are: an rtl block would otherwise sit
+   flush against the far edge of the ltr card */
+.enterprise__kicker {
+  display: inline-block;
+  margin-bottom: 2px;
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: 19px;
+  line-height: 1.9;
+  color: var(--pine);
+}
+.enterprise__name {
+  margin: 0 0 6px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(18px, 2.4vw, 22px);
+  color: var(--ink);
+}
+.enterprise__body {
+  margin: 0;
+  max-width: 56ch;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.enterprise__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  border: 1.5px solid var(--pine);
+  color: var(--pine);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.enterprise__mail {
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--faint);
+  direction: ltr;
+}
+.enterprise__cta:hover {
+  background: var(--pine);
+  color: #f4ede2;
+}
+.enterprise__cta:hover .enterprise__mail {
+  color: rgba(244, 237, 226, 0.72);
 }
 
 /* ── responsive ───────────────────────────────────────────────────────── */
@@ -956,6 +1088,42 @@
     grid-template-columns: 1fr;
     max-width: 360px;
     margin-inline: auto;
+  }
+  .enterprise {
+    max-width: 360px;
+    margin-inline: auto;
+  }
+  .enterprise__cta {
+    align-self: stretch;
+  }
+}
+
+/* Three cards in a 1020px row leaves each limit column too narrow to hold
+   "WhatsApp" on one line. Between the breakpoints the ruled table turns on its
+   side: label and figure per line, the way an item reads in the book. */
+@media (min-width: 721px) and (max-width: 940px) {
+  .plan__limits {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .plan__limits > div {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding-block: 7px;
+    border-bottom: 1px solid var(--line);
+  }
+  .plan__limits > div:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .plan__limits dt {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .plan__limits dd {
+    font-size: 17px;
   }
 }
 

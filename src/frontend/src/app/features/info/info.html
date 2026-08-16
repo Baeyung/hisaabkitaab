@@ -245,19 +245,32 @@
   <p class="pricing__subtitle">{{ c().pricingSubtitle }}</p>
 
   <div class="pricing__grid">
-    <!-- Standard -->
+    <!-- Basic -->
     <div class="plan">
-      <span class="plan__name">{{ c().planStandard }}</span>
+      <span class="plan__name">{{ c().planBasic }}</span>
+      <p class="plan__note">{{ c().noteBasic }}</p>
       <div class="plan__price">
         <span class="plan__currency">PKR</span>
         <span class="plan__amount">3,000</span>
         <span class="plan__period">{{ c().planPeriod }}</span>
       </div>
       <p class="plan__trial">{{ c().planTrial }}</p>
+      <!-- the three metered columns: what actually separates one plan from the
+           next. Written as a ledger column head over its figure. -->
+      <dl class="plan__limits">
+        <div><dt>{{ c().limStores }}</dt><dd>1</dd></div>
+        <div><dt>{{ c().limUsers }}</dt><dd>1</dd></div>
+        <div>
+          <dt>{{ c().limWhatsApp }}</dt>
+          <dd>50<span class="plan__unit">{{ c().limPerMonth }}</span></dd>
+        </div>
+      </dl>
       <ul class="plan__features">
-        <li>{{ c().featKhata }}</li>
-        <li>{{ c().featRozn }}</li>
+        <li>{{ c().featLedger }}</li>
+        <li>{{ c().featCashbook }}</li>
         <li>{{ c().featBills }}</li>
+        <li>{{ c().featParties }}</li>
+        <li>{{ c().featItems }}</li>
         <li>{{ c().featStock }}</li>
         <li>{{ c().featDash }}</li>
       </ul>
@@ -268,35 +281,68 @@
     <div class="plan plan--featured">
       <span class="plan__badge">{{ c().planPopular }}</span>
       <span class="plan__name">{{ c().planPremium }}</span>
+      <p class="plan__note">{{ c().notePremium }}</p>
       <div class="plan__price">
         <span class="plan__currency">PKR</span>
         <span class="plan__amount">5,000</span>
         <span class="plan__period">{{ c().planPeriod }}</span>
       </div>
       <p class="plan__trial">{{ c().planTrial }}</p>
+      <dl class="plan__limits">
+        <div><dt>{{ c().limStores }}</dt><dd>2</dd></div>
+        <div><dt>{{ c().limUsers }}</dt><dd>3</dd></div>
+        <div>
+          <dt>{{ c().limWhatsApp }}</dt>
+          <dd>150<span class="plan__unit">{{ c().limPerMonth }}</span></dd>
+        </div>
+      </dl>
       <ul class="plan__features">
-        <li>{{ c().featAllStd }}</li>
-        <li class="plan__feature--highlight">{{ c().featWhatsApp }}</li>
+        <li>{{ c().featAllBasic }}</li>
+        <li class="plan__feature--highlight">{{ c().featDaily }}</li>
+        <li class="plan__feature--highlight">{{ c().featReminders }}</li>
       </ul>
       <a class="plan__cta plan__cta--featured" routerLink="/signup">{{ c().planCta }}</a>
     </div>
 
-    <!-- Corporate -->
+    <!-- Premium, enhanced limits -->
     <div class="plan">
-      <span class="plan__name">{{ c().planCorporate }}</span>
+      <span class="plan__name">{{ c().planPremiumPlus }}</span>
+      <p class="plan__note">{{ c().notePlus }}</p>
       <div class="plan__price">
         <span class="plan__currency">PKR</span>
         <span class="plan__amount">10,000</span>
         <span class="plan__period">{{ c().planPeriod }}</span>
       </div>
       <p class="plan__trial">{{ c().planTrial }}</p>
+      <dl class="plan__limits">
+        <div><dt>{{ c().limStores }}</dt><dd>6</dd></div>
+        <div><dt>{{ c().limUsers }}</dt><dd>8</dd></div>
+        <div>
+          <dt>{{ c().limWhatsApp }}</dt>
+          <dd>250<span class="plan__unit">{{ c().limPerMonth }}</span></dd>
+        </div>
+      </dl>
       <ul class="plan__features">
-        <li>{{ c().featAllPrm }}</li>
-        <li>{{ c().featEmail }}</li>
-        <li>{{ c().featMaxWa }}</li>
+        <li>{{ c().featAllPremium }}</li>
+        <li>{{ c().featDaily }}</li>
+        <li>{{ c().featReminders }}</li>
       </ul>
       <a class="plan__cta" routerLink="/signup">{{ c().planCta }}</a>
     </div>
+  </div>
+
+  <!-- Enterprise: no figures to print, so it sits under the grid as the
+       ledger's closing note rather than a fourth column of blanks. -->
+  <div class="enterprise">
+    <div class="enterprise__text">
+      <span class="enterprise__kicker" dir="rtl" lang="ur">بڑا کاروبار</span>
+      <h3 class="enterprise__name">{{ c().entName }}</h3>
+      <p class="enterprise__body">{{ c().entBody }}</p>
+    </div>
+    <a class="enterprise__cta" href="mailto:sales@hisaabkitaab.shop">
+      {{ c().entCta }}
+      <span class="enterprise__mail">sales&#64;hisaabkitaab.shop</span>
+    </a>
   </div>
 </section>
 
