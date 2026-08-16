@@ -149,10 +149,16 @@ html[dir='rtl'] .eb__title {
 }
 
 /* One band per column. The tone is set once here and read by the rule and the
-   buttons' marks below it, so a band's colour is stated in a single place. */
+   buttons' marks below it, so a band's colour is stated in a single place.
+   --chip is a second, separate signal: the soft wash behind every icon and a
+   tile's hover glow. On a money band it rides the same tone as --mark, so
+   the two reinforce each other; on a read band it takes the app's own brand
+   accent instead of ink, which is what keeps Reports and Setup from reading
+   as flat grey without giving them a direction colour that means nothing. */
 .eb__band {
   --mark: var(--kg-ink);
   --rule: var(--kg-line-strong);
+  --chip: var(--kg-brand);
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -161,10 +167,12 @@ html[dir='rtl'] .eb__title {
 .eb__band[data-tone='in'] {
   --mark: var(--kg-in);
   --rule: var(--kg-in);
+  --chip: var(--kg-in);
 }
 .eb__band[data-tone='out'] {
   --mark: var(--kg-out);
   --rule: var(--kg-out);
+  --chip: var(--kg-out);
 }
 
 /* A ruled column heading, not a filled bar. The label is always ink-on-paper
@@ -220,11 +228,15 @@ html[dir='rtl'] .eb__bandname {
   /* Sized for a thumb on a counter tablet, not for a mouse. */
   min-height: 72px;
   padding: 12px 14px;
-  background: var(--kg-card);
+  /* A hair of the chip colour lifts the card off flat white/near-black at
+     rest, so the surface already has some life in it before a hand ever
+     reaches for it. */
+  background: linear-gradient(180deg, var(--kg-card), color-mix(in srgb, var(--chip) 4%, var(--kg-card)));
   border: 1px solid var(--kg-line);
   border-radius: 12px;
   color: var(--kg-ink);
   text-decoration: none;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--kg-ink) 5%, transparent);
   transition:
     border-color 0.14s ease,
     box-shadow 0.14s ease,
@@ -232,8 +244,8 @@ html[dir='rtl'] .eb__bandname {
 }
 
 .eb__tile:hover {
-  border-color: var(--mark);
-  box-shadow: 0 3px 12px color-mix(in srgb, var(--mark) 20%, transparent);
+  border-color: var(--chip);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--chip) 22%, transparent);
   transform: translateY(-1px);
 }
 
@@ -243,14 +255,24 @@ html[dir='rtl'] .eb__bandname {
 
 .eb__tile:focus-visible {
   outline: none;
-  border-color: var(--mark);
+  border-color: var(--chip);
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
 
+/* The glyph keeps --mark (ink on a read band, in/out on a money band, so the
+   rule above and the marks below still agree). The chip it sits in is the
+   warmth: a soft wash of --chip, which is where a read band gets its brand
+   tint instead of another grey. */
 .eb__mark {
   flex: none;
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   color: var(--mark);
+  background: color-mix(in srgb, var(--chip) 13%, transparent);
 }
 
 .eb__name {
@@ -292,11 +314,13 @@ html[dir='rtl'] .eb__name {
 .eb__tile--off {
   border-style: dashed;
   background: transparent;
+  box-shadow: none;
   color: var(--kg-faint);
   cursor: not-allowed;
 }
 .eb__tile--off .eb__mark {
   color: var(--kg-faint);
+  background: transparent;
 }
 .eb__closed {
   flex: none;
