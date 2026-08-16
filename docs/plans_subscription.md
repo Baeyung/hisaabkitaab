@@ -24,7 +24,7 @@
 - 8 Users
 - 250 On demand WhatsApp messages
 - Daily reports via WhatsApp for each store on WhatsApp
-- Monthly party reminders (20 contacts max) for each store
+- Monthly party reminders (40 contacts max) for each store
 ---
 # Enterprise (Contact sales@hisaabkitaab.shop)
 - Everything in Basic

@@ -194,6 +194,7 @@ const EN = {
   featAllPremium: 'Everything in Premium',
   featDaily: "Each shop's day, sent to you on WhatsApp",
   featReminders: 'Monthly reminders to up to 20 customers per shop',
+  featRemindersPlus: 'Monthly reminders to up to 40 customers per shop',
   entName: 'Enterprise',
   entBody:
     'Everything in Basic, with the shops, users and WhatsApp allowance set to the size of your business.',
@@ -298,6 +299,7 @@ const UR: typeof EN = {
   featAllPremium: 'پریمیم کی تمام سہولیات',
   featDaily: 'ہر دکان کے دن کا حساب واٹس ایپ پر',
   featReminders: 'ہر دکان کے 20 گاہکوں تک ماہانہ یاد دہانی',
+  featRemindersPlus: 'ہر دکان کے 40 گاہکوں تک ماہانہ یاد دہانی',
   entName: 'انٹرپرائز',
   entBody: 'بیسک کی تمام سہولیات، اور دکانیں، یوزر اور واٹس ایپ کی حد آپ کے کاروبار کے مطابق۔',
   entCta: 'سیلز سے رابطہ کریں',
