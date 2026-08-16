@@ -10,10 +10,14 @@
    (de → f0 → ff), so the buttons read as raised in both without a shadow
    doing the work.
 
-   Colour says exactly one thing: which way money moves. It appears on the
-   band's rule and its buttons' marks, and only on the Entry tab, because that
-   is the only tab where anything moves. Reports and Setup are ruled in grey
-   and drawn in ink. */
+   Every band carries one colour — its --chip — on its rule, its buttons' icon
+   wash, and their hover glow. On Entry that colour is money direction: green
+   for what comes in, red for what goes out, because that tab is where
+   something moves. Reports and Setup have nothing to move, so their bands
+   take the app's own brand accent instead — the same colour a button or a
+   link already wears everywhere else, which is what keeps a shopkeeper from
+   reading a Reports rule as a receivable. Both readings share one mechanism;
+   only the meaning of the colour changes with the tab. */
 
 /* The board owns its ground. <main> is --kg-surface, which is also the page's
    fill, so without this the card would be invisible and the tabs would look
@@ -148,16 +152,13 @@ html[dir='rtl'] .eb__title {
   padding: clamp(16px, 2.4cqw, 26px);
 }
 
-/* One band per column. The tone is set once here and read by the rule and the
-   buttons' marks below it, so a band's colour is stated in a single place.
-   --chip is a second, separate signal: the soft wash behind every icon and a
-   tile's hover glow. On a money band it rides the same tone as --mark, so
-   the two reinforce each other; on a read band it takes the app's own brand
-   accent instead of ink, which is what keeps Reports and Setup from reading
-   as flat grey without giving them a direction colour that means nothing. */
+/* One band per column. --mark is the icon glyph's own colour — ink on a read
+   band, in/out on a money band — and --chip is everything else the band
+   colours: the rule beside its heading, the wash behind each icon, and a
+   tile's hover glow. Both are stated once here so a band's whole palette is
+   one thing to change, not four. */
 .eb__band {
   --mark: var(--kg-ink);
-  --rule: var(--kg-line-strong);
   --chip: var(--kg-brand);
   display: flex;
   flex-direction: column;
@@ -166,21 +167,19 @@ html[dir='rtl'] .eb__title {
 }
 .eb__band[data-tone='in'] {
   --mark: var(--kg-in);
-  --rule: var(--kg-in);
   --chip: var(--kg-in);
 }
 .eb__band[data-tone='out'] {
   --mark: var(--kg-out);
-  --rule: var(--kg-out);
   --chip: var(--kg-out);
 }
 
 /* A ruled column heading, not a filled bar. The label is always ink-on-paper
-   at the same weight on every tab, and the rule beside it is the one thing
-   that changes — so "money out" is legible as a colour before it is read as a
-   word, while Reports and Setup stay quiet. The label is deliberately NOT
-   tinted: --kg-in at 11px lands at 4.48:1 on this surface, just under the
-   contrast floor, and a rule is a graphic that only owes 3:1. */
+   at the same weight in every band, and the rule beside it carries --chip —
+   so "money out" is legible as a colour before it is read as a word, and
+   "Papers" carries the same brand accent its tiles do. The label is
+   deliberately NOT tinted: --kg-in at 11px lands at 4.48:1 on this surface,
+   just under the contrast floor, and a rule is a graphic that only owes 3:1. */
 .eb__bandname {
   display: flex;
   align-items: center;
@@ -199,7 +198,7 @@ html[dir='rtl'] .eb__title {
   min-width: 0;
   height: 2px;
   border-radius: 1px;
-  background: var(--rule);
+  background: var(--chip);
 }
 
 /* Nastaliq is a joining script — tracking pulls its letters apart into

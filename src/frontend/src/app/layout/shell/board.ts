@@ -3,13 +3,16 @@ import { NavIcon } from '../../shared/nav-icon/nav-icon';
 import { NavItem, NavLeaf } from './nav';
 
 /**
- * What a band's colour means. Exactly one thing: which way money moves.
+ * What a band's colour means. Exactly one thing: which way money moves — `in` and `out` are
+ * the only tones that say so.
  *
- * There is no third colour. Reports and Setup opened nothing and closed nothing, so they get
- * `read` — a grey rule and ink marks — and the board carries colour on precisely the one tab
- * where a shopkeeper is about to move money. An earlier pass gave Setup its own blue, which
- * looked like a system until you noticed the blue meant nothing; three tabs of coloured
- * headings is decoration, and it drowns the two that are actually saying something.
+ * `read` is everything else: Reports and Setup opened nothing and closed nothing, so their
+ * bands carry the app's own brand accent (see easy-board.css's --chip) rather than a direction.
+ * It reads as the app's colour, not a receivable or a payable — the same distinction a button
+ * or a link already makes everywhere else. An earlier pass gave Setup a colour that meant
+ * nothing beyond "Setup", which is the one thing `read` still must never become: three tabs of
+ * coloured headings that each say something different is decoration, and it drowns the one
+ * tab where the colour is actually reporting a fact.
  */
 export type BoardTone = 'in' | 'out' | 'read';
 
