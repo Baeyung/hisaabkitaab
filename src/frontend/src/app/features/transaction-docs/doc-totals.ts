@@ -62,8 +62,9 @@ export function sumBills(
 
 /**
  * The same totals from the list's own rows — what the shopkeeper is looking at right now,
- * without the round-trip Print makes for full details. Cash isn't in a summary row, so it
- * isn't here; the footer states what it can stand behind.
+ * without the round-trip Print makes for full details. A summary row carries the same
+ * goods/cash/khata split the document does, so this states everything the printed footer
+ * does bar the per-document item lines.
  */
 export function sumSummaries(
   bills: BillSummary[],
@@ -71,12 +72,14 @@ export function sumSummaries(
 ): {
   count: number;
   amount: number;
+  cash: number;
   khata: number;
   discount: number;
 } {
-  const totals = { count: bills.length, amount: 0, khata: 0, discount: 0 };
+  const totals = { count: bills.length, amount: 0, cash: 0, khata: 0, discount: 0 };
   for (const b of bills) {
     totals.amount += b.amount;
+    totals.cash += b.cashReceived;
     const { khata, discount } = splitRemainder(b, owing);
     totals.khata += khata;
     totals.discount += discount;

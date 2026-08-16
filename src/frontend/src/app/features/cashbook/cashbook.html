@@ -184,9 +184,20 @@
             </tbody>
           </table>
         </div>
+        <!-- Where the range ended up, on both sides: what the khatas moved, and what the
+             drawer holds. The two columns above each get their own closing figure. -->
         <div class="rm-foot">
-          <span>{{ locale.t('cashbook.closing') }}</span>
-          <strong class="num">{{ locale.money(cb.closingBalance) }}</strong>
+          <span>
+            {{ locale.t('cashbook.totalKhata') }}
+            <strong class="num" [class]="directionClass(cb.totalKhata.direction)">{{
+              locale.money(cb.totalKhata.amount)
+            }}</strong>
+            <em class="rm-note">{{ locale.t(directionKey(cb.totalKhata.direction)) }}</em>
+          </span>
+          <span>
+            {{ locale.t('cashbook.closing') }}
+            <strong class="num">{{ locale.money(cb.closingBalance) }}</strong>
+          </span>
         </div>
       </div>
       <!-- Empty unless the user printed with details — then it closes the run. -->

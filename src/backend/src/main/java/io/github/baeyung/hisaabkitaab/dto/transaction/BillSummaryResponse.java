@@ -10,6 +10,8 @@ public record BillSummaryResponse(
         LocalDate date,
         String partyName,
         double amount,
+        /** Cash that changed hands on it: taken in on a bill, paid out on a purchase. */
+        double cashReceived,
         /**
          * What this one document left on the khata — the same figure its detail page shows,
          * so the list can say whether {@code amount} was paid, part-paid, or all on udhaar

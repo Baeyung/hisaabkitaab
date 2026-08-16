@@ -49,6 +49,7 @@ public class TransactionQueryService
                         dateOf(transaction),
                         transaction.getParty() != null ? transaction.getParty().getName() : null,
                         goodsTotal(transaction),
+                        cashReceived(transaction),
                         outstanding(transaction)
                 ))
                 .toList();
@@ -105,12 +106,6 @@ public class TransactionQueryService
 
         double goodsTotal = lines.stream().mapToDouble(BillLineResponse::amount).sum();
 
-        double cashReceived = transaction.getLines()
-                .stream()
-                .filter(line -> line.getTargetKind() == TargetKind.CASH)
-                .mapToDouble(this::value)
-                .sum();
-
         return new BillDetailResponse(
                 transaction.getId(),
                 transaction.getBill(),
@@ -121,9 +116,23 @@ public class TransactionQueryService
                 transaction.getParty() != null ? transaction.getParty().getContact() : null,
                 lines,
                 goodsTotal,
-                cashReceived,
+                cashReceived(transaction),
                 outstanding(transaction)
         );
+    }
+
+    /**
+     * The cash side of the document: taken in on a bill, paid out on a purchase — the two
+     * are mirrors, so one sum serves both. Shared by the list and the detail so the column
+     * and the document can never disagree.
+     */
+    private double cashReceived(Transaction transaction)
+    {
+        return transaction.getLines()
+                .stream()
+                .filter(line -> line.getTargetKind() == TargetKind.CASH)
+                .mapToDouble(this::value)
+                .sum();
     }
 
     /**

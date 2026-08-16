@@ -15,6 +15,8 @@ export interface BillSummary {
   date: string;
   partyName: string | null;
   amount: number;
+  /** Cash that changed hands on it: taken in on a bill, paid out on a purchase. */
+  cashReceived: number;
   /**
    * The same "on khata" figure the document's own page shows, so the list can say
    * whether `amount` was paid, part-paid, or all on udhaar. With no party on the
