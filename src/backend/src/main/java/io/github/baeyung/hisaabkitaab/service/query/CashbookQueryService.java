@@ -2,6 +2,7 @@ package io.github.baeyung.hisaabkitaab.service.query;
 
 import io.github.baeyung.hisaabkitaab.dto.cashbook.CashbookDayResponse;
 import io.github.baeyung.hisaabkitaab.dto.cashbook.CashbookRowResponse;
+import io.github.baeyung.hisaabkitaab.dto.common.PartyBalance;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
@@ -15,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance carried from all prior CASH
@@ -50,6 +53,11 @@ public class CashbookQueryService
                     .toList();
         }
 
+        // The other half of each entry: what it did to the party's khata. Every event posts
+        // at most one CASH line, so a row maps to a transaction one-for-one and can carry its
+        // khata movement whole without any of it being counted twice.
+        Map<String, Double> khataNets = partyNetsByTransaction(storeId, from, to);
+
         List<CashbookRowResponse> rows = RunningBalanceFolder.fold(
                 lines,
                 opening,
@@ -65,6 +73,7 @@ public class CashbookQueryService
                             transaction.getParty() != null ? transaction.getParty().getName() : null,
                             line.getInOut(),
                             value(line),
+                            PartyBalance.of(khataNet(khataNets, transaction)),
                             running
                     );
                 }
@@ -72,9 +81,32 @@ public class CashbookQueryService
 
         double totalIn = sumWhere(lines, InOut.IN);
         double totalOut = sumWhere(lines, InOut.OUT);
+        // Netted over the rows on screen, not over every party line in the range — an entry
+        // that moved no cash has no row here, and its khata belongs to the ledger, not this total.
+        double totalKhata = lines.stream()
+                .map(TransactionLine::getTransaction)
+                .mapToDouble(transaction -> khataNet(khataNets, transaction))
+                .sum();
         double closing = rows.isEmpty() ? opening : rows.getLast().runningBalance();
 
-        return new CashbookDayResponse(from, to, opening, rows, totalIn, totalOut, closing);
+        return new CashbookDayResponse(
+                from, to, opening, rows, totalIn, totalOut, PartyBalance.of(totalKhata), closing);
+    }
+
+    private Map<String, Double> partyNetsByTransaction(String storeId, LocalDate from, LocalDate to)
+    {
+        Map<String, Double> nets = new HashMap<>();
+        for (TransactionLineRepository.TransactionPartyNetRow row
+                : transactionLineRepository.sumPartyNetByTransactionInRange(storeId, from, to))
+        {
+            nets.put(row.getTransactionId(), row.getNet() != null ? row.getNet() : 0);
+        }
+        return nets;
+    }
+
+    private double khataNet(Map<String, Double> nets, Transaction transaction)
+    {
+        return nets.getOrDefault(transaction.getId(), 0.0);
     }
 
     private double sumWhere(List<TransactionLine> lines, InOut inOut)

@@ -13,6 +13,8 @@ import { PrintItemsSummary } from '../../shared/print-items-summary';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { DateField } from '../../shared/date-field/date-field';
 import { entryDetailLink, entryEditLink, isEditableEntry } from '../../shared/entry-route';
+import { directionClass, directionKey } from '../../shared/balance.util';
+import { KhataAmount } from '../../shared/khata-amount';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
 
@@ -23,10 +25,13 @@ import { deleteErrorKey } from '../../core/store/delete-error';
  */
 @Component({
   selector: 'app-cashbook',
-  imports: [RouterLink, PrintHeader, PrintItemsSummary, DateField, WhatsAppButton],
+  imports: [RouterLink, PrintHeader, PrintItemsSummary, DateField, WhatsAppButton, KhataAmount],
   templateUrl: './cashbook.html',
 })
 export class Cashbook {
+  protected readonly directionKey = directionKey;
+  protected readonly directionClass = directionClass;
+
   protected readonly locale = inject(LocaleService);
   protected readonly stores = inject(StoreService);
   private readonly api = inject(CashbookService);

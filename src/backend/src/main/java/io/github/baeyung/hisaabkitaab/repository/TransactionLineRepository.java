@@ -53,6 +53,29 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<TransactionLine> findCashLinesInRange(@Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
+    /**
+     * Net khata movement (Σ IN − Σ OUT over PARTY lines) per transaction in the range —
+     * the cashbook's "on khata" column. Grouped in one query rather than walked from each
+     * row's transaction, which would be a lazy load per row.
+     *
+     * <p>Positive means the entry moved money the store's way (a credit sale); negative the
+     * other (a receipt clearing baqaya, or a purchase left owing). Transactions with no
+     * PARTY line simply don't come back, and the caller reads those as nothing on khata.
+     */
+    @Query("""
+            select tl.transaction.id as transactionId,
+                   sum(case when tl.inOut = io.github.baeyung.hisaabkitaab.enums.InOut.IN then tl.value
+                            when tl.inOut = io.github.baeyung.hisaabkitaab.enums.InOut.OUT then -tl.value
+                            else 0 end) as net
+            from TransactionLine tl
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.PARTY
+              and tl.transaction.store.id = :storeId
+              and coalesce(tl.transaction.eventDate, tl.transaction.entryDate) between :from and :to
+            group by tl.transaction.id
+            """)
+    List<TransactionPartyNetRow> sumPartyNetByTransactionInRange(
+            @Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+
     /** Every EXPENSE cash-out line for the store, chronological — grouped by category into the khata's spend heads. */
     @Query("""
             select tl from TransactionLine tl
@@ -198,6 +221,13 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
         String getPartyId();
 
         Double getBalance();
+    }
+
+    interface TransactionPartyNetRow
+    {
+        String getTransactionId();
+
+        Double getNet();
     }
 
     interface PartyOpeningRow

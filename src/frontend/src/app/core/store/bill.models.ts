@@ -15,6 +15,13 @@ export interface BillSummary {
   date: string;
   partyName: string | null;
   amount: number;
+  /**
+   * The same "on khata" figure the document's own page shows, so the list can say
+   * whether `amount` was paid, part-paid, or all on udhaar. With no party on the
+   * document there is no khata and an unbalanced one is a discount — read the two
+   * apart by `partyName`, exactly as {@link BillDetail} is.
+   */
+  outstanding: Balance;
 }
 
 export interface BillLine {

@@ -6,7 +6,10 @@ import { deleteErrorKey } from '../../core/store/delete-error';
 import { BillService } from '../../core/store/bill.service';
 import { EventService } from '../../core/store/event.service';
 import { StoreService } from '../../core/store/store.service';
+import { Balance } from '../../core/store/balance.models';
 import { BillDetail, BillSummary } from '../../core/store/bill.models';
+import { directionClass, directionKey } from '../../shared/balance.util';
+import { KhataAmount } from '../../shared/khata-amount';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
 import { BillInvoice } from '../../shared/bill-invoice';
@@ -20,7 +23,7 @@ import { todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { DocConfig } from './doc-config';
-import { sumBills } from './doc-totals';
+import { sumBills, sumSummaries } from './doc-totals';
 
 /**
  * A run of goods documents — every bill, or every purchase — newest first,
@@ -34,11 +37,22 @@ import { sumBills } from './doc-totals';
  */
 @Component({
   selector: 'app-doc-list',
-  imports: [RouterLink, PrintHeader, PrintItemsSummary, BillInvoice, Select, DateField],
+  imports: [
+    RouterLink,
+    PrintHeader,
+    PrintItemsSummary,
+    BillInvoice,
+    Select,
+    DateField,
+    KhataAmount,
+  ],
   templateUrl: './doc-list.html',
 })
 export class DocList {
   readonly config = input.required<DocConfig>();
+
+  protected readonly directionKey = directionKey;
+  protected readonly directionClass = directionClass;
 
   protected readonly locale = inject(LocaleService);
   protected readonly stores = inject(StoreService);
@@ -103,6 +117,27 @@ export class DocList {
   protected readonly printTotals = computed(() =>
     sumBills(this.printBills(), this.config().owing),
   );
+
+  /** The footer under the rows on screen — what the current filters add up to. */
+  protected readonly listTotals = computed(() =>
+    sumSummaries(this.filtered(), this.config().owing),
+  );
+
+  /**
+   * The run's net khata as a balance, so the footer figure is coloured by the same rule as
+   * the rows above it. `sumSummaries` runs positive the way this kind owes, so a negative
+   * total means the run is a net overpayment and points the other way.
+   */
+  protected readonly khataTotal = computed<Balance>(() => {
+    const net = this.listTotals().khata;
+    // Same half-paisa tolerance the backend settles a balance at — these are doubles.
+    if (Math.abs(net) < 0.005) {
+      return { amount: 0, direction: 'SETTLED' };
+    }
+    const owing = this.config().owing;
+    const other = owing === 'THEY_OWE_YOU' ? 'YOU_OWE_THEM' : 'THEY_OWE_YOU';
+    return { amount: Math.abs(net), direction: net > 0 ? owing : other };
+  });
 
   protected readonly filtered = computed(() => {
     const q = this.filters.q().trim().toLowerCase();

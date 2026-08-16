@@ -1233,6 +1233,12 @@ html[dir='rtl'] select.rm-input {
   .rm-tbl td:empty {
     display: none;
   }
+  /* An entry that settled in full shows an em dash on the wide table, to keep the
+     column reading straight down. On a phone there is no column to keep straight and
+     the cell would only add a blank fact to the meta line, so it goes entirely. */
+  .rm-tbl td:has(> app-khata-amount.is-empty) {
+    display: none;
+  }
   .rm-tbl td.end {
     text-align: start;
   }

@@ -106,6 +106,7 @@
               <th scope="col">{{ locale.t(config().labels.colDate) }}</th>
               <th scope="col">{{ locale.t(config().labels.colParty) }}</th>
               <th scope="col" class="end">{{ locale.t(config().labels.colAmount) }}</th>
+              <th scope="col" class="end">{{ locale.t(config().invoice.outstanding) }}</th>
               <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t(config().labels.colActions) }}</span></th>
             </tr>
           </thead>
@@ -120,6 +121,13 @@
                 <td class="num">{{ bill.date }}</td>
                 <td [attr.data-label]="locale.t(config().labels.colParty)">{{ bill.partyName || locale.t(config().invoice.noParty) }}</td>
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(bill.amount) }}</td>
+                <td class="end" [attr.data-label]="locale.t(config().invoice.outstanding)">
+                  <app-khata-amount
+                    [balance]="bill.outstanding"
+                    [partyName]="bill.partyName"
+                    [discountLabel]="config().invoice.discount"
+                  />
+                </td>
                 <td class="end rm-noprint">
                   @if (stores.canEdit()) {
                   <button
@@ -147,12 +155,13 @@
                       }
                     </td>
                     <td class="end num">{{ locale.money(line.amount) }}</td>
+                    <td></td>
                     <td class="rm-noprint"></td>
                   </tr>
                 }
                 <tr class="rm-subrow rm-subrow--tot">
                   <td></td>
-                  <td colspan="3" class="rm-subrow__tot">
+                  <td colspan="4" class="rm-subrow__tot">
                     <span>{{ locale.t(config().invoice.goodsTotal) }} <b class="num">{{ locale.money(detail.goodsTotal) }}</b></span>
                     <span>{{ locale.t(config().invoice.cash) }} <b class="num amt--in">{{ locale.money(detail.cashReceived) }}</b></span>
                     @if (detail.outstanding.direction !== 'SETTLED') {
@@ -165,7 +174,7 @@
 
               @if (confirmingId() === bill.id) {
                 <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
-                  <td colspan="5">
+                  <td colspan="6">
                     <div class="rm-confirm">
                       <span class="rm-confirm__msg">
                         {{ locale.t(config().labels.deleteConfirm, { name: bill.billNumber || locale.t(config().invoice.noParty) }) }}
@@ -184,11 +193,36 @@
               }
             } @empty {
               <tr>
-                <td colspan="5">{{ locale.t(config().labels.searchNone) }}</td>
+                <td colspan="6">{{ locale.t(config().labels.searchNone) }}</td>
               </tr>
             }
           </tbody>
         </table>
+      </div>
+      <!-- What the rows on screen come to. The printed report states more (it has each
+           document's cash in hand), so it keeps its own footer below. -->
+      <div class="rm-foot rm-noprint">
+        <span>
+          {{ locale.t(config().labels.printCount) }}
+          <strong class="num">{{ locale.formatNumber(listTotals().count) }}</strong>
+        </span>
+        <span>
+          {{ locale.t(config().labels.printTotal) }}
+          <strong class="num">{{ locale.money(listTotals().amount) }}</strong>
+        </span>
+        <span>
+          {{ locale.t(config().invoice.outstanding) }}
+          <strong class="num" [class]="directionClass(khataTotal().direction)">{{
+            locale.money(khataTotal().amount)
+          }}</strong>
+          <em class="rm-note">{{ locale.t(directionKey(khataTotal().direction)) }}</em>
+        </span>
+        @if (listTotals().discount) {
+          <span>
+            {{ locale.t(config().invoice.discount) }}
+            <strong class="num">{{ locale.money(listTotals().discount) }}</strong>
+          </span>
+        }
       </div>
       @if (reportMode()) {
         <div class="rm-printonly">

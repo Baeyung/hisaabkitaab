@@ -701,10 +701,15 @@ export const ur: Record<TranslationKey, string> = {
   'cashbook.closing': 'اختتامی رقم',
   'cashbook.totalIn': 'نقد آمد',
   'cashbook.totalOut': 'نقد اخراج',
+  // The drawer only ever sees part of an entry; this is the rest of it.
+  'cashbook.totalKhata': 'کھاتے میں',
   'cashbook.col.time': 'تاریخ و وقت',
   'cashbook.col.detail': 'تفصیل',
   'cashbook.col.amount': 'رقم',
+  'cashbook.col.khata': 'کھاتے میں',
   'cashbook.col.running': 'میزان',
+  // Read aloud in place of the dash the column shows when an entry settled in full.
+  'khata.none': 'کھاتے میں کچھ نہیں',
   'cashbook.empty.title': 'اس دن کوئی نقد لین دین نہیں',
   'cashbook.empty.body': 'نقد آمد یا اخراج والی انٹریاں یہاں نظر آئیں گی۔',
   'cashbook.loadError': 'روزنامچہ لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔',

@@ -63,6 +63,14 @@
         <span class="rm-stat__label">{{ locale.t('cashbook.totalOut') }}</span>
         <span class="rm-stat__value num amt--out">{{ locale.money(cb.totalOut) }}</span>
       </div>
+      <!-- The half of the day the drawer never sees: what these same entries did to the khatas. -->
+      <div class="rm-stat">
+        <span class="rm-stat__label">{{ locale.t('cashbook.totalKhata') }}</span>
+        <span class="rm-stat__value num" [class]="directionClass(cb.totalKhata.direction)">{{
+          locale.money(cb.totalKhata.amount)
+        }}</span>
+        <span class="rm-stat__hint">{{ locale.t(directionKey(cb.totalKhata.direction)) }}</span>
+      </div>
       <div class="rm-stat">
         <span class="rm-stat__label">{{ locale.t('cashbook.closing') }}</span>
         <span class="rm-stat__value num">{{ locale.money(cb.closingBalance) }}</span>
@@ -83,6 +91,7 @@
                 <th scope="col">{{ locale.t('cashbook.col.time') }}</th>
                 <th scope="col">{{ locale.t('cashbook.col.detail') }}</th>
                 <th scope="col" class="end">{{ locale.t('cashbook.col.amount') }}</th>
+                <th scope="col" class="end">{{ locale.t('cashbook.col.khata') }}</th>
                 <th scope="col" class="end">{{ locale.t('cashbook.col.running') }}</th>
                 <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t('bill.col.actions') }}</span></th>
               </tr>
@@ -101,6 +110,13 @@
                   <td class="end num rm-cell-amt" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
                     {{ locale.money(row.amount) }}
                   </td>
+                  <td class="end" [attr.data-label]="locale.t('cashbook.col.khata')">
+                    <app-khata-amount
+                      [balance]="row.khata"
+                      [partyName]="row.partyName"
+                      discountLabel="bill.detail.discount"
+                    />
+                  </td>
                   <td class="end num" [attr.data-label]="locale.t('cashbook.col.running')">{{ locale.money(row.runningBalance) }}</td>
                   <td class="end rm-noprint">
                     @if (canEdit(row.event)) {
@@ -118,7 +134,7 @@
 
                 @if (pendingDelete() === row.transactionId) {
                   <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
-                    <td colspan="5">
+                    <td colspan="6">
                       <div class="rm-confirm">
                         <span class="rm-confirm__msg">{{ locale.t('entry.delete.confirm') }}</span>
                         <span class="rm-confirm__actions">
@@ -148,12 +164,13 @@
                       </td>
                       <td class="end num">{{ locale.money(line.amount) }}</td>
                       <td></td>
+                      <td></td>
                       <td class="rm-noprint"></td>
                     </tr>
                   }
                   <tr class="rm-subrow rm-subrow--tot">
                     <td></td>
-                    <td colspan="3" class="rm-subrow__tot">
+                    <td colspan="4" class="rm-subrow__tot">
                       <span>{{ locale.t('bill.detail.goodsTotal') }} <b class="num">{{ locale.money(bill.goodsTotal) }}</b></span>
                       <span>{{ locale.t('bill.detail.cashReceived') }} <b class="num amt--in">{{ locale.money(bill.cashReceived) }}</b></span>
                       @if (bill.outstanding.direction !== 'SETTLED') {

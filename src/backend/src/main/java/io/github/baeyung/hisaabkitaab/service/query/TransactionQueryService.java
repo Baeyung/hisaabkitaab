@@ -48,7 +48,8 @@ public class TransactionQueryService
                         transaction.getBill(),
                         dateOf(transaction),
                         transaction.getParty() != null ? transaction.getParty().getName() : null,
-                        goodsTotal(transaction)
+                        goodsTotal(transaction),
+                        outstanding(transaction)
                 ))
                 .toList();
     }
@@ -110,17 +111,6 @@ public class TransactionQueryService
                 .mapToDouble(this::value)
                 .sum();
 
-        double partyNet = transaction.getLines()
-                .stream()
-                .filter(line -> line.getTargetKind() == TargetKind.PARTY)
-                .mapToDouble(line -> switch (line.getInOut())
-                {
-                    case IN -> value(line);
-                    case OUT -> -value(line);
-                    default -> 0;
-                })
-                .sum();
-
         return new BillDetailResponse(
                 transaction.getId(),
                 transaction.getBill(),
@@ -132,8 +122,29 @@ public class TransactionQueryService
                 lines,
                 goodsTotal,
                 cashReceived,
-                PartyBalance.of(partyNet)
+                outstanding(transaction)
         );
+    }
+
+    /**
+     * What the document left on its party's khata: Σ IN − Σ OUT over its PARTY lines,
+     * turned into an amount plus a direction. Shared by the list and the detail so the
+     * "on khata" column and the document itself can never disagree.
+     */
+    private PartyBalance outstanding(Transaction transaction)
+    {
+        double partyNet = transaction.getLines()
+                .stream()
+                .filter(line -> line.getTargetKind() == TargetKind.PARTY)
+                .mapToDouble(line -> switch (line.getInOut())
+                {
+                    case IN -> value(line);
+                    case OUT -> -value(line);
+                    default -> 0;
+                })
+                .sum();
+
+        return PartyBalance.of(partyNet);
     }
 
     /** Same line math as the detail view, so the list amount can never disagree with the detail total. */

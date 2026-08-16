@@ -725,10 +725,15 @@ export const en = {
   'cashbook.closing': 'Closing balance',
   'cashbook.totalIn': 'Cash in',
   'cashbook.totalOut': 'Cash out',
+  // The drawer only ever sees part of an entry; this is the rest of it.
+  'cashbook.totalKhata': 'On khata',
   'cashbook.col.time': 'Date & Time',
   'cashbook.col.detail': 'Detail',
   'cashbook.col.amount': 'Amount',
+  'cashbook.col.khata': 'On khata',
   'cashbook.col.running': 'Balance',
+  // Read aloud in place of the dash the column shows when an entry settled in full.
+  'khata.none': 'Nothing on khata',
   'cashbook.empty.title': 'No cash movement this day',
   'cashbook.empty.body': 'Entries with cash in or out will show here as you record them.',
   'cashbook.loadError': "Couldn't load the cashbook. Please try again.",
