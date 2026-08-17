@@ -65,10 +65,32 @@ public class PdfRenderService
      */
     public byte[] render(String html)
     {
+        return post(Map.of("html", html));
+    }
+
+    /**
+     * The same printout, fetched rather than handed over: the renderer opens {@code url} in its
+     * browser and prints what loads.
+     *
+     * <p>For the scheduled reports, which have no screen to copy. Nobody is signed in when they
+     * run, so there is no rendered page to post — but the renderer is a real browser, and the
+     * app is perfectly capable of drawing itself if something opens it. The page authorises
+     * its own API calls with the token in the URL; see {@code ReportTokenService}.
+     *
+     * @param url an absolute address the renderer can reach, which is not the same as one a
+     *            customer could — in Docker it is the frontend container by service name.
+     */
+    public byte[] renderUrl(String url)
+    {
+        return post(Map.of("url", url));
+    }
+
+    private byte[] post(Map<String, String> request)
+    {
         byte[] pdf = client.post()
                 .uri("/render")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("html", html))
+                .body(request)
                 .retrieve()
                 .body(byte[].class);
         dump(pdf);

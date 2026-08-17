@@ -31,6 +31,7 @@
 - [x] conversions in store settings, with import export options. also includes most renown conversions
 - [x] purchase screen
 - [x] cash received/udhaar on all screens
+- [x] monthly reports + party reminders, on whatsapp
 - [ ] button for sending whatsapp to all members
-- [ ] monthly reports + party reminders, on email + whatsapp
 - [ ] enhance mobile UI for better UX.
+- [ ] toasts on error/succes api

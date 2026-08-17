@@ -120,7 +120,7 @@ public class DashboardQueryService
                 deadStock(storeId, saleLines),
                 parties.receivables(),
                 parties.payables(),
-                staleReceivables(storeId, to),
+                staleReceivables(storeId, to).stream().limit(TOP_STALE).toList(),
                 topExpenses(expenseLines)
         );
     }
@@ -248,11 +248,21 @@ public class DashboardQueryService
     }
 
     // ── Receivable aging: how long each party's oldest unpaid charge has sat ──
-    // Walk each party's PARTY lines in order, FIFO-settling payments (OUT) against
-    // the oldest outstanding charges (IN). Whatever charge is still unpaid at the
-    // front of the queue is the oldest due; its business date, measured against
-    // `asOf`, is the party's staleness. Only parties still net-owing are surfaced.
-    private List<StaleParty> staleReceivables(String storeId, LocalDate asOf)
+    /**
+     * Walk each party's PARTY lines in order, FIFO-settling payments (OUT) against
+     * the oldest outstanding charges (IN). Whatever charge is still unpaid at the
+     * front of the queue is the oldest due; its business date, measured against
+     * `asOf`, is the party's staleness. Only parties still net-owing are surfaced,
+     * biggest debt first.
+     *
+     * <p>Public and unlimited because the dashboard is no longer the only caller: the
+     * monthly reminder job picks who to chase by exactly this measure, and the whole
+     * point of it is that a party paying a token amount against an old bill is still
+     * stale. The dashboard takes the top {@code TOP_STALE} of what comes back; a
+     * second implementation of the same walk is what would make the shopkeeper's
+     * "who owes me longest" list and the reminders disagree.
+     */
+    public List<StaleParty> staleReceivables(String storeId, LocalDate asOf)
     {
         Map<String, List<TransactionLine>> byParty = transactionLineRepository.findPartyLinesByStore(storeId)
                 .stream()
@@ -280,7 +290,7 @@ public class DashboardQueryService
             }
         }
         stale.sort(Comparator.comparingDouble(StaleParty::amount).reversed());
-        return stale.stream().limit(TOP_STALE).toList();
+        return stale;
     }
 
     private LocalDate businessDate(TransactionLine line)

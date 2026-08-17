@@ -68,6 +68,17 @@ public class UserPlan
 
     private Integer whatsappQuota;
 
+    /** Whether this account's shops may send their owner a nightly report. */
+    private Boolean dailyReports;
+
+    /**
+     * How many khata holders one of this account's shops may chase in a month. A ceiling on the
+     * selection, not a quota to spend: the monthly job takes this many of the shop's biggest
+     * debtors in one pass and leaves the rest, so unlike {@link #whatsappQuota} there is nothing
+     * to record between runs. Zero switches the reminders off.
+     */
+    private Integer reminderContacts;
+
     /**
      * Messages spent against {@link #whatsappQuota} during {@link #whatsappPeriod}. Meaningless
      * on its own — read it only together with the period, which is what says whether the count

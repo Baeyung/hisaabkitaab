@@ -1,0 +1,128 @@
+/* ── Store Settings › Reports ──────────────────────────────────────────
+   The label-rail-and-controls frame this screen shares with General and Menu:
+   an intro column on the left naming and explaining a section, its controls on
+   the right, and a save footer aligned under those controls.
+
+   ponytail: the frame below is a third copy — General and Menu each carry their
+   own. Copied rather than extracted because doing it properly means editing two
+   working screens' stylesheets, which is a bigger change than this feature asked
+   for and one no test would catch the regression of. The moment a fourth screen
+   wants it, pull .set__card/.sec/.fld/.set__foot out into settings-page.css the
+   way settings-table.css and settings-switch.css were already pulled out, and
+   delete all three copies together. */
+
+.set__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sec {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 10px 48px;
+  padding: 28px 0;
+  border-top: 1px solid var(--kg-line);
+}
+.sec__eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.sec__desc {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--kg-muted);
+  max-width: 30ch;
+}
+/* Set apart from the description above so it reads as a caveat rather than as
+   more instructions — the same treatment the note gets on General and Menu.
+   This screen has three of them, and each is something a shopkeeper should know
+   before switching something on rather than find out from a customer. */
+.sec__note {
+  margin: 4px 0 0;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--kg-line-strong);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-faint);
+  max-width: 46ch;
+}
+.sec__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 520px;
+}
+
+.fld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fld__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+/* What each threshold actually means, under the box rather than beside it: both
+   of them are measured in a way a shopkeeper would otherwise have to guess at. */
+.fld__hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--kg-faint);
+}
+/* A field whose switch is off is inert, and has to look it — otherwise the time
+   box on a shop that never turned reports on reads as something that will happen. */
+.fld__input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.set__foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 26px;
+  border-top: 1px solid var(--kg-line);
+  padding-inline-start: 288px; /* 240 rail + 48 gap → sits under .sec__fields */
+}
+.set__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-in);
+}
+.set__alert {
+  margin: 0;
+  padding: 10px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kg-out);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
+  border-radius: 11px;
+}
+
+/* The rail folds above its controls on a narrow screen; the footer loses the
+   indent that was aligning it under them. */
+@container (max-width: 760px) {
+  .sec {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 22px 0;
+  }
+  .sec__desc,
+  .sec__note {
+    max-width: none;
+  }
+  .set__foot {
+    padding-inline-start: 0;
+  }
+}

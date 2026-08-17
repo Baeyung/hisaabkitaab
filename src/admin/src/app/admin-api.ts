@@ -11,6 +11,13 @@ export interface PlanLimits {
   maxStores: number | null;
   maxUsers: number | null;
   whatsappQuota: number | null;
+  /** Whether this account's shops may send their owner a nightly report. */
+  dailyReports: boolean | null;
+  /**
+   * How many khata holders one of its shops may chase in a month. A ceiling on the monthly
+   * job's selection rather than a quota it spends, so zero switches the reminders off.
+   */
+  reminderContacts: number | null;
 }
 
 export interface Plan {
@@ -39,6 +46,8 @@ export interface PlanTierInfo {
   maxStores: number;
   maxUsers: number;
   whatsappQuota: number;
+  dailyReports: boolean;
+  reminderContacts: number;
 }
 
 export interface AssignPlanRequest {
@@ -47,6 +56,8 @@ export interface AssignPlanRequest {
   maxStores?: number | null;
   maxUsers?: number | null;
   whatsappQuota?: number | null;
+  dailyReports?: boolean | null;
+  reminderContacts?: number | null;
 }
 
 /**

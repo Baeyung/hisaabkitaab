@@ -316,6 +316,48 @@
                            focus:outline-none"
                   />
                 </label>
+
+                <!--
+                  How many khata holders one of this account's SHOPS may chase a month — a
+                  ceiling on who the monthly job picks, not a pool of messages it spends. Zero
+                  is how the reminders are switched off below Premium.
+                -->
+                <label class="block">
+                  <span class="font-mono text-xs text-faint">Reminder contacts</span>
+                  <input
+                    name="reminderContacts"
+                    type="number"
+                    min="0"
+                    [placeholder]="defaultsFor(plan.tier)?.reminderContacts ?? ''"
+                    [ngModel]="plan.reminderContacts"
+                    (ngModelChange)="update('reminderContacts', $event)"
+                    class="mt-1 w-full rounded border border-[var(--rule-strong)] bg-card px-3 py-2
+                           font-mono text-sm text-ink placeholder:text-faint focus:border-pine
+                           focus:outline-none"
+                  />
+                </label>
+
+                <!--
+                  Three states, not a checkbox: "leave it to the tier" is a different answer
+                  from "off for this account", and a checkbox has nowhere to put the first.
+                  Matches the blank-means-tier rule the number boxes beside it follow.
+                -->
+                <label class="block">
+                  <span class="font-mono text-xs text-faint">Daily report</span>
+                  <select
+                    name="dailyReports"
+                    [ngModel]="plan.dailyReports"
+                    (ngModelChange)="update('dailyReports', $event)"
+                    class="mt-1 w-full rounded border border-[var(--rule-strong)] bg-card px-3 py-2
+                           font-mono text-sm text-ink focus:border-pine focus:outline-none"
+                  >
+                    <option [ngValue]="null">
+                      {{ defaultsFor(plan.tier)?.dailyReports ? 'On' : 'Off' }} (tier)
+                    </option>
+                    <option [ngValue]="true">On</option>
+                    <option [ngValue]="false">Off</option>
+                  </select>
+                </label>
               </div>
             </div>
 

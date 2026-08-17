@@ -1,0 +1,192 @@
+@if (report(); as r) {
+  <!--
+    The renderer polls for this attribute and prints the moment it appears, so it belongs on an
+    element that only exists once the whole report has data — inside the @if, never outside it.
+  -->
+  <section class="rm-page rpt" data-report-ready>
+    <app-print-header [shop]="r.store" />
+
+    <header class="rpt__head">
+      <h1 class="rpt__title">Daily report</h1>
+      <p class="rpt__date">{{ r.date }}</p>
+    </header>
+
+    <!-- 1. The day as money moving. -->
+    <section class="rpt__sec">
+      <h2 class="rpt__h2">Cashbook</h2>
+
+      <div class="rpt__stats">
+        <span><b>Opening</b> {{ locale.money(r.cashbook.openingBalance) }}</span>
+        <span><b>In</b> {{ locale.money(r.cashbook.totalIn) }}</span>
+        <span><b>Out</b> {{ locale.money(r.cashbook.totalOut) }}</span>
+        <span><b>Closing</b> {{ locale.money(r.cashbook.closingBalance) }}</span>
+      </div>
+
+      @if (r.cashbook.rows.length === 0) {
+        <p class="rpt__empty">No cash moved today.</p>
+      } @else {
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th>Entry</th>
+              <th>Party</th>
+              <th class="rpt__num">In</th>
+              <th class="rpt__num">Out</th>
+              <th class="rpt__num">On khata</th>
+              <th class="rpt__num">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of r.cashbook.rows; track row.transactionId) {
+              <tr>
+                <td>
+                  <span class="rm-tbl__name">{{
+                    locale.describe(row.event, null, null, null)
+                  }}</span>
+                  @if (row.description || row.itemSummary) {
+                    <span class="rm-tbl__meta">{{ row.description || row.itemSummary }}</span>
+                  }
+                </td>
+                <td>{{ row.partyName || '—' }}</td>
+                <td class="rpt__num num">
+                  {{ row.inOut === 'IN' ? locale.money(row.amount) : '' }}
+                </td>
+                <td class="rpt__num num">
+                  {{ row.inOut === 'OUT' ? locale.money(row.amount) : '' }}
+                </td>
+                <td class="rpt__num num" [class]="tone(row.khata.direction)">
+                  {{ row.khata.direction === 'SETTLED' ? '—' : locale.money(row.khata.amount) }}
+                </td>
+                <td class="rpt__num num">{{ locale.money(row.runningBalance) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <!-- 2 and 3. What was sold and what was bought, with the goods on each. -->
+    @for (
+      group of [
+        { title: 'Bills', docs: r.bills },
+        { title: 'Purchases', docs: r.purchases },
+      ];
+      track group.title
+    ) {
+      <section class="rpt__sec">
+        <h2 class="rpt__h2">{{ group.title }}</h2>
+
+        @if (group.docs.length === 0) {
+          <p class="rpt__empty">Nothing recorded today.</p>
+        } @else {
+          @for (doc of group.docs; track doc.id) {
+            <div class="rpt__doc">
+              <div class="rpt__docHead">
+                <b>{{ doc.billNumber || doc.partyName || 'Cash' }}</b>
+                @if (doc.billNumber && doc.partyName) {
+                  <span>{{ doc.partyName }}</span>
+                }
+                <span class="num">{{ locale.money(doc.goodsTotal) }}</span>
+              </div>
+
+              @if (doc.lines.length > 0) {
+                <table class="rm-tbl rpt__lines">
+                  <tbody>
+                    @for (line of doc.lines; track $index) {
+                      <tr>
+                        <td>{{ line.itemName || '—' }}</td>
+                        <td class="rpt__num">
+                          {{ locale.qtyUnit(line.quantity ?? 0, line.unit) }}
+                        </td>
+                        <td class="rpt__num num">{{ locale.money(line.rate) }}</td>
+                        <td class="rpt__num num">{{ locale.money(line.amount) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+
+              <div class="rpt__docFoot">
+                <span>Cash {{ locale.money(doc.cashReceived) }}</span>
+                @if (doc.outstanding.direction !== 'SETTLED') {
+                  <span [class]="tone(doc.outstanding.direction)">
+                    On khata {{ locale.money(doc.outstanding.amount) }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        }
+      </section>
+    }
+
+    <!-- 4. Every khata as it stands at the close — a position, not a record of the day. -->
+    <section class="rpt__sec">
+      <h2 class="rpt__h2">Khatas</h2>
+
+      @if (owing().length === 0) {
+        <p class="rpt__empty">Every khata is settled.</p>
+      } @else {
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th>Party</th>
+              <th>Contact</th>
+              <th class="rpt__num">Balance</th>
+              <th>Direction</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (party of owing(); track party.partyId) {
+              <tr>
+                <td>{{ party.name }}</td>
+                <td class="num">{{ party.contact || '—' }}</td>
+                <td class="rpt__num num" [class]="tone(party.balance.direction)">
+                  {{ locale.money(party.balance.amount) }}
+                </td>
+                <td>{{ direction(party.balance.direction) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <!-- 5. What is on the shelf when the shutter comes down. -->
+    <section class="rpt__sec">
+      <h2 class="rpt__h2">Stock</h2>
+
+      @if (goods().length === 0) {
+        <p class="rpt__empty">No goods on the books.</p>
+      } @else {
+        <div class="rpt__stats">
+          <span><b>Stock value at cost</b> {{ locale.money(stockValue()) }}</span>
+        </div>
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th class="rpt__num">On hand</th>
+              <th class="rpt__num">Cost</th>
+              <th class="rpt__num">Sale</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of goods(); track item.itemId) {
+              <tr>
+                <td>{{ item.name }}</td>
+                <td class="rpt__num">{{ locale.qtyUnit(item.currentStock ?? 0, item.unit) }}</td>
+                <td class="rpt__num num">
+                  {{ item.costPrice === null ? '—' : locale.money(item.costPrice) }}
+                </td>
+                <td class="rpt__num num">
+                  {{ item.salePrice === null ? '—' : locale.money(item.salePrice) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  </section>
+}

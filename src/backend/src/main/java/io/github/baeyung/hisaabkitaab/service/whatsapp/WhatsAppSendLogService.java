@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.entity.WhatsAppSend;
+import io.github.baeyung.hisaabkitaab.enums.WhatsAppSendSource;
 import io.github.baeyung.hisaabkitaab.enums.WhatsAppSendStatus;
 import io.github.baeyung.hisaabkitaab.repository.WhatsAppSendRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +30,15 @@ public class WhatsAppSendLogService
 
     /**
      * @param sender whoever pressed send, which is not necessarily the owner whose quota is
-     *               charged for it — that is half the reason this is worth recording.
+     *               charged for it — that is half the reason this is worth recording. A
+     *               scheduled send has nobody pressing anything and names the shop's owner:
+     *               they are who turned the job on and whose plan carries it, and {@code
+     *               source} is what tells the two apart afterwards.
+     * @param source why this went out at all — see {@link WhatsAppSendSource}.
      */
     @Transactional
-    public void record(Store store, User sender, Addressee to, String filename, WhatsAppSendStatus status)
+    public void record(Store store, User sender, Addressee to, String filename,
+            WhatsAppSendStatus status, WhatsAppSendSource source)
     {
         repository.save(WhatsAppSend.builder()
                 .store(store)
@@ -43,6 +49,7 @@ public class WhatsAppSendLogService
                 .contact(to.contact())
                 .filename(filename)
                 .status(status)
+                .source(source)
                 .sentAt(Instant.now())
                 .build());
     }

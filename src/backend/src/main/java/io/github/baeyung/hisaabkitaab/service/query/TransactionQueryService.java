@@ -55,6 +55,20 @@ public class TransactionQueryService
                 .toList();
     }
 
+    /**
+     * Every document of one event on one business day, whole — what the daily report prints.
+     * Details rather than summaries because the report shows each bill's goods, and one query
+     * for the day beats {@link #getDetails} over ids the caller had to list first.
+     */
+    public List<BillDetailResponse> listDetailsInRange(
+            String storeId, TransactionEvent event, LocalDate from, LocalDate to)
+    {
+        return transactionRepository.findByStoreAndEventInRange(storeId, event, from, to)
+                .stream()
+                .map(this::toBillDetail)
+                .toList();
+    }
+
     public BillDetailResponse getDetail(String storeId, TransactionEvent event, String transactionId)
     {
         // Scoped by store id, and an id of the wrong event is "not found" — a purchase is not

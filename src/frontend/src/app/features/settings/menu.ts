@@ -1,5 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
+import {
+  CdkDrag,
+  CdkDragDrop,
+  CdkDragHandle,
+  CdkDropList,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
@@ -214,6 +220,9 @@ export class SettingsMenu {
       // does not edit how the shop navigates — General does. Rebuilding the document without
       // it would switch a counter shop back to the sidebar on the next menu save.
       easyMode: this.saved()?.easyMode === true,
+      // The same, for the same reason: Reports owns this, and arranging the sidebar must not
+      // be what silently switches a shop's nightly report and khata reminders back off.
+      reports: this.saved()?.reports,
     };
   }
 

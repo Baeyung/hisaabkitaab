@@ -1,0 +1,75 @@
+@if (reminder(); as r) {
+  <section class="rm-page rpt" data-report-ready>
+    <app-print-header [shop]="r.store" />
+
+    <header class="rpt__head">
+      <h1 class="rpt__title">Khata statement</h1>
+      <p class="rpt__date">{{ r.statement.partyName }} · {{ r.date }}</p>
+    </header>
+
+    <!--
+      The reminder's whole argument, said once at the top: what is owed, and how long the
+      oldest unpaid bill has sat. Everything below is the working.
+    -->
+    <section class="rpt__sec">
+      <div class="rpt__stats">
+        <span [class]="tone(r.statement.currentBalance.direction)">
+          <b>Balance</b> {{ locale.money(r.statement.currentBalance.amount) }}
+        </span>
+        <span><b>Total billed</b> {{ locale.money(r.statement.totalBilled) }}</span>
+        <span><b>Total paid</b> {{ locale.money(r.statement.totalPaid) }}</span>
+        <span>
+          <b>Last payment</b>
+          {{ r.statement.lastPaymentDate || 'None yet' }}
+        </span>
+        @if (r.daysStale > 0) {
+          <span><b>Oldest unpaid bill</b> {{ r.daysStale }} days</span>
+        }
+      </div>
+    </section>
+
+    <section class="rpt__sec">
+      <h2 class="rpt__h2">Entries</h2>
+
+      @if (r.statement.rows.length === 0) {
+        <p class="rpt__empty">Nothing on this khata yet.</p>
+      } @else {
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Entry</th>
+              <th class="rpt__num">Billed</th>
+              <th class="rpt__num">Paid</th>
+              <th class="rpt__num">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of r.statement.rows; track row.transactionId) {
+              <tr>
+                <td>{{ row.date }}</td>
+                <td>
+                  <span class="rm-tbl__name">{{
+                    locale.describe(row.event, null, null, null)
+                  }}</span>
+                  @if (row.description || row.itemSummary) {
+                    <span class="rm-tbl__meta">{{ row.description || row.itemSummary }}</span>
+                  }
+                </td>
+                <td class="rpt__num num">
+                  {{ row.inOut === 'IN' ? locale.money(row.amount) : '' }}
+                </td>
+                <td class="rpt__num num">
+                  {{ row.inOut === 'OUT' ? locale.money(row.amount) : '' }}
+                </td>
+                <td class="rpt__num num" [class]="tone(row.runningBalance.direction)">
+                  {{ locale.money(row.runningBalance.amount) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  </section>
+}

@@ -118,6 +118,7 @@ export const ur: Record<TranslationKey, string> = {
   'nav.settings.party': 'پارٹیاں',
   'nav.settings.units': 'یونٹ تبدیلی',
   'nav.settings.menu': 'مینو',
+  'nav.settings.reports': 'رپورٹس',
   'nav.closedHint': 'یہ دکان بند ہے — آپ کا پلان اب اسے نہیں سنبھالتا۔ کچھ ضائع نہیں ہوا۔',
 
   // ── بورڈ (آسان موڈ) ────────────────────────────────────────────────
@@ -992,4 +993,32 @@ export const ur: Record<TranslationKey, string> = {
   'settings.general.viewerNote': 'صرف دکان کا مالک انہیں بدل سکتا ہے۔',
   'error.ownerOnly': 'یہ صرف دکان کا مالک کر سکتا ہے۔',
   'error.deleteWindow': 'صرف دکان کا مالک 24 گھنٹے سے پرانی انٹریاں حذف کر سکتا ہے۔',
+  // ── Store Settings › Reports ──────────────────────────────────────
+  'settings.reports.subtitle': 'دن بھر کا حساب اپنے لیے، اور گاہکوں کو ان کا کھاتہ۔',
+  'settings.reports.notInPlan': 'یہ آپ کے پلان میں شامل نہیں۔ آن کرنے کے لیے پلان بڑھائیں۔',
+  'settings.reports.save': 'رپورٹس محفوظ کریں',
+  'settings.reports.saving': 'محفوظ ہو رہا ہے…',
+  'settings.reports.saved': 'رپورٹس محفوظ ہو گئیں',
+  'settings.reports.daily.title': 'روزانہ رپورٹ',
+  'settings.reports.daily.help':
+    'ہر شام، پورے دن کا حساب ایک PDF میں — روزنامچہ، بل، خرید، ہر کھاتہ اور موجودہ اسٹاک — واٹس ایپ پر۔',
+  'settings.reports.daily.quietDays': 'جس دن کوئی اندراج نہ ہو، اس دن کچھ نہیں بھیجا جائے گا۔',
+  'settings.reports.daily.switch': 'مجھے روزانہ رپورٹ بھیجیں',
+  'settings.reports.daily.time': 'بھیجنے کا وقت',
+  'settings.reports.reminders.title': 'کھاتہ یاد دہانی',
+  'settings.reports.reminders.help':
+    'مہینے میں ایک بار، جو گاہک پیچھے ہیں انہیں ان کے بقایا کا کھاتہ — نیچے دیے گئے اصول کے مطابق۔',
+  'settings.reports.reminders.toCustomers':
+    'یہ آپ کو نہیں، آپ کے گاہکوں کو جاتی ہیں۔ جس نے پیغام روکنے کو کہا ہو، اسے چھوڑ دیا جاتا ہے۔',
+  'settings.reports.reminders.cap':
+    'آپ کا پلان مہینے میں {{n}} گاہکوں تک ہے۔ زیادہ ہوں تو سب سے بڑی رقم والے پہلے۔',
+  'settings.reports.reminders.switch': 'ماہانہ کھاتہ یاد دہانی بھیجیں',
+  'settings.reports.reminders.day': 'مہینے کی تاریخ',
+  'settings.reports.reminders.dayHint': '31 کا مطلب مہینے کا آخری دن، جو بھی ہو۔',
+  'settings.reports.reminders.time': 'بھیجنے کا وقت',
+  'settings.reports.reminders.minAmount': 'صرف جب اتنا یا اس سے زیادہ دینا ہو',
+  'settings.reports.reminders.minAmountHint': '0 رہنے دیں تو ہر مقروض گاہک کو یاد دہانی جائے گی۔',
+  'settings.reports.reminders.minDays': 'اور سب سے پرانا غیر ادا بل اتنے دن پرانا ہو',
+  'settings.reports.reminders.minDaysHint':
+    'دن اس بل سے گنے جاتے ہیں جو اب تک ادا نہیں ہوا — یوں تھوڑا تھوڑا دینے والے گاہک کو بھی یاد دہانی جاتی ہے۔',
 };

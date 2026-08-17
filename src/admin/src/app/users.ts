@@ -11,6 +11,12 @@ interface PlanForm {
   maxStores: number | null;
   maxUsers: number | null;
   whatsappQuota: number | null;
+  /**
+   * Tri-state like the numbers beside it, and for the same reason: null is "leave it to the
+   * tier", which is not the same answer as an explicit false.
+   */
+  dailyReports: boolean | null;
+  reminderContacts: number | null;
 }
 
 /**
@@ -206,6 +212,8 @@ export class Users {
       maxStores: user.plan?.overrides.maxStores ?? null,
       maxUsers: user.plan?.overrides.maxUsers ?? null,
       whatsappQuota: user.plan?.overrides.whatsappQuota ?? null,
+      dailyReports: user.plan?.overrides.dailyReports ?? null,
+      reminderContacts: user.plan?.overrides.reminderContacts ?? null,
     });
   }
 
@@ -241,6 +249,8 @@ export class Users {
         maxStores: blankToNull(form.maxStores),
         maxUsers: blankToNull(form.maxUsers),
         whatsappQuota: blankToNull(form.whatsappQuota),
+        dailyReports: form.dailyReports,
+        reminderContacts: blankToNull(form.reminderContacts),
       });
       this.cancel();
       await this.load();
@@ -257,7 +267,13 @@ export class Users {
       count(plan.limits.maxStores, 'store'),
       count(plan.limits.maxUsers, 'user'),
       count(plan.limits.whatsappQuota, 'msg'),
-    ].join(' · ');
+      // Only worth a word when the plan actually carries them — every Basic row saying
+      // "no reports · 0 reminders" would be noise down the whole register.
+      plan.limits.dailyReports ? 'daily report' : null,
+      plan.limits.reminderContacts ? count(plan.limits.reminderContacts, 'reminder') : null,
+    ]
+      .filter((part): part is string => part !== null)
+      .join(' · ');
   }
 
   /** The tier's own numbers, shown as placeholders so a blank box says what it will mean. */

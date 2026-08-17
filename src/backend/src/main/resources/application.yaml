@@ -68,7 +68,19 @@ app:
   pdf:
     renderer-url: ${PDF_RENDERER_URL:http://localhost:3000}
     dump-dir: ${PDF_DUMP_DIR:}
+  reports:
+    # Where the renderer opens the report pages. Not frontend-base-url below: that is the
+    # public address, meant for links a person clicks in an email, and this is walked by our
+    # own headless browser on our own network. In Docker it is the frontend container by
+    # service name; in dev it is the Angular dev server.
+    page-base-url: ${REPORTS_PAGE_BASE_URL:http://localhost:4200}
+    # Signs the five-minute tokens those pages read with. Generated per process when blank.
+    secret: ${REPORTS_SECRET:}
   frontend-base-url: ${FRONTEND_BASE_URL:https://aapka.hisaabkitaab.shop}
+  # The shop's own clock. Everything a shopkeeper enters is already a plain business date with
+  # no timezone in it; this is only what the scheduler reads to know what "today" and "20:00"
+  # mean, and without it a report set for the evening would go out in the middle of the night.
+  timezone: ${APP_TIMEZONE:Asia/Karachi}
   email:
     enabled: ${EMAIL_ENABLED:false}
   verification:

@@ -1,0 +1,107 @@
+/*
+ * The scheduled reports' own layout. Small on purpose: the app's global print stylesheet
+ * already paginates .rm-tbl, whitens the paper, avoids breaking rows across pages, and repeats
+ * the letterhead's watermark and brand line — see the @media print block in styles.css. All
+ * that is left here is what a multi-section report needs and no single-screen printout did.
+ *
+ * Not wrapped in @media print. These pages are only ever opened by the renderer, which puts
+ * Chrome in print media before it navigates, so a screen half would be a second layout nobody
+ * ever looks at.
+ */
+
+.rpt__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.rpt__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.rpt__date {
+  margin: 0;
+  font-size: 12px;
+  color: #444;
+}
+
+/*
+ * A section starts on the page it fits on rather than being split from its own heading. Not
+ * `break-before: page` — five sections on five sheets would turn a quiet day into a booklet.
+ */
+.rpt__sec {
+  margin-bottom: 16px;
+  break-inside: auto;
+}
+
+.rpt__h2 {
+  margin: 0 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid #999;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  /* Never the last thing on a sheet. */
+  break-after: avoid;
+}
+
+.rpt__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+}
+
+.rpt__stats b {
+  font-weight: 600;
+  color: #444;
+}
+
+.rpt__empty {
+  margin: 0;
+  font-size: 11px;
+  font-style: italic;
+  color: #555;
+}
+
+.rpt__num {
+  text-align: right;
+}
+
+/* One bill or purchase, kept whole — a five-line invoice split over a page turn is unreadable. */
+.rpt__doc {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dotted #bbb;
+  break-inside: avoid;
+}
+
+.rpt__docHead,
+.rpt__docFoot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 14px;
+  font-size: 11.5px;
+}
+
+.rpt__docFoot {
+  color: #444;
+}
+
+/* The goods inside one document: indented under its heading and lighter than the day's tables. */
+.rpt__lines {
+  margin: 3px 0 3px 14px;
+  font-size: 10.5px;
+}
+
+.rpt__lines td {
+  padding: 2px 8px;
+  border-bottom: 0;
+}

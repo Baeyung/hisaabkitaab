@@ -22,6 +22,11 @@ services:
     build: ./src/renderer
     container_name: hisaabkitaab-renderer
     restart: unless-stopped
+    # Deliberately no depends_on frontend, though the scheduled reports do open it by service
+    # name (see REPORTS_PAGE_BASE_URL below): frontend already depends on backend, and backend
+    # on renderer, so declaring it would close a cycle compose refuses to start. Nothing is
+    # lost — the name is resolved when a report is rendered, not at boot, and the first one is
+    # a scheduled minute away.
 
   backend:
     build: ./src/backend
@@ -30,6 +35,15 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hisaabkitaab
       PDF_RENDERER_URL: http://renderer:3000
+      # Where the renderer opens the report pages. The frontend container, by service name —
+      # not the public hostname: this URL is walked by our own browser on our own network, and
+      # the nginx there proxies /api back to this service, so the page's own calls stay
+      # same-origin and never leave the compose network.
+      REPORTS_PAGE_BASE_URL: ${REPORTS_PAGE_BASE_URL:-http://frontend}
+      # Signs the short-lived tokens those pages authenticate with. Generated per process when
+      # unset, which is fine for one backend; set it once there is more than one.
+      REPORTS_SECRET: ${REPORTS_SECRET:-}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Karachi}
       # Set PDF_DUMP_DIR=/pdf-dumps to keep every sent PDF under ./pdf-dumps on the host.
       PDF_DUMP_DIR: ${PDF_DUMP_DIR:-}
       BREVO_MAIL_USER_IDENTIFIER: ${BREVO_MAIL_USER_IDENTIFIER}

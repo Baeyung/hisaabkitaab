@@ -156,6 +156,8 @@ public class PlanService
                 .maxStores(request.maxStores())
                 .maxUsers(request.maxUsers())
                 .whatsappQuota(request.whatsappQuota())
+                .dailyReports(request.dailyReports())
+                .reminderContacts(request.reminderContacts())
                 .whatsappUsed(previous == null ? 0 : previous.getWhatsappUsed())
                 .whatsappPeriod(previous == null ? null : previous.getWhatsappPeriod())
                 .build());
@@ -321,6 +323,35 @@ public class PlanService
         {
             userPlanRepository.refundWhatsapp(ownerId, period);
         }
+    }
+
+    /**
+     * What this account's scheduled jobs are entitled to: whether the nightly report goes out,
+     * and how many khata holders one of its shops may chase in a month.
+     *
+     * <p>Answers rather than throws, unlike every other check here. Those are all reached from a
+     * request that someone is waiting on and whose refusal is worth reading; a job has nobody to
+     * tell, and a shop it is not allowed to report on is simply one it skips.
+     *
+     * <p>A lapsed plan is entitled to nothing. Reports are the one thing that would otherwise
+     * keep running for an account that stopped paying — nobody has to sign in for them, so the
+     * usual door ({@link #isLoginAllowed}) is never reached. This is also why the clock is not
+     * started here as {@link #spendWhatsappMessage} does: a job must never be what spends an
+     * account's trial, on a shop whose owner has not opened the app.
+     */
+    public PlanLimits scheduledReportsOf(String ownerId)
+    {
+        if (!enabled)
+        {
+            // Plans switched off: a dev box reports on everything, as generously as the top tier.
+            return PlanLimits.effectiveFor(UserPlan.builder().tier(PlanTier.ENTERPRISE).build());
+        }
+
+        UserPlan plan = planOf(ownerId);
+
+        return isActive(plan, LocalDate.now())
+                ? PlanLimits.effectiveFor(plan)
+                : new PlanLimits(0, 0, 0, false, 0);
     }
 
     /**
