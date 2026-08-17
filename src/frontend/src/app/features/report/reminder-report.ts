@@ -43,6 +43,18 @@ export class ReminderReportPage {
     return directionClass(direction);
   }
 
+  /** "They owe" / "You owe" — colour never carries the direction on its own. */
+  protected direction(direction: BalanceDirection): string {
+    switch (direction) {
+      case 'THEY_OWE_YOU':
+        return 'To receive';
+      case 'YOU_OWE_THEM':
+        return 'To pay';
+      default:
+        return 'Settled';
+    }
+  }
+
   private async load(storeId: string, partyId: string, date: string, token: string): Promise<void> {
     this.reminder.set(await this.api.reminder(storeId, partyId, date, token));
   }
