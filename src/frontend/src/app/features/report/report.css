@@ -1,0 +1,354 @@
+/*
+ * The scheduled reports' own layout. It leans on the app's global print stylesheet — see the
+ * @media print block in styles.css — for whitening the paper, keeping rows off page seams, and
+ * repeating the letterhead's watermark and brand line. What is here is what a multi-page
+ * document needs and no single-screen printout did: a contents page, a chapter per section,
+ * and columns whose widths are decided rather than guessed.
+ *
+ * Not wrapped in @media print. These pages are only ever opened by the renderer, which puts
+ * Chrome in print media before it navigates, so a screen half would be a second layout nobody
+ * ever looks at.
+ */
+
+.rpt {
+  font-size: 12.5px;
+}
+
+.rpt__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.rpt__title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.rpt__date {
+  margin: 0;
+  font-size: 13px;
+  color: #444;
+}
+
+/*
+ * A chapter and its heading arrive together on a fresh sheet. This is the report's one real
+ * cost — a shut shop still prints five near-empty pages — and it buys the thing the document
+ * is for: it is read by thumb, in WhatsApp, and a reader looking for what they bought today
+ * should land on it rather than scroll past the cashbook to reach it.
+ */
+.rpt__sec {
+  margin-bottom: 18px;
+}
+
+.rpt__sec--page {
+  break-before: page;
+}
+
+.rpt__h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding-bottom: 5px;
+  border-bottom: 1.5px solid #333;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  /* Never the last thing on a sheet. */
+  break-after: avoid;
+}
+
+/* The chapter's number, matching its line on the contents page. */
+.rpt__h2No {
+  min-width: 20px;
+  padding: 1px 5px;
+  background: #eceae4;
+  font-size: 12px;
+  text-align: center;
+}
+
+/*
+ * Which shop, and which day. Only the first sheet carries the letterhead — it is in the normal
+ * flow — so without this every page after it would be an anonymous table.
+ */
+.rpt__h2Meta {
+  margin-inline-start: auto;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: #666;
+}
+
+.rpt__empty {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: #555;
+}
+
+/* ── page one ──────────────────────────────────────────────────────────── */
+
+/* The day's five headline figures, big enough to be the only thing read. */
+.rpt__glance {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  margin: 0;
+  background: #d9d5cc;
+  border: 1px solid #d9d5cc;
+}
+
+.rpt__fig {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 12px;
+  background: #fff;
+}
+
+/* Five figures in a two-column grid: the last one spans, rather than leaving a hole. */
+.rpt__fig:last-child {
+  grid-column: 1 / -1;
+}
+
+.rpt__fig dt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6b655c;
+}
+
+.rpt__fig dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* Colour never carries the direction alone — the ledger's own wording rides beside it. */
+.rpt__fig dd em {
+  font-size: 10.5px;
+  font-weight: 500;
+  font-style: normal;
+  color: #6b655c;
+}
+
+.rpt__toc {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rpt__tocRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dotted #c8c4bc;
+  font-size: 13px;
+}
+
+.rpt__tocNo {
+  min-width: 20px;
+  padding: 1px 5px;
+  background: #eceae4;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.rpt__tocName {
+  font-weight: 700;
+}
+
+/* The leader dots between a chapter and its figure — decoration, hidden from readers. */
+.rpt__tocLead {
+  flex: 1;
+  min-width: 12px;
+  border-bottom: 1px dotted #b8b4ac;
+  transform: translateY(-3px);
+}
+
+.rpt__tocNote {
+  color: #555;
+}
+
+/* ── the report's tables ───────────────────────────────────────────────── */
+
+/*
+ * `table-layout: fixed` is the whole reason these have widths at all. Left to size themselves,
+ * a table whose content does not fit the 186mm of printable A4 simply grows past the right
+ * margin, and Chrome prints what fits and clips the rest — which is how "Rs 30,000" reached a
+ * shopkeeper's phone as "Rs 30,00". Fixed columns cannot overflow: text wraps instead.
+ */
+.rpt-t {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+}
+
+.rpt-t th,
+.rpt-t td {
+  padding: 5px 7px;
+  overflow-wrap: anywhere;
+}
+
+.rpt-t thead th {
+  padding: 4px 7px;
+  font-size: 9.5px;
+  /* Fixed columns are narrow; a header that refuses to wrap is a header that overlaps. */
+  white-space: normal;
+}
+
+.rpt__num {
+  text-align: end;
+}
+
+.rpt-t .rm-tbl__meta {
+  font-size: 9.5px;
+}
+
+/*
+ * Totals read down one column of figures, so every closing row keeps its label in the
+ * row-header cells and its number in the same column the lines above used. `th` rather than
+ * `td` for the labels: they name their row, and it keeps the global `.rm-tbl td` colour off
+ * the figure beside them.
+ *
+ * These are the last rows of the tbody, not a tfoot — see the templates for why.
+ */
+.rpt-t th[colspan] {
+  padding: 5px 7px;
+  text-align: end;
+  font-weight: 600;
+  color: #333;
+}
+
+.rpt-t__tot ~ tr td,
+.rpt-t__tot td {
+  font-weight: 700;
+}
+
+/* The rule the shopkeeper's own arithmetic stops at. */
+.rpt-t__tot th,
+.rpt-t__tot td {
+  border-top: 1.5px solid #333;
+}
+
+/* Nothing hangs below the last figure. */
+.rpt-t tbody tr:last-child td,
+.rpt-t tbody tr:last-child th {
+  border-bottom: 0;
+}
+
+/* One bill or purchase, kept whole — a five-line invoice split over a page turn is unreadable. */
+.rpt-t--doc {
+  break-inside: avoid;
+}
+
+/* Who the paper is with, above its own columns. */
+.rpt-t__cap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 7px 3px;
+  text-align: start;
+  caption-side: top;
+}
+
+.rpt-t__party {
+  font-size: 13.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.rpt-t__ref {
+  font-size: 10.5px;
+  color: #666;
+}
+
+/* The section's own bottom line: a foot with nothing above it but the documents. */
+.rpt-t--sum {
+  margin-top: 4px;
+}
+
+/* Column widths, per table. Item names take the slack; figures get what they need and no more. */
+.rpt-t--cash th:nth-child(1) {
+  width: 8%;
+}
+.rpt-t--cash th:nth-child(2) {
+  width: 40%;
+}
+.rpt-t--cash th:nth-child(3),
+.rpt-t--cash th:nth-child(4),
+.rpt-t--cash th:nth-child(5) {
+  width: 17.33%;
+}
+
+.rpt-t--doc th:nth-child(1) {
+  width: 44%;
+}
+.rpt-t--doc th:nth-child(2) {
+  width: 16%;
+}
+.rpt-t--doc th:nth-child(3) {
+  width: 18%;
+}
+.rpt-t--doc th:nth-child(4) {
+  width: 22%;
+}
+
+.rpt-t--khata th:nth-child(1) {
+  width: 34%;
+}
+.rpt-t--khata th:nth-child(2) {
+  width: 24%;
+}
+.rpt-t--khata th:nth-child(3) {
+  width: 22%;
+}
+.rpt-t--khata th:nth-child(4) {
+  width: 20%;
+}
+
+.rpt-t--stmt th:nth-child(1) {
+  width: 16%;
+}
+.rpt-t--stmt th:nth-child(2) {
+  width: 44%;
+}
+.rpt-t--stmt th:nth-child(3),
+.rpt-t--stmt th:nth-child(4) {
+  width: 20%;
+}
+
+.rpt-t--stock th:nth-child(1) {
+  width: 32%;
+}
+.rpt-t--stock th:nth-child(2) {
+  width: 17%;
+}
+.rpt-t--stock th:nth-child(3),
+.rpt-t--stock th:nth-child(4) {
+  width: 15%;
+}
+.rpt-t--stock th:nth-child(5) {
+  width: 21%;
+}
+
+/*
+ * A summary table has no head, so nothing declares its columns — the foot's own cells have to.
+ * Same split as the document tables above, so the two stacks of figures line up.
+ */
+.rpt-t--sum th:first-child {
+  width: 78%;
+}

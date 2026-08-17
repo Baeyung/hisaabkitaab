@@ -32,6 +32,22 @@ export const routes: Routes = [
     path: 'block/:token',
     loadComponent: () => import('./features/block/block').then((m) => m.Block),
   },
+  // The two scheduled reports, as pages. Public and unguarded like the opt-out above, and for
+  // a stranger reason: the only thing that ever opens these is our own headless Chrome, sent
+  // here by the backend to turn the page into the PDF it WhatsApps out. There is nobody signed
+  // in when a job runs, so `:token` — signed by the backend, good for five minutes and for
+  // this shop and date alone — is what the page authenticates its API calls with. See
+  // `ReportService`. `withComponentInputBinding` is what hands these segments to the
+  // components as inputs.
+  {
+    path: 'report/daily/:storeId/:date/:token',
+    loadComponent: () => import('./features/report/daily-report').then((m) => m.DailyReportPage),
+  },
+  {
+    path: 'report/reminder/:storeId/:partyId/:date/:token',
+    loadComponent: () =>
+      import('./features/report/reminder-report').then((m) => m.ReminderReportPage),
+  },
   {
     path: 'login',
     canActivate: [apexAppRedirectGuard, publicOnlyGuard],
@@ -275,6 +291,15 @@ export const routes: Routes = [
         path: 'settings/menu',
         canActivate: [ownerGuard],
         loadComponent: () => import('./features/settings/menu').then((m) => m.SettingsMenu),
+      },
+      {
+        // The shop's scheduled sends. ownerGuard like the menu, and for a stronger reason:
+        // these put messages on customers' phones and are metered against the owner's plan.
+        // No plan gate on the route — a shop whose plan stopped covering reports must still
+        // reach the screen to see that, and the switches grey themselves out instead.
+        path: 'settings/reports',
+        canActivate: [ownerGuard],
+        loadComponent: () => import('./features/settings/reports').then((m) => m.SettingsReports),
       },
       {
         path: 'settings/general',

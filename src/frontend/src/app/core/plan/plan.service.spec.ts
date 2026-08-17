@@ -19,7 +19,13 @@ const paid: PlanStatus = {
   expiresAt: isoIn(30),
   expired: false,
   enforced: true,
-  limits: { maxStores: 1, maxUsers: 1, whatsappQuota: 50 },
+  limits: {
+    maxStores: 1,
+    maxUsers: 1,
+    whatsappQuota: 50,
+    dailyReports: true,
+    reminderContacts: 20,
+  },
   usage: { stores: 1, users: 1, whatsapp: 0 },
 };
 

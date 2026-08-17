@@ -44,7 +44,7 @@ const overLimit: PlanStatus = {
   expiresAt: null,
   expired: false,
   enforced: true,
-  limits: { maxStores: 1, maxUsers: 1, whatsappQuota: 0 },
+  limits: { maxStores: 1, maxUsers: 1, whatsappQuota: 0, dailyReports: false, reminderContacts: 0 },
   usage: { stores: 2, users: 1, whatsapp: 0 },
 };
 

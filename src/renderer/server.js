@@ -1,6 +1,9 @@
 /*
  * Turns a printable page into a PDF, using the only text engine that gets Urdu right.
  *
+ * Takes either the page itself (`html`, from a shopkeeper pressing send) or an address to go
+ * and fetch it from (`url`, from the scheduled reports) — see `render` for why both exist.
+ *
  * The statement and the bill are laid out entirely in the frontend's print stylesheet, and
  * Noto Nastaliq needs full contextual shaping that no JS PDF library does — so rather than
  * rebuild either, this renders the page the shopkeeper is looking at in a real browser and
@@ -21,14 +24,33 @@ async function chrome() {
   return browser;
 }
 
-async function render(html) {
+/**
+ * Two ways in, because there are two kinds of caller.
+ *
+ * A shopkeeper pressing send posts `html`: the page is already on their screen, fully drawn,
+ * and the browser here only has to print what it is handed. A scheduled report has no such
+ * screen — nobody is signed in and nothing has been rendered — so it posts a `url` instead and
+ * this navigates to it, letting the app fetch its own data with the token in that URL. Chrome
+ * is already here; asking it to open a page is strictly less work than building one elsewhere,
+ * and it is the only way a single-page app can produce markup at all.
+ *
+ * A navigated page is done when it says so. `networkidle` is not enough on its own: the app
+ * boots, fetches, and only then lays the report out, so the wait is for the `data-report-ready`
+ * flag the report component sets once it has drawn — otherwise the PDF is a spinner.
+ */
+async function render({ html, url }) {
   const context = await (await chrome()).newContext();
   try {
     const page = await context.newPage();
     await page.emulateMedia({ media: 'print' });
-    // The page carries its own webfonts by @import, so wait for the network to go quiet
-    // rather than for load — otherwise Nastaliq falls back mid-render.
-    await page.setContent(html, { waitUntil: 'networkidle', timeout: 20_000 });
+    if (url) {
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
+      await page.waitForSelector('[data-report-ready]', { timeout: 30_000 });
+    } else {
+      // The page carries its own webfonts by @import, so wait for the network to go quiet
+      // rather than for load — otherwise Nastaliq falls back mid-render.
+      await page.setContent(html, { waitUntil: 'networkidle', timeout: 20_000 });
+    }
     await page.evaluate(() => document.fonts.ready);
     return await page.pdf({
       format: 'A4',
@@ -63,12 +85,14 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    const { html } = JSON.parse(await body(req));
-    if (typeof html !== 'string' || html.length === 0) {
-      res.writeHead(400).end('html required');
+    const { html, url } = JSON.parse(await body(req));
+    const hasHtml = typeof html === 'string' && html.length > 0;
+    const hasUrl = typeof url === 'string' && url.length > 0;
+    if (!hasHtml && !hasUrl) {
+      res.writeHead(400).end('html or url required');
       return;
     }
-    const pdf = await render(html);
+    const pdf = await render({ html, url });
     res.writeHead(200, { 'Content-Type': 'application/pdf', 'Content-Length': pdf.length }).end(pdf);
   } catch (error) {
     console.error('render failed:', error);

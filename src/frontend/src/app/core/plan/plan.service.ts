@@ -13,7 +13,19 @@ export interface PlanStatus {
   expired: boolean;
   /** False when the server is not applying plans at all — see {@link PlanService.atStoreLimit}. */
   enforced: boolean;
-  limits: { maxStores: number; maxUsers: number; whatsappQuota: number };
+  /**
+   * `dailyReports` and `reminderContacts` are what the scheduled reports are sold on:
+   * whether the nightly report may go out at all, and how many khata holders one shop may
+   * chase in a month. A ceiling on the monthly job's selection rather than a quota it spends,
+   * so zero means the reminders are simply not part of this plan.
+   */
+  limits: {
+    maxStores: number;
+    maxUsers: number;
+    whatsappQuota: number;
+    dailyReports: boolean;
+    reminderContacts: number;
+  };
   /** `whatsapp` is messages sent *this calendar month* — the other two are standing totals. */
   usage: { stores: number; users: number; whatsapp: number };
 }
@@ -171,6 +183,30 @@ export class PlanService {
    * by waiting for the month to turn, the other only by upgrading.
    */
   readonly whatsappExhausted = computed(() => this.whatsappRemaining() === 0);
+
+  /**
+   * Whether this account's plan covers the nightly report to the owner, and the monthly khata
+   * reminders. Both true while the plan is unknown or unenforced, for the same reason
+   * {@link whatsappAllowed} is — a screen must not lock itself over a plan it has not read.
+   *
+   * The Reports settings screen greys itself out on these, but the rule is the scheduler's:
+   * it asks the plan again when the job fires, so a shop whose plan lapsed after the setting
+   * was saved simply stops sending. Same arrangement as the WhatsApp button.
+   */
+  readonly dailyReportsAllowed = computed(() => this.covers((l) => l.dailyReports));
+
+  readonly remindersAllowed = computed(() => this.covers((l) => l.reminderContacts > 0));
+
+  /** How many parties one shop may chase a month, or null when there is no number to show. */
+  readonly reminderContacts = computed(() => {
+    const status = this._status();
+    return status === null || !status.enforced ? null : status.limits.reminderContacts;
+  });
+
+  private covers(has: (limits: PlanStatus['limits']) => boolean): boolean {
+    const status = this._status();
+    return status === null || !status.enforced || (!status.expired && has(status.limits));
+  }
 
   /**
    * How many shops are open beyond what the plan covers, and how many seats are spent beyond

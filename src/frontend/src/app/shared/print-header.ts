@@ -1,5 +1,14 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { StoreService } from '../core/store/store.service';
+
+/** What a letterhead needs to know about a shop — met by both `Store` and `ReportStore`. */
+export interface Letterhead {
+  name: string;
+  address?: string | null;
+  contact?: string | null;
+  logoUri?: string | null;
+  watermarkUri?: string | null;
+}
 
 /**
  * The shop's letterhead, shown only on the printed page (cashbook, ledger,
@@ -8,6 +17,12 @@ import { StoreService } from '../core/store/store.service';
  * logo and watermark. Plain <img> (not NgOptimizedImage) because the URIs are
  * inline base64. Hidden on screen via :host; the page's own header carries the
  * on-screen title.
+ *
+ * The scheduled report pages pass their shop in through `shop` instead. They are
+ * open pages with nobody signed in, so no store has been selected and there is
+ * nothing for `StoreService.current()` to return — but a report needs the same
+ * letterhead, watermark and brand line as everything else the shop prints, and
+ * that is exactly what should not be written out a second time.
  *
  * It also carries the hisaabkitaab mark in the page footer, which is why this
  * sits on every printable screen rather than only the letterheaded ones: a PDF
@@ -114,6 +129,12 @@ import { StoreService } from '../core/store/store.service';
 })
 export class PrintHeader {
   private readonly stores = inject(StoreService);
+
+  /** The shop to letterhead by, for pages that have one without having selected one. */
+  readonly shop = input<Letterhead | null>(null);
+
   /** The shop whose books are open — a bill must be letterheaded by the shop that issued it. */
-  protected readonly store = this.stores.current;
+  protected readonly store = computed<Letterhead | null>(
+    () => this.shop() ?? this.stores.current(),
+  );
 }

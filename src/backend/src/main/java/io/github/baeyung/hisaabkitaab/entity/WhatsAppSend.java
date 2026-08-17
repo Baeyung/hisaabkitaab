@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.github.baeyung.hisaabkitaab.enums.WhatsAppSendSource;
 import io.github.baeyung.hisaabkitaab.enums.WhatsAppSendStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -75,6 +76,14 @@ public class WhatsAppSend
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private WhatsAppSendStatus status;
+
+    /**
+     * Why it was sent — a shopkeeper's button, or one of the two scheduled jobs. Also what
+     * the scheduler reads to know it has already run; see {@code WhatsAppSendRepository}.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private WhatsAppSendSource source;
 
     @Column(name = "sent_at", nullable = false)
     private Instant sentAt;

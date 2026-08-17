@@ -117,6 +117,7 @@ export const en = {
   'nav.settings.party': 'Parties',
   'nav.settings.units': 'Unit Conversions',
   'nav.settings.menu': 'Menu',
+  'nav.settings.reports': 'Reports',
   // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
   // same two things `stores.suspendedSettled` says on the picker, in one line.
   'nav.closedHint': 'This shop is closed — your plan no longer covers it. Nothing has been lost.',
@@ -279,6 +280,7 @@ export const en = {
   'setup.khatas.empty': 'Nothing added yet.',
   'setup.note':
     'None of this is locked in. Items, parties, branding, and the opening balances all live in Store Settings — change or add to them whenever you like.',
+  'setup.hint.add': 'add and start the next',
   'setup.written': 'Written so far',
   'setup.negative': 'Amounts and quantities cannot be less than zero.',
   'setup.remove': 'Remove',
@@ -538,6 +540,7 @@ export const en = {
   'processing.description.ph': 'Optional',
   'processing.clear': 'Clear',
   'processing.saveNext': 'Save + Next',
+  'processing.hint.save': 'save this batch',
   'processing.effect': 'Effect',
   'processing.effect.bought': 'Bought in',
   'processing.effect.cashOut': 'Cash out',
@@ -659,6 +662,8 @@ export const en = {
   'common.delete': 'Delete',
   'common.cancel': 'Cancel',
   'common.update': 'Update',
+  'entry.hint.next': 'next line',
+  'entry.hint.save': 'save this bill',
   'entry.delete.confirm':
     'Delete this entry? This permanently removes it and undoes its effect on cash, khata and stock.',
   'entry.delete.confirmBtn': 'Delete',
@@ -1022,6 +1027,34 @@ export const en = {
   'settings.general.viewerNote': 'Only the shop owner can change these.',
   'error.ownerOnly': 'Only the shop owner can do this.',
   'error.deleteWindow': 'Only the shop owner can delete entries older than 24 hours.',
+  // ── Store Settings › Reports ──────────────────────────────────────
+  'settings.reports.subtitle': 'Send yourself the day’s books, and your customers their khata.',
+  'settings.reports.notInPlan': 'Your plan does not include this. Upgrade to switch it on.',
+  'settings.reports.save': 'Save reports',
+  'settings.reports.saving': 'Saving…',
+  'settings.reports.saved': 'Reports saved',
+  'settings.reports.daily.title': 'Daily report',
+  'settings.reports.daily.help':
+    'Every evening, the whole day on one PDF — cashbook, bills, purchases, every khata and what is left in stock — sent to you on WhatsApp.',
+  'settings.reports.daily.quietDays': 'On a day you record nothing, nothing is sent.',
+  'settings.reports.daily.switch': 'Send me the daily report',
+  'settings.reports.daily.time': 'Send at',
+  'settings.reports.reminders.title': 'Khata reminders',
+  'settings.reports.reminders.help':
+    'Once a month, a statement of what they owe goes to the customers who are behind — by the rule you set below.',
+  'settings.reports.reminders.toCustomers':
+    'These go to your customers, not to you. Anyone who has asked you to stop messaging them is left out.',
+  'settings.reports.reminders.cap':
+    'Your plan covers {{n}} customers a month. If more are behind, the biggest amounts are chased first.',
+  'settings.reports.reminders.switch': 'Send monthly khata reminders',
+  'settings.reports.reminders.day': 'Day of the month',
+  'settings.reports.reminders.dayHint': '31 means the last day, whatever the month is.',
+  'settings.reports.reminders.time': 'Send at',
+  'settings.reports.reminders.minAmount': 'Only if they owe at least',
+  'settings.reports.reminders.minAmountHint': 'Leave at 0 to chase every customer who owes.',
+  'settings.reports.reminders.minDays': 'And their oldest unpaid bill is older than',
+  'settings.reports.reminders.minDaysHint':
+    'Counted in days from the oldest bill still unpaid — so a customer paying a little each month is still chased for an old one.',
 } as const;
 
 export type TranslationKey = keyof typeof en;

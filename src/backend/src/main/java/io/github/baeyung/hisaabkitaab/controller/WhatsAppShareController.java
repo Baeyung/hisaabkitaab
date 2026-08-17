@@ -20,6 +20,7 @@ import io.github.baeyung.hisaabkitaab.dto.whatsapp.ShareResult;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.User;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
+import io.github.baeyung.hisaabkitaab.enums.WhatsAppSendSource;
 import io.github.baeyung.hisaabkitaab.enums.WhatsAppSendStatus;
 import io.github.baeyung.hisaabkitaab.security.CurrentStore;
 import io.github.baeyung.hisaabkitaab.security.UserPrincipal;
@@ -132,7 +133,8 @@ public class WhatsAppShareController
             if (blocks.has(to.recipientId(), to.contact()))
             {
                 optedOut.add(to.name());
-                sendLog.record(store, sender, to, request.filename(), WhatsAppSendStatus.BLOCKED);
+                sendLog.record(store, sender, to, request.filename(),
+                        WhatsAppSendStatus.BLOCKED, WhatsAppSendSource.SHARE);
             }
             else
             {
@@ -153,7 +155,8 @@ public class WhatsAppShareController
                 // worth raising — nothing has happened yet and the message explains itself.
                 // Part-way through a list it is not: messages have already gone out, and the
                 // honest reply is which ones did.
-                sendLog.record(store, sender, to, request.filename(), WhatsAppSendStatus.FAILED);
+                sendLog.record(store, sender, to, request.filename(),
+                        WhatsAppSendStatus.FAILED, WhatsAppSendSource.SHARE);
                 if (sent == 0 && failed.isEmpty())
                 {
                     throw e;
@@ -177,7 +180,8 @@ public class WhatsAppShareController
                 // Includes the renderer falling over: the message was charged a moment ago and
                 // nothing went out, so it goes back before the failure leaves here.
                 planService.releaseWhatsappMessage(ownerId, charged);
-                sendLog.record(store, sender, to, request.filename(), WhatsAppSendStatus.FAILED);
+                sendLog.record(store, sender, to, request.filename(),
+                        WhatsAppSendStatus.FAILED, WhatsAppSendSource.SHARE);
                 throw e;
             }
 
@@ -192,7 +196,8 @@ public class WhatsAppShareController
             }
 
             sendLog.record(store, sender, to, request.filename(),
-                    delivered ? WhatsAppSendStatus.SENT : WhatsAppSendStatus.FAILED);
+                    delivered ? WhatsAppSendStatus.SENT : WhatsAppSendStatus.FAILED,
+                    WhatsAppSendSource.SHARE);
         }
 
         failed.addAll(optedOut);

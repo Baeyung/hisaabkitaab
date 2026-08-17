@@ -89,7 +89,14 @@
 
 <section class="sale rm-noprint">
   <!-- ── entry form ─────────────────────────────────────────────────────── -->
-  <div class="sale__form">
+  <!-- Enter belongs to the line grid (it opens the next line), so saving takes the chord.
+       It is bound on the whole form, not the grid: a shopkeeper who has just typed the cash
+       received should be able to post the bill without reaching back for the button. -->
+  <div
+    class="sale__form"
+    (keydown.control.enter)="save()"
+    (keydown.meta.enter)="save()"
+  >
     <header class="sale__head">
       <div>
         <p class="sale__eyebrow">{{ locale.t(config().labels.newEntry) }}</p>
@@ -153,8 +160,14 @@
       </div>
 
       @for (line of lines(); track line.key) {
-        <div class="grid__row">
+        <!-- The foot line: ruled, not yet written on. It counts for nothing until it is. -->
+        <div
+          class="grid__row"
+          [class.grid__row--waiting]="!written(line)"
+          (keydown)="onLineKey($event, line.key)"
+        >
           <app-combobox
+            #designField
             [small]="true"
             [options]="itemNames()"
             [value]="line.design"
@@ -191,12 +204,19 @@
             [attr.placeholder]="locale.t(config().labels.colRate)"
             [attr.aria-label]="locale.t(config().labels.colRate)"
           />
-          <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+          <!-- A rule, not "Rs 0": nothing has been written on this line, so it owes nothing. -->
+          <span class="grid__amount num">
+            @if (written(line)) {
+              {{ locale.money(lineAmount(line)) }}
+            } @else {
+              <span class="grid__amount-rule" aria-hidden="true">—</span>
+            }
+          </span>
           <button
             type="button"
             class="iconbtn iconbtn--danger"
             (click)="removeLine(line.key)"
-            [disabled]="lines().length === 1"
+            [disabled]="!written(line)"
             [attr.aria-label]="locale.t(config().labels.lineRemove)"
           >
             <svg
@@ -228,9 +248,19 @@
         }
       }
 
-      <button type="button" class="linkbtn" (click)="addLine()">
-        + {{ locale.t(config().labels.lineAdd) }}
-      </button>
+      <div class="grid__foot">
+        <button type="button" class="linkbtn" (click)="addLine()">
+          + {{ locale.t(config().labels.lineAdd) }}
+        </button>
+        <!-- The rhythm, said once, where it is being used. Hidden on touch, where there
+             are no keys to press. -->
+        <p class="grid__keys">
+          <kbd class="key">↵</kbd>
+          <span>{{ locale.t('entry.hint.next') }}</span>
+          <kbd class="key">{{ saveChord }}</kbd>
+          <span>{{ locale.t('entry.hint.save') }}</span>
+        </p>
+      </div>
     </div>
 
     <!-- totals + money -->
@@ -312,7 +342,8 @@
           />
         }
         <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
-          {{ locale.t(config().labels.saveNext) }} ↵
+          {{ locale.t(config().labels.saveNext) }}
+          <kbd class="key key--on">{{ saveChord }}</kbd>
         </button>
       }
     </div>

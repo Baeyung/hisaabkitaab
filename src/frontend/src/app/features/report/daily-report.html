@@ -1,0 +1,316 @@
+@if (report(); as r) {
+  <!--
+    The renderer polls for this attribute and prints the moment it appears, so it belongs on an
+    element that only exists once the whole report has data — inside the @if, never outside it.
+  -->
+  <section class="rm-page rpt" data-report-ready>
+    <app-print-header [shop]="r.store" />
+
+    <header class="rpt__head">
+      <h1 class="rpt__title">Daily report</h1>
+      <p class="rpt__date num">{{ r.date }}</p>
+    </header>
+
+    <!-- Page one: the whole day in five figures, and where to find the working for them. -->
+    <section class="rpt__sec">
+      <h2 class="rpt__h2">The day at a glance</h2>
+      <dl class="rpt__glance">
+        <div class="rpt__fig">
+          <dt>Opening cash</dt>
+          <dd class="num">{{ locale.money(r.cashbook.openingBalance) }}</dd>
+        </div>
+        <div class="rpt__fig">
+          <dt>Cash in</dt>
+          <dd class="num amt--in">{{ locale.money(r.cashbook.totalIn) }}</dd>
+        </div>
+        <div class="rpt__fig">
+          <dt>Cash out</dt>
+          <dd class="num amt--out">{{ locale.money(r.cashbook.totalOut) }}</dd>
+        </div>
+        <div class="rpt__fig">
+          <dt>Closing cash</dt>
+          <dd class="num">{{ locale.money(r.cashbook.closingBalance) }}</dd>
+        </div>
+        <!-- The half of the day the drawer never sees: what these entries did to the khatas. -->
+        <div class="rpt__fig">
+          <dt>On khata today</dt>
+          <dd class="num" [class]="tone(r.cashbook.totalKhata.direction)">
+            {{ locale.money(r.cashbook.totalKhata.amount) }}
+            <em>{{ direction(r.cashbook.totalKhata.direction) }}</em>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="rpt__sec">
+      <h2 class="rpt__h2">Contents</h2>
+      <ol class="rpt__toc">
+        @for (chapter of chapters(); track chapter.no) {
+          <li class="rpt__tocRow">
+            <span class="rpt__tocNo num">{{ chapter.no }}</span>
+            <span class="rpt__tocName">{{ chapter.name }}</span>
+            <span class="rpt__tocLead" aria-hidden="true"></span>
+            <span class="rpt__tocNote num">{{ chapter.note }}</span>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <!--
+      1. The day as money moving. Same columns the cashbook screen shows, in the same order —
+      a report that re-cut its own columns would be a second reading of the books.
+    -->
+    <section class="rpt__sec rpt__sec--page">
+      <h2 class="rpt__h2">
+        <span class="rpt__h2No num">1</span>Cashbook
+        <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+      </h2>
+
+      @if (r.cashbook.rows.length === 0) {
+        <p class="rpt__empty">No cash moved today.</p>
+      } @else {
+        <table class="rm-tbl rpt-t rpt-t--cash">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Entry</th>
+              <th class="rpt__num">Amount</th>
+              <th class="rpt__num">On khata</th>
+              <th class="rpt__num">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of r.cashbook.rows; track row.transactionId) {
+              <tr>
+                <td class="num">{{ time(row.occurredAt) }}</td>
+                <td>
+                  <span class="rm-tbl__name">{{
+                    locale.describe(row.event, row.partyName, row.amount, row.itemSummary)
+                  }}</span>
+                  @if (row.description) {
+                    <span class="rm-tbl__meta">{{ row.description }}</span>
+                  }
+                </td>
+                <td
+                  class="rpt__num num"
+                  [class.amt--in]="row.inOut === 'IN'"
+                  [class.amt--out]="row.inOut === 'OUT'"
+                >
+                  {{ locale.money(row.amount) }}
+                </td>
+                <td class="rpt__num num" [class]="tone(row.khata.direction)">
+                  @if (row.khata.direction === 'SETTLED') {
+                    —
+                  } @else {
+                    {{ locale.money(row.khata.amount) }}
+                    <!-- The column already says "on khata"; it only needs naming when it isn't
+                         one, which with nobody to put it on it cannot be. -->
+                    @if (!row.partyName) {
+                      <span class="rm-tbl__meta">Discount</span>
+                    }
+                  }
+                </td>
+                <td class="rpt__num num">{{ locale.money(row.runningBalance) }}</td>
+              </tr>
+            }
+
+            <!--
+              Where the day ended up, on both sides: what the khatas moved, and what the drawer
+              holds. The two columns above each get their own closing figure.
+
+              In the tbody rather than a tfoot, which is the one place semantics would cost the
+              reader: Chrome repeats a tfoot on every sheet a table spills onto, so a busy day
+              would print its closing balance three times, on two pages where it isn't the
+              closing figure yet. The thead above is repeated for the same reason, and there it
+              is exactly what is wanted.
+            -->
+            <tr class="rpt-t__tot">
+              <th colspan="2">Closing</th>
+              <td class="rpt__num num"></td>
+              <td class="rpt__num num" [class]="tone(r.cashbook.totalKhata.direction)">
+                {{ locale.money(r.cashbook.totalKhata.amount) }}
+                <span class="rm-tbl__meta">{{ direction(r.cashbook.totalKhata.direction) }}</span>
+              </td>
+              <td class="rpt__num num">{{ locale.money(r.cashbook.closingBalance) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <!--
+      2 and 3. What was sold and what was bought. One table per document rather than a head-and-
+      footnotes block: the goods, the total they came to, the cash that changed hands and what
+      was left on the khata all belong in one column of figures, read straight down.
+    -->
+    @for (group of groups(); track group.no) {
+      <section class="rpt__sec rpt__sec--page">
+        <h2 class="rpt__h2">
+          <span class="rpt__h2No num">{{ group.no }}</span>{{ group.title }}
+          <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+        </h2>
+
+        @if (group.docs.length === 0) {
+          <p class="rpt__empty">Nothing recorded today.</p>
+        } @else {
+          @for (doc of group.docs; track doc.id) {
+            <table class="rm-tbl rpt-t rpt-t--doc">
+              <caption class="rpt-t__cap">
+                <span class="rpt-t__party">{{ doc.partyName || group.noParty }}</span>
+                @if (doc.billNumber) {
+                  <span class="rpt-t__ref num">{{ doc.billNumber }}</span>
+                }
+              </caption>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th class="rpt__num">Units</th>
+                  <th class="rpt__num">Price/unit</th>
+                  <th class="rpt__num">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (line of doc.lines; track $index) {
+                  <tr>
+                    <td>{{ line.itemName || '—' }}</td>
+                    <td class="rpt__num num">{{ locale.qtyUnit(line.quantity ?? 0, line.unit) }}</td>
+                    <td class="rpt__num num">{{ locale.money(line.rate) }}</td>
+                    <td class="rpt__num num">{{ locale.money(line.amount) }}</td>
+                  </tr>
+                }
+
+                <!-- The three figures that close a document, read straight down the same
+                     column the goods were priced in. See the cashbook above on why these are
+                     tbody rows and not a tfoot. -->
+                <tr class="rpt-t__tot">
+                  <th colspan="3">Total</th>
+                  <td class="rpt__num num">{{ locale.money(doc.goodsTotal) }}</td>
+                </tr>
+                <tr>
+                  <th colspan="3">{{ group.cashLabel }}</th>
+                  <td class="rpt__num num amt--in">{{ locale.money(doc.cashReceived) }}</td>
+                </tr>
+                @if (doc.outstanding.direction !== 'SETTLED') {
+                  <tr>
+                    <th colspan="3">{{ gapLabel(doc.partyName) }}</th>
+                    <td class="rpt__num num" [class]="tone(doc.outstanding.direction)">
+                      {{ locale.money(doc.outstanding.amount) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+
+          <!-- The section's own bottom line, so the day's selling (or buying) is one figure. -->
+          <table class="rm-tbl rpt-t rpt-t--doc rpt-t--sum">
+            <tbody>
+              <tr class="rpt-t__tot">
+                <th colspan="3">{{ group.title }} today · {{ group.docs.length }}</th>
+                <td class="rpt__num num">{{ locale.money(group.goodsTotal) }}</td>
+              </tr>
+              <tr>
+                <th colspan="3">{{ group.cashLabel }}</th>
+                <td class="rpt__num num amt--in">{{ locale.money(group.cashTotal) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        }
+      </section>
+    }
+
+    <!-- 4. Every khata as it stands at the close — a position, not a record of the day. -->
+    <section class="rpt__sec rpt__sec--page">
+      <h2 class="rpt__h2">
+        <span class="rpt__h2No num">4</span>Khatas
+        <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+      </h2>
+
+      @if (owing().length === 0) {
+        <p class="rpt__empty">Every khata is settled.</p>
+      } @else {
+        <table class="rm-tbl rpt-t rpt-t--khata">
+          <thead>
+            <tr>
+              <th>Party</th>
+              <th>Contact</th>
+              <th class="rpt__num">Balance</th>
+              <th class="rpt__num">Direction</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (party of owing(); track party.partyId) {
+              <tr>
+                <td>{{ party.name }}</td>
+                <td class="num">{{ party.contact || '—' }}</td>
+                <td class="rpt__num num" [class]="tone(party.balance.direction)">
+                  {{ locale.money(party.balance.amount) }}
+                </td>
+                <td class="rpt__num">{{ direction(party.balance.direction) }}</td>
+              </tr>
+            }
+
+            <!-- Both sides, never netted: what the shop is owed and what it owes are two
+                 facts, and one figure would hide the smaller of them. -->
+            <tr class="rpt-t__tot">
+              <th colspan="2">To receive</th>
+              <td class="rpt__num num amt--in">{{ locale.money(toReceive()) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <th colspan="2">To pay</th>
+              <td class="rpt__num num amt--out">{{ locale.money(toPay()) }}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <!-- 5. What is on the shelf when the shutter comes down. -->
+    <section class="rpt__sec rpt__sec--page">
+      <h2 class="rpt__h2">
+        <span class="rpt__h2No num">5</span>Stock
+        <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+      </h2>
+
+      @if (goods().length === 0) {
+        <p class="rpt__empty">No goods on the books.</p>
+      } @else {
+        <table class="rm-tbl rpt-t rpt-t--stock">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th class="rpt__num">On hand</th>
+              <th class="rpt__num">Cost</th>
+              <th class="rpt__num">Sale</th>
+              <th class="rpt__num">Value at cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of goods(); track item.itemId) {
+              <tr>
+                <td>{{ item.name }}</td>
+                <td class="rpt__num num">{{ locale.qtyUnit(item.currentStock ?? 0, item.unit) }}</td>
+                <td class="rpt__num num">
+                  {{ item.costPrice === null ? '—' : locale.money(item.costPrice) }}
+                </td>
+                <td class="rpt__num num">
+                  {{ item.salePrice === null ? '—' : locale.money(item.salePrice) }}
+                </td>
+                <td class="rpt__num num">
+                  {{ locale.money(itemValue(item.currentStock, item.costPrice)) }}
+                </td>
+              </tr>
+            }
+
+            <tr class="rpt-t__tot">
+              <th colspan="4">Stock value at cost</th>
+              <td class="rpt__num num">{{ locale.money(stockValue()) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      }
+    </section>
+  </section>
+}

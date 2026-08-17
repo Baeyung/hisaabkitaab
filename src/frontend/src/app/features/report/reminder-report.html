@@ -1,0 +1,117 @@
+@if (reminder(); as r) {
+  <section class="rm-page rpt" data-report-ready>
+    <app-print-header [shop]="r.store" />
+
+    <header class="rpt__head">
+      <h1 class="rpt__title">Khata statement</h1>
+      <p class="rpt__date num">{{ r.statement.partyName }} · {{ r.date }}</p>
+    </header>
+
+    <!--
+      The reminder's whole argument, said once at the top: what is owed, and how long the
+      oldest unpaid bill has sat. Everything below is the working.
+    -->
+    <section class="rpt__sec">
+      <h2 class="rpt__h2">
+        <span>Where this khata stands</span>
+        <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+      </h2>
+
+      <dl class="rpt__glance">
+        <div class="rpt__fig">
+          <dt>Total billed</dt>
+          <dd class="num">{{ locale.money(r.statement.totalBilled) }}</dd>
+        </div>
+        <div class="rpt__fig">
+          <dt>Total paid</dt>
+          <dd class="num amt--in">{{ locale.money(r.statement.totalPaid) }}</dd>
+        </div>
+        <div class="rpt__fig">
+          <dt>Last payment</dt>
+          <dd class="num">{{ r.statement.lastPaymentDate || 'None yet' }}</dd>
+        </div>
+        <div class="rpt__fig">
+          <dt>Oldest unpaid bill</dt>
+          <dd class="num">{{ r.daysStale > 0 ? r.daysStale + ' days' : '—' }}</dd>
+        </div>
+        <div class="rpt__fig">
+          <dt>Balance outstanding</dt>
+          <dd class="num" [class]="tone(r.statement.currentBalance.direction)">
+            {{ locale.money(r.statement.currentBalance.amount) }}
+            <em>{{ direction(r.statement.currentBalance.direction) }}</em>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!--
+      The working, in the khata screen's own columns — the customer who rings about this is
+      looking at the same paper the shop is.
+
+      No page break before it, unlike the daily report's chapters: this document makes one
+      claim, and the evidence for it should be on the sheet that makes it.
+    -->
+    <section class="rpt__sec">
+      <h2 class="rpt__h2">
+        <span>Entries</span>
+        <span class="rpt__h2Meta">{{ r.statement.partyName }} · {{ r.date }}</span>
+      </h2>
+
+      @if (r.statement.rows.length === 0) {
+        <p class="rpt__empty">Nothing on this khata yet.</p>
+      } @else {
+        <table class="rm-tbl rpt-t rpt-t--stmt">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Entry</th>
+              <th class="rpt__num">Amount</th>
+              <th class="rpt__num">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of r.statement.rows; track row.transactionId) {
+              <tr>
+                <td class="num">{{ row.date }}</td>
+                <td>
+                  <span class="rm-tbl__name">{{
+                    locale.describe(row.event, r.statement.partyName, row.amount, row.itemSummary)
+                  }}</span>
+                  @if (row.description) {
+                    <span class="rm-tbl__meta">{{ row.description }}</span>
+                  }
+                  @if (row.cleared === true) {
+                    <span class="rm-tbl__meta">Cleared</span>
+                  }
+                </td>
+                <td
+                  class="rpt__num num"
+                  [class.amt--in]="row.inOut === 'IN'"
+                  [class.amt--out]="row.inOut === 'OUT'"
+                >
+                  {{ row.inOut === 'NONE' ? '—' : locale.money(row.amount) }}
+                </td>
+                <td class="rpt__num num" [class]="tone(row.runningBalance.direction)">
+                  {{ locale.money(row.runningBalance.amount) }}
+                </td>
+              </tr>
+            }
+
+            <!-- A tbody row, not a tfoot: Chrome repeats a tfoot on every sheet a long
+                 statement spills onto, and a balance is only outstanding at the end. -->
+            <tr class="rpt-t__tot">
+              <th colspan="2">Balance outstanding</th>
+              <td class="rpt__num num"></td>
+              <td class="rpt__num num" [class]="tone(r.statement.currentBalance.direction)">
+                {{ locale.money(r.statement.currentBalance.amount) }}
+                <span class="rm-tbl__meta">{{
+                  direction(r.statement.currentBalance.direction)
+                }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      }
+    </section>
+  </section>
+}

@@ -13,12 +13,18 @@ import jakarta.validation.constraints.Size;
  * {@code stores.settings} by {@code StoreSettingsConverter}, and sent to the client on every
  * {@code StoreSummary} so the menu can be drawn right the first time.
  *
- * <p><strong>The backend does not know what any of this means.</strong> It caps how much of it
+ * <p><strong>The backend does not know what most of this means.</strong> It caps how much of it
  * there can be and validates nothing else — the menu keys are the client's, and only the
  * client knows whether {@code nav.ledger} is still a screen. Reconciling a saved arrangement
  * against the menu the running app actually has is {@code applyMenu()}'s job in
  * {@code layout/shell/nav.ts}. Keeping that judgement in one place is what lets a screen be
  * added, renamed or dropped without a migration.
+ *
+ * <p>{@code reports} is the deliberate exception: {@code ReportScheduler} reads it every minute
+ * and acts on it, so unlike the menu it is validated here and means something on this side. It
+ * rides in this document all the same, because it is the same kind of thing — one shop's own
+ * arrangement, saved by the same owner-only {@code PUT /api/stores/{id}/settings} — and a
+ * column of its own would buy nothing but a migration.
  *
  * @param menu       the top-level menu in the order it should appear. Not authoritative:
  *                   entries the client no longer recognises are dropped and menu items
@@ -32,22 +38,29 @@ import jakarta.validation.constraints.Size;
  *                   what it is for. Presentation only, like everything else here — every
  *                   route stays exactly as reachable, and the board is built from the same
  *                   arranged {@code menu} above, so hiding an entry hides its button too.
+ * @param reports    when this shop's daily report and monthly khata reminders go out, and who
+ *                   the reminders chase. Both off until an owner turns them on; see
+ *                   {@link ReportSettings}.
  */
 public record StoreSettings(
         @Size(max = 64) List<@Valid MenuSetting> menu,
         Set<ChromeItem> hideChrome,
-        boolean easyMode)
+        boolean easyMode,
+        @Valid ReportSettings reports)
 {
     /** What a shop with a null {@code settings} column means: the built-in menu, nothing hidden. */
-    public static final StoreSettings EMPTY = new StoreSettings(List.of(), EnumSet.noneOf(ChromeItem.class), false);
+    public static final StoreSettings EMPTY = new StoreSettings(
+            List.of(), EnumSet.noneOf(ChromeItem.class), false, ReportSettings.DEFAULT);
 
     /**
      * Null-safe by construction, so nothing downstream — the converter, the client, a future
-     * caller — has to ask whether half of a stored document was present.
+     * caller — has to ask whether half of a stored document was present. Every shop arranged
+     * before reports existed has no {@code reports} key at all, and reads as sending nothing.
      */
     public StoreSettings
     {
         menu = menu == null ? List.of() : List.copyOf(menu);
         hideChrome = hideChrome == null ? EnumSet.noneOf(ChromeItem.class) : Set.copyOf(hideChrome);
+        reports = reports == null ? ReportSettings.DEFAULT : reports;
     }
 }

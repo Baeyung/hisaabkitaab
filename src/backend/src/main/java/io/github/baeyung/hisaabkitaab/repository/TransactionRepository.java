@@ -61,6 +61,27 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
             @Param("storeId") String storeId,
             @Param("event") TransactionEvent event);
 
+    /**
+     * One business day's documents of one event, oldest first — the daily report, which reads
+     * the day in the order it happened rather than newest-first like the screens.
+     *
+     * <p>Dated by the same {@code coalesce(eventDate, entryDate)} every other query here sorts
+     * on, so a bill saved without a bill date lands on the day it was keyed in and cannot fall
+     * out of every report by having no date of its own.
+     */
+    @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
+    @Query("""
+            select t from Transaction t
+            where t.store.id = :storeId and t.event = :event
+              and coalesce(t.eventDate, t.entryDate) between :from and :to
+            order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc
+            """)
+    List<Transaction> findByStoreAndEventInRange(
+            @Param("storeId") String storeId,
+            @Param("event") TransactionEvent event,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
     @EntityGraph(attributePaths = {"party", "lines", "lines.item"})
     Optional<Transaction> findByIdAndStoreId(String id, String storeId);
 

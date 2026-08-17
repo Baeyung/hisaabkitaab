@@ -1,0 +1,164 @@
+<section class="set">
+  <header class="set__head">
+    <div class="set__titles">
+      <h1 class="set__title">{{ locale.t('nav.settings.reports') }}</h1>
+      <p class="set__sub">{{ locale.t('settings.reports.subtitle') }}</p>
+    </div>
+  </header>
+
+  <form class="set__card" (submit)="$event.preventDefault(); save()">
+    <!-- ── the nightly report ────────────────────────────────────── -->
+    <section class="sec" aria-labelledby="sec-daily">
+      <div class="sec__intro">
+        <h2 class="sec__eyebrow" id="sec-daily">{{ locale.t('settings.reports.daily.title') }}</h2>
+        <p class="sec__desc">{{ locale.t('settings.reports.daily.help') }}</p>
+        <!-- Said once, because it is the question every shopkeeper asks of a daily anything. -->
+        <p class="sec__note">{{ locale.t('settings.reports.daily.quietDays') }}</p>
+        @if (!plan.dailyReportsAllowed()) {
+          <p class="sec__note">{{ locale.t('settings.reports.notInPlan') }}</p>
+        }
+      </div>
+
+      <div class="sec__fields">
+        <label class="sw sw--wide" [class.sw--locked]="!plan.dailyReportsAllowed()">
+          <input
+            class="sw__box"
+            type="checkbox"
+            [checked]="form().dailyEnabled"
+            [disabled]="!plan.dailyReportsAllowed()"
+            (change)="set('dailyEnabled', $any($event.target).checked)"
+          />
+          <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
+          <span class="sw__text">{{ locale.t('settings.reports.daily.switch') }}</span>
+        </label>
+
+        <label class="fld">
+          <span class="fld__label">{{ locale.t('settings.reports.daily.time') }}</span>
+          <input
+            class="fld__input"
+            type="time"
+            [value]="form().dailyTime"
+            [disabled]="!plan.dailyReportsAllowed() || !form().dailyEnabled"
+            (change)="set('dailyTime', $any($event.target).value)"
+          />
+        </label>
+      </div>
+    </section>
+
+    <!-- ── the monthly khata reminders ───────────────────────────── -->
+    <section class="sec" aria-labelledby="sec-reminders">
+      <div class="sec__intro">
+        <h2 class="sec__eyebrow" id="sec-reminders">
+          {{ locale.t('settings.reports.reminders.title') }}
+        </h2>
+        <p class="sec__desc">{{ locale.t('settings.reports.reminders.help') }}</p>
+        <!-- These go to customers, not to the shop. Worth being blunt about on the screen
+             that turns them on. -->
+        <p class="sec__note">{{ locale.t('settings.reports.reminders.toCustomers') }}</p>
+        @if (!plan.remindersAllowed()) {
+          <p class="sec__note">{{ locale.t('settings.reports.notInPlan') }}</p>
+        } @else if (contactCap(); as cap) {
+          <p class="sec__note">
+            {{ locale.t('settings.reports.reminders.cap', { n: cap.toString() }) }}
+          </p>
+        }
+      </div>
+
+      <div class="sec__fields">
+        <label class="sw sw--wide" [class.sw--locked]="!plan.remindersAllowed()">
+          <input
+            class="sw__box"
+            type="checkbox"
+            [checked]="form().reminderEnabled"
+            [disabled]="!plan.remindersAllowed()"
+            (change)="set('reminderEnabled', $any($event.target).checked)"
+          />
+          <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
+          <span class="sw__text">{{ locale.t('settings.reports.reminders.switch') }}</span>
+        </label>
+
+        <label class="fld">
+          <span class="fld__label">{{ locale.t('settings.reports.reminders.day') }}</span>
+          <input
+            class="fld__input"
+            type="number"
+            min="1"
+            max="31"
+            [value]="form().reminderDay"
+            [disabled]="!plan.remindersAllowed() || !form().reminderEnabled"
+            (change)="setNumber('reminderDay', $any($event.target).value, 1, 31)"
+          />
+          <!-- 31 in a 30-day month is the 30th, not a skipped month. -->
+          <span class="fld__hint">{{ locale.t('settings.reports.reminders.dayHint') }}</span>
+        </label>
+
+        <label class="fld">
+          <span class="fld__label">{{ locale.t('settings.reports.reminders.time') }}</span>
+          <input
+            class="fld__input"
+            type="time"
+            [value]="form().reminderTime"
+            [disabled]="!plan.remindersAllowed() || !form().reminderEnabled"
+            (change)="set('reminderTime', $any($event.target).value)"
+          />
+        </label>
+
+        <label class="fld">
+          <span class="fld__label">{{ locale.t('settings.reports.reminders.minAmount') }}</span>
+          <input
+            class="fld__input num"
+            type="number"
+            min="0"
+            step="100"
+            [value]="form().reminderMinAmount"
+            [disabled]="!plan.remindersAllowed() || !form().reminderEnabled"
+            (change)="setNumber('reminderMinAmount', $any($event.target).value, 0, 99999999)"
+          />
+          <span class="fld__hint">{{ locale.t('settings.reports.reminders.minAmountHint') }}</span>
+        </label>
+
+        <label class="fld">
+          <span class="fld__label">{{ locale.t('settings.reports.reminders.minDays') }}</span>
+          <input
+            class="fld__input num"
+            type="number"
+            min="0"
+            max="3650"
+            [value]="form().reminderMinDaysStale"
+            [disabled]="!plan.remindersAllowed() || !form().reminderEnabled"
+            (change)="setNumber('reminderMinDaysStale', $any($event.target).value, 0, 3650)"
+          />
+          <!-- Measured from the oldest bill still unpaid, not from the last payment: a party
+               paying a little every month against an old bill is still overdue on it. -->
+          <span class="fld__hint">{{ locale.t('settings.reports.reminders.minDaysHint') }}</span>
+        </label>
+      </div>
+    </section>
+
+    <div class="set__foot">
+      <button type="submit" class="btn btn--primary" [disabled]="saving()">
+        {{ saving() ? locale.t('settings.reports.saving') : locale.t('settings.reports.save') }}
+      </button>
+      <span class="set__status" role="status" aria-live="polite">
+        @if (savedKey(); as key) {
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            aria-hidden="true"
+          >
+            <path d="M4 12l5 5L20 6" />
+          </svg>
+          {{ locale.t(key) }}
+        }
+      </span>
+    </div>
+
+    @if (errorKey(); as key) {
+      <p role="alert" class="set__alert">{{ locale.t(key) }}</p>
+    }
+  </form>
+</section>

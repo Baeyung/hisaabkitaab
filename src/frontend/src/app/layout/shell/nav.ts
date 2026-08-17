@@ -109,6 +109,10 @@ export const NAV: NavItem[] = [
       // un-hides the others. No `writes` — arranging a menu records no business, so it stays
       // usable on a shop the plan has closed.
       { key: 'nav.settings.menu', path: 'settings/menu', requires: 'OWNER', locked: true },
+      // Owner-only: these sends are metered against their plan and go to their customers. No
+      // `writes` — a closed shop records nothing, but its owner should still be able to reach
+      // this and switch the reminders off rather than have them keep going out unseen.
+      { key: 'nav.settings.reports', path: 'settings/reports', requires: 'OWNER' },
     ],
   },
 ];
@@ -180,7 +184,10 @@ export function mergeMenu(nav: readonly NavItem[], saved: readonly MenuSetting[]
 
   return ordered(nav, saved).map((item) => {
     const setting = byKey.get(item.key);
-    const shown = { label: labelOf(setting), hidden: item.locked !== true && setting?.hidden === true };
+    const shown = {
+      label: labelOf(setting),
+      hidden: item.locked !== true && setting?.hidden === true,
+    };
 
     if (item.kind === 'link') {
       return { ...item, ...shown };

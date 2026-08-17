@@ -68,7 +68,12 @@ public class SecurityConfig
                             // customers, who have no account here — the unguessable
                             // storeId:recipientId token is the gate. See
                             // WhatsAppBlockController for what it does and does not expose.
-                            .requestMatchers("/api/block/**").permitAll();
+                            .requestMatchers("/api/block/**").permitAll()
+                            // The report pages the scheduler renders. Reached by headless
+                            // Chrome, which has nobody signed in — the signed, five-minute
+                            // token the job minted is the gate, and ReportController checks
+                            // it against the store and date in the path itself.
+                            .requestMatchers(HttpMethod.GET, "/api/reports/**").permitAll();
                     // With verification on, everything else needs a *verified* account:
                     // unverified logins authenticate but hold only ROLE_UNVERIFIED, so they
                     // fall through to the 403 access-denied handler. With it off, plain

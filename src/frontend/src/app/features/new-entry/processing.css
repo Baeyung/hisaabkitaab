@@ -43,6 +43,21 @@
   border: 1px solid var(--kg-line);
   border-radius: 10px;
 }
+/* A row rules itself in as the one above it is written on — see .grid__row in sale.css,
+   which this grid deliberately matches rather than inventing its own timing. */
+.pgrid__row {
+  animation: rule-in 180ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pgrid__row {
+    animation: none;
+  }
+}
+/* The waiting row has nothing to take away, and a greyed-out minus on the row about to
+   be typed in is noise on the one row that should read as blank. */
+.pgrid__row--waiting > .iconbtn {
+  visibility: hidden;
+}
 .pgrid__row > :nth-child(1) {
   grid-area: name;
 }

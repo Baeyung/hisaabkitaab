@@ -36,9 +36,45 @@ export interface MenuSetting {
  * `layout/shell/nav.ts` reconciles it against the menu this build actually has, so an
  * arrangement saved before a screen existed still shows that screen.
  */
+/**
+ * When this shop's scheduled reports go out, and who the reminders chase. Mirrors the backend
+ * `ReportSettings`, and unlike the rest of this document the backend genuinely reads it —
+ * `ReportScheduler` acts on these fields every minute, so they are validated on the way in.
+ *
+ * Both jobs are off until an owner turns them on, which is the only safe default for something
+ * that puts messages on customers' phones: a shop still keying in its opening khatas must not
+ * start chasing people over balances that are not yet true.
+ */
+export interface ReportSettings {
+  /** The nightly report to the shop's owner. */
+  dailyEnabled: boolean;
+  /** `HH:mm` in the shop's own timezone — exactly what `<input type="time">` produces. */
+  dailyTime: string;
+  /** The monthly khata reminders to the parties who owe. */
+  reminderEnabled: boolean;
+  /** Day of the month to chase on; 31 clamps to the real last day, so it means "month end". */
+  reminderDay: number;
+  reminderTime: string;
+  /** Only chase a party owing at least this much. */
+  reminderMinAmount: number;
+  /**
+   * Only chase once their oldest unpaid bill has sat this long. Measured by FIFO settlement,
+   * not by the last payment received — so a party paying a token amount monthly against an old
+   * bill is still stale, which is the point.
+   */
+  reminderMinDaysStale: number;
+}
+
 export interface StoreSettings {
   menu: MenuSetting[];
   hideChrome: ChromeItem[];
+  /**
+   * Optional on the way in only because an arrangement saved before reports existed has no
+   * field for it — absent reads as both jobs off. Anything rebuilding this document field by
+   * field has to carry it through, or saving an unrelated screen would switch a shop's reports
+   * off; see `menu.ts`.
+   */
+  reports?: ReportSettings;
   /**
    * Navigate from the board — one screen of big buttons — instead of the sidebar. A shop
    * setting rather than a personal one, because the counter tablet is shared: whoever is

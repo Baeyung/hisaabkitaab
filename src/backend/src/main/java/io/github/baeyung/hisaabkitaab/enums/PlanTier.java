@@ -19,11 +19,11 @@ import lombok.Getter;
 public enum PlanTier
 {
     /** Where every fresh signup lands: Basic's limits for a month, with WhatsApp switched off. */
-    TRIAL(1, 1, 0),
-    BASIC(1, 1, 50),
-    PREMIUM(2, 3, 150),
-    PREMIUM_PLUS(6, 8, 250),
-    ENTERPRISE(6, 8, 250);
+    TRIAL(1, 1, 0, false, 0),
+    BASIC(1, 1, 50, false, 0),
+    PREMIUM(2, 3, 150, true, 20),
+    PREMIUM_PLUS(6, 8, 250, true, 40),
+    ENTERPRISE(6, 8, 250, true, 40);
 
     private final int maxStores;
 
@@ -31,10 +31,21 @@ public enum PlanTier
 
     private final int whatsappQuota;
 
-    PlanTier(int maxStores, int maxUsers, int whatsappQuota)
+    /** Whether a shop on this tier may send its owner a nightly report. Premium and up. */
+    private final boolean dailyReports;
+
+    /**
+     * How many khata holders one shop on this tier may chase in a month; zero switches the
+     * monthly reminders off, which is what makes them a Premium feature rather than a flag.
+     */
+    private final int reminderContacts;
+
+    PlanTier(int maxStores, int maxUsers, int whatsappQuota, boolean dailyReports, int reminderContacts)
     {
         this.maxStores = maxStores;
         this.maxUsers = maxUsers;
         this.whatsappQuota = whatsappQuota;
+        this.dailyReports = dailyReports;
+        this.reminderContacts = reminderContacts;
     }
 }
