@@ -1,4 +1,13 @@
-import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+  viewChildren,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -11,6 +20,7 @@ import { StoreItem } from '../../core/store/store-item.models';
 import { EventRequest } from '../../core/store/event.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
+import { ruleLines } from '../../shared/ruled-lines';
 import { Combobox } from '../../shared/combobox/combobox';
 import { PrintHeader } from '../../shared/print-header';
 import { DateField } from '../../shared/date-field/date-field';
@@ -160,6 +170,16 @@ export class GoodsEntry {
 
   /** Bill-number box — where the cursor goes after a Save + Next. */
   private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
+
+  /** The item box of every line, in grid order — where a line hands over to the next. */
+  private readonly designFields = viewChildren<Combobox>('designField');
+
+  /** The chord printed on Save + Next. Named on the button rather than left to be discovered:
+   *  Enter belongs to the grid here, so the save key has to say what it is. */
+  protected readonly saveChord =
+    typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
+      ? '⌘ ↵'
+      : 'Ctrl ↵';
 
   // Declared before `lines` below, whose initializer calls blankLine() → keySeq++.
   // Class fields init top-to-bottom, so it must already be a real number here
@@ -319,7 +339,7 @@ export class GoodsEntry {
         factor: null,
         factorFor: null,
       }));
-      this.lines.set(lines.length > 0 ? lines : [this.blankLine()]);
+      this.lines.set(this.rule(lines));
     } catch {
       this.errorKey.set('error.generic');
     }
@@ -338,12 +358,71 @@ export class GoodsEntry {
   }
 
   // ── lines ──────────────────────────────────────────────────────────────
+  /**
+   * Whether anything has been written on a line. The unit is deliberately not counted: it
+   * arrives on its own when a design is matched, so a line carrying only a unit is a line
+   * nobody has written on yet.
+   */
+  protected written(l: Line): boolean {
+    return !!l.design.trim() || l.qty != null || l.rate != null;
+  }
+
+  /** Keeps one ruled-but-unwritten line at the foot of the grid. See {@link ruleLines}. */
+  private rule(lines: Line[], editing: number | null = null): Line[] {
+    return ruleLines(lines, (l) => this.written(l), () => this.blankLine(), editing);
+  }
+
+  /**
+   * The mouse path to the line the grid is already holding open. The grid rules its own lines
+   * now, so this no longer makes one — it goes to the one waiting, which is what the button
+   * always meant.
+   */
   addLine(): void {
-    this.lines.update((ls) => [...ls, this.blankLine()]);
+    const ls = this.lines();
+    const foot = ls[ls.length - 1];
+    if (foot && !this.written(foot)) {
+      this.focusLine(foot.key);
+      return;
+    }
+    const line = this.blankLine();
+    this.lines.update((prev) => [...prev, line]);
+    this.focusLine(line.key);
   }
 
   removeLine(key: number): void {
-    this.lines.update((ls) => (ls.length > 1 ? ls.filter((l) => l.key !== key) : ls));
+    this.lines.update((ls) => this.rule(ls.filter((l) => l.key !== key)));
+  }
+
+  /**
+   * Enter finishes a line and opens the next — the rhythm of writing a bill, where the hand
+   * never leaves the keyboard between designs.
+   *
+   * The combobox calls preventDefault() when Enter took one of its suggestions, so a defaulted
+   * event is one it has already spent. A button inside the row keeps its own Enter, which is
+   * its click.
+   */
+  protected onLineKey(e: KeyboardEvent, key: number): void {
+    if (e.key !== 'Enter' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) {
+      return;
+    }
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    e.preventDefault();
+    const ls = this.lines();
+    const i = ls.findIndex((l) => l.key === key);
+    // The foot line has nowhere to hand over to — it is the line being started.
+    if (i >= 0 && i < ls.length - 1) {
+      this.focusLine(ls[i + 1].key);
+    }
+  }
+
+  /** Put the caret on a line's item box, once the row it belongs to has rendered. */
+  private focusLine(key: number): void {
+    requestAnimationFrame(() => {
+      const i = this.lines().findIndex((l) => l.key === key);
+      this.designFields()[i]?.focus();
+    });
   }
 
   setDesign(key: number, value: string): void {
@@ -593,8 +672,9 @@ export class GoodsEntry {
     return value.trim() === '' || Number.isNaN(n) ? null : n;
   }
 
+  /** Every edit to a line goes through here, so every edit re-rules the grid. */
   private patchLine(key: number, fn: (l: Line) => Line): void {
-    this.lines.update((ls) => ls.map((l) => (l.key === key ? fn(l) : l)));
+    this.lines.update((ls) => this.rule(ls.map((l) => (l.key === key ? fn(l) : l)), key));
   }
 
   private blankLine(): Line {

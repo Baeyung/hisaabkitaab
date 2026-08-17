@@ -196,6 +196,82 @@ select.fld__input {
   text-align: end;
   overflow-wrap: anywhere;
 }
+/* An unwritten line owes nothing, and "Rs 0" reads as a figure someone entered. */
+.grid__amount-rule {
+  color: var(--kg-faint);
+  font-weight: 500;
+}
+
+/* A line rules itself in as the one above it is written on. The only movement on the
+   screen, and short enough to register as the page keeping up rather than animating:
+   the book turning its own page. No fill mode — the transform must not outlive the
+   keyframes, or it becomes the containing block for the combobox's fixed popup. */
+@keyframes rule-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.grid__row {
+  animation: rule-in 180ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .grid__row {
+    animation: none;
+  }
+}
+
+/* ── the keyboard rhythm ─────────────────────────────────────────────────── */
+.grid__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.grid__keys {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--kg-faint);
+}
+.grid__keys > span:not(:last-child) {
+  margin-inline-end: 6px;
+}
+/* Nothing to press on a phone, so the hint does not take up the line. */
+@media (pointer: coarse) {
+  .grid__keys {
+    display: none;
+  }
+}
+/* Matches the keycaps on the easy board — one keycap in the app, not two. */
+.key {
+  min-width: 24px;
+  padding: 3px 6px;
+  border: 1px solid var(--kg-line);
+  border-radius: 6px;
+  background: var(--kg-fill-subtle);
+  color: var(--kg-faint);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+/* On the primary button, where the ground is already brand-coloured. */
+.key--on {
+  margin-inline-start: 6px;
+  border-color: color-mix(in srgb, currentColor 35%, transparent);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  color: inherit;
+}
+@media (pointer: coarse) {
+  .key--on {
+    display: none;
+  }
+}
 
 /* The standing conversion note, one line under the row it belongs to. */
 .grid__conv {
@@ -297,6 +373,12 @@ select.fld__input {
 .iconbtn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px var(--kg-focus);
+}
+/* The waiting line has nothing to take away. Its remove control keeps the row's width but
+   stays off the page: a greyed-out minus on the one line that should read as blank is the
+   sort of noise that makes a grid look busier than the bill actually is. */
+.grid__row--waiting > .iconbtn {
+  visibility: hidden;
 }
 
 .alert {

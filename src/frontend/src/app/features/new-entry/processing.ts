@@ -1,4 +1,12 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  WritableSignal,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { StoreItemService } from '../../core/store/store-item.service';
 import { PartyService } from '../../core/store/party.service';
@@ -8,6 +16,7 @@ import { StoreItem } from '../../core/store/store-item.models';
 import { Party } from '../../core/store/party.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
+import { ruleLines } from '../../shared/ruled-lines';
 import { Combobox } from '../../shared/combobox/combobox';
 import { DateField } from '../../shared/date-field/date-field';
 import { UnitConversionService } from '../../core/units/unit-conversion.service';
@@ -116,6 +125,12 @@ export class Processing {
 
   /** Batch-number box — where the cursor goes after a Save + Next. */
   private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
+
+  /** The chord printed on Save + Next; Enter belongs to the grids. See the sale screen. */
+  protected readonly saveChord =
+    typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
+      ? '⌘ ↵'
+      : 'Ctrl ↵';
 
   // Declared before the line signals below, whose initializers call blankLine() → keySeq++.
   private keySeq = 1;
@@ -263,37 +278,98 @@ export class Processing {
   }
 
   // ── lines ──────────────────────────────────────────────────────────────
+  /**
+   * Whether anything has been written on a row. The unit is not counted: it arrives on its
+   * own when a name is matched, so a row carrying only a unit is one nobody has written on.
+   */
+  protected written(l: Line): boolean {
+    return !!l.name.trim() || l.qty != null || l.rate != null;
+  }
+
+  /** Keeps one ruled-but-unwritten row at the foot of a grid. See {@link ruleLines}. */
+  private rule(lines: Line[], editing: number | null = null): Line[] {
+    return ruleLines(lines, (l) => this.written(l), () => this.blankLine(), editing);
+  }
+
+  /** The mouse path to the row each grid is already holding open. */
   addRaw(): void {
-    this.rawLines.update((ls) => [...ls, this.blankLine()]);
+    this.openFoot(this.rawLines, 'raw');
   }
 
   addProc(): void {
-    this.procLines.update((ls) => [...ls, this.blankLine()]);
+    this.openFoot(this.procLines, 'proc');
   }
 
   removeRaw(key: number): void {
-    this.rawLines.update(dropUnlessLast(key));
+    this.rawLines.update((ls) => this.rule(dropUnlessLast(key)(ls)));
   }
 
   removeProc(key: number): void {
-    this.procLines.update(dropUnlessLast(key));
+    this.procLines.update((ls) => this.rule(dropUnlessLast(key)(ls)));
   }
 
   patchRaw(key: number, change: Partial<Line>): void {
-    this.rawLines.update(patch(key, change));
+    this.rawLines.update((ls) => this.rule(patch(key, change)(ls), key));
   }
 
   patchProc(key: number, change: Partial<Line>): void {
-    this.procLines.update(patch(key, change));
+    this.procLines.update((ls) => this.rule(patch(key, change)(ls), key));
   }
 
   /** A matched item brings its unit and sale price with it, if the boxes are empty. */
   setRawName(key: number, value: string): void {
-    this.rawLines.update((ls) => ls.map(named(key, value, this.matchItem(value))));
+    this.rawLines.update((ls) => this.rule(ls.map(named(key, value, this.matchItem(value))), key));
   }
 
   setProcName(key: number, value: string): void {
-    this.procLines.update((ls) => ls.map(named(key, value, this.matchItem(value))));
+    this.procLines.update((ls) => this.rule(ls.map(named(key, value, this.matchItem(value))), key));
+  }
+
+  /**
+   * Enter finishes a row and opens the next, the same rhythm the sale and purchase grids
+   * keep. Bound on the row itself, not the supplier fold under it: Enter in a supplier box
+   * belongs to that box.
+   */
+  protected onRowKey(e: KeyboardEvent, key: number, grid: 'raw' | 'proc'): void {
+    if (e.key !== 'Enter' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) {
+      return;
+    }
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    e.preventDefault();
+    const lines = grid === 'raw' ? this.rawLines() : this.procLines();
+    const i = lines.findIndex((l) => l.key === key);
+    // The foot row has nowhere to hand over to — it is the row being started.
+    if (i >= 0 && i < lines.length - 1) {
+      this.focusRow(lines[i + 1].key, grid);
+    }
+  }
+
+  /** Put the caret on the row a grid is holding open, adding one only if it has none. */
+  private openFoot(lines: WritableSignal<Line[]>, grid: 'raw' | 'proc'): void {
+    const ls = lines();
+    const foot = ls[ls.length - 1];
+    if (foot && !this.written(foot)) {
+      this.focusRow(foot.key, grid);
+      return;
+    }
+    const line = this.blankLine();
+    lines.update((prev) => [...prev, line]);
+    this.focusRow(line.key, grid);
+  }
+
+  /**
+   * Put the caret on a row's name box once it has rendered. Found by id rather than by view
+   * child: the two grids share one row template, and the ids are already on the boxes for
+   * their labels.
+   */
+  private focusRow(key: number, grid: 'raw' | 'proc'): void {
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`${grid}-name-${key}`);
+      (el as HTMLInputElement | null)?.select();
+      el?.focus();
+    });
   }
 
   // ── units ──────────────────────────────────────────────────────────────

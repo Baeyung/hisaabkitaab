@@ -287,8 +287,10 @@ export class StoreSetup {
         openingStock = stored > 0 ? stored : null;
       }
       this.items.update((list) => [...list, { ...created, openingStock }]);
-      // The fold's open/closed state is deliberately left alone here.
-      this.itemRow.set({ ...EMPTY_ITEM });
+      // The fold's open/closed state is deliberately left alone here — and so is the unit,
+      // for the same reason: a shop that measures in metres measures all twenty items in
+      // metres, and retyping "Meter" nineteen times is what makes a setup feel like paperwork.
+      this.itemRow.set({ ...EMPTY_ITEM, unit });
       this.focusFirstField();
       return true;
     } catch {
@@ -341,7 +343,9 @@ export class StoreSetup {
         });
       }
       this.parties.update((list) => [...list, { ...created, openingBalance }]);
-      this.partyRow.set({ ...EMPTY_PARTY });
+      // Which way the baqaya leans carries over, like the unit above: someone working through
+      // their customers is entering ten balances that all lean the same way.
+      this.partyRow.set({ ...EMPTY_PARTY, direction: row.direction });
       this.focusFirstField();
       return true;
     } catch {

@@ -1,6 +1,8 @@
 <section class="sale">
   <!-- ── entry form ─────────────────────────────────────────────────────── -->
-  <div class="sale__form">
+  <!-- Enter belongs to the row grids (it opens the next row), so saving takes the chord —
+       the same contract as the sale and purchase screens. -->
+  <div class="sale__form" (keydown.control.enter)="save()" (keydown.meta.enter)="save()">
     <header class="sale__head">
       <div>
         <p class="sale__eyebrow">{{ locale.t('processing.newEntry') }}</p>
@@ -34,7 +36,12 @@
       <p class="pgrid__title">{{ locale.t('processing.raw') }}</p>
 
       @for (line of rawLines(); track line.key) {
-        <div class="pgrid__row">
+        <!-- The foot row: ruled, not yet written on. It counts for nothing until it is. -->
+        <div
+          class="pgrid__row"
+          [class.pgrid__row--waiting]="!written(line)"
+          (keydown)="onRowKey($event, line.key, 'raw')"
+        >
           <div class="fld">
             <label class="fld__label" [attr.for]="'raw-name-' + line.key">
               {{ locale.t('processing.col.name') }}
@@ -94,13 +101,20 @@
           </div>
           <div class="fld pgrid__amount">
             <span class="fld__label">{{ locale.t('processing.col.amount') }}</span>
-            <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+            <!-- A rule, not "Rs 0": nothing is written on this row, so it costs nothing. -->
+            <span class="grid__amount num">
+              @if (written(line)) {
+                {{ locale.money(lineAmount(line)) }}
+              } @else {
+                <span class="grid__amount-rule" aria-hidden="true">—</span>
+              }
+            </span>
           </div>
           <button
             type="button"
             class="iconbtn iconbtn--danger"
             (click)="removeRaw(line.key)"
-            [disabled]="rawLines().length === 1"
+            [disabled]="!written(line)"
             [attr.aria-label]="locale.t('processing.line.remove')"
           >
             <svg
@@ -174,9 +188,19 @@
         }
       }
 
-      <button type="button" class="linkbtn" (click)="addRaw()">
-        + {{ locale.t('processing.raw.add') }}
-      </button>
+      <div class="grid__foot">
+        <button type="button" class="linkbtn" (click)="addRaw()">
+          + {{ locale.t('processing.raw.add') }}
+        </button>
+        <!-- Said once for the whole batch, on the first grid a shopkeeper writes in —
+             the consumables grid below keeps the same keys and does not repeat them. -->
+        <p class="grid__keys">
+          <kbd class="key">↵</kbd>
+          <span>{{ locale.t('entry.hint.next') }}</span>
+          <kbd class="key">{{ saveChord }}</kbd>
+          <span>{{ locale.t('processing.hint.save') }}</span>
+        </p>
+      </div>
     </div>
 
     <!-- the three blocks read as one recipe: raw + consumables → output -->
@@ -187,7 +211,11 @@
       <p class="pgrid__title">{{ locale.t('processing.items') }}</p>
 
       @for (line of procLines(); track line.key) {
-        <div class="pgrid__row">
+        <div
+          class="pgrid__row"
+          [class.pgrid__row--waiting]="!written(line)"
+          (keydown)="onRowKey($event, line.key, 'proc')"
+        >
           <div class="fld">
             <label class="fld__label" [attr.for]="'proc-name-' + line.key">
               {{ locale.t('processing.col.name') }}
@@ -245,13 +273,20 @@
           </div>
           <div class="fld pgrid__amount">
             <span class="fld__label">{{ locale.t('processing.col.amount') }}</span>
-            <span class="grid__amount num">{{ locale.money(lineAmount(line)) }}</span>
+            <!-- A rule, not "Rs 0": nothing is written on this row, so it costs nothing. -->
+            <span class="grid__amount num">
+              @if (written(line)) {
+                {{ locale.money(lineAmount(line)) }}
+              } @else {
+                <span class="grid__amount-rule" aria-hidden="true">—</span>
+              }
+            </span>
           </div>
           <button
             type="button"
             class="iconbtn iconbtn--danger"
             (click)="removeProc(line.key)"
-            [disabled]="procLines().length === 1"
+            [disabled]="!written(line)"
             [attr.aria-label]="locale.t('processing.line.remove')"
           >
             <svg
@@ -476,7 +511,8 @@
         {{ locale.t('processing.clear') }}
       </button>
       <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave()">
-        {{ locale.t('processing.saveNext') }} ↵
+        {{ locale.t('processing.saveNext') }}
+        <kbd class="key key--on">{{ saveChord }}</kbd>
       </button>
     </div>
   </div>

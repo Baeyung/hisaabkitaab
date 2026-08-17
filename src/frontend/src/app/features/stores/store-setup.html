@@ -272,12 +272,18 @@
                   <span role="alert" class="fld__err">{{ locale.t('setup.negative') }}</span>
                 }
 
-                <button type="submit" class="btn btn--ghost btn--add" [disabled]="!canAddItem() || busy()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  {{ locale.t('setup.goods.add') }}
-                </button>
+                <div class="quick__foot">
+                  <button type="submit" class="btn btn--ghost btn--add" [disabled]="!canAddItem() || busy()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    {{ locale.t('setup.goods.add') }}
+                  </button>
+                  <p class="quick__keys">
+                    <kbd class="key">↵</kbd>
+                    <span>{{ locale.t('setup.hint.add') }}</span>
+                  </p>
+                </div>
               </form>
 
               @if (errorKey(); as key) {
@@ -431,12 +437,18 @@
                   <span role="alert" class="fld__err">{{ locale.t('setup.negative') }}</span>
                 }
 
-                <button type="submit" class="btn btn--ghost btn--add" [disabled]="!canAddParty() || busy()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  {{ locale.t('setup.khatas.add') }}
-                </button>
+                <div class="quick__foot">
+                  <button type="submit" class="btn btn--ghost btn--add" [disabled]="!canAddParty() || busy()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    {{ locale.t('setup.khatas.add') }}
+                  </button>
+                  <p class="quick__keys">
+                    <kbd class="key">↵</kbd>
+                    <span>{{ locale.t('setup.hint.add') }}</span>
+                  </p>
+                </div>
               </form>
 
               @if (errorKey(); as key) {

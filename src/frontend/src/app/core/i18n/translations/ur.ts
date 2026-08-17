@@ -264,6 +264,7 @@ export const ur: Record<TranslationKey, string> = {
   'setup.khatas.empty': 'ابھی کچھ شامل نہیں کیا گیا۔',
   'setup.note':
     'یہ سب کچھ حتمی نہیں۔ آئٹمز، پارٹیاں، برانڈنگ اور ابتدائی رقوم سب ترتیبات میں موجود ہیں — جب چاہیں بدل یا بڑھا سکتے ہیں۔',
+  'setup.hint.add': 'شامل کر کے اگلا شروع کریں',
   'setup.written': 'اب تک درج',
   'setup.negative': 'رقم اور مقدار صفر سے کم نہیں ہو سکتی۔',
   'setup.remove': 'ہٹائیں',
@@ -522,6 +523,7 @@ export const ur: Record<TranslationKey, string> = {
   'processing.description.ph': 'اختیاری',
   'processing.clear': 'صاف کریں',
   'processing.saveNext': 'محفوظ + اگلا',
+  'processing.hint.save': 'بیچ محفوظ کریں',
   'processing.effect': 'اثر',
   'processing.effect.bought': 'خریدا گیا',
   'processing.effect.cashOut': 'نقد باہر',
@@ -638,6 +640,8 @@ export const ur: Record<TranslationKey, string> = {
   'common.delete': 'حذف کریں',
   'common.cancel': 'منسوخ کریں',
   'common.update': 'اپ ڈیٹ کریں',
+  'entry.hint.next': 'اگلی سطر',
+  'entry.hint.save': 'بل محفوظ کریں',
   'entry.delete.confirm':
     'یہ اندراج حذف کریں؟ یہ اسے مستقل طور پر ہٹا دے گا اور نقد، کھاتہ اور اسٹاک پر اس کا اثر ختم کر دے گا۔',
   'entry.delete.confirmBtn': 'حذف کریں',

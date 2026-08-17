@@ -211,6 +211,18 @@ export class Combobox {
     });
   }
 
+  /**
+   * Put the caret in this box, selecting whatever is already in it.
+   *
+   * The entry grids call this to hand a line to the next one, and selecting means a shopkeeper
+   * who lands on a prefilled box types over it rather than appending to it.
+   */
+  focus(): void {
+    const el = this.inputEl().nativeElement;
+    el.focus();
+    el.select();
+  }
+
   protected optionId(i: number): string {
     return `${this.listboxId}-opt-${i}`;
   }

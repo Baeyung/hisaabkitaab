@@ -280,6 +280,7 @@ export const en = {
   'setup.khatas.empty': 'Nothing added yet.',
   'setup.note':
     'None of this is locked in. Items, parties, branding, and the opening balances all live in Store Settings — change or add to them whenever you like.',
+  'setup.hint.add': 'add and start the next',
   'setup.written': 'Written so far',
   'setup.negative': 'Amounts and quantities cannot be less than zero.',
   'setup.remove': 'Remove',
@@ -539,6 +540,7 @@ export const en = {
   'processing.description.ph': 'Optional',
   'processing.clear': 'Clear',
   'processing.saveNext': 'Save + Next',
+  'processing.hint.save': 'save this batch',
   'processing.effect': 'Effect',
   'processing.effect.bought': 'Bought in',
   'processing.effect.cashOut': 'Cash out',
@@ -660,6 +662,8 @@ export const en = {
   'common.delete': 'Delete',
   'common.cancel': 'Cancel',
   'common.update': 'Update',
+  'entry.hint.next': 'next line',
+  'entry.hint.save': 'save this bill',
   'entry.delete.confirm':
     'Delete this entry? This permanently removes it and undoes its effect on cash, khata and stock.',
   'entry.delete.confirmBtn': 'Delete',
