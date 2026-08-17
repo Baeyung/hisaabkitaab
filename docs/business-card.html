@@ -1,0 +1,495 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>HisaabKitaab — business card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@500;600&family=IBM+Plex+Serif:wght@500;600&display=swap"
+  rel="stylesheet"
+/>
+
+<!--
+  Credit-card sized (ISO 7810 ID-1): 85.6 x 54 mm trim, 3 mm bleed all round,
+  so every SVG below is 91.6 x 60 mm. Everything is vector and sized in real
+  millimetres — zoom does not degrade it, and the printer gets true size.
+
+  One-sided by design. The back stays empty for the emboss.
+
+  Type: one superfamily, three voices. IBM Plex Serif for names (the register a
+  printed ledger uses), IBM Plex Mono for anything you would dial or type (it
+  sets figures on a fixed pitch, like an amount column), IBM Plex Sans — the
+  app's own face — for the small caps label.
+
+  To hand off: open in Chrome, Print, destination "Save as PDF", paper size
+  A4 or Custom, margins None, scale 100%. Tell the press it is 85.6x54 trim
+  with 3 mm bleed, and ask them to outline the type.
+-->
+
+<style>
+  :root {
+    --pine: #1f5c4d;
+    --pine-deep: #184335;
+    --amber: #c98a2b;
+    --cream: #f7f4ee;
+    --ink: #23201c;
+    --muted: #6b655c;
+  }
+  body {
+    margin: 0;
+    padding: 32px;
+    background: #ded9cc;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--ink);
+  }
+  h1 {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  p.lede {
+    margin: 0 0 20px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 66ch;
+  }
+  label.toggle,
+  #g {
+    font-size: 13px;
+    color: var(--muted);
+    vertical-align: middle;
+  }
+  #g {
+    margin: 0 6px 24px 0;
+  }
+  .export {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 0 0 24px;
+    font-size: 13px;
+  }
+  .export select,
+  .export button {
+    font: inherit;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid #b6afa4;
+    border-radius: 3px;
+    padding: 5px 9px;
+  }
+  .export button {
+    background: var(--pine);
+    border-color: var(--pine);
+    color: var(--cream);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .export button:hover {
+    background: var(--pine-deep);
+  }
+  .export button:disabled {
+    background: var(--muted);
+    border-color: var(--muted);
+    cursor: default;
+  }
+  .export :focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+  #status {
+    color: var(--muted);
+  }
+  figure {
+    margin: 0 0 30px;
+  }
+  figcaption {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    max-width: 66ch;
+  }
+  figcaption b {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  svg.card {
+    display: block;
+    box-shadow: 0 2px 10px #23201c22;
+  }
+
+  /* Trim + safe-area guides: preview aid only, never printed. */
+  .guides {
+    display: none;
+  }
+  #g:checked ~ figure .guides {
+    display: block;
+  }
+
+  @media print {
+    @page {
+      size: 91.6mm 60mm;
+      margin: 0;
+    }
+    body {
+      padding: 0;
+      background: #fff;
+    }
+    h1,
+    p.lede,
+    label.toggle,
+    #g,
+    .export,
+    figcaption {
+      display: none;
+    }
+    .guides {
+      display: none !important;
+    }
+    figure {
+      margin: 0;
+      page-break-after: always;
+    }
+    svg.card {
+      box-shadow: none;
+    }
+  }
+</style>
+
+<h1>HisaabKitaab — business card</h1>
+<p class="lede">
+  85.6 × 54 mm trim, 3 mm bleed (91.6 × 60 mm artboard). One-sided; back left blank for the emboss.
+  Five directions — the first three take the khata itself as the material, then the safe one, then
+  the centered one.
+</p>
+<div class="export">
+  <label for="pick">Download</label>
+  <select id="pick"></select>
+  <label for="dpi">at</label>
+  <select id="dpi">
+    <option value="600">600 dpi (print)</option>
+    <option value="300">300 dpi</option>
+    <option value="150">150 dpi (screen)</option>
+  </select>
+  <button id="save" type="button">Save PNG</button>
+  <span id="status" role="status"></span>
+</div>
+
+<input type="checkbox" id="g" /><label class="toggle" for="g">show trim &amp; safe-area guides</label>
+
+<!-- ───────────────────────  1 · Ruled khata  ─────────────────────────
+     The card is a page of the book: printed header, amber rule under it,
+     ruled lines at a fixed pitch, and a column divider splitting particulars
+     from amount. Every line of type sits ON a rule, the way an entry does.
+     You are one row in the register. -->
+<figure>
+  <figcaption>
+    <b>1 · Ruled khata</b><br />The card is a page of the ledger. Type sits on the rules, name in the
+    particulars column, contacts in the amount column — one entry, ruled and posted.
+  </figcaption>
+  <svg class="card" width="91.6mm" height="60mm" viewBox="0 0 91.6 60" xmlns="http://www.w3.org/2000/svg">
+    <rect width="91.6" height="60" fill="#f7f4ee" />
+
+    <!-- printed header of the page -->
+    <rect x="0" y="0" width="91.6" height="19" fill="#1f5c4d" />
+    <g transform="translate(5.32 5.95) scale(0.42)">
+      <path d="M3.4 2.5h8v19h-8zM12.6 2.5h8v19h-8z" fill="#f7f4ee" />
+      <path d="M3.4 5.1h8v2.6h-8zM12.6 5.1h8v2.6h-8z" fill="#c98a2b" />
+    </g>
+    <text x="18.4" y="13.6" fill="#f7f4ee" font-family="'IBM Plex Serif',serif" font-size="6.2"
+      font-weight="600">HisaabKitaab</text>
+    <rect x="0" y="19" width="91.6" height="1" fill="#c98a2b" />
+
+    <!-- ruled paper: hairlines at a 4.4 mm pitch, run to the bleed -->
+    <g stroke="#1f5c4d" stroke-width="0.12" opacity="0.16">
+      <path d="M0 24.4h91.6M0 28.8h91.6M0 33.2h91.6M0 37.6h91.6M0 42h91.6M0 46.4h91.6M0 50.8h91.6M0 55.2h91.6M0 59.6h91.6" />
+    </g>
+    <!-- the amount-column divider -->
+    <path d="M50 20v40" stroke="#1f5c4d" stroke-width="0.15" opacity="0.3" />
+
+    <text x="7" y="33.2" fill="#23201c" font-family="'IBM Plex Serif',serif" font-size="4.4"
+      font-weight="600">Muhammad Ahmad</text>
+    <text x="7" y="37.6" fill="#6b655c" font-family="'IBM Plex Sans',sans-serif" font-size="2.9"
+      font-weight="500" letter-spacing="0.5">CEO</text>
+
+    <text x="84.6" y="33.2" text-anchor="end" fill="#1f5c4d" font-family="'IBM Plex Mono',monospace"
+      font-size="3.1" font-weight="500">hisaabkitaab.shop</text>
+    <text x="84.6" y="37.6" text-anchor="end" fill="#23201c" font-family="'IBM Plex Mono',monospace"
+      font-size="3.1">0339 4010046</text>
+
+    <g class="guides" fill="none">
+      <rect x="3" y="3" width="85.6" height="54" stroke="#e0115f" stroke-width="0.2" />
+      <rect x="7" y="7" width="77.6" height="46" stroke="#e0115f" stroke-width="0.15"
+        stroke-dasharray="1 1" />
+    </g>
+  </svg>
+</figure>
+
+<!-- ───────────────────────  2 · Open spread  ─────────────────────────
+     The mark blown up until it IS the card: two cream pages, a pine gutter
+     between them, the amber rule crossing both at the same height and
+     breaking at the gutter — exactly what the logo does at 24px. Left page
+     is the company, right page is the person. -->
+<figure>
+  <figcaption>
+    <b>2 · Open spread</b><br />The logo at card scale: two pages, a pine gutter, the amber rule
+    crossing both and breaking at the fold. Company on the left page, you on the right.
+  </figcaption>
+  <svg class="card" width="91.6mm" height="60mm" viewBox="0 0 91.6 60" xmlns="http://www.w3.org/2000/svg">
+    <rect width="91.6" height="60" fill="#1f5c4d" />
+    <rect x="0" y="0" width="44" height="60" fill="#f7f4ee" />
+    <rect x="46.4" y="0" width="45.2" height="60" fill="#f7f4ee" />
+
+    <!-- the mark's rule, running across both pages -->
+    <rect x="0" y="12" width="44" height="2.6" fill="#c98a2b" />
+    <rect x="46.4" y="12" width="45.2" height="2.6" fill="#c98a2b" />
+
+    <text x="8" y="34" fill="#23201c" font-family="'IBM Plex Serif',serif" font-size="7"
+      font-weight="600">Hisaab</text>
+    <text x="8" y="42.6" fill="#1f5c4d" font-family="'IBM Plex Serif',serif" font-size="7"
+      font-weight="600">Kitaab</text>
+
+    <text x="51.4" y="30" fill="#23201c" font-family="'IBM Plex Serif',serif" font-size="5"
+      font-weight="600">Muhammad</text>
+    <text x="51.4" y="36" fill="#23201c" font-family="'IBM Plex Serif',serif" font-size="5"
+      font-weight="600">Ahmad</text>
+    <text x="51.7" y="41" fill="#6b655c" font-family="'IBM Plex Sans',sans-serif" font-size="2.9"
+      font-weight="500" letter-spacing="0.5">CEO</text>
+
+    <text x="51.4" y="47.6" fill="#1f5c4d" font-family="'IBM Plex Mono',monospace" font-size="2.9"
+      font-weight="500">hisaabkitaab.shop</text>
+    <text x="51.4" y="52.2" fill="#23201c" font-family="'IBM Plex Mono',monospace" font-size="2.9">0339 4010046</text>
+
+    <g class="guides" fill="none">
+      <rect x="3" y="3" width="85.6" height="54" stroke="#e0115f" stroke-width="0.2" />
+      <rect x="7" y="7" width="77.6" height="46" stroke="#e0115f" stroke-width="0.15"
+        stroke-dasharray="1 1" />
+    </g>
+  </svg>
+</figure>
+
+<!-- ───────────────────────  3 · Cropped seal  ─────────────────────────
+     The mark oversized and run off the right edge in a lighter pine, so it
+     reads as a watermark or a stamp rather than a logo placement. Only its
+     amber rule stays at full strength. Type keeps to the lower left. -->
+<figure>
+  <figcaption>
+    <b>3 · Cropped seal</b><br />The mark oversized and run off the edge as a tonal watermark — only
+    its amber rule at full strength. Quiet, and the one that looks least like a business card.
+  </figcaption>
+  <svg class="card" width="91.6mm" height="60mm" viewBox="0 0 91.6 60" xmlns="http://www.w3.org/2000/svg">
+    <rect width="91.6" height="60" fill="#1f5c4d" />
+
+    <g transform="translate(55.54 0.25) scale(1.9)">
+      <path d="M3.4 2.5h8v19h-8zM12.6 2.5h8v19h-8z" fill="#26695a" />
+      <path d="M3.4 5.1h8v2.6h-8zM12.6 5.1h8v2.6h-8z" fill="#c98a2b" opacity="0.7" />
+    </g>
+
+    <text x="7" y="41" fill="#f7f4ee" font-family="'IBM Plex Serif',serif" font-size="6.4"
+      font-weight="600">HisaabKitaab</text>
+    <rect x="7" y="44.2" width="15" height="0.6" fill="#c98a2b" />
+
+    <text x="7" y="50" fill="#f7f4ee" font-family="'IBM Plex Serif',serif" font-size="4.6"
+      font-weight="500">Muhammad Ahmad</text>
+    <text x="7.3" y="54" fill="#f7f4ee" opacity="0.65" font-family="'IBM Plex Sans',sans-serif"
+      font-size="2.8" font-weight="500" letter-spacing="0.5">CEO</text>
+
+    <text x="84.6" y="50" text-anchor="end" fill="#f7f4ee" font-family="'IBM Plex Mono',monospace"
+      font-size="3" font-weight="500">hisaabkitaab.shop</text>
+    <text x="84.6" y="54" text-anchor="end" fill="#f7f4ee" opacity="0.8"
+      font-family="'IBM Plex Mono',monospace" font-size="3">0339 4010046</text>
+
+    <g class="guides" fill="none">
+      <rect x="3" y="3" width="85.6" height="54" stroke="#e0115f" stroke-width="0.2" />
+      <rect x="7" y="7" width="77.6" height="46" stroke="#e0115f" stroke-width="0.15"
+        stroke-dasharray="1 1" />
+    </g>
+  </svg>
+</figure>
+
+<!-- ───────────────────────  4 · Pine field  ─────────────────────────
+     The conservative one, kept on the sheet because a CEO card sometimes
+     just has to not misfire. Same type system as the rest. -->
+<figure>
+  <figcaption>
+    <b>4 · Pine field</b><br />The safe one, rebuilt on the same type system. Nothing surprising, and
+    nothing to go wrong at any printer.
+  </figcaption>
+  <svg class="card" width="91.6mm" height="60mm" viewBox="0 0 91.6 60" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="pineFade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1f5c4d" />
+        <stop offset="1" stop-color="#184335" />
+      </linearGradient>
+    </defs>
+    <rect width="91.6" height="60" fill="url(#pineFade)" />
+
+    <g transform="translate(5.3 14.75) scale(0.5)">
+      <path d="M3.4 2.5h8v19h-8zM12.6 2.5h8v19h-8z" fill="#f7f4ee" />
+      <path d="M3.4 5.1h8v2.6h-8zM12.6 5.1h8v2.6h-8z" fill="#c98a2b" />
+    </g>
+    <text x="19.5" y="24" fill="#f7f4ee" font-family="'IBM Plex Serif',serif" font-size="7"
+      font-weight="600">HisaabKitaab</text>
+
+    <text x="7" y="37" fill="#f7f4ee" font-family="'IBM Plex Serif',serif" font-size="5"
+      font-weight="500">Muhammad Ahmad</text>
+    <text x="7.3" y="41.4" fill="#c98a2b" font-family="'IBM Plex Sans',sans-serif" font-size="2.9"
+      font-weight="500" letter-spacing="0.5">CEO</text>
+
+    <rect x="7" y="44.6" width="77.6" height="0.3" fill="#f7f4ee" opacity="0.28" />
+
+    <text x="7" y="51" fill="#f7f4ee" font-family="'IBM Plex Mono',monospace" font-size="3.2"
+      font-weight="500">hisaabkitaab.shop</text>
+    <text x="84.6" y="51" text-anchor="end" fill="#f7f4ee" opacity="0.85"
+      font-family="'IBM Plex Mono',monospace" font-size="3.2">0339 4010046</text>
+
+    <g class="guides" fill="none">
+      <rect x="3" y="3" width="85.6" height="54" stroke="#e0115f" stroke-width="0.2" />
+      <rect x="7" y="7" width="77.6" height="46" stroke="#e0115f" stroke-width="0.15"
+        stroke-dasharray="1 1" />
+    </g>
+  </svg>
+</figure>
+
+<!-- ───────────────────────  5 · Balance  ─────────────────────────
+     Everything on the centre axis. The single amber rule sits at the card's
+     exact midpoint (45.8, 30) and works as a fulcrum: the company above it,
+     the person below, the two blocks set so their visual centres fall the
+     same 12 mm either side. Bookkeeping is balance; the card balances.
+     One accent, one axis, nothing else. -->
+<figure>
+  <figcaption>
+    <b>5 · Balance</b><br />Everything on the centre axis. The amber rule sits at the card's exact
+    midpoint and acts as a fulcrum — company above, you below, equal weight either side.
+  </figcaption>
+  <svg class="card" width="91.6mm" height="60mm" viewBox="0 0 91.6 60" xmlns="http://www.w3.org/2000/svg">
+    <rect width="91.6" height="60" fill="#f7f4ee" />
+
+    <g transform="translate(38.85 7.05) scale(0.579)">
+      <path d="M3.4 2.5h8v19h-8zM12.6 2.5h8v19h-8z" fill="#1f5c4d" />
+      <path d="M3.4 5.1h8v2.6h-8zM12.6 5.1h8v2.6h-8z" fill="#c98a2b" />
+    </g>
+    <text x="45.9" y="26.4" text-anchor="middle" fill="#1f5c4d"
+      font-family="'IBM Plex Serif',serif" font-size="5.4" font-weight="500" letter-spacing="0.2">HisaabKitaab</text>
+
+    <!-- the fulcrum: dead centre of the card -->
+    <rect x="40.8" y="29.7" width="10" height="0.6" fill="#c98a2b" />
+
+    <text x="45.8" y="38.4" text-anchor="middle" fill="#23201c" font-family="'IBM Plex Serif',serif"
+      font-size="5.6" font-weight="600">Muhammad Ahmad</text>
+    <text x="46.1" y="43" text-anchor="middle" fill="#6b655c" font-family="'IBM Plex Sans',sans-serif"
+      font-size="2.8" font-weight="500" letter-spacing="0.6">CEO</text>
+
+    <text x="45.8" y="50.2" text-anchor="middle" fill="#1f5c4d" font-family="'IBM Plex Mono',monospace"
+      font-size="3.1">hisaabkitaab.shop<tspan fill="#c98a2b"> · </tspan>0339 4010046</text>
+
+    <g class="guides" fill="none">
+      <rect x="3" y="3" width="85.6" height="54" stroke="#e0115f" stroke-width="0.2" />
+      <rect x="7" y="7" width="77.6" height="46" stroke="#e0115f" stroke-width="0.15"
+        stroke-dasharray="1 1" />
+    </g>
+  </svg>
+</figure>
+
+<script>
+  // Export a card as PNG. Two things make this less trivial than it looks:
+  // an SVG rasterised through <img> cannot reach the network, so the webfonts
+  // have to travel inside it as data URIs or the PNG comes out in Times; and
+  // the guide rects are hidden by page CSS that does not travel with the SVG,
+  // so they have to be removed from the clone rather than styled away.
+  const FONT_CSS =
+    'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@500;600&family=IBM+Plex+Serif:wght@500;600&display=swap';
+  const MM = { w: 91.6, h: 60 };
+
+  const cards = [...document.querySelectorAll('svg.card')];
+  const names = [...document.querySelectorAll('figcaption b')].map((b) => b.textContent.trim());
+  const pick = document.getElementById('pick');
+  const dpi = document.getElementById('dpi');
+  const save = document.getElementById('save');
+  const status = document.getElementById('status');
+
+  names.forEach((n, i) => pick.add(new Option(n, i)));
+
+  let fontsInlined;
+  async function inlinedFonts() {
+    if (fontsInlined) return fontsInlined;
+    // Bounded, so a stalled network degrades to fallback type instead of a
+    // button that never comes back.
+    const opts = { signal: AbortSignal.timeout(20000) };
+    let css = await (await fetch(FONT_CSS, opts)).text();
+    const urls = [...new Set([...css.matchAll(/url\((https:\/\/[^)]+)\)/g)].map((m) => m[1]))];
+    for (const url of urls) {
+      const buf = await (await fetch(url, opts)).arrayBuffer();
+      let bin = '';
+      new Uint8Array(buf).forEach((b) => (bin += String.fromCharCode(b)));
+      css = css.split(url).join('data:font/woff2;base64,' + btoa(bin));
+    }
+    fontsInlined = css;
+    return css;
+  }
+
+  function slug(name) {
+    return name.replace(/·/g, '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  }
+
+  async function toPng(index, resolution) {
+    const svg = cards[index].cloneNode(true);
+    svg.querySelectorAll('.guides').forEach((g) => g.remove());
+
+    let fonts = '';
+    try {
+      fonts = await inlinedFonts();
+    } catch {
+      status.textContent = 'No connection — exporting with fallback type.';
+    }
+    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    style.textContent = fonts;
+    svg.insertBefore(style, svg.firstChild);
+
+    const url = URL.createObjectURL(
+      new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' })
+    );
+    const img = new Image();
+    await new Promise((ok, fail) => {
+      img.onload = ok;
+      img.onerror = () => fail(new Error('could not rasterise the card'));
+      img.src = url;
+    });
+
+    const px = resolution / 25.4;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(MM.w * px);
+    canvas.height = Math.round(MM.h * px);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+
+    return new Promise((ok) => canvas.toBlob(ok, 'image/png'));
+  }
+
+  save.addEventListener('click', async () => {
+    const i = +pick.value;
+    const resolution = +dpi.value;
+    save.disabled = true;
+    status.textContent = 'Rendering…';
+    try {
+      const blob = await toPng(i, resolution);
+      const file = `hisaabkitaab-card-${slug(names[i])}-${resolution}dpi.png`;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = file;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      status.textContent = `Saved ${file}`;
+    } catch (err) {
+      status.textContent = `Could not export: ${err.message}`;
+    } finally {
+      save.disabled = false;
+    }
+  });
+</script>
