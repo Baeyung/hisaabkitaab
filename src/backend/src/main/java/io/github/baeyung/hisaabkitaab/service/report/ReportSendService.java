@@ -73,10 +73,7 @@ public class ReportSendService
         WhatsAppSendStatus status = WhatsAppSendStatus.FAILED;
         try
         {
-            byte[] pdf = pdfRenderService.renderUrl(
-                    pageBaseUrl + request.pagePath(tokenService.mint(request.subject())));
-
-            if (documentShareService.share(store, to, action, pdf, filename, LOCALE))
+            if (documentShareService.share(store, to, action, render(request), filename, LOCALE))
             {
                 status = WhatsAppSendStatus.SENT;
             }
@@ -92,6 +89,25 @@ public class ReportSendService
         sendLog.record(store, sender, to, filename, status, source);
 
         return status == WhatsAppSendStatus.SENT;
+    }
+
+    /**
+     * The PDF a scheduled send would put on a phone, and nothing past that.
+     *
+     * <p>Everything that makes a report a report is here: the token minted for this exact
+     * request, the app's own route built from the same {@link ReportRequest}, and the renderer
+     * fetching it. {@link #send} is this plus a phone. Kept as one method rather than two
+     * spellings so that what {@code DevToolsController} shows somebody debugging is the same
+     * document the scheduler sends at 21:00 — a preview drawn a second way would be a second
+     * thing to keep true.
+     *
+     * <p>Throws where {@link #send} swallows: a caller who asked for a PDF and is waiting on
+     * the answer has somewhere to report the failure to, which a job does not.
+     */
+    public byte[] render(ReportRequest request)
+    {
+        return pdfRenderService.renderUrl(
+                pageBaseUrl + request.pagePath(tokenService.mint(request.subject())));
     }
 
     /** Records a send that was never attempted — the recipient had opted out of this shop. */

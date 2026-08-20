@@ -1,0 +1,140 @@
+/*
+ * Fixed to the viewport's end corner, above everything the shell draws but below the modal
+ * dialogs — a print prompt or a share sheet is something being answered, and the gear must not
+ * float over it. Logical properties throughout so it lands bottom-left in Urdu.
+ *
+ * Deliberately not themed like the rest of the app: this is a developer's tool sitting on top
+ * of a shopkeeper's screen, and it should never be mistaken for part of it in a screenshot.
+ */
+:host {
+  position: fixed;
+  inset-block-end: 18px;
+  inset-inline-end: 18px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.dev-fab {
+  order: 2; /* the gear stays at the corner; the panel opens above it */
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 50%;
+  color: var(--kg-chrome-ink);
+  background: var(--kg-chrome);
+  box-shadow: var(--kg-shadow-pop);
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.dev-fab:hover {
+  transform: rotate(25deg);
+}
+
+.dev-fab--open {
+  background: var(--kg-brand-solid);
+  color: var(--kg-on-brand);
+  border-color: var(--kg-brand-solid);
+}
+
+.dev-panel {
+  order: 1;
+  width: min(340px, calc(100vw - 36px));
+  /* Long enough sessions leave a list of renders; the panel scrolls rather than growing
+     past the top of the screen. */
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 12px;
+  background: var(--kg-surface);
+  color: var(--kg-ink);
+  box-shadow: var(--kg-shadow-dialog);
+}
+
+.dev-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dev-panel__store {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--kg-muted);
+}
+
+.dev-panel__close {
+  border: 0;
+  background: none;
+  color: var(--kg-muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dev-panel__note {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--kg-faint);
+}
+
+.dev-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dev-field__label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--kg-muted);
+}
+
+.dev-row {
+  display: flex;
+}
+
+.dev-run {
+  width: 100%;
+  justify-content: center;
+}
+
+.dev-status {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--kg-muted);
+}
+
+.dev-status--bad {
+  /* Whole words matter here — a stack-ish server message must not be clipped to a hint. */
+  overflow-wrap: anywhere;
+  color: var(--kg-out);
+}
+
+.dev-out {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-block-start: 10px;
+  border-block-start: 1px solid var(--kg-line);
+}
+
+.dev-out__link {
+  font-size: 0.8rem;
+  color: var(--kg-brand);
+}

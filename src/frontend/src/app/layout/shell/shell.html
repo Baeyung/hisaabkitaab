@@ -177,3 +177,9 @@
 <app-print-details-dialog />
 <app-conversion-slip />
 
+<!-- Off unless localStorage.devtools is 'true'; @if rather than a hidden class so a
+     shopkeeper's session never builds the panel or fetches the party list behind it. -->
+@if (dev.enabled()) {
+  <app-dev-tools />
+}
+
