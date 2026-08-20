@@ -789,6 +789,9 @@ export const ur: Record<TranslationKey, string> = {
   'ledger.detail.col.date': 'تاریخ',
   'ledger.detail.col.detail': 'تفصیل',
   'ledger.detail.col.amount': 'رقم',
+  // گاہک سے وصول ہو یا دکان سے ادا — رنگ بتاتا ہے کس طرف۔
+  'ledger.detail.col.paid': 'ادا شدہ',
+  'ledger.detail.col.khata': 'کھاتے میں',
   'ledger.detail.col.balance': 'بقایا',
   'ledger.detail.empty': 'اس پارٹی کے ساتھ ابھی کوئی انٹری نہیں۔',
   'ledger.detail.loadError': 'یہ کھاتہ لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔',

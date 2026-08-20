@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BalanceDirection } from '../../core/store/balance.models';
-import { directionClass } from '../../shared/balance.util';
+import { directionClass, khataAmount } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { ReportService } from './report.service';
 import { PartyReminder } from './report.models';
@@ -38,6 +38,8 @@ export class ReminderReportPage {
       void this.load(this.storeId(), this.partyId(), this.date(), this.token());
     });
   }
+
+  protected readonly khataAmount = khataAmount;
 
   protected tone(direction: BalanceDirection): string {
     return directionClass(direction);

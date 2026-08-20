@@ -1211,10 +1211,15 @@ html[dir='rtl'] select.rm-input {
     border-end-end-radius: 3px;
     background: var(--kg-line-strong);
   }
-  .rm-tbl tbody tr:has(td.amt--in)::before {
+  /* Scoped to the headline figure, not to any coloured cell: a statement row carries
+     three of them — the goods total, the cash, and the khata effect — and the two that
+     are coloured can point opposite ways. Paying a supplier sends cash out while their
+     baqaya comes down, which reads in. Matching either, the later rule would win and
+     paint the rail against the entry it stands for. */
+  .rm-tbl tbody tr:has(td.rm-cell-amt.amt--in)::before {
     background: var(--kg-in);
   }
-  .rm-tbl tbody tr:has(td.amt--out)::before {
+  .rm-tbl tbody tr:has(td.rm-cell-amt.amt--out)::before {
     background: var(--kg-out);
   }
 
@@ -1236,7 +1241,8 @@ html[dir='rtl'] select.rm-input {
   /* An entry that settled in full shows an em dash on the wide table, to keep the
      column reading straight down. On a phone there is no column to keep straight and
      the cell would only add a blank fact to the meta line, so it goes entirely. */
-  .rm-tbl td:has(> app-khata-amount.is-empty) {
+  .rm-tbl td:has(> app-khata-amount.is-empty),
+  .rm-tbl td.is-empty {
     display: none;
   }
   .rm-tbl td.end {

@@ -19,7 +19,12 @@ export interface PartyStatementRow {
   itemSummary: string | null;
   /** 'NONE' on a row that is only a record — a processed-goods batch moves the party no money. */
   inOut: 'IN' | 'OUT' | 'NONE';
+  /** What the entry did to the khata: `goodsTotal` − `cashAmount`, unsigned — `inOut` carries the direction. */
   amount: number;
+  /** What the entry's goods came to — the bill it stands for. Null on an entry that is not a document. */
+  goodsTotal: number | null;
+  /** Cash that changed hands on the entry. Null when none did — an opening balance moves no money. */
+  cashAmount: number | null;
   runningBalance: Balance;
   /** For a charge (a bill): true once FIFO payments have covered it; null for payment rows. */
   cleared: boolean | null;

@@ -130,6 +130,8 @@
                 <th scope="col">{{ locale.t('ledger.detail.col.date') }}</th>
                 <th scope="col">{{ locale.t('ledger.detail.col.detail') }}</th>
                 <th scope="col" class="end">{{ locale.t('ledger.detail.col.amount') }}</th>
+                <th scope="col" class="end">{{ locale.t('ledger.detail.col.paid') }}</th>
+                <th scope="col" class="end">{{ locale.t('ledger.detail.col.khata') }}</th>
                 <th scope="col" class="end">{{ locale.t('ledger.detail.col.balance') }}</th>
                 <th scope="col" class="end rm-noprint">
                   <span class="sr-only">{{ locale.t('bill.col.actions') }}</span>
@@ -163,11 +165,26 @@
                     }
                   </td>
                   <td
-                    class="end num rm-cell-amt"
-                    [class.amt--in]="row.inOut === 'IN'"
-                    [class.amt--out]="row.inOut === 'OUT'"
+                    class="end num"
+                    [class.is-empty]="row.goodsTotal === null"
+                    [attr.data-label]="locale.t('ledger.detail.col.amount')"
                   >
-                    {{ locale.money(row.amount) }}
+                    {{ row.goodsTotal === null ? '—' : locale.money(row.goodsTotal) }}
+                  </td>
+                  <td
+                    class="end num"
+                    [class.is-empty]="row.cashAmount === null"
+                    [attr.data-label]="locale.t('ledger.detail.col.paid')"
+                  >
+                    {{ row.cashAmount === null ? '—' : locale.money(row.cashAmount) }}
+                  </td>
+                  <td
+                    class="end num rm-cell-amt"
+                    [class.is-empty]="khataAmount(row) === null"
+                    [class.amt--in]="khataAmount(row) !== null && row.inOut === 'IN'"
+                    [class.amt--out]="khataAmount(row) !== null && row.inOut === 'OUT'"
+                  >
+                    {{ khataAmount(row) === null ? '—' : locale.money(row.amount) }}
                   </td>
                   <td class="end" [attr.data-label]="locale.t('ledger.detail.col.balance')">
                     <span
@@ -176,7 +193,7 @@
                     >
                       {{ locale.money(row.runningBalance.amount) }}
                     </span>
-                    <span class="rm-tbl__meta">{{
+                    <span class="sr-only">{{
                       locale.t(directionKey(row.runningBalance.direction))
                     }}</span>
                   </td>
@@ -232,7 +249,7 @@
 
                 @if (pendingDelete() === row.transactionId) {
                   <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
-                    <td colspan="5">
+                    <td colspan="7">
                       <div class="rm-confirm">
                         <span class="rm-confirm__msg">{{ locale.t('entry.delete.confirm') }}</span>
                         <span class="rm-confirm__actions">
@@ -276,12 +293,14 @@
                       </td>
                       <td class="end num">{{ locale.money(line.amount) }}</td>
                       <td></td>
+                      <td></td>
+                      <td></td>
                       <td class="rm-noprint"></td>
                     </tr>
                   }
                   <tr class="rm-subrow rm-subrow--tot">
                     <td></td>
-                    <td colspan="3" class="rm-subrow__tot">
+                    <td colspan="5" class="rm-subrow__tot">
                       <span
                         >{{ locale.t('bill.detail.goodsTotal') }}
                         <b class="num">{{ locale.money(doc.goodsTotal) }}</b></span
@@ -313,7 +332,7 @@
                 }
               } @empty {
                 <tr>
-                  <td colspan="5">{{ locale.t('report.filtered.none') }}</td>
+                  <td colspan="7">{{ locale.t('report.filtered.none') }}</td>
                 </tr>
               }
             </tbody>

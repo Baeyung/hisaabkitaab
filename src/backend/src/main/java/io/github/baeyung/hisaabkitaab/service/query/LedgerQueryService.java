@@ -6,11 +6,13 @@ import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
+import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
+import io.github.baeyung.hisaabkitaab.service.query.support.DocumentTotals;
 import io.github.baeyung.hisaabkitaab.service.query.support.ItemSummary;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
@@ -153,6 +155,8 @@ public class LedgerQueryService
                             ItemSummary.of(transaction),
                             line.getInOut(),
                             value(line),
+                            isDocument(transaction) ? shown(DocumentTotals.goods(transaction)) : null,
+                            shown(DocumentTotals.cash(transaction)),
                             PartyBalance.of(running),
                             cleared
                     );
@@ -173,6 +177,27 @@ public class LedgerQueryService
                 party.getId(), party.getName(), party.getContact(), rows, current,
                 totalBilled, totalPaid, lastPaymentDate
         );
+    }
+
+    /**
+     * Whether the entry stands for a piece of paper with goods on it, and so has a bill
+     * total worth showing beside its khata figure. A receipt is not a document — the cash
+     * is the whole of it — and a processing batch never posts a PARTY line to begin with.
+     */
+    private static boolean isDocument(Transaction transaction)
+    {
+        return transaction.getEvent() == TransactionEvent.SALE
+                || transaction.getEvent() == TransactionEvent.PURCHASE;
+    }
+
+    /**
+     * A figure the row shows only when there is one. Zero is left out rather than printed:
+     * a sale paid in full posts a PARTY line of nothing, and a bare "0" in the column reads
+     * as a real amount instead of as nothing outstanding.
+     */
+    private static Double shown(double amount)
+    {
+        return amount > 0.005 ? amount : null;
     }
 
     private double signedValue(TransactionLine line)

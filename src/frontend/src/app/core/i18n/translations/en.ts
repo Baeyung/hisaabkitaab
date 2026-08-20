@@ -763,6 +763,9 @@ export const en = {
   'ledger.detail.col.date': 'Date',
   'ledger.detail.col.detail': 'Detail',
   'ledger.detail.col.amount': 'Amount',
+  // The cash on the entry, either way across the counter — the colour says which.
+  'ledger.detail.col.paid': 'Paid',
+  'ledger.detail.col.khata': 'On khata',
   'ledger.detail.col.balance': 'Balance',
   'ledger.detail.empty': 'No entries with this party yet.',
   'ledger.detail.loadError': "Couldn't load this khata. Please try again.",

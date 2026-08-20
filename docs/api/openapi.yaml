@@ -1879,7 +1879,26 @@ components:
         description: { type: string }
         itemSummary: { type: string, description: 'Goods on the entry ("Lawn Print × 12") — null when it moves none.' }
         inOut: { $ref: '#/components/schemas/InOut' }
-        amount: { type: number, format: double }
+        amount:
+          type: number
+          format: double
+          description: >-
+            What the entry left on the khata: `goodsTotal` − `cashAmount`, unsigned —
+            `inOut` carries the direction. On a part-paid bill this is neither the bill
+            nor the payment, which is why the two below are sent alongside it.
+        goodsTotal:
+          type: [number, 'null']
+          format: double
+          description: >-
+            Σ(quantity × rate) over the entry's goods — the bill it stands for. Null on an
+            entry that is not a document (a receipt, a payment, an opening balance), and on
+            a document whose goods came to nothing.
+        cashAmount:
+          type: [number, 'null']
+          format: double
+          description: >-
+            Cash that changed hands on the entry — taken in on a sale or receipt, paid out
+            on a purchase or payment. Null when none did.
         runningBalance: { $ref: '#/components/schemas/PartyBalance' }
         cleared:
           type: [boolean, 'null']

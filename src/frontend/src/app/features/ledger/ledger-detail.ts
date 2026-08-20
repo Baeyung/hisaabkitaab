@@ -10,7 +10,7 @@ import { TransactionEventKind } from '../../core/store/cashbook.models';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { entryDetailLink, entryEditLink, isEditableEntry } from '../../shared/entry-route';
 import { deleteErrorKey } from '../../core/store/delete-error';
-import { directionClass, directionKey } from '../../shared/balance.util';
+import { directionClass, directionKey, khataAmount } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
@@ -86,9 +86,7 @@ export class LedgerDetail {
     // row.date is an ISO `YYYY-MM-DD` string, so lexical comparison is a date comparison.
     return (this.statement()?.rows ?? []).filter(
       (row) =>
-        (!from || row.date >= from) &&
-        (!to || row.date <= to) &&
-        (!event || row.event === event),
+        (!from || row.date >= from) && (!to || row.date <= to) && (!event || row.event === event),
     );
   });
 
@@ -115,6 +113,7 @@ export class LedgerDetail {
 
   protected readonly directionKey = directionKey;
   protected readonly directionClass = directionClass;
+  protected readonly khataAmount = khataAmount;
 
   /** Bilingual label for an event kind — all kinds have a `report.event.*` key. */
   protected readonly eventLabel = (kind: TransactionEventKind): string =>
