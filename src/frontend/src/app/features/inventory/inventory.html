@@ -39,6 +39,8 @@
       <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('settings/items')">{{ locale.t('inventory.empty.cta') }}</a>
     </div>
   } @else {
+    <app-amount-legend kind="stock" />
+
     @if (query().trim()) {
       <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.filter', { query: query().trim() }) }}</p>
     }

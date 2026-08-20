@@ -21,6 +21,7 @@ import { directionClass, directionKey } from '../../shared/balance.util';
 import { KhataAmount } from '../../shared/khata-amount';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -29,7 +30,15 @@ import { deleteErrorKey } from '../../core/store/delete-error';
  */
 @Component({
   selector: 'app-cashbook',
-  imports: [RouterLink, PrintHeader, PrintItemsSummary, DateField, WhatsAppButton, KhataAmount],
+  imports: [
+    RouterLink,
+    PrintHeader,
+    PrintItemsSummary,
+    DateField,
+    WhatsAppButton,
+    KhataAmount,
+    AmountLegend,
+  ],
   templateUrl: './cashbook.html',
 })
 export class Cashbook {

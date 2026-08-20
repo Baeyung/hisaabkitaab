@@ -6,6 +6,7 @@ import { directionClass } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { ReportService } from './report.service';
 import { DailyReport } from './report.models';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /** One line of the contents page: a numbered chapter and the one figure that summarises it. */
 interface Chapter {
@@ -55,7 +56,7 @@ interface DocGroup {
  */
 @Component({
   selector: 'app-daily-report',
-  imports: [PrintHeader],
+  imports: [PrintHeader, AmountLegend],
   templateUrl: './daily-report.html',
   styleUrl: './report.css',
 })

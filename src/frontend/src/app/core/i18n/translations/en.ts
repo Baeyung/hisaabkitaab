@@ -743,6 +743,12 @@ export const en = {
   'cashbook.col.amount': 'Amount',
   'cashbook.col.khata': 'On khata',
   'cashbook.col.running': 'Balance',
+  // The colour key that rides under the figures on every screen that paints them. Named in
+  // words, not left to a swatch — see app/shared/amount-legend.ts.
+  'legend.money.in': 'Green = money in',
+  'legend.money.out': 'Red = money out',
+  'legend.stock.in': 'Green = stock in',
+  'legend.stock.out': 'Red = stock out',
   // Read aloud in place of the dash the column shows when an entry settled in full.
   'khata.none': 'Nothing on khata',
   'cashbook.empty.title': 'No cash movement this day',

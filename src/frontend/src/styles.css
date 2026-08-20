@@ -446,6 +446,45 @@ html[dir='rtl'] .rm-back::before {
   color: var(--kg-muted);
 }
 
+/* The key to the green and the red — see app/shared/amount-legend.ts. Quiet and
+   end-aligned so it sits under the column it explains, close enough to be found
+   the first time and faint enough to stop being read after that. */
+.rm-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px 14px;
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--kg-muted);
+}
+.rm-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+/* Painted with `background`, so it needs `print-color-adjust` to survive the
+   printer at all — and even then the label beside it names the colour in words,
+   because a dot alone is nothing to a greyscale sheet or a red-green eye. */
+.rm-legend__dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.rm-legend__dot--in {
+  color: var(--kg-in);
+}
+.rm-legend__dot--out {
+  color: var(--kg-out);
+}
+
 /* card + table shell */
 .rm-card {
   background: var(--kg-card);

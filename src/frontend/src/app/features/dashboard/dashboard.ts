@@ -14,6 +14,7 @@ import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { FONT, PALETTES, compactMoney, shortDate } from '../../shared/chart/chart-theme';
 import { DateField } from '../../shared/date-field/date-field';
 import { urlFilters } from '../../shared/url-filters';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * The analytics home screen. One backend call feeds every widget for the chosen
@@ -21,7 +22,7 @@ import { urlFilters } from '../../shared/url-filters';
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, ChartView, DateField, PrintHeader, WhatsAppButton],
+  imports: [RouterLink, ChartView, DateField, PrintHeader, WhatsAppButton, AmountLegend],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {

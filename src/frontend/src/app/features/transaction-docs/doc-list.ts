@@ -24,6 +24,7 @@ import { urlFilters } from '../../shared/url-filters';
 import { PrintDetailsService } from '../../shared/print-details.service';
 import { DocConfig } from './doc-config';
 import { sumBills, sumSummaries } from './doc-totals';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * A run of goods documents — every bill, or every purchase — newest first,
@@ -45,6 +46,7 @@ import { sumBills, sumSummaries } from './doc-totals';
     Select,
     DateField,
     KhataAmount,
+    AmountLegend,
   ],
   templateUrl: './doc-list.html',
 })

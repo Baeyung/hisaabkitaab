@@ -5,6 +5,7 @@ import { directionClass, khataAmount } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { ReportService } from './report.service';
 import { PartyReminder } from './report.models';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * One khata holder's statement, as the monthly job sends it to them.
@@ -16,7 +17,7 @@ import { PartyReminder } from './report.models';
  */
 @Component({
   selector: 'app-reminder-report',
-  imports: [PrintHeader],
+  imports: [PrintHeader, AmountLegend],
   templateUrl: './reminder-report.html',
   styleUrl: './report.css',
 })

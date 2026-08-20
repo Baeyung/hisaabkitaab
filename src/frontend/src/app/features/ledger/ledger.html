@@ -39,6 +39,8 @@
       <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('settings/party')">{{ locale.t('ledger.empty.cta') }}</a>
     </div>
   } @else {
+    <app-amount-legend />
+
     @if ((parties()?.length ?? 0) > 0) {
     @if (query().trim()) {
       <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.filter', { query: query().trim() }) }}</p>

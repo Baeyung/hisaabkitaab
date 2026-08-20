@@ -46,6 +46,8 @@
         <p class="rm-state__body">{{ locale.t('inventory.detail.empty') }}</p>
       </div>
     } @else {
+      <app-amount-legend kind="stock" />
+
       <div class="rm-card">
         <div class="rm-tablewrap">
           <table class="rm-tbl">
