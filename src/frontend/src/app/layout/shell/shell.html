@@ -28,6 +28,43 @@
         </svg>
       </button>
     }
+
+    <!-- Back and Forward, doing exactly what the browser's own pair does. Worth carrying in
+         the app's own frame because this app is a PWA on a counter tablet as often as it is
+         a tab, and installed there the browser's pair is not on screen at all. Greyed at the
+         ends of the run this app has put on the stack — see NavHistoryService for why that
+         has to be counted rather than asked for.
+
+         `kg-flip` because these two glyphs mean "back" and "onward", not "left" and
+         "right": in Urdu the strip reads the other way and an unmirrored chevron would have
+         Back pointing at Forward. -->
+    <nav class="histnav" [attr.aria-label]="locale.t('nav.history')">
+      <button
+        type="button"
+        class="histnav__btn"
+        [disabled]="!history.canBack()"
+        [attr.aria-label]="locale.t('nav.back')"
+        [attr.title]="locale.t('nav.back')"
+        (click)="history.back()"
+      >
+        <svg class="kg-flip" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 6l-6 6 6 6" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="histnav__btn"
+        [disabled]="!history.canForward()"
+        [attr.aria-label]="locale.t('nav.forward')"
+        [attr.title]="locale.t('nav.forward')"
+        (click)="history.forward()"
+      >
+        <svg class="kg-flip" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </button>
+    </nav>
+
     <div class="topbar-brand">
       <div class="brand-logo"><app-brand-mark /></div>
       <b>{{ locale.t('app.name') }}</b>

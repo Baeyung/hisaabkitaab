@@ -325,39 +325,6 @@ html[dir='rtl'] .kg-flip {
   border-radius: 999px;
 }
 
-/* The arrow lives here, not in the four templates that use this: as a text node
-   it was a bidi neutral, so Urdu parked it at the *end* of the label and left it
-   pointing left — "back" aiming forward. As a flex item it sits at inline-start
-   in both scripts, and the glyph itself turns around. */
-.rm-back::before {
-  content: '←';
-}
-html[dir='rtl'] .rm-back::before {
-  content: '→';
-}
-.rm-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--kg-muted);
-  text-decoration: none;
-  border: 1px solid var(--kg-line-strong);
-  border-radius: 9px;
-  padding: 7px 12px;
-  background: var(--kg-card);
-}
-.rm-back:hover {
-  color: var(--kg-ink);
-  border-color: var(--kg-line-hover);
-}
-.rm-back:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--kg-focus);
-}
-
 /* stat strip: opening/closing, totals, current balance/stock */
 .rm-stats {
   display: grid;

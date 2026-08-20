@@ -94,6 +94,9 @@ export const ur: Record<TranslationKey, string> = {
   'install.steps.other':
     'اپنے براؤزر کا مینو کھولیں، پھر ”Install app“ یا ”Add to Home Screen“ منتخب کریں۔',
   'nav.menu': 'مینو',
+  'nav.history': 'پیچھے اور آگے',
+  'nav.back': 'پیچھے',
+  'nav.forward': 'آگے',
   'nav.dashboard': 'ڈیش بورڈ',
   'nav.cashbook': 'روزنامچہ',
   'nav.ledger': 'کھاتہ',

@@ -1,9 +1,5 @@
 <section class="rm-page">
   <app-print-header />
-  <a class="rm-back rm-noprint" [routerLink]="stores.link('ledger')">{{
-    locale.t('common.back')
-  }}</a>
-
   @if (loading()) {
     <div class="rm-card" aria-hidden="true">
       <div class="rm-skel"></div>

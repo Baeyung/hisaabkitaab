@@ -92,6 +92,11 @@ export const en = {
   'install.steps.other':
     'Open your browser’s menu, then choose “Install app” or “Add to Home Screen”.',
   'nav.menu': 'Menu',
+  // The topbar's Back/Forward pair. Named for the movement, not for the screen either one
+  // lands on — where they go depends only on where this browser has already been.
+  'nav.history': 'Back and forward',
+  'nav.back': 'Back',
+  'nav.forward': 'Forward',
   'nav.dashboard': 'Dashboard',
   'nav.cashbook': 'Cashbook',
   'nav.ledger': 'Ledger',

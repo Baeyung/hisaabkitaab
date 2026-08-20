@@ -1,6 +1,6 @@
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { MenuSetting } from '../../core/store/store.models';
-import { BOARD, BoardTab, BoardTile, boardFor } from './board';
+import { BOARD, BoardTab, BoardTile, boardFor, openSheet } from './board';
 import { NAV, NavGroup, arranged } from './nav';
 
 const at = (key: string, extra: Partial<MenuSetting> = {}): MenuSetting => ({ key, ...extra });
@@ -114,5 +114,40 @@ describe('boardFor', () => {
     const board = boardFor(arranged('OWNER'));
 
     expect(new Set(keys(board)).size).toBe(keys(board).length);
+  });
+});
+
+/**
+ * Which sheet the board opens on. Three claims in order — the address, then where this
+ * browser was left, then the first tab — and the order is the feature: a counter tablet spends
+ * all day on one kind of work, so coming back to Entry rather than to tab one is a tap the same
+ * person otherwise pays over and over; but an address naming a sheet still has to win, or every
+ * link and Back press into the board would land somewhere other than where it said.
+ */
+describe('openSheet', () => {
+  const board = boardFor(arranged('OWNER'));
+  const [first, second] = board;
+
+  it('opens the sheet the address names, over anything remembered', () => {
+    expect(openSheet(board, second.key, first.key)).toBe(second);
+  });
+
+  it('opens the sheet this browser was left on when the address names none', () => {
+    expect(openSheet(board, undefined, second.key)).toBe(second);
+  });
+
+  it('opens the first sheet when nothing has been remembered yet', () => {
+    expect(openSheet(board, undefined, null)).toBe(first);
+  });
+
+  // A bookmark from a build where that tab existed, or a hand-typed URL. Either way it lands
+  // on the board rather than on a blank page.
+  it('falls past a tab this build no longer has, in both the address and the memory', () => {
+    expect(openSheet(board, 'board.tab.gone', second.key)).toBe(second);
+    expect(openSheet(board, 'board.tab.gone', 'board.tab.alsoGone')).toBe(first);
+  });
+
+  it('has nothing to open for a role whose board is empty', () => {
+    expect(openSheet([], undefined, null)).toBeUndefined();
   });
 });

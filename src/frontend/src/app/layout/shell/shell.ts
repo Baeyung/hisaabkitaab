@@ -17,6 +17,7 @@ import { NavIconMark } from '../../shared/nav-icon/nav-icon';
 import { NavLeaf, arranged } from './nav';
 import { DevTools } from '../../shared/dev-tools/dev-tools';
 import { DevToolsService } from '../../core/dev/dev-tools.service';
+import { NavHistoryService } from '../../core/nav/nav-history.service';
 
 /**
  * One "used of allowed" line on the plan strip: the numbers as words, and the same numbers
@@ -47,6 +48,9 @@ export class Shell {
   private readonly plans = inject(PlanService);
   /** The floating gear, and whether this browser has asked for it. */
   protected readonly dev = inject(DevToolsService);
+
+  /** Backs the two chevrons in the topbar: where we are in this app's own history. */
+  protected readonly history = inject(NavHistoryService);
 
   /**
    * The sidebar: role first, then the shop's own arrangement, then drop what it hides.
