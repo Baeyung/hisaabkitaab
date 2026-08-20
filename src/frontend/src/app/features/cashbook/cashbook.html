@@ -152,8 +152,8 @@
                     </td>
                   </tr>
                 }
-                @if (printer.bills().get(row.transactionId); as bill) {
-                  @for (line of bill.lines; track $index) {
+                @if (printer.docs().get(row.transactionId); as doc) {
+                  @for (line of doc.lines; track $index) {
                     <tr class="rm-subrow">
                       <td></td>
                       <td>
@@ -171,10 +171,10 @@
                   <tr class="rm-subrow rm-subrow--tot">
                     <td></td>
                     <td colspan="4" class="rm-subrow__tot">
-                      <span>{{ locale.t('bill.detail.goodsTotal') }} <b class="num">{{ locale.money(bill.goodsTotal) }}</b></span>
-                      <span>{{ locale.t('bill.detail.cashReceived') }} <b class="num amt--in">{{ locale.money(bill.cashReceived) }}</b></span>
-                      @if (bill.outstanding.direction !== 'SETTLED') {
-                        <span>{{ locale.t(bill.partyName ? 'bill.detail.outstanding' : 'bill.detail.discount') }} <b class="num">{{ locale.money(bill.outstanding.amount) }}</b></span>
+                      <span>{{ locale.t('bill.detail.goodsTotal') }} <b class="num">{{ locale.money(doc.goodsTotal) }}</b></span>
+                      <span>{{ locale.t(docKeys[doc.kind].cash) }} <b class="num" [class.amt--in]="doc.kind === 'bills'" [class.amt--out]="doc.kind === 'purchases'">{{ locale.money(doc.cashReceived) }}</b></span>
+                      @if (doc.outstanding.direction !== 'SETTLED') {
+                        <span>{{ locale.t(doc.partyName ? docKeys[doc.kind].outstanding : docKeys[doc.kind].discount) }} <b class="num">{{ locale.money(doc.outstanding.amount) }}</b></span>
                       }
                     </td>
                     <td class="rm-noprint"></td>
@@ -201,7 +201,8 @@
         </div>
       </div>
       <!-- Empty unless the user printed with details — then it closes the run. -->
-      <app-print-items-summary [bills]="printedBills()" />
+      <app-print-items-summary [bills]="soldDocs()" />
+      <app-print-items-summary [bills]="boughtDocs()" [title]="boughtTitle" />
     }
   }
 </section>

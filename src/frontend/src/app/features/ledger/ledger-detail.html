@@ -260,8 +260,8 @@
                     </td>
                   </tr>
                 }
-                @if (printer.bills().get(row.transactionId); as bill) {
-                  @for (line of bill.lines; track $index) {
+                @if (printer.docs().get(row.transactionId); as doc) {
+                  @for (line of doc.lines; track $index) {
                     <tr class="rm-subrow">
                       <td></td>
                       <td>
@@ -284,20 +284,27 @@
                     <td colspan="3" class="rm-subrow__tot">
                       <span
                         >{{ locale.t('bill.detail.goodsTotal') }}
-                        <b class="num">{{ locale.money(bill.goodsTotal) }}</b></span
+                        <b class="num">{{ locale.money(doc.goodsTotal) }}</b></span
                       >
                       <span
-                        >{{ locale.t('bill.detail.cashReceived') }}
-                        <b class="num amt--in">{{ locale.money(bill.cashReceived) }}</b></span
+                        >{{ locale.t(docKeys[doc.kind].cash) }}
+                        <b
+                          class="num"
+                          [class.amt--in]="doc.kind === 'bills'"
+                          [class.amt--out]="doc.kind === 'purchases'"
+                          >{{ locale.money(doc.cashReceived) }}</b
+                        ></span
                       >
-                      @if (bill.outstanding.direction !== 'SETTLED') {
+                      @if (doc.outstanding.direction !== 'SETTLED') {
                         <span
                           >{{
                             locale.t(
-                              bill.partyName ? 'bill.detail.outstanding' : 'bill.detail.discount'
+                              doc.partyName
+                                ? docKeys[doc.kind].outstanding
+                                : docKeys[doc.kind].discount
                             )
                           }}
-                          <b class="num">{{ locale.money(bill.outstanding.amount) }}</b></span
+                          <b class="num">{{ locale.money(doc.outstanding.amount) }}</b></span
                         >
                       }
                     </td>

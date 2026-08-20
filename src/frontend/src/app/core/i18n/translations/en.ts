@@ -718,8 +718,14 @@ export const en = {
   'block.done.title': 'Messages stopped',
   'block.done.body': '{{store}} will not send any more WhatsApp messages to {{number}}.',
   'block.support': 'Changed your mind? Only our support team can undo this:',
+  // The prompt names the documents actually on the page — a customer's statement is
+  // all bills, a supplier's all purchases, and the cashbook usually holds both.
   'common.printDetails.title': 'Bill details',
   'common.printDetails.confirm': "Include each bill's item details as sub-rows?",
+  'common.printDetails.purchases.title': 'Purchase details',
+  'common.printDetails.purchases.confirm': "Include each purchase's item details as sub-rows?",
+  'common.printDetails.both.title': 'Item details',
+  'common.printDetails.both.confirm': 'Include the items on each bill and purchase as sub-rows?',
   'common.printDetails.with': 'With details',
   'common.printDetails.without': 'Without details',
   'cashbook.subtitle': 'Every rupee in and out of the galla, day by day.',

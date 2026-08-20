@@ -696,6 +696,12 @@ export const ur: Record<TranslationKey, string> = {
   'block.support': 'ارادہ بدل گیا؟ یہ صرف ہماری سپورٹ ٹیم ہی واپس کر سکتی ہے:',
   'common.printDetails.title': 'بل کی تفصیلات',
   'common.printDetails.confirm': 'کیا ہر بل کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
+  'common.printDetails.purchases.title': 'خرید کی تفصیلات',
+  'common.printDetails.purchases.confirm':
+    'کیا ہر خرید کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
+  'common.printDetails.both.title': 'آئٹمز کی تفصیلات',
+  'common.printDetails.both.confirm':
+    'کیا ہر بل اور خرید کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
   'common.printDetails.with': 'تفصیلات کے ساتھ',
   'common.printDetails.without': 'تفصیلات کے بغیر',
   'cashbook.subtitle': 'گلے میں آنے جانے والا ہر روپیہ، دن بہ دن۔',
