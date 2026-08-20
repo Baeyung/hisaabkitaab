@@ -11,6 +11,7 @@ import { DateField } from '../../shared/date-field/date-field';
 import { OuterBar } from '../../shared/outer-bar/outer-bar';
 import { daysAgoIso, todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * Every shop the user owns, side by side over one window.
@@ -27,7 +28,7 @@ import { urlFilters } from '../../shared/url-filters';
  */
 @Component({
   selector: 'app-store-compare',
-  imports: [RouterLink, OuterBar, ChartView, DateField],
+  imports: [RouterLink, OuterBar, ChartView, DateField, AmountLegend],
   templateUrl: './store-compare.html',
   styleUrl: './store-compare.css',
 })

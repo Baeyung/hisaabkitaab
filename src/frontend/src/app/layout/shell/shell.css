@@ -72,6 +72,68 @@
   }
 }
 
+/* ── Back / Forward ───────────────────────────────────────
+   A pair, boxed as one control the way a browser boxes them: two 32px targets sharing a
+   frame, small enough that they read as chrome rather than as anything on the page. */
+.histnav {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.histnav__btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.histnav__btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.histnav__btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* Greyed rather than dropped: two buttons that come and go would move the brand and the
+   shop's name sideways under the finger reaching for them. */
+.histnav__btn:disabled {
+  opacity: 0.34;
+  cursor: default;
+}
+
+/* Under ~420px there is not room for all of it, so two things go, in this order.
+
+   Forward first: you only have somewhere forward to go if you have already gone back, so
+   it is the rarer of the pair, and Back on its own is still the button being reached for.
+
+   Then the app's own name. It was already within a pixel of the shop's name at 390px before
+   these two buttons existed — `.topbar-brand b` sets `white-space: nowrap` and no width, so
+   it does not shrink, it runs *under* the shop switcher. The mark beside it still says which
+   app this is, and the name it is covering says which shop you are in, which is the one of
+   the two a shopkeeper actually has to check. Same trade the switcher's own verb makes at
+   640px and the board link's label makes at 560px. */
+@media (max-width: 420px) {
+  .histnav__btn:last-child {
+    display: none;
+  }
+  .topbar-brand b {
+    display: none;
+  }
+}
+
 .topbar-brand {
   display: flex;
   align-items: center;

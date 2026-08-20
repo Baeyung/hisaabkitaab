@@ -94,6 +94,9 @@ export const ur: Record<TranslationKey, string> = {
   'install.steps.other':
     'اپنے براؤزر کا مینو کھولیں، پھر ”Install app“ یا ”Add to Home Screen“ منتخب کریں۔',
   'nav.menu': 'مینو',
+  'nav.history': 'پیچھے اور آگے',
+  'nav.back': 'پیچھے',
+  'nav.forward': 'آگے',
   'nav.dashboard': 'ڈیش بورڈ',
   'nav.cashbook': 'روزنامچہ',
   'nav.ledger': 'کھاتہ',
@@ -696,6 +699,12 @@ export const ur: Record<TranslationKey, string> = {
   'block.support': 'ارادہ بدل گیا؟ یہ صرف ہماری سپورٹ ٹیم ہی واپس کر سکتی ہے:',
   'common.printDetails.title': 'بل کی تفصیلات',
   'common.printDetails.confirm': 'کیا ہر بل کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
+  'common.printDetails.purchases.title': 'خرید کی تفصیلات',
+  'common.printDetails.purchases.confirm':
+    'کیا ہر خرید کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
+  'common.printDetails.both.title': 'آئٹمز کی تفصیلات',
+  'common.printDetails.both.confirm':
+    'کیا ہر بل اور خرید کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
   'common.printDetails.with': 'تفصیلات کے ساتھ',
   'common.printDetails.without': 'تفصیلات کے بغیر',
   'cashbook.subtitle': 'گلے میں آنے جانے والا ہر روپیہ، دن بہ دن۔',
@@ -713,6 +722,10 @@ export const ur: Record<TranslationKey, string> = {
   'cashbook.col.amount': 'رقم',
   'cashbook.col.khata': 'کھاتے میں',
   'cashbook.col.running': 'میزان',
+  'legend.money.in': 'سبز = رقم کی آمد',
+  'legend.money.out': 'سرخ = رقم کا اخراج',
+  'legend.stock.in': 'سبز = مال کی آمد',
+  'legend.stock.out': 'سرخ = مال کا اخراج',
   // Read aloud in place of the dash the column shows when an entry settled in full.
   'khata.none': 'کھاتے میں کچھ نہیں',
   'cashbook.empty.title': 'اس دن کوئی نقد لین دین نہیں',
@@ -783,6 +796,9 @@ export const ur: Record<TranslationKey, string> = {
   'ledger.detail.col.date': 'تاریخ',
   'ledger.detail.col.detail': 'تفصیل',
   'ledger.detail.col.amount': 'رقم',
+  // گاہک سے وصول ہو یا دکان سے ادا — رنگ بتاتا ہے کس طرف۔
+  'ledger.detail.col.paid': 'ادا شدہ',
+  'ledger.detail.col.khata': 'کھاتے میں',
   'ledger.detail.col.balance': 'بقایا',
   'ledger.detail.empty': 'اس پارٹی کے ساتھ ابھی کوئی انٹری نہیں۔',
   'ledger.detail.loadError': 'یہ کھاتہ لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔',

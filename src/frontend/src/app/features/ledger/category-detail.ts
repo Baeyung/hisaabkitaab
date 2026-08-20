@@ -7,6 +7,7 @@ import { ExpenseCategoryGroup } from '../../core/store/ledger.models';
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * One expense category's statement: every expense filed under it (parts, bijli,
@@ -16,7 +17,7 @@ import { WhatsAppButton } from '../../shared/whatsapp-button';
  */
 @Component({
   selector: 'app-category-detail',
-  imports: [RouterLink, PrintHeader, WhatsAppButton],
+  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend],
   templateUrl: './category-detail.html',
 })
 export class CategoryDetail {

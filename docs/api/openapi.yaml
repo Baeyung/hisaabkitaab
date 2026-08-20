@@ -1,0 +1,2122 @@
+openapi: 3.1.0
+
+info:
+  title: HisaabKitaab API
+  version: "1.0.0"
+  summary: Store bookkeeping API — parties (khata), items, entries, and the derived ledger/inventory/cashbook reads.
+  description: |
+    Hand-written spec for the HisaabKitaab Spring Boot backend. There is no springdoc on the
+    classpath, so this file is the contract: if a controller changes, change this too.
+
+    ## The one thing to understand before writing anything
+
+    Nothing in this system stores a balance. Every khata balance, every stock quantity and
+    every cash figure is **folded at read time** from `transaction_line` rows. You never PUT a
+    balance; you post the *event* that moved it (`POST /api/stores/{storeId}/event`), and the
+    read endpoints re-derive. Two consequences that matter for a bulk import:
+
+    * Posting the same entry twice does not "overwrite" — it doubles the balance. There is no
+      idempotency key. The importer owns dedupe.
+    * Deleting an entry un-does it completely. Correction is delete + re-post, or `PUT /event/{id}`.
+
+    ## Tenancy
+
+    Every business endpoint is nested under `/api/stores/{storeId}`. `{storeId}` is resolved and
+    access-checked centrally (`CurrentStoreArgumentResolver`): a store the caller cannot reach is
+    `404`, never `403`, so ids cannot be probed. A role too weak for the operation is `403`.
+    Past that boundary services scope on store id alone — a party or item id from another store
+    reads as `404`.
+
+    Roles, weakest first: `VIEWER` (reads), `EDITOR` (books entries, adds parties/items/openings),
+    `OWNER` (deletes, store settings, members). `OWNER` is derived from `stores.owner_user_id`
+    and is never granted.
+
+    ## Auth
+
+    HTTP Basic on every request (stateless — credentials re-sent each time). Username is the
+    account's **contact number or email**. An authenticated but unverified account holds only
+    `ROLE_UNVERIFIED` and gets `403 ACCOUNT_UNVERIFIED`, distinct from a `401` on bad credentials.
+
+    ## Migration / ingestion
+
+    See `docs/api/README.md` for the ordered recipe, the required-field traps (several fields are
+    optional in the schema but cause a `500` when absent), and the duplicate-party trap.
+
+servers:
+  - url: http://localhost:8080
+    description: Local dev (backend). The Angular dev server reaches it as /api.
+  - url: https://aapka.hisaabkitaab.shop
+    description: Production
+
+security:
+  - basicAuth: []
+
+tags:
+  - name: auth
+    description: Signup, verification, password reset, and the current account.
+  - name: stores
+    description: The shops a user owns or has been given access to.
+  - name: catalogue
+    description: Parties (khata holders) and items — the two things entries point at. Create these first.
+  - name: openings
+    description: Carried-in balances at onboarding — party balance, item stock, drawer cash.
+  - name: entries
+    description: The write path. Every sale, purchase, receipt, payment and expense is one POST here.
+  - name: processing
+    description: Raw material plus consumables in, a different item out.
+  - name: reads
+    description: Everything derived from entries — ledger, inventory, cashbook, bills, dashboard.
+  - name: settings
+    description: Unit conversions, expense heads, members.
+
+paths:
+
+  /api/auth/signup:
+    post:
+      tags: [auth]
+      summary: Create an account
+      description: |
+        Public. A brand-new signup lands unverified and must clear `POST /api/auth/verify` before
+        it holds `ROLE_USER`. If the email already exists as an `INVITED` placeholder (someone
+        shared a store with the address before they signed up), that row is adopted in place, so
+        access granted before signup survives it.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignupRequest' }
+      responses:
+        '200':
+          description: The created user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '409':
+          description: Account already exists.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /api/auth/verify:
+    post:
+      tags: [auth]
+      summary: Verify an account with the emailed OTP
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, otp]
+              properties:
+                identifier:
+                  type: string
+                  description: Email or contact number — whichever the account is being identified by.
+                otp: { type: string }
+      responses:
+        '204':
+          description: Verified. The account now holds ROLE_USER.
+        '404':
+          description: No matching account, or the OTP was wrong, expired, or over its attempt limit.
+
+  /api/auth/resend-verification:
+    post:
+      tags: [auth]
+      summary: Re-send the verification OTP
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier]
+              properties:
+                identifier: { type: string }
+      responses:
+        '204':
+          description: Sent, if the account existed. Deliberately does not say whether it did.
+
+  /api/auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: Mail a password-reset OTP
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '204':
+          description: Sent, if the address had an account.
+
+  /api/auth/verify-reset-otp:
+    post:
+      tags: [auth]
+      summary: Check a reset OTP without spending it
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp]
+              properties:
+                email: { type: string, format: email }
+                otp: { type: string }
+      responses:
+        '204':
+          description: OTP is good.
+        '404':
+          description: Wrong, expired, or over the attempt limit.
+
+  /api/auth/reset-password:
+    post:
+      tags: [auth]
+      summary: Set a new password using a reset OTP
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp, password]
+              properties:
+                email: { type: string, format: email }
+                otp: { type: string }
+                password:
+                  type: string
+                  description: 8+ chars, at least one digit and one non-alphanumeric.
+      responses:
+        '204':
+          description: Password changed.
+        '404':
+          description: Wrong, expired, or over the attempt limit.
+
+  /api/auth/me:
+    get:
+      tags: [auth]
+      summary: The signed-in account
+      description: The cheapest way to check that Basic credentials work before starting an import.
+      responses:
+        '200':
+          description: The current user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Unverified' }
+
+  /api/users/me:
+    put:
+      tags: [auth]
+      summary: Update own name and contact number
+      description: |
+        Email is deliberately not changeable — it is the address the account was verified against
+        and the one a password reset is mailed to.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, contactNumber]
+              properties:
+                name: { type: string }
+                contactNumber: { type: string, pattern: '^\d{7,15}$' }
+      responses:
+        '200':
+          description: The updated user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+
+  /api/stores:
+    get:
+      tags: [stores]
+      summary: Every store the caller can reach
+      description: Owned stores and stores shared with the caller, each carrying the caller's role in it.
+      responses:
+        '200':
+          description: Stores, with role.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/StoreSummary' }
+    post:
+      tags: [stores]
+      summary: Create a store
+      description: |
+        The caller becomes its `OWNER`. Refused with `403` when the account's plan is already at
+        its shop ceiling (`maxStores`). A new store is seeded with a default set of expense heads.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreWrite' }
+      responses:
+        '200':
+          description: The created store.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreSummary' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '403':
+          description: Plan's shop ceiling reached. The message is written to be shown to the user as-is.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /api/stores/compare:
+    get:
+      tags: [stores, reads]
+      summary: Owned stores side by side, each with its dashboard
+      description: |
+        Owned shops only — a shop shared with this user belongs to someone else's books. Closed
+        (plan-suspended) shops stay in; their history is what a comparison is for.
+      parameters:
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+      responses:
+        '200':
+          description: One entry per owned shop.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    store: { $ref: '#/components/schemas/StoreSummary' }
+                    dashboard: { $ref: '#/components/schemas/DashboardResponse' }
+
+  /api/stores/{storeId}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [stores]
+      summary: One store
+      description: 'Needs VIEWER.'
+      responses:
+        '200':
+          description: The store, with the caller's role in it.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreSummary' }
+        '404': { $ref: '#/components/responses/StoreNotFound' }
+    put:
+      tags: [stores]
+      summary: Update a store
+      description: 'Needs OWNER. Full replace of name/address/contact/logo/watermark.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreWrite' }
+      responses:
+        '200':
+          description: The updated store.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreSummary' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/StoreNotFound' }
+    delete:
+      tags: [stores]
+      summary: Delete a store and everything in it
+      description: |
+        Needs OWNER. Irreversible — parties, items and every transaction go with it. Allowed even
+        on a plan-suspended shop.
+      responses:
+        '204':
+          description: Gone.
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/StoreNotFound' }
+
+  /api/stores/{storeId}/settings:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    put:
+      tags: [stores, settings]
+      summary: Replace how the shop's app chrome is arranged
+      description: |
+        Needs OWNER. Menu order, what is shown, what it is called — store-wide, not per-reader.
+        Allowed on a suspended shop (it records no business). Not relevant to a data migration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: StoreSettings — menu arrangement. Opaque to an importer.
+              additionalProperties: true
+      responses:
+        '200':
+          description: The store, with settings applied.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreSummary' }
+
+  /api/stores/{storeId}/parties:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [catalogue]
+      summary: Every party (khata holder) in the store
+      description: |
+        Needs VIEWER. Includes each party's current opening balance (`null` when none is set).
+
+        **This is the only party lookup there is.** No query parameters, no name search, no
+        pagination — it returns the store's whole party list in one call. So the way to find a
+        party by name is: call this once, build a normalised `name → id` map client-side, and
+        keep it. There is nothing to call per row.
+
+        An importer must do exactly that *before* creating anything (`POST /parties` has no
+        upsert and no uniqueness check, so a blind create always duplicates). Resolve against
+        this list, then post only the names it does not contain.
+
+        Reading the results: a `contact` of `090078601` together with an `address` of
+        `address@HisaabKitaab` marks a party the backend auto-created from a name on some entry
+        rather than one somebody entered — usually the fingerprint of an earlier import that sent
+        names instead of ids.
+      responses:
+        '200':
+          description: Parties with their openings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PartyResponse' }
+    post:
+      tags: [catalogue]
+      summary: Create a party
+      description: |
+        Needs EDITOR.
+
+        **There is no uniqueness constraint on name, and this is not an upsert.** Posting the same
+        name twice creates two parties with two separate khatas, and returns `200` both times.
+
+        Always resolve first: `GET /parties`, match the name against that list (case-folded and
+        whitespace-collapsed — the backend normalises nothing), and call this **only** when there
+        is no match. Keep the returned `id`; it is what every entry must carry in `party.partyId`.
+
+        Matching is entirely the client's job — there is no `?name=` search and no
+        get-or-create endpoint.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartyWrite' }
+      responses:
+        '200':
+          description: The created party. Keep its `id`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Party' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/stores/{storeId}/parties/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - { $ref: '#/components/parameters/ResourceId' }
+    get:
+      tags: [catalogue]
+      summary: One party
+      description: |
+        Needs VIEWER. Confirms an id is live and belongs to this store — a party from anywhere else
+        is `404`. **Not a search**: there is no way to pass a name here. To find a party by name,
+        list them with `GET /parties` and match client-side.
+      responses:
+        '200':
+          description: The party.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Party' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [catalogue]
+      summary: Update a party
+      description: |
+        Needs EDITOR. Full replace — `name`, `contact` and `address` are all written from the body,
+        so omitting one clears it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartyWrite' }
+      responses:
+        '200':
+          description: The updated party.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Party' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [catalogue]
+      summary: Delete a party
+      description: |
+        Needs OWNER. **Cascades**: every transaction that references this party is deleted with it.
+        This is the cleanest way to undo a bad import of one party's history.
+      responses:
+        '204':
+          description: Gone, along with its transactions.
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/parties/{id}/opening-balance:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - { $ref: '#/components/parameters/ResourceId' }
+    put:
+      tags: [openings]
+      summary: Set (or clear) a party's carried-in balance
+      description: |
+        Needs EDITOR. Upsert — there is at most one opening per party, so sending again edits it in
+        place and `amount: 0` deletes it. Behind the scenes this writes a single-sided
+        `OPENING_BALANCE` transaction with one PARTY line; the ledger folds it in like any other.
+
+        This is the right way to carry in "what they already owed" from the old system. Do **not**
+        model it as a backdated SALE — that would also move stock.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OpeningBalanceRequest' }
+      responses:
+        '200':
+          description: The opening balance as stored.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartyBalance' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/store-items:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [catalogue]
+      summary: Every item in the store
+      description: |
+        Needs VIEWER. Includes each item's current opening stock (`null` when none is set).
+
+        **The only item lookup there is** — no query parameters, no name search, no pagination.
+        Same pattern as `GET /parties`: call it once, build a normalised `name → id` map
+        client-side, resolve against that, and create only what is missing.
+
+        An item carrying unit `"gz"` with `salePrice` and `costPrice` both zero was most likely
+        auto-created by an entry that sent a name without an `itemId`, not entered deliberately.
+        `PUT /store-items/{id}` is where those get corrected.
+      responses:
+        '200':
+          description: Items with their openings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/StoreItemResponse' }
+    post:
+      tags: [catalogue]
+      summary: Create an item
+      description: |
+        Needs EDITOR. Same caveat as parties: **no uniqueness on name, and no upsert.** Posting the
+        same name twice creates two items, each holding part of the stock history.
+
+        Resolve first via `GET /store-items`, match on a normalised name, and call this only when
+        there is no match. Keep the returned `id` for `items[].itemId` on every entry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreItemWrite' }
+      responses:
+        '200':
+          description: The created item. Keep its `id`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreItem' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/stores/{storeId}/store-items/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - { $ref: '#/components/parameters/ResourceId' }
+    get:
+      tags: [catalogue]
+      summary: One item
+      description: |
+        Needs VIEWER. Confirms an id is live and belongs to this store; an item from anywhere else
+        is `404`. **Not a search** — no name parameter. Use `GET /store-items` and match
+        client-side.
+      responses:
+        '200':
+          description: The item.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreItem' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [catalogue]
+      summary: Update an item
+      description: |
+        Needs EDITOR. Full replace of `name`, `unit`, `salePrice`, `costPrice`, `service`.
+
+        Useful after an import that let entries auto-create items: those land with unit `"gz"` and
+        zero prices, and this is where they get corrected.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreItemWrite' }
+      responses:
+        '200':
+          description: The updated item.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreItem' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [catalogue]
+      summary: Delete an item
+      description: 'Needs OWNER. **Cascades**: every transaction that used this item is deleted with it.'
+      responses:
+        '204':
+          description: Gone, along with its transactions.
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/store-items/{id}/opening-stock:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - { $ref: '#/components/parameters/ResourceId' }
+    put:
+      tags: [openings]
+      summary: Set (or clear) an item's carried-in stock
+      description: |
+        Needs EDITOR. Upsert, always an IN stock line; `quantity: 0` clears it. The right way to
+        carry in on-hand stock from the old system — a backdated PURCHASE would also put money on
+        a supplier's khata.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OpeningStockRequest' }
+      responses:
+        '200':
+          description: The opening quantity as stored.
+          content:
+            application/json:
+              schema: { type: number }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/opening-cash:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [openings]
+      summary: The store's opening drawer balance
+      description: 'Needs VIEWER. Returns 0 when none has been set.'
+      responses:
+        '200':
+          description: Opening cash.
+          content:
+            application/json:
+              schema: { type: number, format: double }
+    put:
+      tags: [openings]
+      summary: Set (or clear) the opening drawer balance
+      description: 'Needs EDITOR. Upsert; `amount: 0` clears it. Physical cash, so never negative.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount: { type: number, format: double, minimum: 0 }
+      responses:
+        '200':
+          description: Opening cash as stored.
+          content:
+            application/json:
+              schema: { type: number, format: double }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+
+  /api/stores/{storeId}/event:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    post:
+      tags: [entries]
+      summary: Book an entry (sale, purchase, receipt, payment, expense)
+      description: |
+        Needs EDITOR. **This is the entire write path for business data.** One POST = one
+        transaction, fanned out into cash / party / stock lines by the event type.
+
+        ### Which fields each event actually reads
+
+        | `transactionEvent` | cash | party | stock | reads |
+        |---|---|---|---|---|
+        | `SALE`      | IN  | derived | OUT | `cashAmount`, `billAmount`, `party`, `items[]` |
+        | `PURCHASE`  | OUT | derived | IN  | `cashAmount`, `billAmount`, `party`, `items[]` |
+        | `RECEIPT`   | IN  | OUT     | —   | `cashAmount`, `party` |
+        | `PAYMENT`   | OUT | IN      | —   | `cashAmount`, `party` |
+        | `EXPENSE`   | OUT | —       | —   | `cashAmount`, `expenseCategory` |
+
+        On `SALE` and `PURCHASE` the khata line is **derived, not sent**: the amount is
+        `|billAmount − cashAmount|` and the direction follows the sign. So a 5,000 sale with
+        `cashAmount: 2000` leaves 3,000 on the customer's khata; a fully-paid sale sends
+        `cashAmount == billAmount` and leaves the khata untouched. Full udhaar is `cashAmount: 0`.
+
+        ### Traps an importer will hit
+
+        * `cashAmount` is **required in practice for every event** — it is dereferenced unboxed,
+          so `null` is a `500`, not a `400`. Send `0`.
+        * `billAmount` is required on `SALE`/`PURCHASE` for the same reason.
+        * `billAmount` **must equal Σ(`quantity` × `itemSoldAt`)** over `items[]`. The khata split
+          is computed from `billAmount` at write time while the read side re-totals the lines; a
+          mismatch shows as a bill whose goods total and outstanding disagree.
+        * `PROCESSING`, `ADJUSTMENT`, `OPENING_BALANCE`, `OPENING_STOCK` and `OPENING_CASH` have
+          **no processor**. Posting one here returns `200` with the body echoed and writes
+          *nothing*. Use `/processing` and the opening endpoints instead; `ADJUSTMENT` has no
+          write path at all in this release.
+        * A `party` or `items[]` entry sent with a name and **no id is created fresh every time** —
+          there is no match-by-name. Resolve ids first (see the ingestion guide), or an import of
+          200 bills for "Ali Traders" produces 200 parties named "Ali Traders", each holding a
+          fragment of the khata.
+        * No bulk endpoint. One HTTP call per entry.
+        * No idempotency. Re-running an import doubles everything.
+        * `billDate` is the business date and may be backdated freely. `entryDate` is always
+          stamped `today` server-side and cannot be set — nor can `createdAt`, which is what the
+          non-owner 24-hour delete window is measured on.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventRequest' }
+            examples:
+              saleFullyPaid:
+                summary: Cash sale, nothing left on the khata
+                value:
+                  transactionEvent: SALE
+                  billNumber: "INV-1042"
+                  billDate: "2026-03-14"
+                  cashAmount: 4500
+                  billAmount: 4500
+                  party: { partyId: "0f0a1b2c-…", name: "Ali Traders" }
+                  items:
+                    - { itemId: "9c1b2d3e-…", name: "Lawn Print", quantity: 30, itemSoldAt: 150 }
+              salePartCredit:
+                summary: 5,000 sale, 2,000 taken — 3,000 goes on the customer's khata
+                value:
+                  transactionEvent: SALE
+                  billNumber: "INV-1043"
+                  billDate: "2026-03-15"
+                  cashAmount: 2000
+                  billAmount: 5000
+                  party: { partyId: "0f0a1b2c-…", name: "Ali Traders" }
+                  items:
+                    - { itemId: "9c1b2d3e-…", name: "Lawn Print", quantity: 20, itemSoldAt: 150 }
+                    - { itemId: "44de5f60-…", name: "Cambric", quantity: 10, itemSoldAt: 200 }
+              purchaseOnCredit:
+                summary: Stock in, nothing paid — the whole bill sits on the supplier's khata
+                value:
+                  transactionEvent: PURCHASE
+                  billNumber: "PO-88"
+                  billDate: "2026-03-10"
+                  cashAmount: 0
+                  billAmount: 12000
+                  party: { partyId: "77ab8c9d-…", name: "Karachi Mills" }
+                  items:
+                    - { itemId: "9c1b2d3e-…", name: "Lawn Print", quantity: 100, itemSoldAt: 120 }
+              receipt:
+                summary: Customer pays down their baqaya
+                value:
+                  transactionEvent: RECEIPT
+                  billDate: "2026-03-20"
+                  cashAmount: 3000
+                  party: { partyId: "0f0a1b2c-…", name: "Ali Traders" }
+                  description: "Cleared March udhaar"
+              payment:
+                summary: Shop pays a supplier
+                value:
+                  transactionEvent: PAYMENT
+                  billDate: "2026-03-21"
+                  cashAmount: 12000
+                  party: { partyId: "77ab8c9d-…", name: "Karachi Mills" }
+              expense:
+                summary: Spend with no party — the head is created if new
+                value:
+                  transactionEvent: EXPENSE
+                  billDate: "2026-03-21"
+                  cashAmount: 1800
+                  expenseCategory: "bijli"
+                  description: "March electricity"
+      responses:
+        '200':
+          description: |
+            Accepted. The body is the request echoed back — it does **not** carry the new
+            transaction's id. To get the id, read the entry back from the relevant list endpoint
+            (`/transactions/bills`, `/transactions/purchases`, `/cashbook`, `/ledger/{partyId}`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRequest' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/StoreNotFound' }
+        '500':
+          description: |
+            Usually a null `cashAmount` (or a null `billAmount` on SALE/PURCHASE). Match the
+            `traceId` in the body against the server log for the real cause.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /api/stores/{storeId}/event/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - { $ref: '#/components/parameters/ResourceId' }
+    get:
+      tags: [entries]
+      summary: An entry rebuilt as the request that would create it
+      description: |
+        Needs VIEWER. The inverse of the processors — lines folded back into an `EventRequest`,
+        which is what the entry screen prefills from in edit mode. Handy for an importer to verify
+        round-trip fidelity. Opening entries read as `404` here; they belong to Settings.
+      responses:
+        '200':
+          description: The entry as a request.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [entries]
+      summary: Correct an entry in place
+      description: |
+        Needs EDITOR. The old lines are dropped and re-derived from the new values, so there is no
+        balance to reconcile. The event type is fixed — a receipt edits as a receipt; changing the
+        type is delete + re-post. A `PROCESSING` batch cannot be edited (`409`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventRequest' }
+      responses:
+        '204':
+          description: Corrected.
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: A processed-goods entry cannot be edited — delete it and enter it again.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+    delete:
+      tags: [entries]
+      summary: Take an entry back
+      description: |
+        Needs EDITOR. Lines cascade away and every balance re-derives without them.
+
+        A caller who is **not** the shop's owner may only delete entries booked within the last 24
+        hours (measured on `createdAt`, which cannot be forged) — erasing older history is the
+        owner's call. An import rollback therefore has to run as the owner.
+      responses:
+        '204':
+          description: Gone.
+        '403':
+          description: Non-owner trying to delete an entry older than 24 hours.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/processing:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [processing]
+      summary: Every processed-goods batch
+      description: 'Needs VIEWER.'
+      responses:
+        '200':
+          description: Batches.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ProcessingResponse' }
+    post:
+      tags: [processing]
+      summary: Record a batch — raw material plus consumables in, a different item out
+      description: |
+        Needs EDITOR. Not editable afterwards; correcting one is delete (via `DELETE /event/{id}`
+        on its `transactionId`) and re-enter.
+
+        An input row carrying a `party` is *bought in* for the batch before it is consumed — that
+        posts a purchase against the supplier, with `paid` handed over in cash and the remainder
+        left on their khata. An input row with no party simply comes off the shelf.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProcessingRequest' }
+      responses:
+        '204':
+          description: Booked.
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/stores/{storeId}/processing/{transactionId}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - name: transactionId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [processing]
+      summary: One batch
+      description: 'Needs VIEWER.'
+      responses:
+        '200':
+          description: The batch.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProcessingResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/transactions/bills:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [reads]
+      summary: Sales, as bill summaries
+      description: |
+        Needs VIEWER. Read-only — bills are created through `POST /event` with
+        `transactionEvent: SALE` and deleted through `DELETE /event/{id}`.
+
+        This is where an importer gets transaction **ids** back after posting, and the natural
+        place to reconcile counts and totals against the source system.
+      parameters:
+        - { $ref: '#/components/parameters/PartyIdFilter' }
+        - { $ref: '#/components/parameters/ItemIdFilter' }
+      responses:
+        '200':
+          description: Bill summaries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BillSummaryResponse' }
+
+  /api/stores/{storeId}/transactions/bills/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - { $ref: '#/components/parameters/ResourceId' }
+    get:
+      tags: [reads]
+      summary: One bill, with its lines
+      description: 'Needs VIEWER.'
+      responses:
+        '200':
+          description: The bill.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BillDetailResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/transactions/bills/details:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    post:
+      tags: [reads]
+      summary: Several bills' details in one call
+      description: |
+        Needs VIEWER. A POST only because the id list goes in the body; it writes nothing. The one
+        batching affordance in the API — worth using when verifying a large import.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { type: string }
+      responses:
+        '200':
+          description: Details for the ids that resolved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BillDetailResponse' }
+
+  /api/stores/{storeId}/transactions/purchases:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [reads]
+      summary: Purchases, as bill summaries
+      description: 'Needs VIEWER. Same shape as `/bills`; `cashReceived` reads as cash *paid out* here.'
+      parameters:
+        - { $ref: '#/components/parameters/PartyIdFilter' }
+        - { $ref: '#/components/parameters/ItemIdFilter' }
+      responses:
+        '200':
+          description: Purchase summaries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BillSummaryResponse' }
+
+  /api/stores/{storeId}/transactions/purchases/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - { $ref: '#/components/parameters/ResourceId' }
+    get:
+      tags: [reads]
+      summary: One purchase, with its lines
+      description: 'Needs VIEWER.'
+      responses:
+        '200':
+          description: The purchase.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BillDetailResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/transactions/purchases/details:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    post:
+      tags: [reads]
+      summary: Several purchases' details in one call
+      description: 'Needs VIEWER. Writes nothing.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { type: string }
+      responses:
+        '200':
+          description: Details for the ids that resolved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BillDetailResponse' }
+
+  /api/stores/{storeId}/ledger:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [reads]
+      summary: Every party's current balance
+      description: |
+        Needs VIEWER. The primary reconciliation read after a migration: compare each
+        `balance.amount` / `balance.direction` against the old system's closing khata.
+      responses:
+        '200':
+          description: Balances.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PartyBalanceResponse' }
+
+  /api/stores/{storeId}/ledger/expense-categories:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [reads]
+      summary: Expenses grouped by head
+      description: 'Needs VIEWER. Each head with its count, total spend, and the entries beneath it.'
+      responses:
+        '200':
+          description: Expense heads with their entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ExpenseCategoryGroupResponse' }
+
+  /api/stores/{storeId}/ledger/{partyId}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - name: partyId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [reads]
+      summary: One party's full statement
+      description: |
+        Needs VIEWER. Every entry against the party with a running balance, plus totals billed and
+        paid. Payments settle oldest charges first (FIFO), which is where `cleared` and the
+        dashboard's `daysStale` come from.
+      responses:
+        '200':
+          description: The statement.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartyStatementResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/inventory:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [reads]
+      summary: On-hand stock for every item
+      description: |
+        Needs VIEWER. The stock-side reconciliation read. `currentStock` is `null` for a service
+        item — work sold carries no on-hand quantity.
+      responses:
+        '200':
+          description: Stock per item.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ItemStockResponse' }
+
+  /api/stores/{storeId}/inventory/{itemId}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - name: itemId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [reads]
+      summary: One item's movement history
+      description: 'Needs VIEWER. Every line that moved this item, with a running stock figure.'
+      responses:
+        '200':
+          description: The movement history.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemMovementResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/stores/{storeId}/cashbook:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [reads]
+      summary: The drawer over a date range
+      description: |
+        Needs VIEWER. Opening balance, every cash movement with a running balance, and the closing
+        figure. `from` defaults to today and `to` defaults to `from`, so calling it bare returns
+        just today.
+
+        Each row also carries `khata` — what that same entry did to the party's balance — so a
+        part-paid sale is not misread as the whole story.
+      parameters:
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+      responses:
+        '200':
+          description: The cashbook for the range.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CashbookDayResponse' }
+
+  /api/stores/{storeId}/dashboard:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [reads]
+      summary: Analytics for one window
+      description: |
+        Needs VIEWER. Totals and series are window-scoped; receivables, payables and the cash
+        position are cumulative as of `to`, because a khata balance is not a per-window number.
+        Default window is the last 7 days, today inclusive.
+      parameters:
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+      responses:
+        '200':
+          description: The dashboard.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DashboardResponse' }
+
+  /api/stores/{storeId}/expense-categories:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [settings]
+      summary: The store's expense heads, by name
+      description: |
+        Needs VIEWER. Read-only, and names only — heads are created implicitly by posting an
+        `EXPENSE` event with an `expenseCategory` the store has not seen before. Every new store is
+        seeded with a default set. A blank head files under `UNCATEGORIZED`.
+      responses:
+        '200':
+          description: Head names.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+
+  /api/stores/{storeId}/unit-conversions:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [settings]
+      summary: The rates this shop measures by
+      description: |
+        Needs VIEWER. Each row reads `1 fromUnit = factor toUnit`. Returned in one direction only —
+        the caller inverts for the other way round.
+      responses:
+        '200':
+          description: Conversions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/UnitConversionResponse' }
+    put:
+      tags: [settings]
+      summary: Teach the shop a rate
+      description: |
+        Needs EDITOR. `PUT` rather than `POST` because a pair has one rate — sending it again
+        replaces it. Send it in whichever direction is natural; the service folds the units, puts
+        the pair in canonical order and inverts the factor if it had to swap them.
+
+        There is no delete: nothing in the app asks for a pair to go back to having no answer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UnitConversionRequest' }
+      responses:
+        '200':
+          description: The rate as stored (possibly inverted into canonical order).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UnitConversionResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+
+  /api/stores/{storeId}/members:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+    get:
+      tags: [settings]
+      summary: Everyone the owner has given access to
+      description: |
+        Needs OWNER. The owner is never in this list — they are the store, not a guest in it. A
+        member still on an outstanding invite has `status: INVITED` and a `null` name.
+      responses:
+        '200':
+          description: Members.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MemberResponse' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [settings]
+      summary: Give an email address access to the store
+      description: |
+        Needs OWNER. If no account exists for the address, an `INVITED` placeholder is created so
+        the access row has something to hang off; signing up with that address adopts it. Refused
+        with `403` when the account's plan is at its user ceiling (the owner counts).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email: { type: string, format: email }
+                role: { type: string, enum: [VIEWER, EDITOR] }
+      responses:
+        '200':
+          description: The member.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemberResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/stores/{storeId}/members/{userId}:
+    parameters:
+      - { $ref: '#/components/parameters/StoreId' }
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [settings]
+      summary: Move a member between VIEWER and EDITOR
+      description: "Needs OWNER. OWNER cannot be granted — it is derived from the store's owner column."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [VIEWER, EDITOR] }
+      responses:
+        '200':
+          description: The updated member.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemberResponse' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [settings]
+      summary: Revoke a member's access
+      description: 'Needs OWNER. Removes the access row; the account itself is untouched.'
+      responses:
+        '204':
+          description: Access revoked.
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/plan/me:
+    get:
+      tags: [auth]
+      summary: The caller's plan, its limits and current usage
+      description: |
+        Worth reading before a migration: `maxStores` and `maxUsers` are enforced on create, and a
+        shop the plan no longer covers is suspended — readable, but every write to it is `403`.
+      responses:
+        '200':
+          description: Plan status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanStatusResponse' }
+
+components:
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: |
+        Username is the account's contact number **or** email; password is the account password.
+        Stateless — send the header on every request. An unverified account authenticates but is
+        refused with `403 ACCOUNT_UNVERIFIED`.
+
+  parameters:
+    StoreId:
+      name: storeId
+      in: path
+      required: true
+      description: The store every nested resource is scoped to. A store the caller cannot reach is `404`.
+      schema: { type: string, format: uuid }
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    From:
+      name: from
+      in: query
+      required: false
+      description: Inclusive start of the window, `YYYY-MM-DD`.
+      schema: { type: string, format: date }
+    To:
+      name: to
+      in: query
+      required: false
+      description: Inclusive end of the window, `YYYY-MM-DD`.
+      schema: { type: string, format: date }
+    PartyIdFilter:
+      name: partyId
+      in: query
+      required: false
+      description: Only documents against this party.
+      schema: { type: string, format: uuid }
+    ItemIdFilter:
+      name: itemId
+      in: query
+      required: false
+      description: Only documents containing this item.
+      schema: { type: string, format: uuid }
+
+  responses:
+    Unauthorized:
+      description: Missing or bad Basic credentials.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Unverified:
+      description: Authenticated but the account has not cleared email verification.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Forbidden:
+      description: |
+        The caller's role in the store is too weak, or the shop is plan-suspended and this is a
+        write. The `message` on a plan refusal is written to be shown to the user verbatim.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    NotFound:
+      description: No such resource in this store.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    StoreNotFound:
+      description: No such store, or the caller has no access to it — the two are deliberately indistinguishable.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    ValidationFailed:
+      description: Bean-validation failure. `fieldErrors` maps field name to message.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+
+  schemas:
+
+    ApiError:
+      type: object
+      description: The single error shape for every 4xx and 5xx.
+      properties:
+        timestamp: { type: string, format: date-time }
+        status: { type: integer }
+        error: { type: string, description: HTTP reason phrase. }
+        message:
+          type: string
+          description: Deliberately vague on 500s — the detail is in the server log, keyed by `traceId`.
+        path: { type: string }
+        traceId:
+          type: string
+          description: Matches the `X-Trace-Id` response header and the MDC id on every log line of this request.
+        fieldErrors:
+          type: object
+          additionalProperties: { type: string }
+          description: Present only on validation failures.
+
+    TransactionEvent:
+      type: string
+      description: |
+        The business event a transaction represents.
+
+        Only `SALE`, `PURCHASE`, `RECEIPT`, `PAYMENT` and `EXPENSE` have processors — the rest are
+        written by other paths (`/processing`, the opening endpoints) or not at all. Posting one of
+        the others to `/event` returns 200 and writes nothing.
+      enum: [SALE, PURCHASE, PROCESSING, RECEIPT, PAYMENT, EXPENSE, ADJUSTMENT, OPENING_BALANCE, OPENING_STOCK, OPENING_CASH]
+
+    InOut:
+      type: string
+      description: Direction of flow for a transaction line.
+      enum: [IN, OUT, NONE, UNKNOWN]
+
+    StoreRole:
+      type: string
+      description: |
+        What a user may do inside one store, weakest first. Only `VIEWER` and `EDITOR` are stored;
+        `OWNER` is derived from the store's owner column and cannot be granted.
+      enum: [VIEWER, EDITOR, OWNER]
+
+    BalanceDirection:
+      type: string
+      description: Which way a party balance points, in the shopkeeper's language — never debit/credit.
+      enum: [THEY_OWE_YOU, YOU_OWE_THEM, SETTLED]
+
+    PartyBalance:
+      type: object
+      description: |
+        A balance for display: a **non-negative** amount plus the direction that carries the sign.
+        `|net| < 0.005` reads as `SETTLED`. The single place a signed net becomes "they owe you".
+      properties:
+        amount: { type: number, format: double, minimum: 0 }
+        direction: { $ref: '#/components/schemas/BalanceDirection' }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        contactNumber: { type: string }
+        status:
+          type: string
+          enum: [INVITED, ACTIVE]
+          description: '`INVITED` is a placeholder created when a store was shared with an address that had no account.'
+
+    SignupRequest:
+      type: object
+      required: [name, contactNumber, email, password]
+      properties:
+        name: { type: string, minLength: 1 }
+        contactNumber:
+          type: string
+          pattern: '^\d{7,15}$'
+          description: Digits only. Doubles as a login identifier, so it is stored exactly as typed.
+        email: { type: string, format: email }
+        password:
+          type: string
+          description: 8+ characters with at least one digit and one non-alphanumeric. Only new passwords are held to this.
+
+    StoreWrite:
+      type: object
+      required: [name]
+      description: The request body for creating or updating a store. Full replace on update.
+      properties:
+        name: { type: string, minLength: 1 }
+        address: { type: string }
+        contact:
+          type: string
+          pattern: '^(\d{7,15})?$'
+          description: Blank, or 7–15 digits. No `+`, spaces or dashes.
+        logoUri:
+          type: string
+          description: Base64 data URI. Stored inline for now — see docs/tickets/HK-store-media-object-storage.md.
+        watermarkUri: { type: string, description: Base64 data URI. }
+
+    StoreSummary:
+      type: object
+      description: |
+        A store as *this* caller sees it. Every store-returning endpoint answers with this, so the
+        client never holds a store without knowing its role.
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        address: { type: string }
+        contact: { type: string }
+        logoUri: { type: string }
+        watermarkUri: { type: string }
+        role: { $ref: '#/components/schemas/StoreRole' }
+        ownerName: { type: string, description: 'Shown on shared stores ("Shared by …").' }
+        suspended:
+          type: boolean
+          description: |
+            True when the owner's plan no longer covers this shop: readable and printable, but
+            closed to new entries. Raising the plan's limits opens it again; nothing is lost.
+        settings:
+          type: object
+          additionalProperties: true
+          description: How the owner arranged the app for this shop. Never null — an empty arrangement means the built-in menu.
+
+    Party:
+      type: object
+      description: A khata holder — customer, supplier, or both.
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        name: { type: string }
+        contact: { type: string }
+        address: { type: string }
+
+    PartyWrite:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        contact:
+          type: string
+          pattern: '^(\d{7,15})?$'
+          description: |
+            Blank, or 7–15 digits — nothing else passes. Strip `+`, spaces and dashes when importing.
+            A party created in passing (name-only on an entry) is stamped with the placeholder
+            `090078601`, which is nobody's number and must never be messaged.
+        address: { type: string }
+
+    PartyResponse:
+      type: object
+      description: A party for the settings list, with its opening balance for the editor to prefill.
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        contact: { type: string }
+        address: { type: string }
+        openingBalance:
+          oneOf:
+            - { $ref: '#/components/schemas/PartyBalance' }
+            - { type: 'null' }
+          description: Null when no opening has been set.
+
+    StoreItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        name: { type: string }
+        unit: { type: string }
+        salePrice: { type: number }
+        costPrice: { type: number }
+        service: { type: boolean }
+
+    StoreItemWrite:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        unit:
+          type: string
+          description: Free text (gaz, than, kg…). An item auto-created by an entry gets `"gz"`.
+        salePrice: { type: number }
+        costPrice: { type: number }
+        service:
+          type: boolean
+          default: false
+          description: |
+            Work sold rather than goods — a dye job, stitching. Nothing leaves a shelf, so it
+            carries no stock: its lines still record what was sold and for how much, but the
+            inventory screens show no on-hand quantity.
+
+    StoreItemResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        unit: { type: string }
+        salePrice: { type: number }
+        costPrice: { type: number }
+        openingStock: { type: [number, 'null'], description: Null when no opening has been set. }
+        service: { type: boolean }
+
+    OpeningBalanceRequest:
+      type: object
+      required: [amount, direction]
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 0
+          description: Always positive — the sign lives in `direction`. Zero clears the opening.
+        direction: { $ref: '#/components/schemas/BalanceDirection' }
+
+    OpeningStockRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity: { type: number, minimum: 0, description: Zero clears the opening. }
+
+    EventRequest:
+      type: object
+      description: |
+        One business entry. The same shape goes in on create/update and comes back out of
+        `GET /event/{id}`, rebuilt from the stored lines.
+
+        Which fields are read depends on `transactionEvent` — see the endpoint description. Fields
+        the event does not use are ignored rather than rejected.
+      required: [transactionEvent]
+      properties:
+        transactionEvent: { $ref: '#/components/schemas/TransactionEvent' }
+        cashAmount:
+          type: number
+          format: double
+          minimum: 0
+          description: |
+            Cash that changed hands. **Send this on every event, including `0`** — it is
+            dereferenced unboxed, so `null` is a 500 rather than a validation error. On a SALE it
+            is what was taken in; on a PURCHASE, PAYMENT or EXPENSE, what was paid out; on a
+            RECEIPT, what came in. A negative value is silently skipped and no cash line is written.
+        billAmount:
+          type: number
+          format: double
+          description: |
+            Goods total. Required on `SALE`/`PURCHASE` (null is a 500) and ignored elsewhere.
+            **Must equal Σ(`quantity` × `itemSoldAt`) over `items[]`** — the khata split is derived
+            from `billAmount − cashAmount` at write time, while the read side re-totals the lines.
+        description:
+          type: string
+          description: |
+            The shopkeeper's own note, and only that. The row's label is rendered client-side from
+            the event, party and amount so it follows the UI language; this note trails it in
+            brackets. Blank is stored as null.
+        billNumber:
+          type: string
+          description: The document number from the source system. Free text, not unique, not validated.
+        billDate:
+          type: string
+          format: date
+          description: |
+            The business date, `YYYY-MM-DD`. **Backdate this freely when importing history** — it is
+            what every report, statement and cashbook range keys on. The separate `entryDate` and
+            `createdAt` stamps are server-side and always "now".
+        party:
+          oneOf:
+            - { $ref: '#/components/schemas/EventParty' }
+            - { type: 'null' }
+          description: The counterparty. Null on an EXPENSE, and on a walk-in sale with no khata.
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/EventItem' }
+          description: Goods lines. Read only on `SALE`/`PURCHASE`; an empty or absent list moves no stock.
+        expenseCategory:
+          type: string
+          description: |
+            The spend head for an `EXPENSE`, **by name**. Auto-created for the store if new; blank
+            files under `UNCATEGORIZED`. Read `GET /expense-categories` for the existing names.
+
+    EventParty:
+      type: object
+      description: |
+        A counterparty reference. Send `partyId` for anything already in the catalogue.
+
+        **`partyId` wins; `name` is only a fallback.** With `partyId` blank, the backend creates a
+        *brand-new* party from `name` on every single call — it does not look the name up. An
+        import that leans on `name` produces one party per bill.
+
+        Where the id comes from: `GET /api/stores/{storeId}/parties` (the whole list, no search
+        params), matched on a normalised name, with `POST /parties` filling the gaps. Do that once
+        up front and hold the map — not per entry.
+      properties:
+        partyId: { type: string, format: uuid }
+        name: { type: string }
+
+    EventItem:
+      type: object
+      description: |
+        One goods line. Same rule as `EventParty`: `itemId` wins, and a blank `itemId` creates a new
+        item from `name` every time (unit `"gz"`, zero prices) rather than matching an existing one.
+
+        Get the id from `GET /api/stores/{storeId}/store-items` — the full list, resolved into a
+        normalised `name → id` map once, before any entry is posted.
+      properties:
+        itemId: { type: string, format: uuid }
+        name: { type: string }
+        quantity: { type: number, description: In the item's own unit. }
+        itemSoldAt:
+          type: number
+          format: double
+          description: Rate per unit on this line — the sale price here, the cost price on a purchase.
+
+    ProcessingRequest:
+      type: object
+      description: One batch — raw material plus consumables in, a different item out.
+      required: [rawItems, processingItems, output]
+      properties:
+        rawItems:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ProcessingInputLine' }
+          description: What the batch worked on. At least one row.
+        processingItems:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ProcessingInputLine' }
+          description: The dye, fuel or labour that makes this processing rather than a rename. At least one row.
+        output: { $ref: '#/components/schemas/ProcessingOutputLine' }
+        billNumber: { type: string }
+        billDate: { type: string, format: date }
+        description: { type: string }
+
+    ProcessingInputLine:
+      type: object
+      description: |
+        What the batch consumed. Both input lists are treated alike by the arithmetic — both
+        contribute cost and both come off the shelf.
+      properties:
+        itemId: { type: string, format: uuid }
+        name: { type: string }
+        unit: { type: string }
+        quantity: { type: number }
+        pricePerUnit: { type: number }
+        party:
+          oneOf:
+            - { $ref: '#/components/schemas/EventParty' }
+            - { type: 'null' }
+          description: |
+            Set, and the row was bought in for the batch before being consumed — a purchase is
+            posted against this supplier. Null, and it simply comes off the shelf.
+        paid:
+          type: number
+          description: Cash handed over for this row now; the rest stays on the party's khata. Null means nothing.
+        service:
+          type: boolean
+          description: Work rather than goods. Costs the batch and lands on the khata, but keeps no stock.
+
+    ProcessingOutputLine:
+      type: object
+      description: What the batch produced, added to stock.
+      properties:
+        itemId: { type: string, format: uuid }
+        name: { type: string }
+        unit: { type: string }
+        quantity: { type: number }
+        unitCost:
+          type: number
+          description: |
+            Total input cost ÷ output quantity, or whatever the shopkeeper typed over it. The
+            item's cost price is averaged against this.
+        wastage: { type: number, description: What the batch lost — recorded, but it moves no stock and costs nothing. }
+
+    ProcessingResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+          description: Pass this to `DELETE /event/{id}` to take the batch back.
+        date: { type: string, format: date }
+        billNumber: { type: string }
+        description: { type: string }
+        partyId:
+          type: string
+          description: Only on batches booked before the party moved onto individual rows. Null on new ones.
+        partyName: { type: string }
+        rawItems: { type: array, items: { $ref: '#/components/schemas/ProcessingInputRow' } }
+        processingItems: { type: array, items: { $ref: '#/components/schemas/ProcessingInputRow' } }
+        output:
+          type: object
+          properties:
+            itemId: { type: string }
+            name: { type: string }
+            unit: { type: string }
+            quantity: { type: number }
+            unitCost: { type: number }
+            wastage: { type: number }
+        recent: { type: boolean, description: Whether the caller may still take this entry back (24-hour window). }
+
+    ProcessingInputRow:
+      type: object
+      properties:
+        name: { type: string }
+        unit: { type: string }
+        quantity: { type: number }
+        pricePerUnit: { type: number }
+        partyId: { type: string, description: Set when the row was bought in rather than taken off the shelf. }
+        partyName: { type: string }
+
+    BillSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The transaction id — pass to `DELETE /event/{id}` or `PUT /event/{id}`.
+        billNumber: { type: string }
+        date: { type: string, format: date }
+        partyName: { type: string }
+        amount: { type: number, format: double, description: Goods total. }
+        cashReceived:
+          type: number
+          format: double
+          description: Cash that changed hands — taken in on a bill, paid out on a purchase.
+        outstanding:
+          allOf: [{ $ref: '#/components/schemas/PartyBalance' }]
+          description: |
+            What this one document left on the khata. With no `partyName` there is no khata to put
+            it on and an unbalanced document is a discount instead.
+
+    BillLineResponse:
+      type: object
+      properties:
+        itemId: { type: string, format: uuid }
+        itemName: { type: string }
+        quantity: { type: number }
+        unit: { type: string }
+        rate: { type: number, format: double }
+        amount: { type: number, format: double }
+
+    BillDetailResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        billNumber: { type: string }
+        date: { type: string, format: date }
+        description: { type: string }
+        partyId: { type: string, format: uuid }
+        partyName: { type: string }
+        partyContact: { type: string, description: So the bill screen can offer to WhatsApp it to them. }
+        lines: { type: array, items: { $ref: '#/components/schemas/BillLineResponse' } }
+        goodsTotal: { type: number, format: double }
+        cashReceived: { type: number, format: double }
+        outstanding: { $ref: '#/components/schemas/PartyBalance' }
+
+    PartyBalanceResponse:
+      type: object
+      properties:
+        partyId: { type: string, format: uuid }
+        name: { type: string }
+        contact: { type: string }
+        balance: { $ref: '#/components/schemas/PartyBalance' }
+
+    PartyStatementResponse:
+      type: object
+      properties:
+        partyId: { type: string, format: uuid }
+        partyName: { type: string }
+        contact: { type: string }
+        rows: { type: array, items: { $ref: '#/components/schemas/PartyStatementRowResponse' } }
+        currentBalance: { $ref: '#/components/schemas/PartyBalance' }
+        totalBilled: { type: number, format: double, description: Σ of what the party was billed. }
+        totalPaid: { type: number, format: double, description: Σ of payments received from / made to this party. }
+        lastPaymentDate: { type: [string, 'null'], format: date }
+
+    PartyStatementRowResponse:
+      type: object
+      properties:
+        transactionId: { type: string, format: uuid }
+        date: { type: string, format: date, description: The business date (`billDate`). }
+        occurredAt:
+          type: string
+          format: date-time
+          description: When it was actually booked. Ties the ordering of same-day rows.
+        event: { $ref: '#/components/schemas/TransactionEvent' }
+        description: { type: string }
+        itemSummary: { type: string, description: 'Goods on the entry ("Lawn Print × 12") — null when it moves none.' }
+        inOut: { $ref: '#/components/schemas/InOut' }
+        amount:
+          type: number
+          format: double
+          description: >-
+            What the entry left on the khata: `goodsTotal` − `cashAmount`, unsigned —
+            `inOut` carries the direction. On a part-paid bill this is neither the bill
+            nor the payment, which is why the two below are sent alongside it.
+        goodsTotal:
+          type: [number, 'null']
+          format: double
+          description: >-
+            Σ(quantity × rate) over the entry's goods — the bill it stands for. Null on an
+            entry that is not a document (a receipt, a payment, an opening balance), and on
+            a document whose goods came to nothing.
+        cashAmount:
+          type: [number, 'null']
+          format: double
+          description: >-
+            Cash that changed hands on the entry — taken in on a sale or receipt, paid out
+            on a purchase or payment. Null when none did.
+        runningBalance: { $ref: '#/components/schemas/PartyBalance' }
+        cleared:
+          type: [boolean, 'null']
+          description: Whether this charge has been settled — payments settle oldest charges first (FIFO).
+
+    ExpenseCategoryGroupResponse:
+      type: object
+      properties:
+        category: { type: string }
+        count: { type: integer, format: int64 }
+        total: { type: number, format: double }
+        rows: { type: array, items: { $ref: '#/components/schemas/ExpenseCategoryRowResponse' } }
+
+    ExpenseCategoryRowResponse:
+      type: object
+      properties:
+        transactionId: { type: string, format: uuid }
+        date: { type: string, format: date }
+        occurredAt: { type: string, format: date-time }
+        description: { type: string }
+        amount: { type: number, format: double }
+        runningTotal: { type: number, format: double }
+
+    ItemStockResponse:
+      type: object
+      properties:
+        itemId: { type: string, format: uuid }
+        name: { type: string }
+        unit: { type: string }
+        salePrice: { type: number }
+        costPrice: { type: number }
+        currentStock: { type: [number, 'null'], description: Null for a service — work sold carries no on-hand quantity. }
+        service: { type: boolean }
+
+    ItemMovementResponse:
+      type: object
+      properties:
+        itemId: { type: string, format: uuid }
+        name: { type: string }
+        unit: { type: string }
+        currentStock: { type: [number, 'null'] }
+        service: { type: boolean }
+        rows: { type: array, items: { $ref: '#/components/schemas/ItemMovementRowResponse' } }
+
+    ItemMovementRowResponse:
+      type: object
+      properties:
+        transactionId: { type: string, format: uuid }
+        date: { type: string, format: date }
+        occurredAt: { type: string, format: date-time }
+        event: { $ref: '#/components/schemas/TransactionEvent' }
+        description: { type: string }
+        inOut: { $ref: '#/components/schemas/InOut' }
+        quantity: { type: number }
+        runningStock: { type: number }
+
+    CashbookDayResponse:
+      type: object
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        openingBalance: { type: number, format: double }
+        rows: { type: array, items: { $ref: '#/components/schemas/CashbookRowResponse' } }
+        totalIn: { type: number, format: double }
+        totalOut: { type: number, format: double }
+        totalKhata:
+          allOf: [{ $ref: '#/components/schemas/PartyBalance' }]
+          description: Which way the khata moved over the whole range, netted over exactly the rows shown.
+        closingBalance: { type: number, format: double }
+
+    CashbookRowResponse:
+      type: object
+      properties:
+        transactionId: { type: string, format: uuid }
+        occurredAt: { type: string, format: date-time }
+        event: { $ref: '#/components/schemas/TransactionEvent' }
+        description: { type: string }
+        itemSummary: { type: string }
+        partyName: { type: string }
+        inOut: { $ref: '#/components/schemas/InOut' }
+        amount: { type: number, format: double, description: The cash movement only. }
+        khata:
+          allOf: [{ $ref: '#/components/schemas/PartyBalance' }]
+          description: |
+            What the same entry did to the party's balance, so the drawer figure isn't read as the
+            whole story. `SETTLED` on an entry that touches no party.
+        runningBalance: { type: number, format: double }
+
+    DashboardResponse:
+      type: object
+      description: |
+        Totals and series are window-scoped (`from..to`); balances and cash position are cumulative
+        as of `to`, because a khata balance is not a per-window number.
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        cashPosition: { type: number, format: double }
+        sales: { type: number, format: double }
+        spend: { type: number, format: double }
+        receivablesTotal: { type: number, format: double }
+        payablesTotal: { type: number, format: double }
+        daily:
+          type: array
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              sales: { type: number, format: double }
+              spend: { type: number, format: double }
+              cash:
+                type: number
+                format: double
+                description: Running drawer balance at the day's close — a stock, not a flow.
+        topItems:
+          type: array
+          items:
+            type: object
+            properties:
+              itemId: { type: string }
+              name: { type: string }
+              unit: { type: string }
+              quantity: { type: number, format: double }
+              revenue: { type: number, format: double }
+        deadStock:
+          type: array
+          description: Stock on hand that saw no sale in the window — capital sitting idle.
+          items:
+            type: object
+            properties:
+              itemId: { type: string }
+              name: { type: string }
+              unit: { type: string }
+              stock: { type: number, format: double }
+              value: { type: number, format: double }
+        topReceivables: { type: array, items: { $ref: '#/components/schemas/PartyRef' } }
+        topPayables: { type: array, items: { $ref: '#/components/schemas/PartyRef' } }
+        staleReceivables:
+          type: array
+          items:
+            type: object
+            properties:
+              partyId: { type: string }
+              name: { type: string }
+              amount: { type: number, format: double }
+              daysStale: { type: integer, description: How long the oldest still-unpaid charge has sat (FIFO). }
+        topExpenses:
+          type: array
+          items:
+            type: object
+            properties:
+              category: { type: string }
+              count: { type: integer }
+              total: { type: number, format: double }
+
+    PartyRef:
+      type: object
+      properties:
+        partyId: { type: string, format: uuid }
+        name: { type: string }
+        amount: { type: number, format: double }
+
+    UnitConversionRequest:
+      type: object
+      description: 'Teach the shop a rate: `1 fromUnit = factor toUnit`.'
+      required: [fromUnit, toUnit, factor]
+      properties:
+        fromUnit: { type: string, maxLength: 64, minLength: 1 }
+        toUnit: { type: string, maxLength: 64, minLength: 1 }
+        factor:
+          type: number
+          exclusiveMinimum: 0
+          description: Must be positive — a zero or negative factor would quietly convert a batch of cloth into nothing.
+
+    UnitConversionResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fromUnit: { type: string }
+        toUnit: { type: string }
+        factor: { type: number }
+
+    MemberResponse:
+      type: object
+      properties:
+        userId: { type: string, format: uuid }
+        name: { type: [string, 'null'], description: Null while the invite is outstanding. }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/StoreRole' }
+        status: { type: string, enum: [INVITED, ACTIVE] }
+
+    PlanStatusResponse:
+      type: object
+      description: |
+        The caller's plan and what it currently covers. Tiers: `TRIAL` (Basic's limits for a month,
+        WhatsApp off), `BASIC`, `PREMIUM`, `PREMIUM_PLUS`, `ENTERPRISE`. An individual account may
+        carry overrides, so read the numbers here rather than assuming the tier's defaults.
+      properties:
+        tier: { type: string, enum: [TRIAL, BASIC, PREMIUM, PREMIUM_PLUS, ENTERPRISE] }
+        expiresAt: { type: [string, 'null'], format: date }
+        expired: { type: boolean }
+        enforced:
+          type: boolean
+          description: |
+            False when `app.plans.enabled` is off — the limits are still reported for display, but
+            nothing is refused. Do not gate an import on numbers that will not be enforced.
+        limits:
+          type: object
+          description: The account's *effective* limits — its own overrides where set, the tier's numbers elsewhere.
+          properties:
+            maxStores: { type: integer }
+            maxUsers: { type: integer, description: Counts everyone who can reach the account's stores, the owner included. }
+            whatsappQuota: { type: integer }
+            dailyReports: { type: boolean }
+            reminderContacts: { type: integer, description: How many khata holders one shop may chase in a month. Zero switches reminders off. }
+        usage:
+          type: object
+          description: What has been spent against `limits`, in the same units.
+          properties:
+            stores: { type: integer, description: Shops this user *owns*; shops shared with them belong to someone else's plan. }
+            users: { type: integer, description: Them plus everyone distinct they have shared any of those shops with. }
+            whatsapp: { type: integer, description: Messages sent this calendar month — the period the quota is granted over. }

@@ -1,6 +1,4 @@
 <section class="rm-page">
-  <a class="rm-back" [routerLink]="stores.link('inventory')">{{ locale.t('common.back') }}</a>
-
   @if (loading()) {
     <div class="rm-card" aria-hidden="true">
       <div class="rm-skel"></div>
@@ -46,6 +44,8 @@
         <p class="rm-state__body">{{ locale.t('inventory.detail.empty') }}</p>
       </div>
     } @else {
+      <app-amount-legend kind="stock" />
+
       <div class="rm-card">
         <div class="rm-tablewrap">
           <table class="rm-tbl">

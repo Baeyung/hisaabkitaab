@@ -4,6 +4,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { InventoryService } from '../../core/store/inventory.service';
 import { StoreService } from '../../core/store/store.service';
 import { ItemMovement } from '../../core/store/inventory.models';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * One item's movement history with the running on-hand quantity. The item id
@@ -11,7 +12,7 @@ import { ItemMovement } from '../../core/store/inventory.models';
  */
 @Component({
   selector: 'app-inventory-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, AmountLegend],
   templateUrl: './inventory-detail.html',
 })
 export class InventoryDetail {

@@ -10,6 +10,7 @@ import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
+import io.github.baeyung.hisaabkitaab.service.query.support.DocumentTotals;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +28,8 @@ import java.util.stream.Collectors;
  * changed hands, what is still owed), so they share one shape: {@code cashReceived}
  * is cash paid out on a purchase, and {@code outstanding} runs the other way.
  *
- * Amounts are recomputed as Σ(quantity × rate) over the STOCK lines — the same number
- * the entry screen showed — because a STOCK line's {@code value} only repeats the
- * transaction's cash amount.
+ * The goods and cash figures come from {@link DocumentTotals}, shared with the khata
+ * statement so the same entry reads the same from either screen.
  */
 @Service
 @RequiredArgsConstructor
@@ -48,8 +48,8 @@ public class TransactionQueryService
                         transaction.getBill(),
                         dateOf(transaction),
                         transaction.getParty() != null ? transaction.getParty().getName() : null,
-                        goodsTotal(transaction),
-                        cashReceived(transaction),
+                        DocumentTotals.goods(transaction),
+                        DocumentTotals.cash(transaction),
                         outstanding(transaction)
                 ))
                 .toList();
@@ -118,8 +118,6 @@ public class TransactionQueryService
                 .map(this::toBillLine)
                 .toList();
 
-        double goodsTotal = lines.stream().mapToDouble(BillLineResponse::amount).sum();
-
         return new BillDetailResponse(
                 transaction.getId(),
                 transaction.getBill(),
@@ -129,24 +127,10 @@ public class TransactionQueryService
                 transaction.getParty() != null ? transaction.getParty().getName() : null,
                 transaction.getParty() != null ? transaction.getParty().getContact() : null,
                 lines,
-                goodsTotal,
-                cashReceived(transaction),
+                DocumentTotals.goods(transaction),
+                DocumentTotals.cash(transaction),
                 outstanding(transaction)
         );
-    }
-
-    /**
-     * The cash side of the document: taken in on a bill, paid out on a purchase — the two
-     * are mirrors, so one sum serves both. Shared by the list and the detail so the column
-     * and the document can never disagree.
-     */
-    private double cashReceived(Transaction transaction)
-    {
-        return transaction.getLines()
-                .stream()
-                .filter(line -> line.getTargetKind() == TargetKind.CASH)
-                .mapToDouble(this::value)
-                .sum();
     }
 
     /**
@@ -168,17 +152,6 @@ public class TransactionQueryService
                 .sum();
 
         return PartyBalance.of(partyNet);
-    }
-
-    /** Same line math as the detail view, so the list amount can never disagree with the detail total. */
-    private double goodsTotal(Transaction transaction)
-    {
-        return transaction.getLines()
-                .stream()
-                .filter(line -> line.getTargetKind() == TargetKind.STOCK)
-                .map(this::toBillLine)
-                .mapToDouble(BillLineResponse::amount)
-                .sum();
     }
 
     private BillLineResponse toBillLine(TransactionLine line)

@@ -10,13 +10,18 @@ import { urlFilters } from '../../shared/url-filters';
 import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
-import { PrintDetailsService } from '../../shared/print-details.service';
+import {
+  DOC_TOTAL_KEYS,
+  ExpandableDocs,
+  PrintDetailsService,
+} from '../../shared/print-details.service';
 import { DateField } from '../../shared/date-field/date-field';
 import { entryDetailLink, entryEditLink, isEditableEntry } from '../../shared/entry-route';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { KhataAmount } from '../../shared/khata-amount';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -25,7 +30,15 @@ import { deleteErrorKey } from '../../core/store/delete-error';
  */
 @Component({
   selector: 'app-cashbook',
-  imports: [RouterLink, PrintHeader, PrintItemsSummary, DateField, WhatsAppButton, KhataAmount],
+  imports: [
+    RouterLink,
+    PrintHeader,
+    PrintItemsSummary,
+    DateField,
+    WhatsAppButton,
+    KhataAmount,
+    AmountLegend,
+  ],
   templateUrl: './cashbook.html',
 })
 export class Cashbook {
@@ -59,8 +72,24 @@ export class Cashbook {
     return this.stores.canEdit() && isEditableEntry(event);
   }
 
-  /** The bills fetched for this printout — empty unless "with details" was chosen. */
-  protected readonly printedBills = computed(() => [...this.printer.bills().values()]);
+  /** Sub-row totals wording, per side of the counter — see DOC_TOTAL_KEYS. */
+  protected readonly docKeys = DOC_TOTAL_KEYS;
+
+  /**
+   * The documents fetched for this printout — empty unless "with details" was chosen.
+   * Split by kind: the closing items table adds quantities up, and what you sold and
+   * what you bought are two different stock stories to tell.
+   */
+  private readonly printedDocs = computed(() => [...this.printer.docs().values()]);
+  protected readonly soldDocs = computed(() =>
+    this.printedDocs().filter((d) => d.kind === 'bills'),
+  );
+  protected readonly boughtDocs = computed(() =>
+    this.printedDocs().filter((d) => d.kind === 'purchases'),
+  );
+
+  /** Heading over the second items table; the first keeps the component's "sold" default. */
+  protected readonly boughtTitle: TranslationKey = 'print.items.bought';
 
   constructor() {
     // Fetch whenever the range changes — a picked date, or a Back/Forward that
@@ -83,10 +112,16 @@ export class Cashbook {
   }
 
   print(): void {
-    const saleIds = (this.data()?.rows ?? [])
-      .filter((r) => r.event === 'SALE')
-      .map((r) => r.transactionId);
-    void this.printer.printWithDetails(saleIds);
+    void this.printer.printWithDetails(this.expandable());
+  }
+
+  /** The day's goods documents, by kind — the rows whose lines the details prompt expands. */
+  private expandable(): ExpandableDocs {
+    const ids = (event: TransactionEventKind) =>
+      (this.data()?.rows ?? [])
+        .filter((row) => row.event === event)
+        .map((row) => row.transactionId);
+    return { bills: ids('SALE'), purchases: ids('PURCHASE') };
   }
 
   /**

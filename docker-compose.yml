@@ -44,7 +44,9 @@ services:
       # unset, which is fine for one backend; set it once there is more than one.
       REPORTS_SECRET: ${REPORTS_SECRET:-}
       APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Karachi}
-      # Set PDF_DUMP_DIR=/pdf-dumps to keep every sent PDF under ./pdf-dumps on the host.
+      # Set PDF_DUMP_DIR=/pdf-dumps to keep every rendered PDF under ./pdf-dumps on the
+      # host — the sent ones, and the ones the frontend's dev-tools gear renders on demand
+      # (see DevToolsController), which is the point of having it while debugging a layout.
       PDF_DUMP_DIR: ${PDF_DUMP_DIR:-}
       BREVO_MAIL_USER_IDENTIFIER: ${BREVO_MAIL_USER_IDENTIFIER}
       BREVO_SMPTP_KEY: ${BREVO_SMPTP_KEY}

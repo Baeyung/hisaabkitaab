@@ -28,3 +28,13 @@ export function directionClass(direction: BalanceDirection): string {
       return 'amt--settled';
   }
 }
+
+/**
+ * The khata figure on a statement row, or null when the entry left nothing on it — one
+ * settled in full, or one that is only a record. The statement screen and the reminder
+ * report both read the column through here, so a fully-paid bill can never print a bare
+ * "0" on one and an em dash on the other.
+ */
+export function khataAmount(row: { inOut: 'IN' | 'OUT' | 'NONE'; amount: number }): number | null {
+  return row.inOut === 'NONE' || Math.abs(row.amount) < 0.005 ? null : row.amount;
+}

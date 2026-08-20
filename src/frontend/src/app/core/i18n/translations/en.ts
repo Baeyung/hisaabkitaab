@@ -92,6 +92,11 @@ export const en = {
   'install.steps.other':
     'Open your browser’s menu, then choose “Install app” or “Add to Home Screen”.',
   'nav.menu': 'Menu',
+  // The topbar's Back/Forward pair. Named for the movement, not for the screen either one
+  // lands on — where they go depends only on where this browser has already been.
+  'nav.history': 'Back and forward',
+  'nav.back': 'Back',
+  'nav.forward': 'Forward',
   'nav.dashboard': 'Dashboard',
   'nav.cashbook': 'Cashbook',
   'nav.ledger': 'Ledger',
@@ -718,8 +723,14 @@ export const en = {
   'block.done.title': 'Messages stopped',
   'block.done.body': '{{store}} will not send any more WhatsApp messages to {{number}}.',
   'block.support': 'Changed your mind? Only our support team can undo this:',
+  // The prompt names the documents actually on the page — a customer's statement is
+  // all bills, a supplier's all purchases, and the cashbook usually holds both.
   'common.printDetails.title': 'Bill details',
   'common.printDetails.confirm': "Include each bill's item details as sub-rows?",
+  'common.printDetails.purchases.title': 'Purchase details',
+  'common.printDetails.purchases.confirm': "Include each purchase's item details as sub-rows?",
+  'common.printDetails.both.title': 'Item details',
+  'common.printDetails.both.confirm': 'Include the items on each bill and purchase as sub-rows?',
   'common.printDetails.with': 'With details',
   'common.printDetails.without': 'Without details',
   'cashbook.subtitle': 'Every rupee in and out of the galla, day by day.',
@@ -737,6 +748,12 @@ export const en = {
   'cashbook.col.amount': 'Amount',
   'cashbook.col.khata': 'On khata',
   'cashbook.col.running': 'Balance',
+  // The colour key that rides under the figures on every screen that paints them. Named in
+  // words, not left to a swatch — see app/shared/amount-legend.ts.
+  'legend.money.in': 'Green = money in',
+  'legend.money.out': 'Red = money out',
+  'legend.stock.in': 'Green = stock in',
+  'legend.stock.out': 'Red = stock out',
   // Read aloud in place of the dash the column shows when an entry settled in full.
   'khata.none': 'Nothing on khata',
   'cashbook.empty.title': 'No cash movement this day',
@@ -757,6 +774,9 @@ export const en = {
   'ledger.detail.col.date': 'Date',
   'ledger.detail.col.detail': 'Detail',
   'ledger.detail.col.amount': 'Amount',
+  // The cash on the entry, either way across the counter — the colour says which.
+  'ledger.detail.col.paid': 'Paid',
+  'ledger.detail.col.khata': 'On khata',
   'ledger.detail.col.balance': 'Balance',
   'ledger.detail.empty': 'No entries with this party yet.',
   'ledger.detail.loadError': "Couldn't load this khata. Please try again.",

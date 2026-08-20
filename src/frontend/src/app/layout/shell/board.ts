@@ -254,3 +254,25 @@ export function boardFor(menu: readonly NavItem[]): BoardTab[] {
 
   return tabs;
 }
+
+/**
+ * Which sheet the board opens, in order of what has the better claim to know.
+ *
+ * The URL first: it is what a link, a bookmark and the Back button all carry, so an address
+ * naming a sheet must open that sheet or the address is lying. Then the one this browser left
+ * open, which is what makes a counter tablet come back to the work it was doing rather than to
+ * the first tab every time. Then the first tab, which is also what catches a misspelt or stale
+ * `?tab=` — a bookmark from a build where that tab existed has to land on the board, not on
+ * nothing.
+ */
+export function openSheet(
+  tabs: readonly BoardTab[],
+  requested: string | undefined,
+  remembered: string | null,
+): BoardTab | undefined {
+  return (
+    tabs.find((tab) => tab.key === requested) ??
+    tabs.find((tab) => tab.key === remembered) ??
+    tabs[0]
+  );
+}

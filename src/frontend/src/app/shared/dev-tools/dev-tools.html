@@ -1,0 +1,101 @@
+<!-- Rendered only when localStorage.devtools is 'true' — the shell drops the whole component
+     otherwise, so nothing here is ever in a shopkeeper's way. -->
+<button
+  type="button"
+  class="dev-fab"
+  [class.dev-fab--open]="panel()"
+  aria-label="Dev tools"
+  [attr.aria-expanded]="panel()"
+  aria-controls="dev-tools-panel"
+  (click)="toggle()"
+>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+    <circle cx="12" cy="12" r="3" />
+    <path
+      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+    />
+  </svg>
+</button>
+
+@if (panel()) {
+  <section id="dev-tools-panel" class="dev-panel" aria-label="Dev tools">
+    <header class="dev-panel__head">
+      <div>
+        <b>Dev tools</b>
+        <!-- Which shop these render for, said plainly: both reports are scoped to the
+             selected store and there is no picker here. -->
+        <span class="dev-panel__store">{{ storeName() }}</span>
+      </div>
+      <button type="button" class="dev-panel__close" aria-label="Close" (click)="panel.set(false)">
+        &times;
+      </button>
+    </header>
+
+    <p class="dev-panel__note">
+      Renders the scheduled reports on demand — the same page, token and headless Chrome the
+      scheduler uses. Nothing is sent on WhatsApp. With PDF_DUMP_DIR set, a copy also lands in
+      ./pdf-dumps.
+    </p>
+
+    <!-- One date for both. They are the same report run for the same day; two fields would
+         only be two things to keep in step. -->
+    <label class="dev-field">
+      <span class="dev-field__label">Report date</span>
+      <app-date-field [value]="date()" (valueChange)="date.set($event)" ariaLabel="Report date" />
+    </label>
+
+    <div class="dev-row">
+      <button
+        type="button"
+        class="rm-btn rm-btn--primary dev-run"
+        [disabled]="!!busy()"
+        (click)="daily()"
+      >
+        Daily store report
+      </button>
+    </div>
+
+    <label class="dev-field">
+      <span class="dev-field__label">Khata holder</span>
+      <app-select
+        [options]="partyOptions()"
+        [value]="partyId()"
+        (valueChange)="partyId.set($event)"
+        placeholder="Pick a party"
+        ariaLabel="Khata holder"
+      />
+    </label>
+
+    <div class="dev-row">
+      <button
+        type="button"
+        class="rm-btn rm-btn--primary dev-run"
+        [disabled]="!!busy() || !partyId()"
+        (click)="reminder()"
+      >
+        Party khata statement
+      </button>
+    </div>
+
+    @if (busy(); as label) {
+      <!-- The renderer is given a full minute upstream; a long wait here is normal and not
+           a sign that anything is stuck. -->
+      <p class="dev-status">Rendering {{ label }}…</p>
+    }
+
+    @if (error(); as text) {
+      <p class="dev-status dev-status--bad">{{ text }}</p>
+    }
+
+    @if (rendered().length) {
+      <div class="dev-out">
+        <span class="dev-field__label">Rendered</span>
+        <!-- Also the fallback for a blocked popup: the new tab is attempted on every render
+             but arrives after an await, which browsers are entitled to refuse. -->
+        @for (item of rendered(); track item.url) {
+          <a class="dev-out__link" [href]="item.url" target="_blank" rel="noopener">{{ item.label }}</a>
+        }
+      </div>
+    }
+  </section>
+}

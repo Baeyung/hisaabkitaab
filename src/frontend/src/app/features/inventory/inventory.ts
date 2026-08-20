@@ -6,6 +6,7 @@ import { StoreService } from '../../core/store/store.service';
 import { ItemStockRow } from '../../core/store/inventory.models';
 import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * Stock list: every item with its current on-hand quantity, searchable by
@@ -13,7 +14,7 @@ import { WhatsAppButton } from '../../shared/whatsapp-button';
  */
 @Component({
   selector: 'app-inventory',
-  imports: [RouterLink, PrintHeader, WhatsAppButton],
+  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend],
   templateUrl: './inventory.html',
 })
 export class Inventory {

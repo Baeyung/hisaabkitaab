@@ -325,39 +325,6 @@ html[dir='rtl'] .kg-flip {
   border-radius: 999px;
 }
 
-/* The arrow lives here, not in the four templates that use this: as a text node
-   it was a bidi neutral, so Urdu parked it at the *end* of the label and left it
-   pointing left — "back" aiming forward. As a flex item it sits at inline-start
-   in both scripts, and the glyph itself turns around. */
-.rm-back::before {
-  content: '←';
-}
-html[dir='rtl'] .rm-back::before {
-  content: '→';
-}
-.rm-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--kg-muted);
-  text-decoration: none;
-  border: 1px solid var(--kg-line-strong);
-  border-radius: 9px;
-  padding: 7px 12px;
-  background: var(--kg-card);
-}
-.rm-back:hover {
-  color: var(--kg-ink);
-  border-color: var(--kg-line-hover);
-}
-.rm-back:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--kg-focus);
-}
-
 /* stat strip: opening/closing, totals, current balance/stock */
 .rm-stats {
   display: grid;
@@ -444,6 +411,45 @@ html[dir='rtl'] .rm-back::before {
 }
 .rm-tbl td.amt--settled {
   color: var(--kg-muted);
+}
+
+/* The key to the green and the red — see app/shared/amount-legend.ts. Quiet and
+   end-aligned so it sits under the column it explains, close enough to be found
+   the first time and faint enough to stop being read after that. */
+.rm-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px 14px;
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--kg-muted);
+}
+.rm-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+/* Painted with `background`, so it needs `print-color-adjust` to survive the
+   printer at all — and even then the label beside it names the colour in words,
+   because a dot alone is nothing to a greyscale sheet or a red-green eye. */
+.rm-legend__dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.rm-legend__dot--in {
+  color: var(--kg-in);
+}
+.rm-legend__dot--out {
+  color: var(--kg-out);
 }
 
 /* card + table shell */
@@ -1211,10 +1217,15 @@ html[dir='rtl'] select.rm-input {
     border-end-end-radius: 3px;
     background: var(--kg-line-strong);
   }
-  .rm-tbl tbody tr:has(td.amt--in)::before {
+  /* Scoped to the headline figure, not to any coloured cell: a statement row carries
+     three of them — the goods total, the cash, and the khata effect — and the two that
+     are coloured can point opposite ways. Paying a supplier sends cash out while their
+     baqaya comes down, which reads in. Matching either, the later rule would win and
+     paint the rail against the entry it stands for. */
+  .rm-tbl tbody tr:has(td.rm-cell-amt.amt--in)::before {
     background: var(--kg-in);
   }
-  .rm-tbl tbody tr:has(td.amt--out)::before {
+  .rm-tbl tbody tr:has(td.rm-cell-amt.amt--out)::before {
     background: var(--kg-out);
   }
 
@@ -1236,7 +1247,8 @@ html[dir='rtl'] select.rm-input {
   /* An entry that settled in full shows an em dash on the wide table, to keep the
      column reading straight down. On a phone there is no column to keep straight and
      the cell would only add a blank fact to the meta line, so it goes entirely. */
-  .rm-tbl td:has(> app-khata-amount.is-empty) {
+  .rm-tbl td:has(> app-khata-amount.is-empty),
+  .rm-tbl td.is-empty {
     display: none;
   }
   .rm-tbl td.end {

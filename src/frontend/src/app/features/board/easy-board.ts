@@ -10,7 +10,7 @@ import { ThemeToggle } from '../../shared/theme-toggle/theme-toggle';
 import { InstallButton } from '../../shared/install-button/install-button';
 import { NavIconMark } from '../../shared/nav-icon/nav-icon';
 import { arranged } from '../../layout/shell/nav';
-import { BoardTile, boardFor } from '../../layout/shell/board';
+import { BoardTile, boardFor, openSheet } from '../../layout/shell/board';
 
 /**
  * The board — easy mode's home, and the whole of its navigation.
@@ -25,6 +25,11 @@ import { BoardTile, boardFor } from '../../layout/shell/board';
  * The tab is in the URL rather than in a field, so the browser's Back button comes back to
  * the sheet you left from. That is the loop this screen is built around: press 2, record a
  * receipt, press Back, you are looking at Entry again with your finger over the same key.
+ *
+ * Arriving with no `?tab=` at all — the topbar's Menu button, a bookmark of the shop, the
+ * morning's first load — opens the sheet this browser left open last, and puts it in the URL
+ * on the way. A counter tablet is one shop doing one kind of work all day; sending it back to
+ * the first tab every time is a tap the same person pays over and over.
  */
 @Component({
   selector: 'app-easy-board',
@@ -49,13 +54,13 @@ export class EasyBoard {
   );
 
   /**
-   * The open sheet. Falls back to the first tab for a missing, misspelt or stale `?tab=` —
-   * a bookmark from a build where the tab existed must land on the board, not on nothing.
+   * The open sheet — see `openSheet` for which of the three claims wins.
+   *
+   * The remembered tab is read here and not only in the effect below so the right sheet is
+   * drawn on the first frame: waiting for the URL to be rewritten would show tab one first
+   * and then swap it out from under the finger already moving towards it.
    */
-  protected readonly active = computed(() => {
-    const tabs = this.tabs();
-    return tabs.find((t) => t.key === this.tab()) ?? tabs[0];
-  });
+  protected readonly active = computed(() => openSheet(this.tabs(), this.tab(), this.remembered()));
 
   /**
    * Where the keyboard is on the tab strip, which is not the same as which sheet is open:
@@ -79,11 +84,58 @@ export class EasyBoard {
     // Keep the strip's focus on the open sheet when it changes from anywhere else — a link,
     // the Back button, the topbar's Menu button.
     effect(() => {
-      const index = this.tabs().indexOf(this.active());
+      const open = this.active();
+      const index = open ? this.tabs().indexOf(open) : -1;
       if (index >= 0) {
         this.focused.set(index);
       }
     });
+
+    // Keep `?tab=` and the remembered sheet agreeing with what is on screen. The URL is what
+    // actually decides which sheet is open — every link, bookmark and Back press carries it —
+    // so an arrival without one is answered by writing the remembered tab *into* the address
+    // rather than by opening it quietly behind an address that says otherwise. Replacing the
+    // entry, not adding one, for the same reason `open()` does: the sheet the shopkeeper came
+    // from must stay one Back press away, not two.
+    effect(() => {
+      const open = this.active();
+      if (!open) {
+        return;
+      }
+      this.remember(open.key);
+      if (open.key !== this.tab()) {
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { tab: open.key },
+          replaceUrl: true,
+        });
+      }
+    });
+  }
+
+  // ── the sheet this browser left open ────────────────────────────────
+
+  /**
+   * Per shop, because two shops are two different boards: the same login can be at a till in
+   * one and doing the books in another, and one of them remembering the other's tab is worse
+   * than neither remembering anything. Per browser rather than on the shop, too — this is
+   * where *this* device was left, not a setting anybody chose for everyone.
+   */
+  private tabStorageKey(): string | null {
+    const store = this.stores.currentId();
+    return store ? `hk.board.tab.${store}` : null;
+  }
+
+  private remembered(): string | null {
+    const key = this.tabStorageKey();
+    return key ? localStorage.getItem(key) : null;
+  }
+
+  private remember(tab: string): void {
+    const key = this.tabStorageKey();
+    if (key) {
+      localStorage.setItem(key, tab);
+    }
   }
 
   protected label(tile: BoardTile): string {

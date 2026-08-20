@@ -1,10 +1,11 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BalanceDirection } from '../../core/store/balance.models';
-import { directionClass } from '../../shared/balance.util';
+import { directionClass, khataAmount } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { ReportService } from './report.service';
 import { PartyReminder } from './report.models';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /**
  * One khata holder's statement, as the monthly job sends it to them.
@@ -16,7 +17,7 @@ import { PartyReminder } from './report.models';
  */
 @Component({
   selector: 'app-reminder-report',
-  imports: [PrintHeader],
+  imports: [PrintHeader, AmountLegend],
   templateUrl: './reminder-report.html',
   styleUrl: './report.css',
 })
@@ -38,6 +39,8 @@ export class ReminderReportPage {
       void this.load(this.storeId(), this.partyId(), this.date(), this.token());
     });
   }
+
+  protected readonly khataAmount = khataAmount;
 
   protected tone(direction: BalanceDirection): string {
     return directionClass(direction);

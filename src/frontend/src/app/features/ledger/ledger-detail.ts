@@ -10,14 +10,19 @@ import { TransactionEventKind } from '../../core/store/cashbook.models';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { entryDetailLink, entryEditLink, isEditableEntry } from '../../shared/entry-route';
 import { deleteErrorKey } from '../../core/store/delete-error';
-import { directionClass, directionKey } from '../../shared/balance.util';
+import { directionClass, directionKey, khataAmount } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
-import { PrintDetailsService } from '../../shared/print-details.service';
+import {
+  DOC_TOTAL_KEYS,
+  ExpandableDocs,
+  PrintDetailsService,
+} from '../../shared/print-details.service';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { Select } from '../../shared/select/select';
 import { DateField } from '../../shared/date-field/date-field';
+import { AmountLegend } from '../../shared/amount-legend';
 
 /** Zero balance for a range with no rows in it. */
 const SETTLED: Balance = { amount: 0, direction: 'SETTLED' };
@@ -29,7 +34,7 @@ const SETTLED: Balance = { amount: 0, direction: 'SETTLED' };
  */
 @Component({
   selector: 'app-ledger-detail',
-  imports: [RouterLink, PrintHeader, Select, DateField, WhatsAppButton],
+  imports: [RouterLink, PrintHeader, Select, DateField, WhatsAppButton, AmountLegend],
   templateUrl: './ledger-detail.html',
 })
 export class LedgerDetail {
@@ -82,9 +87,7 @@ export class LedgerDetail {
     // row.date is an ISO `YYYY-MM-DD` string, so lexical comparison is a date comparison.
     return (this.statement()?.rows ?? []).filter(
       (row) =>
-        (!from || row.date >= from) &&
-        (!to || row.date <= to) &&
-        (!event || row.event === event),
+        (!from || row.date >= from) && (!to || row.date <= to) && (!event || row.event === event),
     );
   });
 
@@ -111,6 +114,7 @@ export class LedgerDetail {
 
   protected readonly directionKey = directionKey;
   protected readonly directionClass = directionClass;
+  protected readonly khataAmount = khataAmount;
 
   /** Bilingual label for an event kind — all kinds have a `report.event.*` key. */
   protected readonly eventLabel = (kind: TransactionEventKind): string =>
@@ -122,23 +126,32 @@ export class LedgerDetail {
     });
   }
 
+  /** Sub-row totals wording, per side of the counter — see DOC_TOTAL_KEYS. */
+  protected readonly docKeys = DOC_TOTAL_KEYS;
+
   print(): void {
-    void this.printer.printWithDetails(this.saleIds());
+    void this.printer.printWithDetails(this.expandable());
   }
 
   /**
-   * The WhatsApp send goes through the same bill-details question Print asks, so the
-   * party gets the statement the shopkeeper chose to send. Bound as a field, not a
+   * The WhatsApp send goes through the same document-details question Print asks, so
+   * the party gets the statement the shopkeeper chose to send. Bound as a field, not a
    * method, so the template hands over a callable rather than its result.
    */
   protected readonly expandForSend = (): Promise<boolean> =>
-    this.printer.expandDetails(this.saleIds());
+    this.printer.expandDetails(this.expandable());
 
-  /** Every row that stands for a bill, whose lines the details prompt can expand. */
-  private saleIds(): string[] {
-    return (this.statement()?.rows ?? [])
-      .filter((r) => r.event === 'SALE')
-      .map((r) => r.transactionId);
+  /**
+   * Every row that stands for a goods document, whose lines the details prompt can
+   * expand. A customer's statement is all bills and a supplier's all purchases, but
+   * a party can be both — someone you sell to and buy from — so both are collected.
+   */
+  private expandable(): ExpandableDocs {
+    const ids = (event: TransactionEventKind) =>
+      (this.statement()?.rows ?? [])
+        .filter((row) => row.event === event)
+        .map((row) => row.transactionId);
+    return { bills: ids('SALE'), purchases: ids('PURCHASE') };
   }
 
   /**
