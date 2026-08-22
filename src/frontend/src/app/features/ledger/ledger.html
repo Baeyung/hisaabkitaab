@@ -42,20 +42,34 @@
     <app-amount-legend />
 
     @if ((parties()?.length ?? 0) > 0) {
-    @if (query().trim()) {
-      <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.filter', { query: query().trim() }) }}</p>
+    <!-- What the list was narrowed to, so a printed page says so on its face. -->
+    @if (filters.q().trim()) {
+      <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.filter', { query: filters.q().trim() }) }}</p>
+    }
+    @if (filters.dir()) {
+      <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.direction', { filter: directionFilterLabel() }) }}</p>
     }
     <div class="rm-card">
-      <div class="rm-toolbar rm-noprint">
-        <input
-          class="rm-input"
-          type="search"
-          [value]="query()"
-          (input)="query.set(searchInput.value)"
-          #searchInput
-          [attr.placeholder]="locale.t('ledger.search.ph')"
-          [attr.aria-label]="locale.t('ledger.search.ph')"
-        />
+      <div class="rm-toolbar rm-toolbar--filters rm-noprint">
+        <label class="rm-field rm-field--search">
+          <span class="rm-field__label">{{ locale.t('ledger.filter.search') }}</span>
+          <app-combobox
+            [value]="filters.q()"
+            [options]="nameOptions()"
+            (valueChange)="filters.replace({ q: $event })"
+            [placeholder]="locale.t('ledger.search.ph')"
+            [ariaLabel]="locale.t('ledger.search.ph')"
+          />
+        </label>
+        <label class="rm-field">
+          <span class="rm-field__label">{{ locale.t('ledger.filter.direction') }}</span>
+          <app-select
+            [options]="directionOptions()"
+            [value]="filters.dir()"
+            (valueChange)="filters.set('dir', $event)"
+            [ariaLabel]="locale.t('ledger.filter.direction')"
+          />
+        </label>
       </div>
       <div class="rm-tablewrap">
         <table class="rm-tbl">
@@ -82,7 +96,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="3">{{ locale.t('ledger.search.none') }}</td>
+                <td colspan="3">{{ locale.t(emptyKey()) }}</td>
               </tr>
             }
           </tbody>

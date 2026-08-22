@@ -839,6 +839,14 @@ html[dir='rtl'] select.rm-input {
   text-transform: uppercase;
   color: var(--kg-faint);
 }
+
+/* The khata list's party search is an <app-combobox>, whose input sizes to its
+   own intrinsic width rather than to the toolbar. Give the field the footprint
+   the plain .rm-input search had. */
+.rm-field--search {
+  flex: 1 1 240px;
+  max-width: 340px;
+}
 .rm-input--date {
   max-width: 170px;
 }
