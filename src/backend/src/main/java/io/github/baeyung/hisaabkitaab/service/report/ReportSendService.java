@@ -70,12 +70,25 @@ public class ReportSendService
     public boolean send(Store store, User sender, Addressee to, ReportRequest request,
             String action, String filename, WhatsAppSendSource source)
     {
+        // Nobody is watching a job run, so the log is the only place its work shows up at all
+        // — and rendering plus an upload to Meta is slow enough that a tick which stops halfway
+        // has to be tellable from one that never started.
+        log.info("sending the {} \"{}\" for store {} to \"{}\"",
+                source, filename, store.getId(), to.name());
+
+        long startedAt = System.nanoTime();
         WhatsAppSendStatus status = WhatsAppSendStatus.FAILED;
         try
         {
             if (documentShareService.share(store, to, action, render(request), filename, LOCALE))
             {
                 status = WhatsAppSendStatus.SENT;
+            }
+            else
+            {
+                // Meta said no. Distinct from the catch below, which is our side falling over.
+                log.warn("Meta did not accept the {} \"{}\" for store {}",
+                        source, filename, store.getId());
             }
         }
         catch (RuntimeException e)
@@ -85,6 +98,10 @@ public class ReportSendService
             // shop in the tick still gets its report.
             log.warn("Could not send the {} for store {}", source, store.getId(), e);
         }
+
+        log.info("{} the {} \"{}\" for store {} in {}ms",
+                status == WhatsAppSendStatus.SENT ? "sent" : "gave up on",
+                source, filename, store.getId(), (System.nanoTime() - startedAt) / 1_000_000);
 
         sendLog.record(store, sender, to, filename, status, source);
 

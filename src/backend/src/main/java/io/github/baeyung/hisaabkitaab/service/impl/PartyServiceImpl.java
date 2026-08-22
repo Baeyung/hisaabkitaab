@@ -3,6 +3,8 @@ package io.github.baeyung.hisaabkitaab.service.impl;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -23,6 +25,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class PartyServiceImpl implements PartyService
 {
+    private static final Logger log = LoggerFactory.getLogger(PartyServiceImpl.class);
+
     private final PartyRepository partyRepository;
     private final TransactionRepository transactionRepository;
     private final TransactionLineRepository transactionLineRepository;
@@ -62,7 +66,9 @@ public class PartyServiceImpl implements PartyService
                 .address(input.getAddress())
                 .build();
 
-        return partyRepository.save(party);
+        Party saved = partyRepository.save(party);
+        log.info("created party {} \"{}\" in store {}", saved.getId(), saved.getName(), store.getId());
+        return saved;
     }
 
     @Override
@@ -72,6 +78,10 @@ public class PartyServiceImpl implements PartyService
         {
             return findByIdForStore(partyId, store.getId());
         }
+
+        // Worth a line of its own: a party appearing out of an entry screen rather than the
+        // parties page is the usual explanation for a duplicate nobody remembers adding.
+        log.info("no party id on the entry, creating \"{}\" in store {}", name, store.getId());
 
         return create(
                 Party.builder()
@@ -88,6 +98,9 @@ public class PartyServiceImpl implements PartyService
     {
         Party party = findByIdForStore(id, storeId);
 
+        log.info("updating party {} \"{}\" -> \"{}\" in store {}",
+                id, party.getName(), changes.getName(), storeId);
+
         party.setName(changes.getName());
         party.setContact(changes.getContact());
         party.setAddress(changes.getAddress());
@@ -99,6 +112,7 @@ public class PartyServiceImpl implements PartyService
     public void delete(String id, String storeId)
     {
         Party party = findByIdForStore(id, storeId);
+        long startedAt = System.nanoTime();
 
         // Cascade: delete every transaction that references this party, whether as the transaction's
         // counterparty or on one of its lines (their lines go via orphanRemoval).
@@ -109,8 +123,18 @@ public class PartyServiceImpl implements PartyService
                 )
                 .distinct()
                 .toList();
-        transactionRepository.deleteAll(transactions);
 
+        // Announced before the delete rather than after, and with the count: this is the one
+        // operation whose cost is unbounded in the data — a party with a year of entries takes
+        // as long as it takes — and without this line a slow one is indistinguishable from a
+        // hung one. The count is also the answer to "why did that take so long".
+        log.info("deleting party {} \"{}\" from store {}, cascading {} transaction(s)",
+                id, party.getName(), storeId, transactions.size());
+
+        transactionRepository.deleteAll(transactions);
         partyRepository.delete(party);
+
+        log.info("deleted party {} and its {} transaction(s) in {}ms",
+                id, transactions.size(), (System.nanoTime() - startedAt) / 1_000_000);
     }
 }

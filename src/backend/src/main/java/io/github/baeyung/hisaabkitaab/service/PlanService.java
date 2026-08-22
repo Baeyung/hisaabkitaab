@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -81,6 +83,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class PlanService
 {
+    private static final Logger log = LoggerFactory.getLogger(PlanService.class);
+
     /**
      * How long a trial runs once its clock starts. A calendar month rather than a fixed number
      * of days, because that is what the product is sold as on the public page — a trial started
@@ -162,6 +166,14 @@ public class PlanService
                 .whatsappPeriod(previous == null ? null : previous.getWhatsappPeriod())
                 .build());
 
+        // An entitlement changed by hand from the back office, which is the one change in
+        // this application no screen anywhere shows the history of. What it was matters as
+        // much as what it now is — "my plan got downgraded" is otherwise unanswerable.
+        log.warn("plan for user {} set to {} (expires {}, stores {}, users {}, whatsapp {}); was {}",
+                userId, saved.getTier(), saved.getExpiresAt(), saved.getMaxStores(),
+                saved.getMaxUsers(), saved.getWhatsappQuota(),
+                previous == null ? "no plan" : previous.getTier() + " expiring " + previous.getExpiresAt());
+
         reopenWhereRoom(userId, PlanLimits.effectiveFor(saved).maxStores());
 
         return PlanResponse.of(saved, LocalDate.now());
@@ -215,6 +227,8 @@ public class PlanService
 
         if (!isActive(plan, today))
         {
+            log.warn("refusing {} for owner {}: plan {} ended on {}",
+                    capacity, ownerId, plan.getTier(), plan.getExpiresAt());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Your plan ended on " + plan.getExpiresAt() + ". Renew it to add anything new.");
         }
@@ -224,8 +238,14 @@ public class PlanService
         // ponytail: count-then-act, so two simultaneous requests can both pass and overshoot by
         // one. Not worth a lock for a shopkeeper adding a shop — take a row lock on the plan
         // here if that ever stops being the traffic pattern.
-        if (usageOf(ownerId, capacity) >= limit)
+        long used = usageOf(ownerId, capacity);
+        if (used >= limit)
         {
+            // The user is told which ceiling they hit; this says what they were actually at
+            // when it fired, which is what makes a disputed limit checkable rather than
+            // arguable.
+            log.warn("refusing {} for owner {}: {} of {} used on plan {}",
+                    capacity, ownerId, used, limit, plan.getTier());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Your plan covers " + capacity.describe(limit) + ". Upgrade to add more.");
         }
@@ -488,6 +508,13 @@ public class PlanService
 
         storeRepository.saveAll(owned);
 
+        // Closing a shop hides a shopkeeper's books behind a paywall, and this is the call
+        // that decides which. Named, not counted, so the choice is checkable afterwards.
+        log.warn("owner {} settled their overage: keeping {}, closing {}",
+                ownerId,
+                owned.stream().filter(store -> keep.contains(store.getId())).map(Store::getId).toList(),
+                owned.stream().filter(store -> !keep.contains(store.getId())).map(Store::getId).toList());
+
         return statusOf(ownerId);
     }
 
@@ -575,6 +602,7 @@ public class PlanService
 
         if (store.isSuspended())
         {
+            log.warn("refusing write to store {}: closed since {}", store.getId(), store.getSuspendedAt());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "This shop is closed because your plan no longer covers it. "
                             + "Upgrade to open it again — nothing in it has been lost.");
@@ -585,6 +613,8 @@ public class PlanService
         // request (a request-scoped bean, or an attribute on the request) if it ever isn't.
         if (isOverLimit(store.getOwner().getId()))
         {
+            log.warn("refusing write to store {}: owner {} is over their plan and has not chosen "
+                    + "which shops to keep open", store.getId(), store.getOwner().getId());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "This account is using more than its plan covers. "
                             + "Choose which shops to keep open before adding anything new.");

@@ -11,6 +11,8 @@ import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.ItemStockRow;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,8 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class InventoryQueryService
 {
+    private static final Logger log = LoggerFactory.getLogger(InventoryQueryService.class);
+
     private final StoreItemService storeItemService;
     private final StoreItemRepository storeItemRepository;
     private final TransactionLineRepository transactionLineRepository;
@@ -67,6 +71,10 @@ public class InventoryQueryService
         StoreItem item = storeItemService.findByIdForStore(itemId, storeId);
 
         List<TransactionLine> lines = transactionLineRepository.findItemMovementLines(itemId, storeId);
+
+        // As with a party statement: one item's whole history, unpaged.
+        log.debug("movement of item {} \"{}\" in store {}: {} line(s)",
+                itemId, item.getName(), storeId, lines.size());
 
         // A service keeps no stock, so there is no running quantity to carry: the rows
         // stay as a record of when it was given, without a count winding down.

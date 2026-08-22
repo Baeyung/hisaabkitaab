@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class OpeningEntryService
 {
+    private static final Logger log = LoggerFactory.getLogger(OpeningEntryService.class);
+
     private final PartyService partyService;
     private final StoreItemService storeItemService;
     private final TransactionRepository transactionRepository;
@@ -72,6 +76,10 @@ public class OpeningEntryService
 
         if (amount <= 0)
         {
+            // A zero is a clear, not a no-op, and it silently removes an entry. Said out loud
+            // because "the opening balance disappeared" has no other explanation in the log.
+            log.info("clearing opening balance of party {} in store {} (was {})",
+                    partyId, store.getId(), existing.isPresent() ? "set" : "unset");
             existing.ifPresent(transactionRepository::delete);
             return PartyBalance.of(0);
         }
@@ -103,6 +111,10 @@ public class OpeningEntryService
             transactionRepository.save(transaction);
         }
 
+        log.info("{} opening balance of party {} \"{}\" in store {} to {} {}",
+                existing.isPresent() ? "updated" : "set", partyId, party.getName(),
+                store.getId(), amount, inOut);
+
         return PartyBalance.of(inOut == InOut.IN ? amount : -amount);
     }
 
@@ -130,6 +142,8 @@ public class OpeningEntryService
 
         if (amount <= 0)
         {
+            log.info("clearing opening cash of store {} (was {})",
+                    store.getId(), existing.isPresent() ? "set" : "unset");
             existing.ifPresent(transactionRepository::delete);
             return 0;
         }
@@ -159,6 +173,9 @@ public class OpeningEntryService
             transactionRepository.save(transaction);
         }
 
+        log.info("{} opening cash of store {} to {}",
+                existing.isPresent() ? "updated" : "set", store.getId(), amount);
+
         return amount;
     }
 
@@ -171,6 +188,8 @@ public class OpeningEntryService
 
         if (quantity == null || quantity.signum() <= 0)
         {
+            log.info("clearing opening stock of item {} in store {} (was {})",
+                    itemId, store.getId(), existing.isPresent() ? "set" : "unset");
             existing.ifPresent(transactionRepository::delete);
             return BigDecimal.ZERO;
         }
@@ -197,6 +216,10 @@ public class OpeningEntryService
                     .build());
             transactionRepository.save(transaction);
         }
+
+        log.info("{} opening stock of item {} \"{}\" in store {} to {} {}",
+                existing.isPresent() ? "updated" : "set", itemId, item.getName(),
+                store.getId(), quantity, item.getUnit());
 
         return quantity;
     }

@@ -12,6 +12,8 @@ import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.service.query.support.ItemSummary;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,8 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class CashbookQueryService
 {
+    private static final Logger log = LoggerFactory.getLogger(CashbookQueryService.class);
+
     private final TransactionLineRepository transactionLineRepository;
     private final TransactionRepository transactionRepository;
 
@@ -88,6 +92,9 @@ public class CashbookQueryService
                 .mapToDouble(transaction -> khataNet(khataNets, transaction))
                 .sum();
         double closing = rows.isEmpty() ? opening : rows.getLast().runningBalance();
+
+        log.debug("cashbook for store {} over {}..{}: {} cash row(s), opening {}, closing {}",
+                storeId, from, to, rows.size(), opening, closing);
 
         return new CashbookDayResponse(
                 from, to, opening, rows, totalIn, totalOut, PartyBalance.of(totalKhata), closing);

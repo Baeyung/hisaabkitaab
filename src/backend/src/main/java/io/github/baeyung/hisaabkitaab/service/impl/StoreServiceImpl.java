@@ -3,13 +3,18 @@ package io.github.baeyung.hisaabkitaab.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.github.baeyung.hisaabkitaab.dto.store.StoreSummary;
+import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Store;
+import io.github.baeyung.hisaabkitaab.entity.StoreItem;
+import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.enums.PlanCapacity;
 import io.github.baeyung.hisaabkitaab.enums.StoreRole;
 import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
@@ -32,6 +37,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class StoreServiceImpl implements StoreService
 {
+    private static final Logger log = LoggerFactory.getLogger(StoreServiceImpl.class);
+
     private final StoreRepository storeRepository;
     private final StoreItemRepository storeItemRepository;
     private final PartyRepository partyRepository;
@@ -67,8 +74,13 @@ public class StoreServiceImpl implements StoreService
         // 404 for no access at all, so we never leak a store's existence. 403 once they *do*
         // have access is a different answer on purpose: "this is yours to see, but the owner
         // has to be the one to do it" is what the UI needs to say.
-        if (!roleOf(store, userId).atLeast(required))
+        StoreRole held = roleOf(store, userId);
+        if (!held.atLeast(required))
         {
+            // The 403 the caller sees says only "the owner has to do this". This says which
+            // role they hold and which one the endpoint wanted, which is the difference
+            // between diagnosing a permissions complaint and guessing at it.
+            log.warn("refusing store {}: user {} holds {}, needs {}", id, userId, held, required);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the shop owner can do this");
         }
 
@@ -98,6 +110,7 @@ public class StoreServiceImpl implements StoreService
 
         Store saved = storeRepository.save(store);
         expenseCategoryService.seedDefaults(saved);
+        log.info("created store {} \"{}\" for owner {}", saved.getId(), saved.getName(), ownerId);
         return StoreSummary.of(saved, StoreRole.OWNER);
     }
 
@@ -105,6 +118,7 @@ public class StoreServiceImpl implements StoreService
     public StoreSummary update(String storeId, Store changes)
     {
         Store store = load(storeId);
+        log.info("updating store {} \"{}\" -> \"{}\"", storeId, store.getName(), changes.getName());
 
         store.setName(changes.getName());
         store.setAddress(changes.getAddress());
@@ -120,6 +134,7 @@ public class StoreServiceImpl implements StoreService
     public StoreSummary updateSettings(String storeId, StoreSettings settings)
     {
         Store store = load(storeId);
+        log.info("updating settings of store {} \"{}\"", storeId, store.getName());
         store.setSettings(settings);
 
         // Owner-only for the same reason as above (@CurrentStore(OWNER)).
@@ -130,13 +145,24 @@ public class StoreServiceImpl implements StoreService
     public void delete(String storeId)
     {
         Store store = load(storeId);
+        long startedAt = System.nanoTime();
 
         // Cascade: transactions first (their lines are removed via orphanRemoval), which clears the
         // references from items, parties and expense categories, then those, the shared access
         // rows, and finally the store itself.
-        transactionRepository.deleteAll(transactionRepository.findByStoreId(storeId));
-        storeItemRepository.deleteAll(storeItemRepository.findByStoreId(storeId));
-        partyRepository.deleteAll(partyRepository.findByStoreId(storeId));
+        List<Transaction> transactions = transactionRepository.findByStoreId(storeId);
+        List<StoreItem> items = storeItemRepository.findByStoreId(storeId);
+        List<Party> parties = partyRepository.findByStoreId(storeId);
+
+        // The largest irreversible thing this application does, and the slowest. The counts go
+        // out before a single row is dropped, so that if it dies halfway there is a record of
+        // what it was in the middle of — and so a long one can be seen to be progressing.
+        log.warn("deleting store {} \"{}\": {} transaction(s), {} item(s), {} party(ies)",
+                storeId, store.getName(), transactions.size(), items.size(), parties.size());
+
+        transactionRepository.deleteAll(transactions);
+        storeItemRepository.deleteAll(items);
+        partyRepository.deleteAll(parties);
         expenseCategoryService.deleteByStore(storeId);
         storeAccessRepository.deleteByStoreId(storeId);
         // A block outlives the party it was made for, but not the shop it was made against:
@@ -145,6 +171,8 @@ public class StoreServiceImpl implements StoreService
         // Same for the send history: there is nothing left to audit once the shop is gone.
         whatsAppSendRepository.deleteByStoreId(storeId);
         storeRepository.delete(store);
+
+        log.warn("deleted store {} in {}ms", storeId, (System.nanoTime() - startedAt) / 1_000_000);
     }
 
     private Store load(String id)

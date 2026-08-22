@@ -17,6 +17,8 @@ import io.github.baeyung.hisaabkitaab.service.query.support.ItemSummary;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.RunningBalanceFolder;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,8 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class LedgerQueryService
 {
+    private static final Logger log = LoggerFactory.getLogger(LedgerQueryService.class);
+
     private final PartyService partyService;
     private final PartyRepository partyRepository;
     private final TransactionLineRepository transactionLineRepository;
@@ -121,6 +125,11 @@ public class LedgerQueryService
         Party party = partyService.findByIdForStore(partyId, storeId);
 
         List<TransactionLine> lines = transactionLineRepository.findPartyLedgerLines(partyId, storeId);
+
+        // A statement is one party's whole history, unpaged: a shop's oldest customer is the
+        // slowest screen in the app, and this is the number that says so.
+        log.debug("statement for party {} \"{}\" in store {}: {} ledger line(s)",
+                partyId, party.getName(), storeId, lines.size());
 
         // FIFO settlement of charges (IN) by payments (OUT), oldest bill first — the
         // shopkeeper doesn't tie a payment to a bill, so newest money clears oldest dues.

@@ -87,14 +87,39 @@ public class PdfRenderService
 
     private byte[] post(Map<String, String> request)
     {
-        byte[] pdf = client.post()
-                .uri("/render")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .retrieve()
-                .body(byte[].class);
-        dump(pdf);
-        return pdf;
+        // The slowest thing the application does, out of process, and behind a sixty-second
+        // read timeout — so the whole minute a stuck renderer costs is a minute in which
+        // nothing else would say a word. The line before the call is what tells "Chrome is
+        // still going" from "the request never got here"; the one after gives the size, which
+        // is the only cheap check that what came back is a document and not an error page.
+        String target = request.containsKey("url") ? request.get("url") : "posted html";
+        log.info("rendering PDF via the renderer service ({})", target);
+
+        long startedAt = System.nanoTime();
+        try
+        {
+            byte[] pdf = client.post()
+                    .uri("/render")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(byte[].class);
+
+            log.info("rendered {} bytes of PDF in {}ms ({})",
+                    pdf == null ? 0 : pdf.length, (System.nanoTime() - startedAt) / 1_000_000, target);
+
+            dump(pdf);
+            return pdf;
+        }
+        catch (RuntimeException ex)
+        {
+            // Rethrown untouched — the callers already decide what a failed render means. This
+            // only makes sure the renderer is named as the thing that failed, because from a
+            // stack trace alone it reads as an ordinary HTTP error from somewhere unspecified.
+            log.error("renderer failed after {}ms ({}): {}",
+                    (System.nanoTime() - startedAt) / 1_000_000, target, ex.toString());
+            throw ex;
+        }
     }
 
     /**

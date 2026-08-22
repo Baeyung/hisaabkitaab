@@ -3,6 +3,8 @@ package io.github.baeyung.hisaabkitaab.security;
 import java.util.Map;
 
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -33,6 +35,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CurrentStoreArgumentResolver implements HandlerMethodArgumentResolver
 {
+    private static final Logger log = LoggerFactory.getLogger(CurrentStoreArgumentResolver.class);
+
     private final StoreService storeService;
 
     private final PlanService planService;
@@ -65,11 +69,17 @@ public class CurrentStoreArgumentResolver implements HandlerMethodArgumentResolv
         UserPrincipal principal = principal(webRequest);
         if (principal == null)
         {
+            // Reported to the caller as a missing store so nothing is leaked; here it is what
+            // it is, which is a request that reached a store-scoped handler with nobody on it.
+            log.warn("no principal on a request for store {} — answering 404", storeId);
             throw ResourceNotFoundException.forEntity("Store", storeId);
         }
 
         CurrentStore annotation = parameter.getParameterAnnotation(CurrentStore.class);
         Store store = storeService.findByIdForUser(storeId, principal.getId(), annotation.value());
+
+        log.debug("resolved store {} \"{}\" for user {} (needs {})",
+                storeId, store.getName(), principal.getId(), annotation.value());
 
         // Keyed on the HTTP method rather than the required role, because the role does not
         // say which way the data flows: the member list is a GET that needs OWNER. A closed

@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -70,6 +72,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class ProcessingService
 {
+    private static final Logger log = LoggerFactory.getLogger(ProcessingService.class);
+
     /**
      * Working precision for a unit cost. Deliberately finer than money is shown at: a cost
      * per gram divided out of a whole batch is small, and rounding it to paisa here would
@@ -159,6 +163,14 @@ public class ProcessingService
                 .build());
 
         transactionRepository.save(transaction);
+
+        // The one entry that writes back to the catalogue: it moves an item's cost price, and
+        // every margin read afterwards is computed off the number it left behind. So the
+        // inputs to that number go on the record, not just the fact that a batch was booked.
+        log.info("processed batch {} in store {}: {} input(s) -> {} {} of \"{}\" at unit cost {} "
+                        + "(shelf held {} before, wastage {})",
+                transaction.getId(), store.getId(), inputs.size(), outputQuantity,
+                output.getUnit(), outputItem.getName(), unitCost, stockBefore, output.getWastage());
 
         reprice(outputItem, stockBefore, outputQuantity, unitCost);
     }

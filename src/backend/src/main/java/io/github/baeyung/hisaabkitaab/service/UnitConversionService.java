@@ -6,6 +6,8 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Locale;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class UnitConversionService
 {
+    private static final Logger log = LoggerFactory.getLogger(UnitConversionService.class);
+
     /**
      * Working precision for the inversion. Wide enough that a round trip through
      * {@code 1/x} and back lands on the number that went in, for any rate a shopkeeper would
@@ -61,6 +65,14 @@ public class UnitConversionService
         UnitConversion existing = repository
                 .findByStoreIdAndFromUnitAndToUnit(store.getId(), pair.from(), pair.to())
                 .orElse(null);
+
+        // Both the folding and the sorting can leave the stored row looking nothing like what
+        // was typed ("1 than = 22 metre" stored as metre→than at 0.0454…). Logging the pair as
+        // sent and as stored is what makes a rate that "went in wrong" checkable.
+        log.info("{} rate for store {}: {} {} -> {} {} stored as {} -> {} at {}",
+                existing != null ? "correcting" : "learning", store.getId(),
+                request.factor(), request.fromUnit(), 1, request.toUnit(),
+                pair.from(), pair.to(), pair.factor());
 
         if (existing != null)
         {
@@ -92,6 +104,7 @@ public class UnitConversionService
 
         if (a.equals(b))
         {
+            log.warn("refusing a rate from \"{}\" to \"{}\": both fold to \"{}\"", from, to, a);
             throw new IllegalArgumentException("A unit converts to itself at 1; nothing to store.");
         }
 

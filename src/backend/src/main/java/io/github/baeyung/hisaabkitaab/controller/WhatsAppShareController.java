@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,6 +61,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WhatsAppShareController
 {
+    private static final Logger log = LoggerFactory.getLogger(WhatsAppShareController.class);
+
     private final ShareRecipientService shareRecipientService;
 
     private final DocumentShareService documentShareService;
@@ -111,6 +115,12 @@ public class WhatsAppShareController
                 .toList();
         addressees.forEach(to -> DocumentShareService.requireSendable(to.contact()));
 
+        // The one request that can spend money, take a minute, and half-succeed. It answers
+        // 200 either way, so the response cannot be read as the record of what happened —
+        // this and the summary at the end are.
+        log.info("sharing \"{}\" ({}) from store {} to {} recipient(s), sent by {}",
+                request.filename(), request.action(), store.getId(), addressees.size(), sender.getId());
+
         // One render for the whole list — it is the same page for everyone on it — and not
         // until a message has actually been charged for. A send the quota refuses must not
         // cost a trip to headless Chrome first.
@@ -142,6 +152,14 @@ public class WhatsAppShareController
             }
         }
 
+        if (!optedOut.isEmpty())
+        {
+            // Named, because "it says it did not send to them" has exactly two explanations
+            // and the shopkeeper cannot see which from the screen: they opted out, or it broke.
+            log.info("dropping {} opted-out recipient(s) of \"{}\": {}",
+                    optedOut.size(), request.filename(), optedOut);
+        }
+
         for (Addressee to : reachable)
         {
             String charged;
@@ -155,6 +173,9 @@ public class WhatsAppShareController
                 // worth raising — nothing has happened yet and the message explains itself.
                 // Part-way through a list it is not: messages have already gone out, and the
                 // honest reply is which ones did.
+                log.warn("quota refused a message to \"{}\" from store {}: {}",
+                        to.name(), store.getId(), e.getReason());
+
                 sendLog.record(store, sender, to, request.filename(),
                         WhatsAppSendStatus.FAILED, WhatsAppSendSource.SHARE);
                 if (sent == 0 && failed.isEmpty())
@@ -179,6 +200,9 @@ public class WhatsAppShareController
             {
                 // Includes the renderer falling over: the message was charged a moment ago and
                 // nothing went out, so it goes back before the failure leaves here.
+                log.error("send of \"{}\" to \"{}\" from store {} blew up; the charged message "
+                        + "is being given back", request.filename(), to.name(), store.getId(), e);
+
                 planService.releaseWhatsappMessage(ownerId, charged);
                 sendLog.record(store, sender, to, request.filename(),
                         WhatsAppSendStatus.FAILED, WhatsAppSendSource.SHARE);
@@ -201,6 +225,18 @@ public class WhatsAppShareController
         }
 
         failed.addAll(optedOut);
+
+        if (failed.isEmpty())
+        {
+            log.info("shared \"{}\" from store {} to all {} recipient(s)",
+                    request.filename(), store.getId(), sent);
+        }
+        else
+        {
+            log.warn("shared \"{}\" from store {} to {} of {} recipient(s); did not reach: {}",
+                    request.filename(), store.getId(), sent, sent + failed.size(), failed);
+        }
+
         return ResponseEntity.ok(new ShareResult(sent, failed));
     }
 }

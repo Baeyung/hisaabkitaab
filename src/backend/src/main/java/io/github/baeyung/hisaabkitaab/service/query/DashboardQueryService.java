@@ -16,6 +16,8 @@ import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging.Movement;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,8 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DashboardQueryService
 {
+    private static final Logger log = LoggerFactory.getLogger(DashboardQueryService.class);
+
     private static final int TOP_ITEMS = 6;
     private static final int TOP_DEAD_STOCK = 6;
     private static final int TOP_PARTIES = 5;
@@ -50,6 +54,8 @@ public class DashboardQueryService
 
     public DashboardResponse getDashboard(String storeId, LocalDate from, LocalDate to)
     {
+        long startedAt = System.nanoTime();
+
         // Cash position as-of `to` inclusive: net cash strictly before the day after.
         double cashPosition = transactionLineRepository.sumCashBefore(storeId, to.plusDays(1));
 
@@ -106,6 +112,14 @@ public class DashboardQueryService
         double spend = daily.stream().mapToDouble(DailyPoint::spend).sum();
 
         PartySplit parties = topReceivablesAndPayables(storeId);
+
+        // Every figure on the screen is folded in memory out of these two reads, so their
+        // sizes are the whole cost of the page — a dashboard that crawls over a long window
+        // is this line growing, not a query plan going wrong.
+        log.debug("dashboard for store {} over {}..{}: folded {} sale line(s) and {} expense "
+                        + "line(s) in {}ms",
+                storeId, from, to, saleLines.size(), expenseLines.size(),
+                (System.nanoTime() - startedAt) / 1_000_000);
 
         return new DashboardResponse(
                 from,

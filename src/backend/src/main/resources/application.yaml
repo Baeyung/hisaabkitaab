@@ -43,9 +43,15 @@ spring:
 logging:
   level:
     root: INFO
+    # At INFO this layer is a running account of what changed: every write is bracketed by an
+    # arrival and a departure line, and the service in between says what it did and to what.
+    # Reads and CORS preflights sit one level down, so DEBUG is the setting for reproducing a
+    # problem and INFO the one for leaving it on.
     io.github.baeyung.hisaabkitaab: ${LOG_LEVEL:DEBUG}
     org.springframework.web: ${WEB_LOG_LEVEL:INFO}
     org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+    # SQL_LOG_LEVEL=DEBUG prints the statements themselves. Off by default: it is the answer
+    # to "which query is slow", and far too much noise to be the answer to anything else.
     org.hibernate.SQL: ${SQL_LOG_LEVEL:INFO}
   pattern:
     correlation: "[%X{traceId:-        }] "
@@ -58,6 +64,11 @@ logging:
       total-size-cap: 500MB
 
 app:
+  logging:
+    # A request that beats this is logged and forgotten; one that does not is logged at WARN
+    # with a SLOW marker, whatever status it returned. Set for a shopkeeper's expectation of
+    # "instant", not for a timeout — the point is to catch the ones that worked but felt broken.
+    slow-request-ms: ${SLOW_REQUEST_MS:1500}
   whatsapp:
     enabled: ${WHATSAPP_ENABLED:false}
     phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}

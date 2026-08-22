@@ -15,6 +15,8 @@ import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.TransactionService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,8 @@ import java.util.stream.Collectors;
 @Service
 public class EventService
 {
+    private static final Logger log = LoggerFactory.getLogger(EventService.class);
+
     /** Openings are seeded and corrected from Settings, not editable/deletable as day entries. */
     private static final Set<TransactionEvent> OPENING_EVENTS = Set.of(
             TransactionEvent.OPENING_BALANCE,
@@ -94,23 +98,36 @@ public class EventService
     {
         EventProcessor processor = this.eventProcessorMap.get(eventRequest.getTransactionEvent());
 
-        if (processor != null)
+        if (processor == null)
         {
-            Transaction transaction = transactionService.create(
-                    Transaction
-                            .builder()
-                            .store(store)
-                            .event(eventRequest.getTransactionEvent())
-                            .party(resolveParty(eventRequest, store))
-                            .bill(eventRequest.getBillNumber())
-                            .eventDate(eventRequest.getBillDate())
-                            .entryDate(LocalDate.now())
-                            .description(cleanDescription(eventRequest))
-                            .build()
-            );
-
-            fanOut(eventRequest, transaction);
+            // Silently doing nothing is the worst answer a write can give: the caller is told
+            // 200 and no entry appears. Until that becomes a refusal, it is at least on record.
+            log.error("no processor registered for event {} — entry dropped for store {}",
+                    eventRequest.getTransactionEvent(), store.getId());
+            return;
         }
+
+        Transaction transaction = transactionService.create(
+                Transaction
+                        .builder()
+                        .store(store)
+                        .event(eventRequest.getTransactionEvent())
+                        .party(resolveParty(eventRequest, store))
+                        .bill(eventRequest.getBillNumber())
+                        .eventDate(eventRequest.getBillDate())
+                        .entryDate(LocalDate.now())
+                        .description(cleanDescription(eventRequest))
+                        .build()
+        );
+
+        log.info("posted {} entry {} in store {} [bill={} date={} party={} cash={} items={}]",
+                transaction.getEvent(), transaction.getId(), store.getId(),
+                eventRequest.getBillNumber(), eventRequest.getBillDate(),
+                transaction.getParty() == null ? null : transaction.getParty().getName(),
+                eventRequest.getCashAmount(),
+                eventRequest.getItems() == null ? 0 : eventRequest.getItems().size());
+
+        fanOut(eventRequest, transaction);
     }
 
     /**
@@ -130,12 +147,16 @@ public class EventService
         // item priced off a batch that no longer exists. Correcting one is delete + re-enter.
         if (transaction.getEvent() == TransactionEvent.PROCESSING)
         {
+            log.warn("refusing to edit entry {}: a PROCESSING batch has to be deleted and re-entered", id);
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "A processed-goods entry cannot be edited — delete it and enter it again");
         }
 
         // orphanRemoval drops the old derived lines; saveAndFlush makes those DELETEs
         // land before the processors insert the fresh ones, so no stale rows survive.
+        log.info("editing {} entry {} in store {}: {} old line(s) dropped and re-derived",
+                transaction.getEvent(), id, store.getId(), transaction.getLines().size());
+
         transaction.getLines().clear();
         transaction.setParty(resolveParty(eventRequest, store));
         transaction.setBill(eventRequest.getBillNumber());
@@ -160,9 +181,15 @@ public class EventService
         Transaction transaction = loadEditable(id, store);
         if (recentOnly && !transaction.isRecent())
         {
+            log.warn("refusing to delete entry {} ({}, entered {}): outside the window and the caller is not the owner",
+                    id, transaction.getEvent(), transaction.getEntryDate());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Only the shop owner can delete entries older than 24 hours");
         }
+
+        log.info("deleting {} entry {} from store {} [bill={} date={} lines={}]",
+                transaction.getEvent(), id, store.getId(), transaction.getBill(),
+                transaction.getEventDate(), transaction.getLines().size());
 
         transactionRepository.delete(transaction);
     }
@@ -184,6 +211,7 @@ public class EventService
             KindProcessor kindProcessor = this.kindProcessorMap.get(kind);
             if (kindProcessor == null)
             {
+                log.error("entry {} names target kind {}, which nothing handles", transaction.getId(), kind);
                 throw new UnsupportedOperationException("kind not supported: " + kind);
             }
             kindProcessor.process(eventRequest, inout, transaction.getEvent(), transaction);

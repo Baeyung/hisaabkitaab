@@ -2,6 +2,8 @@ package io.github.baeyung.hisaabkitaab.service;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -21,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class ExpenseCategoryService
 {
+    private static final Logger log = LoggerFactory.getLogger(ExpenseCategoryService.class);
+
     /**
      * Seeded into every new store. Kept as stable UPPER_SNAKE tokens (not display text)
      * so the frontend's bilingual labels still resolve for the defaults; see event.models.ts.
@@ -53,8 +57,14 @@ public class ExpenseCategoryService
     {
         String wanted = StringUtils.hasText(name) ? name.trim() : UNCATEGORIZED;
         return repository.findByStoreIdAndNameIgnoreCase(store.getId(), wanted)
-                .orElseGet(() -> repository.save(
-                        ExpenseCategory.builder().store(store).name(wanted).build()));
+                .orElseGet(() -> {
+                    // A head nobody chose to create, appearing because of a typo on the expense
+                    // screen, is how the list grows a near-duplicate of one already on it.
+                    log.info("new expense head \"{}\" in store {}, created from an entry",
+                            wanted, store.getId());
+                    return repository.save(
+                            ExpenseCategory.builder().store(store).name(wanted).build());
+                });
     }
 
     /** Removes every expense head of a store — used when the store itself is deleted. */

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class StoreMemberService
 {
+    private static final Logger log = LoggerFactory.getLogger(StoreMemberService.class);
+
     private final StoreAccessRepository storeAccessRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -65,10 +69,12 @@ public class StoreMemberService
 
         if (store.isOwnedBy(user.getId()))
         {
+            log.warn("refusing invite of {} to store {}: that address owns the shop", address, store.getId());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This is your own shop");
         }
         if (storeAccessRepository.findByStoreIdAndUserId(store.getId(), user.getId()).isPresent())
         {
+            log.warn("refusing invite of {} to store {}: they already have access", address, store.getId());
             throw new ResponseStatusException(HttpStatus.CONFLICT, "They already have access to this shop");
         }
 
@@ -83,6 +89,9 @@ public class StoreMemberService
                 .role(role)
                 .build());
 
+        log.info("granted {} to {} on store {} \"{}\" (account {}, {})",
+                role, address, store.getId(), store.getName(), user.getId(), user.getStatus());
+
         inviteEmailService.sendEmail(address, inviterName, store.getName(), role,
                 user.getStatus() == UserStatus.INVITED);
 
@@ -94,6 +103,9 @@ public class StoreMemberService
         requireGrantable(role);
 
         StoreAccess access = access(storeId, userId);
+        log.info("changing role of user {} on store {} from {} to {}",
+                userId, storeId, access.getRole(), role);
+
         access.setRole(role);
         return MemberResponse.of(storeAccessRepository.save(access));
     }
@@ -105,7 +117,9 @@ public class StoreMemberService
      */
     public void remove(String storeId, String userId)
     {
-        storeAccessRepository.delete(access(storeId, userId));
+        StoreAccess access = access(storeId, userId);
+        log.info("revoking {} from user {} on store {}", access.getRole(), userId, storeId);
+        storeAccessRepository.delete(access);
     }
 
     private StoreAccess access(String storeId, String userId)
@@ -119,6 +133,7 @@ public class StoreMemberService
     {
         if (role == StoreRole.OWNER)
         {
+            log.warn("refusing to grant OWNER — a shop has exactly one owner");
             throw new IllegalArgumentException("A shop has exactly one owner, and it cannot be granted");
         }
     }
@@ -132,6 +147,8 @@ public class StoreMemberService
      */
     private User invitedShell(String email)
     {
+        log.info("no account on {} — creating an invited placeholder for it", email);
+
         return userRepository.save(User.builder()
                 .email(email)
                 .name(email)

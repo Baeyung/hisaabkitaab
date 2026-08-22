@@ -2,7 +2,11 @@ package io.github.baeyung.hisaabkitaab.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
@@ -30,13 +34,48 @@ import org.springframework.stereotype.Component;
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint
 {
+    private static final Logger log = LoggerFactory.getLogger(RestAuthenticationEntryPoint.class);
+
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException
     {
+        // The three cases answer the caller differently and are worth telling apart in the
+        // log too: a locked account and a lapsed plan are support calls that the SPA's own
+        // error screen cannot explain on its own, a bad password is not.
+        log.warn("401 on {} {} as \"{}\": {}", request.getMethod(), request.getRequestURI(),
+                attemptedUser(request), authException.getClass().getSimpleName());
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.getWriter().write(body(authException));
+    }
+
+    /**
+     * Who the caller <em>claimed</em> to be. Nothing is authenticated at this point, so there
+     * is no principal to ask — the identifier has to come back out of the credentials that
+     * just failed. Only the identifier: the password half is dropped without being read, and
+     * a malformed header simply yields nothing rather than being reported.
+     */
+    private static String attemptedUser(HttpServletRequest request)
+    {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.regionMatches(true, 0, "Basic ", 0, 6))
+        {
+            return "anonymous";
+        }
+
+        try
+        {
+            String decoded = new String(
+                    Base64.getDecoder().decode(header.substring(6).trim()), StandardCharsets.UTF_8);
+            int separator = decoded.indexOf(':');
+            return separator < 0 ? "unreadable" : decoded.substring(0, separator);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            return "unreadable";
+        }
     }
 
     private String body(AuthenticationException authException)

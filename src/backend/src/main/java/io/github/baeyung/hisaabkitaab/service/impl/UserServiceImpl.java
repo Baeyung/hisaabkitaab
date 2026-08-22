@@ -6,6 +6,8 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +32,14 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class UserServiceImpl implements UserService
 {
+    /**
+     * Never carries a code or a password — only the reason a call ended the way it did.
+     * Several methods below answer the caller with a bare {@code false} on purpose (telling
+     * them <em>why</em> would say whether an account exists), which leaves the log as the only
+     * place the real reason can be written down.
+     */
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
@@ -79,6 +89,7 @@ public class UserServiceImpl implements UserService
         Optional<User> existing = userRepository.findByEmailIgnoreCase(email);
         if (existing.filter(user -> user.getStatus() == UserStatus.ACTIVE).isPresent())
         {
+            log.warn("signup refused for {}: an active account already holds that address", email);
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Account already exists");
         }
 
@@ -93,6 +104,11 @@ public class UserServiceImpl implements UserService
         // An INVITED row is a placeholder a shop owner created when they shared a store with
         // this address. Adopting it — same row, same id — is what carries that access through
         // signup; a fresh account would leave the shop stranded on an id nobody logs in as.
+        if (existing.isPresent())
+        {
+            log.info("signup for {} adopts the invited placeholder {}", email, existing.get().getId());
+        }
+
         User user = existing.orElseGet(User::new);
         user.setContactNumber(request.getContactNumber());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
@@ -112,6 +128,8 @@ public class UserServiceImpl implements UserService
         // was first created: the trial clock should start when a person actually signs up, not
         // when a shop owner typed their address, and not only if they get around to verifying.
         planService.startTrial(saved);
+
+        log.info("signed up account {} ({}), verified={}", saved.getId(), email, verified);
 
         if (!verified)
         {
@@ -133,8 +151,13 @@ public class UserServiceImpl implements UserService
         if (!contactNumber.equals(user.getContactNumber())
                 && userRepository.existsByContactNumber(contactNumber))
         {
+            log.warn("profile update refused for {}: contact number {} is already in use",
+                    userId, contactNumber);
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Contact number already in use");
         }
+
+        log.info("updating profile of {}: name \"{}\" -> \"{}\", contact {} -> {}",
+                userId, user.getName(), request.name().trim(), user.getContactNumber(), contactNumber);
 
         user.setName(request.name().trim());
         user.setContactNumber(contactNumber);
@@ -147,23 +170,36 @@ public class UserServiceImpl implements UserService
         Optional<User> match = userRepository.findByIdentifier(identifier).filter(user -> !user.isVerified());
         if (match.isEmpty())
         {
+            log.warn("verify failed for {}: no unverified account on that identifier", identifier);
             return false;
         }
         User user = match.get();
 
         // No live code: never issued, already used, expired, or burned by too many guesses.
-        // All four mean the same thing to the caller — ask for a new code.
-        if (user.getVerificationToken() == null
-                || user.getVerificationTokenExpiry() == null
-                || user.getVerificationTokenExpiry().isBefore(Instant.now())
-                || user.getVerificationAttempts() >= MAX_OTP_ATTEMPTS)
+        // All four mean the same thing to the caller — ask for a new code. They do not mean the
+        // same thing to whoever is looking into it, so they are told apart here.
+        if (user.getVerificationToken() == null || user.getVerificationTokenExpiry() == null)
         {
+            log.warn("verify failed for {}: no code on file (never issued, or already used)", identifier);
+            return false;
+        }
+        if (user.getVerificationTokenExpiry().isBefore(Instant.now()))
+        {
+            log.warn("verify failed for {}: code expired at {}", identifier, user.getVerificationTokenExpiry());
+            return false;
+        }
+        if (user.getVerificationAttempts() >= MAX_OTP_ATTEMPTS)
+        {
+            log.warn("verify failed for {}: code burned after {} wrong guesses",
+                    identifier, user.getVerificationAttempts());
             return false;
         }
 
         if (!user.getVerificationToken().equals(otp))
         {
             user.setVerificationAttempts(user.getVerificationAttempts() + 1);
+            log.warn("verify failed for {}: wrong code, attempt {} of {}",
+                    identifier, user.getVerificationAttempts(), MAX_OTP_ATTEMPTS);
             if (user.getVerificationAttempts() >= MAX_OTP_ATTEMPTS)
             {
                 user.setVerificationToken(null);
@@ -171,6 +207,8 @@ public class UserServiceImpl implements UserService
             }
             return false;
         }
+
+        log.info("verified account {} ({})", user.getId(), identifier);
 
         user.setVerified(true);
         user.setVerificationToken(null);
@@ -186,30 +224,66 @@ public class UserServiceImpl implements UserService
     @Override
     public void resendVerification(String identifier)
     {
-        userRepository.findByIdentifier(identifier)
-                .filter(user -> !user.isVerified())
-                .filter(user -> cooledDown(user.getVerificationTokenExpiry()))
-                .ifPresent(user -> {
-                    issueVerificationCode(user);
-                    sendVerificationEmail(user);
-                });
+        // The caller is answered 204 whether or not anything was sent — deliberately, so a
+        // stranger cannot probe for accounts — which is also why "my code never arrived" can
+        // only ever be answered from here.
+        Optional<User> match = userRepository.findByIdentifier(identifier);
+        if (match.isEmpty())
+        {
+            log.warn("resend suppressed for {}: no account on that identifier", identifier);
+            return;
+        }
+
+        User user = match.get();
+        if (user.isVerified())
+        {
+            log.warn("resend suppressed for {}: already verified", identifier);
+            return;
+        }
+        if (!cooledDown(user.getVerificationTokenExpiry()))
+        {
+            log.warn("resend suppressed for {}: still inside the {}s cooldown",
+                    identifier, RESEND_COOLDOWN.toSeconds());
+            return;
+        }
+
+        log.info("issuing a fresh verification code for {}", identifier);
+        issueVerificationCode(user);
+        sendVerificationEmail(user);
     }
 
     @Override
     public void requestPasswordReset(String email)
     {
-        userRepository.findByEmailIgnoreCase(email)
-                .filter(user -> user.getEmail() != null && !user.getEmail().isBlank())
-                // An INVITED placeholder has no password to reset — letting one through would
-                // hand the shop access waiting on that address to whoever asked for the code.
-                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
-                .filter(user -> cooledDown(user.getResetTokenExpiry()))
-                .ifPresent(user -> {
-                    user.setResetToken(sixDigitCode());
-                    user.setResetTokenExpiry(Instant.now().plus(OTP_TTL));
-                    user.setResetAttempts(0);
-                    passwordResetEmailService.sendEmail(user.getEmail(), user.getName(), user.getResetToken());
-                });
+        // Suppressed silently, and so logged, for the same reason as resendVerification.
+        Optional<User> match = userRepository.findByEmailIgnoreCase(email)
+                .filter(user -> user.getEmail() != null && !user.getEmail().isBlank());
+        if (match.isEmpty())
+        {
+            log.warn("reset suppressed for {}: no account with a usable address", email);
+            return;
+        }
+
+        User user = match.get();
+        // An INVITED placeholder has no password to reset — letting one through would
+        // hand the shop access waiting on that address to whoever asked for the code.
+        if (user.getStatus() != UserStatus.ACTIVE)
+        {
+            log.warn("reset suppressed for {}: the account is {}, not ACTIVE", email, user.getStatus());
+            return;
+        }
+        if (!cooledDown(user.getResetTokenExpiry()))
+        {
+            log.warn("reset suppressed for {}: still inside the {}s cooldown",
+                    email, RESEND_COOLDOWN.toSeconds());
+            return;
+        }
+
+        log.info("issuing a password reset code for {}", email);
+        user.setResetToken(sixDigitCode());
+        user.setResetTokenExpiry(Instant.now().plus(OTP_TTL));
+        user.setResetAttempts(0);
+        passwordResetEmailService.sendEmail(user.getEmail(), user.getName(), user.getResetToken());
     }
 
     @Override
@@ -233,6 +307,8 @@ public class UserServiceImpl implements UserService
                     // has been locked out by too many wrong passwords.
                     user.setFailedLoginAttempts(0);
                     user.setLastFailedCredentialHash(null);
+                    log.info("password reset completed for {} (account {}) — lockout cleared",
+                            email, user.getId());
                     return true;
                 })
                 .orElse(false);
@@ -248,21 +324,33 @@ public class UserServiceImpl implements UserService
         Optional<User> match = userRepository.findByEmailIgnoreCase(email);
         if (match.isEmpty())
         {
+            log.warn("reset code rejected for {}: no account on that address", email);
             return Optional.empty();
         }
         User user = match.get();
 
-        if (user.getResetToken() == null
-                || user.getResetTokenExpiry() == null
-                || user.getResetTokenExpiry().isBefore(Instant.now())
-                || user.getResetAttempts() >= MAX_OTP_ATTEMPTS)
+        if (user.getResetToken() == null || user.getResetTokenExpiry() == null)
         {
+            log.warn("reset code rejected for {}: no code on file (never issued, or already used)", email);
+            return Optional.empty();
+        }
+        if (user.getResetTokenExpiry().isBefore(Instant.now()))
+        {
+            log.warn("reset code rejected for {}: expired at {}", email, user.getResetTokenExpiry());
+            return Optional.empty();
+        }
+        if (user.getResetAttempts() >= MAX_OTP_ATTEMPTS)
+        {
+            log.warn("reset code rejected for {}: burned after {} wrong guesses",
+                    email, user.getResetAttempts());
             return Optional.empty();
         }
 
         if (!user.getResetToken().equals(otp))
         {
             user.setResetAttempts(user.getResetAttempts() + 1);
+            log.warn("reset code rejected for {}: wrong code, attempt {} of {}",
+                    email, user.getResetAttempts(), MAX_OTP_ATTEMPTS);
             if (user.getResetAttempts() >= MAX_OTP_ATTEMPTS)
             {
                 user.setResetToken(null);
@@ -308,6 +396,7 @@ public class UserServiceImpl implements UserService
     {
         if (user.getEmail() == null || user.getEmail().isBlank())
         {
+            log.warn("no verification email sent for account {}: no address on file", user.getId());
             return;
         }
         verificationEmailService.sendEmail(user.getEmail(), user.getName(), user.getVerificationToken());
