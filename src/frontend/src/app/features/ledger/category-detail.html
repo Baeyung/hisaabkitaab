@@ -53,14 +53,20 @@
               <th scope="col" class="end">{{ locale.t('ledger.category.detail.col.running') }}</th>
             </tr>
           </thead>
-          <tbody>
-            @for (row of g.rows; track row.transactionId + row.occurredAt) {
+          <tbody [appRowWindow]="win">
+            @if (win.padTop(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="4" [style.height.px]="pad"></td></tr>
+            }
+            @for (row of win.rows(); track row.transactionId + row.occurredAt) {
               <tr>
                 <td class="num">{{ row.date }}</td>
                 <td class="rm-cell-head">{{ locale.describe('EXPENSE', null, row.amount) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</td>
                 <td class="end num amt--out rm-cell-amt">{{ locale.money(row.amount) }}</td>
                 <td class="end num" [attr.data-label]="locale.t('ledger.category.detail.col.running')">{{ locale.money(row.runningTotal) }}</td>
               </tr>
+            }
+            @if (win.padBottom(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="4" [style.height.px]="pad"></td></tr>
             }
           </tbody>
         </table>

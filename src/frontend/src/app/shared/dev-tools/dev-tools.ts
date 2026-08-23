@@ -91,22 +91,39 @@ export class DevTools implements OnDestroy {
   /**
    * Render one report and put it in front of whoever asked.
    *
-   * The new tab is attempted but never relied on: the PDF arrives after an await long enough
-   * that a browser no longer counts the click as the thing that opened it, so a blocked popup
-   * is normal rather than exceptional. Every render is listed in the panel either way, which
-   * is also what makes two renders comparable side by side.
+   * The tab is opened here, before the await, and pointed at the PDF once it arrives — not
+   * opened at the end with the finished blob. A browser only lets a click open a window for a
+   * few seconds after the click, and a big khata takes the renderer the better part of half a
+   * minute, so opening it afterwards is a popup by then and is refused: the report appears in
+   * the list below, having plainly been rendered, and no tab ever shows up. Claiming the tab
+   * while the click is still the reason for it is the difference.
+   *
+   * Held open on failure only long enough to say so, then closed — a blank tab left behind
+   * reads as the PDF that never came. Every render is still listed in the panel either way,
+   * which is what makes two of them comparable side by side.
    */
   private async render(label: string, run: () => Promise<Blob>): Promise<void> {
     if (this.busy()) return;
+
+    const tab = window.open('', '_blank');
+    tab?.document.write(`<title>${label}</title><body style="font:14px system-ui;padding:24px">Rendering ${label}…`);
+    tab?.document.close();
 
     this.busy.set(label);
     this.error.set(null);
     try {
       const url = URL.createObjectURL(await run());
       this.rendered.update((list) => [{ label, url }, ...list]);
-      window.open(url, '_blank');
+      if (tab && !tab.closed) {
+        tab.location.href = url;
+      } else {
+        // The tab was refused outright, or somebody closed it while we waited. One more try,
+        // which may well be blocked too — hence the list, which never is.
+        window.open(url, '_blank');
+      }
     } catch (e) {
       this.error.set(await message(e));
+      tab?.close();
     } finally {
       this.busy.set(null);
     }

@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
@@ -8,6 +8,7 @@ import { expenseCategoryLabel } from '../../core/store/event.models';
 import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { AmountLegend } from '../../shared/amount-legend';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 
 /**
  * One expense category's statement: every expense filed under it (parts, bijli,
@@ -17,7 +18,7 @@ import { AmountLegend } from '../../shared/amount-legend';
  */
 @Component({
   selector: 'app-category-detail',
-  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend],
+  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend, RowWindowDirective],
   templateUrl: './category-detail.html',
 })
 export class CategoryDetail {
@@ -33,6 +34,12 @@ export class CategoryDetail {
     expenseCategoryLabel(name, (k) => this.locale.t(k));
 
   protected readonly group = signal<ExpenseCategoryGroup | null>(null);
+  /**
+   * The rows the table renders. A busy shop's bijli or salaries head runs to five figures
+   * over a few years, and this screen is the whole of one — see shared/row-window.ts.
+   */
+  protected readonly win = rowWindow(computed(() => this.group()?.rows ?? []));
+
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly notFound = signal(false);

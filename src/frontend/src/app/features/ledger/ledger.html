@@ -80,8 +80,11 @@
               <th scope="col" class="end">{{ locale.t('ledger.col.balance') }}</th>
             </tr>
           </thead>
-          <tbody>
-            @for (party of filtered(); track party.partyId) {
+          <tbody [appRowWindow]="win">
+            @if (win.padTop(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="3" [style.height.px]="pad"></td></tr>
+            }
+            @for (party of win.rows(); track party.partyId) {
               <tr class="rm-rowlink" (click)="open(party.partyId)">
                 <td class="rm-cell-head">
                   <a [routerLink]="stores.link('ledger', party.partyId)" class="rm-tbl__name">{{ party.name }}</a>
@@ -94,7 +97,11 @@
                   <span class="rm-tbl__meta">{{ locale.t(directionKey(party.balance.direction)) }}</span>
                 </td>
               </tr>
-            } @empty {
+            }
+            @if (win.padBottom(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="3" [style.height.px]="pad"></td></tr>
+            }
+            @if (!filtered().length) {
               <tr>
                 <td colspan="3">{{ locale.t(emptyKey()) }}</td>
               </tr>

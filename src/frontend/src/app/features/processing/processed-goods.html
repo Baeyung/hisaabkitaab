@@ -44,8 +44,11 @@
               <th scope="col" class="rm-noprint"></th>
             </tr>
           </thead>
-          <tbody>
-            @for (batch of batches(); track batch.transactionId) {
+          <tbody [appRowWindow]="win">
+            @if (win.padTop(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="6" [style.height.px]="pad"></td></tr>
+            }
+            @for (batch of win.rows(); track batch.transactionId) {
               <tr class="rm-rowlink" (click)="open(batch.transactionId)">
                 <td class="rm-cell-head">
                   <a
@@ -109,6 +112,9 @@
                   </td>
                 </tr>
               }
+            }
+            @if (win.padBottom(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="6" [style.height.px]="pad"></td></tr>
             }
           </tbody>
         </table>

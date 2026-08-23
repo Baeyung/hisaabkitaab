@@ -514,6 +514,21 @@ html[dir='rtl'] select.rm-input {
 .rm-tablewrap {
   overflow-x: auto;
 }
+
+/* The two rows a windowed table stands on (see shared/row-window.ts): they hold the space
+   of the rows not currently rendered, so the scrollbar measures the whole khata and not the
+   forty rows of it in the DOM. Everything a row is normally given — borders, padding, the
+   hover and card rules — has to come back off, or the spacers would read as blank entries.
+   They never survive into print: a capture renders every row and leaves no gap to fill. */
+.rm-tbl tbody tr.rm-rowspacer,
+.rm-tbl tbody tr.rm-rowspacer td {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.rm-tbl tbody tr.rm-rowspacer {
+  pointer-events: none;
+}
 .rm-tbl {
   width: 100%;
   min-width: 640px;

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -8,6 +8,7 @@ import { Balance } from '../../core/store/balance.models';
 import { PartyService } from '../../core/store/party.service';
 import { OpeningDirection, Party, PartyDraft } from '../../core/store/party.models';
 import { toDigits } from '../../shared/digits-only';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { PhoneField } from '../../shared/phone-field/phone-field';
 
 /** Form-facing shape: contact/address are non-null strings for the inputs (blank → null on send). */
@@ -33,7 +34,7 @@ const EMPTY_FORM: PartyForm = { name: '', contact: '', address: '', openingAmoun
  */
 @Component({
   selector: 'app-party',
-  imports: [FormField, NgTemplateOutlet, PhoneField],
+  imports: [FormField, NgTemplateOutlet, PhoneField, RowWindowDirective],
   templateUrl: './party.html',
   styleUrl: './party.css',
 })
@@ -51,6 +52,19 @@ export class SettingsParty {
   protected readonly adding = signal(false);
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly openingId = signal<string | null>(null);
+
+  /**
+   * The rows the table renders. Windowing stops while any row has something of its own
+   * open — the edit form, the delete prompt, the opening-balance box — for the same reason
+   * as the items table: those rows hold what was typed, and only in the DOM.
+   */
+  protected readonly win = rowWindow(computed(() => this.parties() ?? []), {
+    suspendWhile: () =>
+      this.adding() ||
+      this.editingId() !== null ||
+      this.confirmingId() !== null ||
+      this.openingId() !== null,
+  });
   protected readonly openingAmount = signal<number | null>(null);
   protected readonly openingDir = signal<OpeningDirection>('THEY_OWE_YOU');
   protected readonly saving = signal(false);

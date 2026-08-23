@@ -63,6 +63,33 @@ function setup(options: { fail?: unknown } = {}) {
   return { fixture, panel: fixture.componentInstance as unknown as Internals, asked };
 }
 
+/**
+ * A fake tab that remembers when it was asked for, so a test can tell "opened on the click"
+ * from "opened once the PDF came back" — which is the whole of what a popup blocker cares
+ * about, and is not otherwise visible from the outside.
+ */
+function withTabRecorder(renderStarted: () => boolean) {
+  const opened: { whileRendering: boolean; href: string | null }[] = [];
+  window.open = () => {
+    const tab = {
+      closed: false,
+      document: { write: () => {}, close: () => {} },
+      location: {
+        set href(value: string) {
+          opened[opened.length - 1].href = value;
+        },
+        get href() {
+          return opened[opened.length - 1].href ?? '';
+        },
+      },
+      close: () => {},
+    };
+    opened.push({ whileRendering: !renderStarted(), href: null });
+    return tab as unknown as Window;
+  };
+  return opened;
+}
+
 describe('DevTools panel', () => {
   it('starts closed, with the gear as the only thing on screen', () => {
     const { fixture, panel } = setup();
@@ -145,5 +172,52 @@ describe('DevToolsService', () => {
     // for this one.
     expect(enabledWith('1')).toBe(false);
     expect(enabledWith(null)).toBe(false);
+  });
+
+  it('opens the tab on the click, not once the PDF has come back', async () => {
+    let settled = false;
+    let release: (blob: Blob) => void = () => {};
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: DevToolsService,
+          useValue: {
+            enabled: signal(true),
+            daily: () =>
+              new Promise<Blob>((resolve) => {
+                release = (blob) => {
+                  settled = true;
+                  resolve(blob);
+                };
+              }),
+            reminder: () => Promise.resolve(new Blob()),
+          },
+        },
+        { provide: PartyService, useValue: { list: () => Promise.resolve(PARTIES) } },
+        { provide: StoreService, useValue: { current: () => ({ name: 'Rahat Kirana' }) } },
+        { provide: LocaleService, useValue: { t: (key: string) => key, locale: () => 'en' } },
+      ],
+    });
+    URL.createObjectURL = () => 'blob:rendered';
+    URL.revokeObjectURL = () => {};
+    const opened = withTabRecorder(() => settled);
+
+    const fixture = TestBed.createComponent(DevTools);
+    const panel = fixture.componentInstance as unknown as Internals;
+    const done = panel.daily();
+
+    // The renderer has not answered yet, and the tab must already exist — after the await a
+    // browser no longer treats it as the click's doing and refuses it.
+    expect(opened.length).toBe(1);
+    expect(opened[0].whileRendering).toBe(true);
+
+    release(new Blob());
+    await done;
+
+    expect(opened.length).toBe(1); // the same tab, pointed at the PDF — not a second one
+    expect(opened[0].href).toBe('blob:rendered');
   });
 });

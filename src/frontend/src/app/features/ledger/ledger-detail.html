@@ -136,8 +136,13 @@
                 </th>
               </tr>
             </thead>
-            <tbody>
-              @for (row of filteredRows(); track row.transactionId + row.occurredAt) {
+            <tbody [appRowWindow]="win">
+              @if (win.padTop(); as pad) {
+                <tr class="rm-rowspacer" aria-hidden="true">
+                  <td colspan="7" [style.height.px]="pad"></td>
+                </tr>
+              }
+              @for (row of win.rows(); track row.transactionId + row.occurredAt) {
                 <tr
                   [class.rm-rowlink]="!!detailLink(row.event, row.transactionId)"
                   [class.rm-row--cleared]="row.cleared === true"
@@ -331,6 +336,11 @@
               } @empty {
                 <tr>
                   <td colspan="7">{{ locale.t('report.filtered.none') }}</td>
+                </tr>
+              }
+              @if (win.padBottom(); as pad) {
+                <tr class="rm-rowspacer" aria-hidden="true">
+                  <td colspan="7" [style.height.px]="pad"></td>
                 </tr>
               }
             </tbody>

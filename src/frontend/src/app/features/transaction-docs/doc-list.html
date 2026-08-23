@@ -113,8 +113,11 @@
               <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t(config().labels.colActions) }}</span></th>
             </tr>
           </thead>
-          <tbody>
-            @for (bill of filtered(); track bill.id) {
+          <tbody [appRowWindow]="win">
+            @if (win.padTop(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="7" [style.height.px]="pad"></td></tr>
+            }
+            @for (bill of win.rows(); track bill.id) {
               <tr class="rm-rowlink" (click)="open(bill.id)">
                 <td class="rm-cell-head">
                   <a [routerLink]="docLink(bill.id)" class="rm-tbl__name num">
@@ -198,7 +201,11 @@
                   </td>
                 </tr>
               }
-            } @empty {
+            }
+            @if (win.padBottom(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="7" [style.height.px]="pad"></td></tr>
+            }
+            @if (!filtered().length) {
               <tr>
                 <td colspan="7">{{ locale.t(config().labels.searchNone) }}</td>
               </tr>

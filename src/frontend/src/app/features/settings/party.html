@@ -44,12 +44,15 @@
             <th scope="col" class="actions"><span class="sr-only">{{ locale.t('settings.party.col.actions') }}</span></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody [appRowWindow]="win">
+          @if (win.padTop(); as pad) {
+            <tr class="rm-rowspacer" aria-hidden="true"><td colspan="5" [style.height.px]="pad"></td></tr>
+          }
           @if (adding()) {
             <ng-container [ngTemplateOutlet]="editRow" />
           }
 
-          @for (party of parties(); track party.id) {
+          @for (party of win.rows(); track party.id) {
             @if (editingId() === party.id) {
               <ng-container [ngTemplateOutlet]="editRow" />
             } @else {
@@ -177,6 +180,9 @@
                 </tr>
               }
             }
+          }
+          @if (win.padBottom(); as pad) {
+            <tr class="rm-rowspacer" aria-hidden="true"><td colspan="5" [style.height.px]="pad"></td></tr>
           }
         </tbody>
       </table>

@@ -9,6 +9,7 @@ import { StoreService } from '../../core/store/store.service';
 import { Balance } from '../../core/store/balance.models';
 import { BillDetail, BillSummary } from '../../core/store/bill.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { KhataAmount } from '../../shared/khata-amount';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
@@ -47,6 +48,7 @@ import { AmountLegend } from '../../shared/amount-legend';
     DateField,
     KhataAmount,
     AmountLegend,
+    RowWindowDirective,
   ],
   templateUrl: './doc-list.html',
 })
@@ -154,6 +156,15 @@ export class DocList {
           (bill.billNumber ?? '').toLowerCase().includes(q) ||
           (bill.partyName ?? '').toLowerCase().includes(q)),
     );
+  });
+
+  /**
+   * The rows the table renders — a year of bills runs to five figures. Windowing pauses
+   * while a delete is being confirmed: that prompt is a row of its own, and scrolling it
+   * out from under the shopkeeper mid-question would cancel it without saying so.
+   */
+  protected readonly win = rowWindow(this.filtered, {
+    suspendWhile: () => this.confirmingId() !== null,
   });
 
   constructor() {

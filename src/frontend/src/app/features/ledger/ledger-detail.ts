@@ -14,6 +14,7 @@ import { directionClass, directionKey, khataAmount } from '../../shared/balance.
 import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import {
   DOC_TOTAL_KEYS,
   ExpandableDocs,
@@ -34,7 +35,15 @@ const SETTLED: Balance = { amount: 0, direction: 'SETTLED' };
  */
 @Component({
   selector: 'app-ledger-detail',
-  imports: [RouterLink, PrintHeader, Select, DateField, WhatsAppButton, AmountLegend],
+  imports: [
+    RouterLink,
+    PrintHeader,
+    Select,
+    DateField,
+    WhatsAppButton,
+    AmountLegend,
+    RowWindowDirective,
+  ],
   templateUrl: './ledger-detail.html',
 })
 export class LedgerDetail {
@@ -90,6 +99,14 @@ export class LedgerDetail {
         (!from || row.date >= from) && (!to || row.date <= to) && (!event || row.event === event),
     );
   });
+
+  /**
+   * The slice of {@link filteredRows} the table actually renders. A shop's oldest customer
+   * runs to five figures of entries, and building all of them cost about a second and a half
+   * of DOM before the screen could be read. Everything that reads the statement as a whole —
+   * the stat cards below, the print/send expansion — still reads `filteredRows`.
+   */
+  protected readonly win = rowWindow(this.filteredRows);
 
   /**
    * The stat cards, over the filtered rows so they always agree with the table

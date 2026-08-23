@@ -6,6 +6,7 @@ import { StoreService } from '../../core/store/store.service';
 import { CashbookDay, TransactionEventKind } from '../../core/store/cashbook.models';
 import { EventService } from '../../core/store/event.service';
 import { todayIso } from '../../shared/date.util';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { urlFilters } from '../../shared/url-filters';
 import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
@@ -38,6 +39,7 @@ import { AmountLegend } from '../../shared/amount-legend';
     WhatsAppButton,
     KhataAmount,
     AmountLegend,
+    RowWindowDirective,
   ],
   templateUrl: './cashbook.html',
 })
@@ -55,6 +57,15 @@ export class Cashbook {
   /** The day (or span) being read, carried in the URL so Back walks it back. */
   protected readonly filters = urlFilters({ from: todayIso(), to: todayIso() });
   protected readonly data = signal<CashbookDay | null>(null);
+
+  /**
+   * The rows the table renders. A day is short, but the range picker will happily ask for a
+   * year of a busy shop's entries. Windowing pauses while a delete is being confirmed — that
+   * prompt is a row of its own, and scrolling it away would cancel it silently.
+   */
+  protected readonly win = rowWindow(computed(() => this.data()?.rows ?? []), {
+    suspendWhile: () => this.pendingDelete() !== null,
+  });
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
 

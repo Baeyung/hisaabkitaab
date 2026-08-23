@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
@@ -22,7 +23,7 @@ import { ProcessingRow } from '../../core/store/processing.models';
  */
 @Component({
   selector: 'app-processed-goods',
-  imports: [RouterLink],
+  imports: [RouterLink, RowWindowDirective],
   templateUrl: './processed-goods.html',
 })
 export class ProcessedGoods {
@@ -37,6 +38,14 @@ export class ProcessedGoods {
   protected readonly loadError = signal(false);
 
   protected readonly confirmingId = signal<string | null>(null);
+
+  /**
+   * The rows the table renders. Windowing pauses while a delete is being confirmed — that
+   * prompt is a row of its own, and scrolling it away would cancel it silently.
+   */
+  protected readonly win = rowWindow(computed(() => this.batches() ?? []), {
+    suspendWhile: () => this.confirmingId() !== null,
+  });
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<TranslationKey | null>(null);
 

@@ -3,6 +3,13 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+
+# Same reason as the frontend's Dockerfile: this build inlines the Google Fonts stylesheet,
+# fonts.googleapis.com resolves to both an IPv4 and an IPv6 address, the bridge network has
+# no working IPv6 route, and Node's Happy Eyeballs abandons the connection instead of
+# falling back. Without this the build fails with ETIMEDOUT.
+ENV NODE_OPTIONS=--no-network-family-autoselection
+
 RUN npm run build
 
 FROM nginx:alpine

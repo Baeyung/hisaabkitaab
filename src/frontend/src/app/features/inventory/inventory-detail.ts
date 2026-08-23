@@ -1,10 +1,11 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { InventoryService } from '../../core/store/inventory.service';
 import { StoreService } from '../../core/store/store.service';
 import { ItemMovement } from '../../core/store/inventory.models';
 import { AmountLegend } from '../../shared/amount-legend';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 
 /**
  * One item's movement history with the running on-hand quantity. The item id
@@ -12,7 +13,7 @@ import { AmountLegend } from '../../shared/amount-legend';
  */
 @Component({
   selector: 'app-inventory-detail',
-  imports: [RouterLink, AmountLegend],
+  imports: [RouterLink, AmountLegend, RowWindowDirective],
   templateUrl: './inventory-detail.html',
 })
 export class InventoryDetail {
@@ -24,6 +25,12 @@ export class InventoryDetail {
   private readonly api = inject(InventoryService);
 
   protected readonly movement = signal<ItemMovement | null>(null);
+
+  /**
+   * The rows the table renders. A cloth a shop moves every day runs to thousands of
+   * movements — see shared/row-window.ts.
+   */
+  protected readonly win = rowWindow(computed(() => this.movement()?.rows ?? []));
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly notFound = signal(false);

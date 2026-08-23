@@ -59,8 +59,13 @@
                 }
               </tr>
             </thead>
-            <tbody>
-              @for (row of mv.rows; track row.transactionId + row.occurredAt) {
+            <tbody [appRowWindow]="win">
+              @if (win.padTop(); as pad) {
+                <tr class="rm-rowspacer" aria-hidden="true">
+                  <td [attr.colspan]="mv.service ? 3 : 4" [style.height.px]="pad"></td>
+                </tr>
+              }
+              @for (row of win.rows(); track row.transactionId + row.occurredAt) {
                 <tr>
                   <td class="num">{{ row.date }}</td>
                   <td class="rm-cell-head">{{ locale.describe(row.event) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</td>
@@ -70,6 +75,11 @@
                   @if (!mv.service) {
                     <td class="end num" [attr.data-label]="locale.t('inventory.detail.col.running')">{{ locale.formatNumber(row.runningStock ?? 0) }}</td>
                   }
+                </tr>
+              }
+              @if (win.padBottom(); as pad) {
+                <tr class="rm-rowspacer" aria-hidden="true">
+                  <td [attr.colspan]="mv.service ? 3 : 4" [style.height.px]="pad"></td>
                 </tr>
               }
             </tbody>

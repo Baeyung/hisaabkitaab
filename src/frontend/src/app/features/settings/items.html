@@ -46,12 +46,15 @@
             <th scope="col" class="actions"><span class="sr-only">{{ locale.t('settings.items.col.actions') }}</span></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody [appRowWindow]="win">
+          @if (win.padTop(); as pad) {
+            <tr class="rm-rowspacer" aria-hidden="true"><td colspan="7" [style.height.px]="pad"></td></tr>
+          }
           @if (adding()) {
             <ng-container [ngTemplateOutlet]="editRow" />
           }
 
-          @for (item of items(); track item.id) {
+          @for (item of win.rows(); track item.id) {
             @if (editingId() === item.id) {
               <ng-container [ngTemplateOutlet]="editRow" />
             } @else {
@@ -198,6 +201,9 @@
                 </tr>
               }
             }
+          }
+          @if (win.padBottom(); as pad) {
+            <tr class="rm-rowspacer" aria-hidden="true"><td colspan="7" [style.height.px]="pad"></td></tr>
           }
         </tbody>
       </table>

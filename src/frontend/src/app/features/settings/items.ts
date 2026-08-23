@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -8,6 +8,7 @@ import { StoreItemService } from '../../core/store/store-item.service';
 import { StoreItem, StoreItemDraft } from '../../core/store/store-item.models';
 import { UnitConversionService } from '../../core/units/unit-conversion.service';
 import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { UnitNote } from '../../shared/conversion-slip/unit-note';
 import { UNIT_SUGGESTIONS, convertQty, sameUnit } from '../../core/units/units';
 
@@ -42,7 +43,7 @@ const EMPTY_FORM: ItemForm = {
  */
 @Component({
   selector: 'app-items',
-  imports: [FormField, NgTemplateOutlet, UnitNote],
+  imports: [FormField, NgTemplateOutlet, UnitNote, RowWindowDirective],
   templateUrl: './items.html',
   styleUrl: './items.css',
 })
@@ -62,6 +63,20 @@ export class SettingsItems {
   protected readonly adding = signal(false);
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly openingId = signal<string | null>(null);
+
+  /**
+   * The rows the table renders — a cloth shop's catalogue runs to a couple of thousand.
+   * Windowing stops the moment any row opens something of its own: the edit form, the
+   * delete prompt, the opening-stock box. Each is a `<tr>` holding state that only exists
+   * in the DOM, and a window that scrolled it away would take what was typed with it.
+   */
+  protected readonly win = rowWindow(computed(() => this.items() ?? []), {
+    suspendWhile: () =>
+      this.adding() ||
+      this.editingId() !== null ||
+      this.confirmingId() !== null ||
+      this.openingId() !== null,
+  });
   protected readonly openingQty = signal<number | null>(null);
   /**
    * The unit the opening quantity is being counted in, prefilled from the item. Opening stock

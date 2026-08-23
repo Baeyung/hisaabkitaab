@@ -98,8 +98,11 @@
                 <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t('bill.col.actions') }}</span></th>
               </tr>
             </thead>
-            <tbody>
-              @for (row of cb.rows; track row.transactionId + row.occurredAt) {
+            <tbody [appRowWindow]="win">
+              @if (win.padTop(); as pad) {
+                <tr class="rm-rowspacer" aria-hidden="true"><td colspan="6" [style.height.px]="pad"></td></tr>
+              }
+              @for (row of win.rows(); track row.transactionId + row.occurredAt) {
                 <tr [class.rm-rowlink]="!!detailLink(row.event, row.transactionId)" (click)="openDetail(row.event, row.transactionId)">
                   <td class="num">{{ time(row.occurredAt) }}</td>
                   <td class="rm-cell-head">
@@ -182,6 +185,9 @@
                     <td class="rm-noprint"></td>
                   </tr>
                 }
+              }
+              @if (win.padBottom(); as pad) {
+                <tr class="rm-rowspacer" aria-hidden="true"><td colspan="6" [style.height.px]="pad"></td></tr>
               }
             </tbody>
           </table>

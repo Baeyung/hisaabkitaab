@@ -5,6 +5,7 @@ import { InventoryService } from '../../core/store/inventory.service';
 import { StoreService } from '../../core/store/store.service';
 import { ItemStockRow } from '../../core/store/inventory.models';
 import { PrintHeader } from '../../shared/print-header';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { AmountLegend } from '../../shared/amount-legend';
 
@@ -14,7 +15,7 @@ import { AmountLegend } from '../../shared/amount-legend';
  */
 @Component({
   selector: 'app-inventory',
-  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend],
+  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend, RowWindowDirective],
   templateUrl: './inventory.html',
 })
 export class Inventory {
@@ -33,6 +34,9 @@ export class Inventory {
     const all = this.items() ?? [];
     return q ? all.filter((item) => item.name.toLowerCase().includes(q)) : all;
   });
+
+  /** The rows the table renders — a shop's catalogue runs to thousands. See shared/row-window.ts. */
+  protected readonly win = rowWindow(this.filtered);
 
   constructor() {
     void this.load();

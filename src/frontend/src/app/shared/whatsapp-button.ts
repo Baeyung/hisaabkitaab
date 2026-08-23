@@ -11,6 +11,7 @@ import { ShareRecipient, ShareTarget } from '../core/store/whatsapp.models';
 import { PhoneField } from './phone-field/phone-field';
 import { todayIso } from './date.util';
 import { printableHtml } from './printable-html';
+import { CaptureModeService } from './capture-mode.service';
 
 type State = 'idle' | 'sending' | 'sent' | 'partial' | 'error';
 
@@ -230,6 +231,7 @@ export class WhatsAppButton {
   private readonly api = inject(WhatsAppService);
   private readonly parties = inject(PartyService);
   private readonly plan = inject(PlanService);
+  private readonly capture = inject(CaptureModeService);
   private readonly dlg = viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
 
   protected readonly state = signal<State>('idle');
@@ -467,9 +469,14 @@ export class WhatsAppButton {
         this.state.set('idle');
         return;
       }
+      // Snapshot with every row rendered. A windowed table holds only what the viewport
+      // needed (see shared/row-window.ts), and this clones the live DOM — so without
+      // this the party would be sent a statement that stops wherever the shopkeeper
+      // happened to have scrolled to, looking complete.
+      const html = this.capture.around(() => printableHtml());
       const result = await this.api.share(
         recipients,
-        printableHtml(),
+        html,
         this.filename(),
         this.action(),
         this.locale.locale(),

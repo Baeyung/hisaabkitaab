@@ -8,6 +8,7 @@ import { BalanceDirection } from '../../core/store/balance.models';
 import { ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.models';
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
+import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { urlFilters } from '../../shared/url-filters';
 import { Combobox } from '../../shared/combobox/combobox';
 import { Select } from '../../shared/select/select';
@@ -23,7 +24,15 @@ import { AmountLegend } from '../../shared/amount-legend';
  */
 @Component({
   selector: 'app-ledger',
-  imports: [RouterLink, Combobox, Select, PrintHeader, WhatsAppButton, AmountLegend],
+  imports: [
+    RouterLink,
+    Combobox,
+    Select,
+    PrintHeader,
+    WhatsAppButton,
+    AmountLegend,
+    RowWindowDirective,
+  ],
   templateUrl: './ledger.html',
 })
 export class Ledger {
@@ -75,6 +84,9 @@ export class Ledger {
       ? rows.filter((p) => p.name.toLowerCase().includes(q) || (p.contact ?? '').includes(q))
       : rows;
   });
+
+  /** The rows the table renders — a wholesaler's khata runs to hundreds of parties. */
+  protected readonly win = rowWindow(this.filtered);
 
   /** "Nothing matched" reads differently when it was the search that emptied the table. */
   protected readonly emptyKey = computed<TranslationKey>(() =>

@@ -65,8 +65,11 @@
               <th scope="col" class="end">{{ locale.t('inventory.col.sale') }}</th>
             </tr>
           </thead>
-          <tbody>
-            @for (item of filtered(); track item.itemId) {
+          <tbody [appRowWindow]="win">
+            @if (win.padTop(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="3" [style.height.px]="pad"></td></tr>
+            }
+            @for (item of win.rows(); track item.itemId) {
               <tr class="rm-rowlink" (click)="open(item.itemId)">
                 <td class="rm-cell-head">
                   <a [routerLink]="stores.link('inventory', item.itemId)" class="rm-tbl__name">{{ item.name }}</a>
@@ -83,7 +86,11 @@
                 </td>
                 <td class="end num" [attr.data-label]="locale.t('inventory.col.sale')">{{ item.salePrice != null ? locale.money(item.salePrice) : '—' }}</td>
               </tr>
-            } @empty {
+            }
+            @if (win.padBottom(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="3" [style.height.px]="pad"></td></tr>
+            }
+            @if (!filtered().length) {
               <tr>
                 <td colspan="3">{{ locale.t('inventory.search.none') }}</td>
               </tr>

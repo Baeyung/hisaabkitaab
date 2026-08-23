@@ -27,6 +27,8 @@ services:
     # on renderer, so declaring it would close a cycle compose refuses to start. Nothing is
     # lost — the name is resolved when a report is rendered, not at boot, and the first one is
     # a scheduled minute away.
+    ports:
+      - "3000:3000"
 
   backend:
     build: ./src/backend
