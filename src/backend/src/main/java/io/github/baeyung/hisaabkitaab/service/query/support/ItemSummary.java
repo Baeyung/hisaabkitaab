@@ -24,8 +24,9 @@ public final class ItemSummary
     /** Null when the transaction moves no goods — cash entries, expenses, opening balances. */
     public static String of(Transaction transaction)
     {
-        // ponytail: touches the transaction's line collection per row (lazy load).
-        // Add a fetch join to the row queries if a long cashbook range gets slow.
+        // Touches the transaction's line collection per row. That collection is batched
+        // (Transaction.lines), which is the fix here — a fetch join on the row queries would
+        // repeat the line they select as a root once per sibling and double-count balances.
         // A PROCESSING batch carries stock lines both ways — the dyes it burned as well as
         // the cloth it made. Only what it made names the row: "Processed Dye, Fuel" would
         // say the opposite of what happened.

@@ -2,6 +2,8 @@ package io.github.baeyung.hisaabkitaab.entity;
 
 import java.math.BigDecimal;
 
+import org.hibernate.annotations.BatchSize;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -20,7 +22,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Batched at the class level, so it covers the proxy as well as any collection of one: a
+ * statement or movement row names its item ({@code line.getItem().getName()}), and one shop's
+ * history walks hundreds of distinct items. Resolving them a proxy at a time is a round trip
+ * per item for a string.
+ */
 @Entity
+@BatchSize(size = 100)
 @Table(name = "store_items")
 @Getter
 @Setter
