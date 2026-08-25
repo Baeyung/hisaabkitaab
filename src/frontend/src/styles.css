@@ -625,6 +625,71 @@ html[dir='rtl'] select.rm-input {
   font-size: 14px;
 }
 
+/* Bill/purchase line items as a hand-written receipt: name, a dotted leader
+   filling the gap, then "qty × rate = amount" — the shape a shopkeeper (and
+   their customer) already reads bills in, instead of a four-column table
+   that only lines up on a wide screen. Shared by app/shared/bill-invoice.html
+   for the bill and purchase detail screens and their print/PDF output. */
+.bill-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px 16px;
+}
+.bill-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.bill-line__name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--kg-ink);
+}
+.bill-line__leader {
+  flex: 1 1 auto;
+  min-width: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px dotted var(--kg-line-strong);
+}
+/* "10 kg × Rs 850 = Rs 8,500" mixes Latin words, ×/= and digits in one run —
+   under an RTL paragraph the bidi algorithm reorders those pieces against
+   each other (the qty ends up on the wrong side). Isolating it as its own
+   LTR run keeps the calculation reading left to right in Urdu too, the way
+   the isolated table cell it replaced always did. */
+.bill-line__calc {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+.bill-total {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--kg-line-strong);
+}
+.bill-total__amt {
+  font-weight: 700;
+  font-size: 15px;
+}
+/* Cash/khata rows reuse .rm-foot's cream background and border, stacked
+   instead of spread across the row so each keeps its own leader line. */
+.rm-foot.bill-foot {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.bill-foot .bill-line__name {
+  font-weight: 500;
+  color: var(--kg-muted);
+}
+
 /* ── recipe blocks + flow marks ───────────────────────────────────────────
    A batch is entered as raw + consumables → output, and reads back the same
    way: cards for each side with a + and an arrow between them. Shared by the
@@ -1102,6 +1167,24 @@ html[dir='rtl'] select.rm-input {
   }
   .rm-tbl__meta {
     font-size: 10px;
+  }
+  /* Compact print for the receipt-style line items — same intent as the
+     .rm-tbl rules above: tighter spacing, smaller type, room for more rows
+     on a page. */
+  .bill-lines {
+    padding: 8px 4px;
+    gap: 4px;
+    font-size: 12px;
+  }
+  .bill-total {
+    margin-inline: 4px;
+  }
+  .rm-foot.bill-foot {
+    padding-inline: 4px;
+  }
+  .bill-line,
+  .bill-total {
+    break-inside: avoid;
   }
   .rm-tbl tr,
   .rm-stat,

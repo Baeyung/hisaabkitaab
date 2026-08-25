@@ -16,57 +16,49 @@
         <p class="rm-state__body">{{ locale.t(labels().empty) }}</p>
       </div>
     } @else {
-      <div class="rm-tablewrap">
-        <table class="rm-tbl">
-          <thead>
-            <tr>
-              <th scope="col">{{ locale.t(labels().colItem) }}</th>
-              <th scope="col" class="end">{{ locale.t(labels().colQty) }}</th>
-              <th scope="col" class="end">{{ locale.t(labels().colRate) }}</th>
-              <th scope="col" class="end">{{ locale.t(labels().colAmount) }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (line of b.lines; track $index) {
-              <tr>
-                <td class="rm-cell-head">
-                  <span class="rm-tbl__name">{{ line.itemName || '—' }}</span>
-                  @if (line.unit) {
-                    <span class="rm-tbl__meta">{{ line.unit }}</span>
-                  }
-                </td>
-                <td class="end num" [attr.data-label]="locale.t(labels().colQty)">{{ line.quantity != null ? locale.formatNumber(line.quantity) : '—' }}</td>
-                <td class="end num" [attr.data-label]="locale.t(labels().colRate)">{{ locale.money(line.rate) }}</td>
-                <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(line.amount) }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <div class="bill-lines">
+        @for (line of b.lines; track $index) {
+          <div class="bill-line">
+            <span class="bill-line__name">{{ line.itemName || '—' }}</span>
+            <span class="bill-line__leader" aria-hidden="true"></span>
+            <span class="bill-line__calc num">
+              @if (line.quantity != null) {
+                {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
+              }
+              {{ locale.money(line.amount) }}
+            </span>
+          </div>
+        }
+      </div>
+      <div class="bill-total">
+        <span class="sr-only">{{ locale.t(labels().goodsTotal) }}</span>
+        <span class="bill-total__amt num">{{ locale.money(b.goodsTotal) }}</span>
       </div>
     }
-    <div class="rm-foot">
-      <span>
-        {{ locale.t(labels().goodsTotal) }}
-        <strong class="num">{{ locale.money(b.goodsTotal) }}</strong>
-      </span>
-      <span>
-        {{ locale.t(labels().cash) }}
-        <strong class="num amt--in">{{ locale.money(b.cashReceived) }}</strong>
-      </span>
+    <div class="rm-foot bill-foot">
+      <div class="bill-line">
+        <span class="bill-line__name">{{ locale.t(labels().cash) }}</span>
+        <span class="bill-line__leader" aria-hidden="true"></span>
+        <span class="bill-line__calc num amt--in">{{ locale.money(b.cashReceived) }}</span>
+      </div>
       @if (b.outstanding.direction !== 'SETTLED') {
         @if (!b.partyName) {
-          <span>
-            {{ locale.t(labels().discount) }}
-            <strong class="num">{{ locale.money(b.outstanding.amount) }}</strong>
-          </span>
+          <div class="bill-line">
+            <span class="bill-line__name">{{ locale.t(labels().discount) }}</span>
+            <span class="bill-line__leader" aria-hidden="true"></span>
+            <span class="bill-line__calc num">{{ locale.money(b.outstanding.amount) }}</span>
+          </div>
         } @else {
-          <span>
-            {{ locale.t(labels().outstanding) }}
-            <strong class="num" [class]="toneClass(b.outstanding.direction)">
+          <div class="bill-line">
+            <span class="bill-line__name"
+              >{{ locale.t(labels().outstanding) }}
+              <span class="rm-tbl__meta">{{ locale.t(toneKey(b.outstanding.direction)) }}</span></span
+            >
+            <span class="bill-line__leader" aria-hidden="true"></span>
+            <span class="bill-line__calc num" [class]="toneClass(b.outstanding.direction)">
               {{ locale.money(b.outstanding.amount) }}
-            </strong>
-            <span class="rm-tbl__meta">{{ locale.t(toneKey(b.outstanding.direction)) }}</span>
-          </span>
+            </span>
+          </div>
         }
       }
     </div>

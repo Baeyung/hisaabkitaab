@@ -19,10 +19,6 @@ export interface InvoiceLabels {
   /** Stands in for the party name when there is none — a walk-in, or a one-off supplier. */
   noParty: TranslationKey;
   empty: TranslationKey;
-  colItem: TranslationKey;
-  colQty: TranslationKey;
-  colRate: TranslationKey;
-  colAmount: TranslationKey;
   goodsTotal: TranslationKey;
   /** The cash side: received from the customer, or paid to the supplier. */
   cash: TranslationKey;
@@ -38,10 +34,6 @@ export const BILL_INVOICE_LABELS: InvoiceLabels = {
   counterparty: 'bill.detail.billTo',
   noParty: 'bill.cashSale',
   empty: 'bill.detail.empty',
-  colItem: 'bill.detail.col.item',
-  colQty: 'bill.detail.col.qty',
-  colRate: 'bill.detail.col.rate',
-  colAmount: 'bill.detail.col.amount',
   goodsTotal: 'bill.detail.goodsTotal',
   cash: 'bill.detail.cashReceived',
   outstanding: 'bill.detail.outstanding',
