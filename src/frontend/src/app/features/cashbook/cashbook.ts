@@ -12,10 +12,11 @@ import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
 import {
-  DOC_TOTAL_KEYS,
+  DOC_INVOICE_LABELS,
   ExpandableDocs,
   PrintDetailsService,
 } from '../../shared/print-details.service';
+import { BillInvoice } from '../../shared/bill-invoice';
 import { DateField } from '../../shared/date-field/date-field';
 import { entryDetailLink, entryEditLink, isEditableEntry } from '../../shared/entry-route';
 import { directionClass, directionKey } from '../../shared/balance.util';
@@ -35,6 +36,7 @@ import { AmountLegend } from '../../shared/amount-legend';
     RouterLink,
     PrintHeader,
     PrintItemsSummary,
+    BillInvoice,
     DateField,
     WhatsAppButton,
     KhataAmount,
@@ -83,15 +85,28 @@ export class Cashbook {
     return this.stores.canEdit() && isEditableEntry(event);
   }
 
-  /** Sub-row totals wording, per side of the counter — see DOC_TOTAL_KEYS. */
-  protected readonly docKeys = DOC_TOTAL_KEYS;
+  /** Full invoice wording per kind, for the appended jump-linked pages. */
+  protected readonly docInvoiceLabels = DOC_INVOICE_LABELS;
 
   /**
-   * The documents fetched for this printout — empty unless "with details" was chosen.
-   * Split by kind: the closing items table adds quantities up, and what you sold and
-   * what you bought are two different stock stories to tell.
+   * The documents fetched for this printout, in the same order their rows appear in the
+   * table — empty unless "with details" was chosen. That order is what the row's jump-link
+   * number and the appended page's own "#N of M" label both count against, so a viewer that
+   * can't follow the link can still find the page by counting.
    */
-  private readonly printedDocs = computed(() => [...this.printer.docs().values()]);
+  protected readonly printedDocs = computed(() =>
+    (this.data()?.rows ?? [])
+      .filter((row) => this.printer.docs().has(row.transactionId))
+      .map((row) => this.printer.docs().get(row.transactionId)!),
+  );
+  /** Row transaction id → its 1-based position in {@link printedDocs}. */
+  protected readonly docIndex = computed(() => {
+    const map = new Map<string, number>();
+    this.printedDocs().forEach((doc, i) => map.set(doc.id, i + 1));
+    return map;
+  });
+  /** Split by kind for the closing items table: what was sold and what was bought are two
+   * different stock stories, added up separately. */
   protected readonly soldDocs = computed(() =>
     this.printedDocs().filter((d) => d.kind === 'bills'),
   );

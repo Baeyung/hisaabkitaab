@@ -22,10 +22,11 @@ import { todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import {
-  DOC_TOTAL_KEYS,
+  DOC_INVOICE_LABELS,
   ExpandableDocs,
   PrintDetailsService,
 } from '../../shared/print-details.service';
+import { BillInvoice } from '../../shared/bill-invoice';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { Select } from '../../shared/select/select';
 import { DateField } from '../../shared/date-field/date-field';
@@ -44,6 +45,7 @@ const SETTLED: Balance = { amount: 0, direction: 'SETTLED' };
   imports: [
     RouterLink,
     PrintHeader,
+    BillInvoice,
     Select,
     DateField,
     WhatsAppButton,
@@ -169,8 +171,27 @@ export class LedgerDetail {
     });
   }
 
-  /** Sub-row totals wording, per side of the counter — see DOC_TOTAL_KEYS. */
-  protected readonly docKeys = DOC_TOTAL_KEYS;
+  /** Full invoice wording per kind, for the appended jump-linked pages. */
+  protected readonly docInvoiceLabels = DOC_INVOICE_LABELS;
+
+  /**
+   * The documents fetched for this printout, in the same order their rows appear in the
+   * table — empty unless "with details" was chosen. That order is what the row's jump-link
+   * number and the appended page's own "#N of M" label both count against, so a viewer that
+   * can't follow the link can still find the page by counting.
+   */
+  protected readonly printedDocs = computed(() =>
+    this.filteredRows()
+      .filter((row) => this.printer.docs().has(row.transactionId))
+      .map((row) => this.printer.docs().get(row.transactionId)!),
+  );
+
+  /** Row transaction id → its 1-based position in {@link printedDocs}. */
+  protected readonly docIndex = computed(() => {
+    const map = new Map<string, number>();
+    this.printedDocs().forEach((doc, i) => map.set(doc.id, i + 1));
+    return map;
+  });
 
   async print(): Promise<void> {
     this.perspective.set(await this.printer.askPerspective());

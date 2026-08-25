@@ -36,6 +36,9 @@
   } @else {
     <!-- The list itself prints only in report layout; the documents print instead. -->
     <app-amount-legend [class.rm-noprint]="!reportMode()" />
+    @if (reportMode() && printBills().length > 0) {
+      <p class="rm-note rm-printonly">{{ locale.t('common.printDetails.note') }}</p>
+    }
 
     <div class="rm-card" [class.rm-noprint]="!reportMode()">
       <div class="rm-toolbar rm-toolbar--filters rm-noprint">
@@ -118,11 +121,24 @@
               <tr class="rm-rowspacer" aria-hidden="true"><td colspan="7" [style.height.px]="pad"></td></tr>
             }
             @for (bill of win.rows(); track bill.id) {
-              <tr class="rm-rowlink" (click)="open(bill.id)">
+              <tr
+                class="rm-rowlink"
+                [class.rm-row--linked]="reportMode() && printDetail().has(bill.id)"
+                [attr.id]="reportMode() && printDetail().has(bill.id) ? 'entry-' + bill.id : null"
+                (click)="open(bill.id)"
+              >
                 <td class="rm-cell-head">
                   <a [routerLink]="docLink(bill.id)" class="rm-tbl__name num">
                     {{ bill.billNumber || '—' }}
                   </a>
+                  @if (reportMode() && docIndex().get(bill.id); as n) {
+                    <a class="rm-jumplink rm-printonly" [attr.href]="'#doc-' + bill.id">{{
+                      locale.t('common.printDetails.jumpLink', {
+                        n: n.toString(),
+                        total: orderedPrintBills().length.toString(),
+                      })
+                    }}</a>
+                  }
                 </td>
                 <td class="num">{{ bill.date }}</td>
                 <td [attr.data-label]="locale.t(config().labels.colParty)">{{ bill.partyName || locale.t(config().invoice.noParty) }}</td>
@@ -152,46 +168,6 @@
                   }
                 </td>
               </tr>
-
-              @if (reportMode() && printDetail().get(bill.id); as detail) {
-                <tr class="rm-subrow">
-                  <td colspan="7">
-                    <div class="bill-lines">
-                      @for (line of detail.lines; track $index) {
-                        <div class="bill-line">
-                          <span class="bill-line__name">{{ line.itemName || '—' }}</span>
-                          <span class="bill-line__leader" aria-hidden="true"></span>
-                          <span class="bill-line__calc num">
-                            @if (line.quantity != null) {
-                              {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
-                            }
-                            {{ locale.money(line.amount) }}
-                          </span>
-                        </div>
-                      }
-                    </div>
-                    <div class="bill-total">
-                      <span class="bill-total__label">{{ locale.t(config().invoice.goodsTotal) }}</span>
-                      <span class="bill-line__leader" aria-hidden="true"></span>
-                      <span class="bill-total__amt num">{{ locale.money(detail.goodsTotal) }}</span>
-                    </div>
-                    <div class="rm-foot bill-foot">
-                      <div class="bill-line">
-                        <span class="bill-line__name">{{ locale.t(config().invoice.cash) }}</span>
-                        <span class="bill-line__leader" aria-hidden="true"></span>
-                        <span class="bill-line__calc num amt--in">{{ locale.money(detail.cashReceived) }}</span>
-                      </div>
-                      @if (detail.outstanding.direction !== 'SETTLED') {
-                        <div class="bill-line">
-                          <span class="bill-line__name">{{ locale.t(detail.partyName ? config().invoice.outstanding : config().invoice.discount) }}</span>
-                          <span class="bill-line__leader" aria-hidden="true"></span>
-                          <span class="bill-line__calc num">{{ locale.money(detail.outstanding.amount) }}</span>
-                        </div>
-                      }
-                    </div>
-                  </td>
-                </tr>
-              }
 
               @if (confirmingId() === bill.id) {
                 <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
@@ -287,12 +263,25 @@
     }
   }
 
-  <!-- Print-only: one document per filtered row, each on its own page. -->
-  @if (!reportMode()) {
-    <div class="rm-printonly">
-      @for (b of printBills(); track b.id) {
-        <div class="rm-print-invoice">
+  <!-- Print-only: one document per filtered row, each on its own page. In report
+       layout these are the appendix the table's rows jump-link to; in the
+       one-per-page layout they're the entire printout. -->
+  @if (orderedPrintBills().length > 0) {
+    <div class="rm-printonly" [class.rm-appendix]="reportMode()">
+      @for (b of orderedPrintBills(); track b.id; let i = $index) {
+        <div class="rm-print-invoice" [id]="'doc-' + b.id">
           <app-print-header />
+          @if (reportMode()) {
+            <p class="rm-note rm-pagelabel">{{
+              locale.t('common.printDetails.pageLabel', {
+                n: (i + 1).toString(),
+                total: orderedPrintBills().length.toString(),
+              })
+            }}</p>
+            <a class="rm-backlink" [attr.href]="'#entry-' + b.id">{{
+              locale.t('common.printDetails.backToEntry')
+            }}</a>
+          }
           <app-bill-invoice [bill]="b" [labels]="config().invoice" />
         </div>
       }

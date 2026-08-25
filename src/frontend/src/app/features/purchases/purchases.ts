@@ -1,22 +1,7 @@
 import { Component } from '@angular/core';
-import { InvoiceLabels } from '../../shared/bill-invoice';
+import { PURCHASE_INVOICE_LABELS } from '../../shared/bill-invoice';
 import { DocConfig } from '../transaction-docs/doc-config';
 import { DocList } from '../transaction-docs/doc-list';
-
-/**
- * A purchase read as paper: the supplier's bill, from your side of the counter.
- * "Cash paid" where a sale says received, "Bought from" where it says bill to.
- */
-const PURCHASE_INVOICE_LABELS: InvoiceLabels = {
-  fallbackTitle: 'nav.purchases',
-  counterparty: 'purchases.detail.boughtFrom',
-  noParty: 'purchases.cashPurchase',
-  empty: 'purchases.detail.empty',
-  goodsTotal: 'bill.detail.goodsTotal',
-  cash: 'purchases.detail.cashPaid',
-  outstanding: 'purchases.detail.outstanding',
-  discount: 'purchases.detail.discount',
-};
 
 /**
  * What a purchase is, in the shared goods-document screens' terms: the PURCHASE

@@ -1110,11 +1110,6 @@ html[dir='rtl'] select.rm-input {
   display: none;
 }
 
-/* Bill line-item sub-rows: only when the user opts into "print with details". */
-.rm-subrow {
-  display: none;
-}
-
 /*
  * Printing the cashbook / ledger / statement: drop the app chrome and any
  * interactive controls (filters, search, buttons, back links marked
@@ -1220,28 +1215,40 @@ html[dir='rtl'] select.rm-input {
   .dw-card {
     break-inside: avoid;
   }
-  .rm-subrow {
-    display: table-row;
+  /* A row whose document is attached as a full page at the end (see
+     .rm-appendix below) tints blue so it reads as clickable — the note above
+     the table spells out what the colour means. `.rm-tbl a { color: inherit }`
+     just above already makes the row's own link pick this colour up; only the
+     jump link needs its underline restored, since that same rule strips it. */
+  .rm-row--linked td {
+    color: var(--kg-brand);
   }
-  /* Indent + tint the attached bill/purchase detail so it reads as a nested
-     receipt under the entry above, not another row of the same table. */
-  .rm-subrow td {
-    padding: 10px 20px 14px 34px;
-    background: var(--kg-cream);
-    border-top: 1px dashed var(--kg-line-strong);
+  .rm-tbl a.rm-jumplink {
+    display: inline;
+    margin-inline-start: 6px;
+    text-decoration: underline;
+    font-size: 11px;
+    white-space: nowrap;
   }
-  .rm-subrow .bill-lines {
-    padding: 0 0 6px;
+  .rm-backlink {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--kg-brand);
+    text-decoration: underline;
+    font-size: 12px;
   }
-  .rm-subrow .bill-total,
-  .rm-subrow .rm-foot.bill-foot {
-    margin-inline: 0;
-    padding-inline: 0;
+  /* The number a viewer with no working link can count to, from the row's own
+     "Attachment #N of M" text — so it doubles as this page's own heading. */
+  .rm-pagelabel {
+    font-style: normal;
+    font-weight: 700;
+    color: var(--kg-brand);
+    margin-bottom: 2px;
   }
-  .rm-subrow .rm-foot.bill-foot {
-    background: transparent;
-    border-top: none;
-    padding-block: 6px 0;
+  /* The appended documents start on a fresh page, separate from the table
+     whose rows link to them. */
+  .rm-appendix {
+    break-before: page;
   }
   /* "Print all bills": each invoice starts a fresh page. The first invoice's
      letterhead watermark and brand line are position:fixed, so they already
@@ -1330,11 +1337,6 @@ html[dir='rtl'] select.rm-input {
   }
   .rm-tbl tbody tr:last-child {
     border-bottom: 0;
-  }
-  /* Print-only sub-rows: `.rm-subrow { display: none }` is a single class and
-     loses to the `tr` rules above, so restate it at matching specificity. */
-  .rm-tbl tbody tr.rm-subrow {
-    display: none;
   }
   /* Zero-height full-width flex item: ends the headline, starts the meta line. */
   .rm-tbl tbody tr::after {

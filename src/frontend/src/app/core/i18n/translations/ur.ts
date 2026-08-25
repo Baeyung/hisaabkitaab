@@ -709,15 +709,20 @@ export const ur: Record<TranslationKey, string> = {
   'block.done.body': '{{store}} اب {{number}} پر کوئی واٹس ایپ پیغام نہیں بھیجے گی۔',
   'block.support': 'ارادہ بدل گیا؟ یہ صرف ہماری سپورٹ ٹیم ہی واپس کر سکتی ہے:',
   'common.printDetails.title': 'بل کی تفصیلات',
-  'common.printDetails.confirm': 'کیا ہر بل کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
+  'common.printDetails.confirm': 'کیا ہر بل کا مکمل صفحہ آخر میں شامل کریں، اس کی قطار سے منسلک؟',
   'common.printDetails.purchases.title': 'خرید کی تفصیلات',
   'common.printDetails.purchases.confirm':
-    'کیا ہر خرید کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
+    'کیا ہر خرید کا مکمل صفحہ آخر میں شامل کریں، اس کی قطار سے منسلک؟',
   'common.printDetails.both.title': 'آئٹمز کی تفصیلات',
   'common.printDetails.both.confirm':
-    'کیا ہر بل اور خرید کی تفصیلات ذیلی قطاروں کے طور پر شامل کریں؟',
+    'کیا ہر بل اور خرید کا مکمل صفحہ آخر میں شامل کریں، اس کی قطار سے منسلک؟',
   'common.printDetails.with': 'تفصیلات کے ساتھ',
   'common.printDetails.without': 'تفصیلات کے بغیر',
+  'common.printDetails.note':
+    'نیلی قطاریں اس نمبر سے آخر میں شامل مکمل بل یا خرید سے ملتی ہیں — وہاں جانے کے لیے ٹیپ کریں، یا اگر آپ کا PDF ویور لنکس کو سپورٹ نہیں کرتا تو نمبر سے تلاش کریں۔',
+  'common.printDetails.jumpLink': 'منسلکہ #{{n}} از {{total}} — مکمل صفحہ دیکھیں ↓',
+  'common.printDetails.pageLabel': 'منسلکہ #{{n}} از {{total}}',
+  'common.printDetails.backToEntry': '↑ اندراج پر واپس جائیں',
   'common.perspective.title': 'کس کا نقطہ نظر؟',
   'common.perspective.confirm': 'یہ آپ کی دکان کے نقطہ نظر سے پرنٹ/بھیجیں، یا فریق کے نقطہ نظر سے؟',
   'common.perspective.mine': 'میرا نقطہ نظر',
