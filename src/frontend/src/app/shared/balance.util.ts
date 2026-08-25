@@ -18,6 +18,36 @@ export function directionKey(direction: BalanceDirection): TranslationKey {
   }
 }
 
+/**
+ * Flips a direction to the other side of the counter — what reads as "they owe
+ * you" (green) from the shop's books reads as "you owe them" (red) to the party
+ * holding the same paper. Used wherever a statement/bill leaves the shop's own
+ * screen: the reminder report (always the party's copy) and the print/WhatsApp
+ * perspective prompt (PrintDetailsService.askPerspective).
+ */
+export function invertDirection(direction: BalanceDirection): BalanceDirection {
+  switch (direction) {
+    case 'THEY_OWE_YOU':
+      return 'YOU_OWE_THEM';
+    case 'YOU_OWE_THEM':
+      return 'THEY_OWE_YOU';
+    default:
+      return direction;
+  }
+}
+
+/** The khata column's own IN/OUT, flipped the same way as {@link invertDirection}. */
+export function invertInOut(inOut: 'IN' | 'OUT' | 'NONE'): 'IN' | 'OUT' | 'NONE' {
+  switch (inOut) {
+    case 'IN':
+      return 'OUT';
+    case 'OUT':
+      return 'IN';
+    default:
+      return inOut;
+  }
+}
+
 export function directionClass(direction: BalanceDirection): string {
   switch (direction) {
     case 'THEY_OWE_YOU':

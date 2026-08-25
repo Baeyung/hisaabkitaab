@@ -5,12 +5,18 @@ import { LedgerService } from '../../core/store/ledger.service';
 import { StoreService } from '../../core/store/store.service';
 import { EventService } from '../../core/store/event.service';
 import { PartyStatement, PartyStatementRow } from '../../core/store/ledger.models';
-import { Balance } from '../../core/store/balance.models';
+import { Balance, BalanceDirection } from '../../core/store/balance.models';
 import { TransactionEventKind } from '../../core/store/cashbook.models';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { entryDetailLink, entryEditLink, isEditableEntry } from '../../shared/entry-route';
 import { deleteErrorKey } from '../../core/store/delete-error';
-import { directionClass, directionKey, khataAmount } from '../../shared/balance.util';
+import {
+  directionClass,
+  directionKey,
+  invertDirection,
+  invertInOut,
+  khataAmount,
+} from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
 import { urlFilters } from '../../shared/url-filters';
@@ -129,8 +135,28 @@ export class LedgerDetail {
     };
   });
 
-  protected readonly directionKey = directionKey;
-  protected readonly directionClass = directionClass;
+  /**
+   * Store's own view by default; flipped to the party's after they choose it in
+   * the print/WhatsApp prompt (see {@link print} and {@link expandForSend}).
+   */
+  protected readonly perspective = signal<'store' | 'party'>('store');
+
+  private sided(direction: BalanceDirection): BalanceDirection {
+    return this.perspective() === 'party' ? invertDirection(direction) : direction;
+  }
+
+  protected toneKey(direction: BalanceDirection): TranslationKey {
+    return directionKey(this.sided(direction));
+  }
+
+  protected toneClass(direction: BalanceDirection): string {
+    return directionClass(this.sided(direction));
+  }
+
+  protected rowInOut(row: PartyStatementRow): 'IN' | 'OUT' | 'NONE' {
+    return this.perspective() === 'party' ? invertInOut(row.inOut) : row.inOut;
+  }
+
   protected readonly khataAmount = khataAmount;
 
   /** Bilingual label for an event kind — all kinds have a `report.event.*` key. */
@@ -146,17 +172,21 @@ export class LedgerDetail {
   /** Sub-row totals wording, per side of the counter — see DOC_TOTAL_KEYS. */
   protected readonly docKeys = DOC_TOTAL_KEYS;
 
-  print(): void {
+  async print(): Promise<void> {
+    this.perspective.set(await this.printer.askPerspective());
     void this.printer.printWithDetails(this.expandable());
   }
 
   /**
-   * The WhatsApp send goes through the same document-details question Print asks, so
-   * the party gets the statement the shopkeeper chose to send. Bound as a field, not a
-   * method, so the template hands over a callable rather than its result.
+   * The WhatsApp send goes through the same perspective and document-details
+   * questions Print asks, so the party gets the statement the shopkeeper chose to
+   * send. Bound as a field, not a method, so the template hands over a callable
+   * rather than its result.
    */
-  protected readonly expandForSend = (): Promise<boolean> =>
-    this.printer.expandDetails(this.expandable());
+  protected readonly expandForSend = async (): Promise<boolean> => {
+    this.perspective.set(await this.printer.askPerspective());
+    return this.printer.expandDetails(this.expandable());
+  };
 
   /**
    * Every row that stands for a goods document, whose lines the details prompt can

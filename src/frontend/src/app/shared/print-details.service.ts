@@ -71,6 +71,16 @@ export const DOC_TOTAL_KEYS: Record<
 
 const KINDS = ['bills', 'purchases'] as const;
 
+/** Which side of the counter a printed/sent statement reads correctly from. */
+export type Perspective = 'store' | 'party';
+
+const PERSPECTIVE_PROMPT: PrintPromptKeys = {
+  title: 'common.perspective.title',
+  body: 'common.perspective.confirm',
+  no: 'common.perspective.mine',
+  yes: 'common.perspective.theirs',
+};
+
 /**
  * Print-with-document-details for the cashbook and ledger statement. Both screens
  * list SALE and PURCHASE rows that each stand for a document; on Print we ask (via
@@ -151,6 +161,16 @@ export class PrintDetailsService {
     this.promptKeys.set(keys);
     this.prompting.set(true);
     return new Promise((resolve) => (this.resolve = resolve));
+  }
+
+  /**
+   * Asked before a single-party document goes to print or WhatsApp — the shop's
+   * own view by default (cancel/backdrop included), the party's only when they
+   * actively choose it, since nobody expects an unanswered prompt to change what
+   * they were about to print.
+   */
+  async askPerspective(): Promise<Perspective> {
+    return (await this.ask(PERSPECTIVE_PROMPT)) === true ? 'party' : 'store';
   }
 
   /** Called by the dialog: true/false = a choice, null = cancelled. */

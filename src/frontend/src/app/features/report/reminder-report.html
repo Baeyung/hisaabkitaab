@@ -96,8 +96,8 @@
                 </td>
                 <td
                   class="rpt__num num"
-                  [class.amt--in]="khataAmount(row) !== null && row.inOut === 'IN'"
-                  [class.amt--out]="khataAmount(row) !== null && row.inOut === 'OUT'"
+                  [class.amt--in]="khataAmount(row) !== null && rowInOut(row) === 'IN'"
+                  [class.amt--out]="khataAmount(row) !== null && rowInOut(row) === 'OUT'"
                 >
                   {{ khataAmount(row) === null ? '—' : locale.money(row.amount) }}
                 </td>

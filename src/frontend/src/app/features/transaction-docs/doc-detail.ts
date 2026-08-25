@@ -10,6 +10,7 @@ import { BillInvoice } from '../../shared/bill-invoice';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
+import { Perspective, PrintDetailsService } from '../../shared/print-details.service';
 import { DocConfig } from './doc-config';
 
 /**
@@ -34,6 +35,7 @@ export class DocDetail {
   private readonly api = inject(BillService);
   private readonly events = inject(EventService);
   private readonly router = inject(Router);
+  private readonly printer = inject(PrintDetailsService);
 
   protected readonly bill = signal<BillDetail | null>(null);
   protected readonly loading = signal(true);
@@ -44,15 +46,25 @@ export class DocDetail {
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<TranslationKey | null>(null);
 
+  /** Store's own view by default; flipped once the print/WhatsApp prompt asks. */
+  protected readonly perspective = signal<Perspective>('store');
+
   constructor() {
     effect(() => {
       void this.load(this.docId());
     });
   }
 
-  print(): void {
+  async print(): Promise<void> {
+    this.perspective.set(await this.printer.askPerspective());
     window.print();
   }
+
+  /** Bound as a field so the WhatsApp button hands over a callable, not its result. */
+  protected readonly beforeSend = async (): Promise<boolean> => {
+    this.perspective.set(await this.printer.askPerspective());
+    return true;
+  };
 
   async load(id: string): Promise<void> {
     this.loading.set(true);

@@ -733,6 +733,11 @@ export const en = {
   'common.printDetails.both.confirm': 'Include the items on each bill and purchase as sub-rows?',
   'common.printDetails.with': 'With details',
   'common.printDetails.without': 'Without details',
+  'common.perspective.title': 'Whose view?',
+  'common.perspective.confirm':
+    'Print/send this from your shop’s view, or from the party’s view?',
+  'common.perspective.mine': 'My view',
+  'common.perspective.theirs': "Party's view",
   'cashbook.subtitle': 'Every rupee in and out of the galla, day by day.',
   'cashbook.print.period': 'Period: {{from}} to {{to}}',
   'ledger.print.filter': 'Filtered by: {{query}}',

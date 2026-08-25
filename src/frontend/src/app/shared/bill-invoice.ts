@@ -2,7 +2,9 @@ import { Component, inject, input } from '@angular/core';
 import { LocaleService } from '../core/i18n/locale.service';
 import { TranslationKey } from '../core/i18n/translations/en';
 import { BillDetail } from '../core/store/bill.models';
-import { directionClass, directionKey } from './balance.util';
+import { BalanceDirection } from '../core/store/balance.models';
+import { directionClass, directionKey, invertDirection } from './balance.util';
+import { Perspective } from './print-details.service';
 
 /**
  * The wording of one goods document. Keys are passed in as literals rather than
@@ -64,8 +66,20 @@ export const BILL_INVOICE_LABELS: InvoiceLabels = {
 export class BillInvoice {
   readonly bill = input.required<BillDetail>();
   readonly labels = input<InvoiceLabels>(BILL_INVOICE_LABELS);
+  /** Store's own view by default; 'party' flips the outstanding figure's colour/label. */
+  readonly perspective = input<Perspective>('store');
 
   protected readonly locale = inject(LocaleService);
-  protected readonly directionKey = directionKey;
-  protected readonly directionClass = directionClass;
+
+  private sided(direction: BalanceDirection): BalanceDirection {
+    return this.perspective() === 'party' ? invertDirection(direction) : direction;
+  }
+
+  protected toneKey(direction: BalanceDirection) {
+    return directionKey(this.sided(direction));
+  }
+
+  protected toneClass(direction: BalanceDirection): string {
+    return directionClass(this.sided(direction));
+  }
 }

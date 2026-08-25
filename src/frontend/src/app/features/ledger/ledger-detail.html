@@ -27,11 +27,11 @@
         @if (st.contact) {
           <p class="rm-sub num">{{ st.contact }}</p>
         }
-        <div class="rm-baqaya" [class]="directionClass(st.currentBalance.direction)">
+        <div class="rm-baqaya" [class]="toneClass(st.currentBalance.direction)">
           <span class="rm-baqaya__label">{{ locale.t('ledger.detail.balance') }}</span>
           <span class="rm-baqaya__amt num">{{ locale.money(st.currentBalance.amount) }}</span>
           <span class="rm-baqaya__dir">{{
-            locale.t(directionKey(st.currentBalance.direction))
+            locale.t(toneKey(st.currentBalance.direction))
           }}</span>
         </div>
       </div>
@@ -79,7 +79,7 @@
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.outstanding') }}</span>
-          <span class="rm-stat__value num" [class]="directionClass(stats().balance.direction)">{{
+          <span class="rm-stat__value num" [class]="toneClass(stats().balance.direction)">{{
             locale.money(stats().balance.amount)
           }}</span>
         </div>
@@ -184,20 +184,20 @@
                   <td
                     class="end num rm-cell-amt"
                     [class.is-empty]="khataAmount(row) === null"
-                    [class.amt--in]="khataAmount(row) !== null && row.inOut === 'IN'"
-                    [class.amt--out]="khataAmount(row) !== null && row.inOut === 'OUT'"
+                    [class.amt--in]="khataAmount(row) !== null && rowInOut(row) === 'IN'"
+                    [class.amt--out]="khataAmount(row) !== null && rowInOut(row) === 'OUT'"
                   >
                     {{ khataAmount(row) === null ? '—' : locale.money(row.amount) }}
                   </td>
                   <td class="end" [attr.data-label]="locale.t('ledger.detail.col.balance')">
                     <span
                       class="num rm-tbl__name"
-                      [class]="directionClass(row.runningBalance.direction)"
+                      [class]="toneClass(row.runningBalance.direction)"
                     >
                       {{ locale.money(row.runningBalance.amount) }}
                     </span>
                     <span class="sr-only">{{
-                      locale.t(directionKey(row.runningBalance.direction))
+                      locale.t(toneKey(row.runningBalance.direction))
                     }}</span>
                   </td>
                   <td class="end rm-noprint">

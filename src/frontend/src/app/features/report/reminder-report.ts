@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BalanceDirection } from '../../core/store/balance.models';
-import { directionClass, khataAmount } from '../../shared/balance.util';
+import { directionClass, invertDirection, invertInOut, khataAmount } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { ReportService } from './report.service';
 import { PartyReminder } from './report.models';
@@ -42,13 +42,18 @@ export class ReminderReportPage {
 
   protected readonly khataAmount = khataAmount;
 
+  /**
+   * This copy goes to the party, not the shop — every direction and IN/OUT read
+   * here is flipped from what `LedgerDetail` shows the shopkeeper, so "green"
+   * means good news for whoever is actually holding this page.
+   */
   protected tone(direction: BalanceDirection): string {
-    return directionClass(direction);
+    return directionClass(invertDirection(direction));
   }
 
   /** "They owe" / "You owe" — colour never carries the direction on its own. */
   protected direction(direction: BalanceDirection): string {
-    switch (direction) {
+    switch (invertDirection(direction)) {
       case 'THEY_OWE_YOU':
         return 'To receive';
       case 'YOU_OWE_THEM':
@@ -56,6 +61,11 @@ export class ReminderReportPage {
       default:
         return 'Settled';
     }
+  }
+
+  /** The khata column's IN/OUT, flipped to the party's side same as {@link tone}. */
+  protected rowInOut(row: { inOut: 'IN' | 'OUT' | 'NONE' }): 'IN' | 'OUT' | 'NONE' {
+    return invertInOut(row.inOut);
   }
 
   private async load(storeId: string, partyId: string, date: string, token: string): Promise<void> {

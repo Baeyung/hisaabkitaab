@@ -62,10 +62,10 @@
         } @else {
           <span>
             {{ locale.t(labels().outstanding) }}
-            <strong class="num" [class]="directionClass(b.outstanding.direction)">
+            <strong class="num" [class]="toneClass(b.outstanding.direction)">
               {{ locale.money(b.outstanding.amount) }}
             </strong>
-            <span class="rm-tbl__meta">{{ locale.t(directionKey(b.outstanding.direction)) }}</span>
+            <span class="rm-tbl__meta">{{ locale.t(toneKey(b.outstanding.direction)) }}</span>
           </span>
         }
       }

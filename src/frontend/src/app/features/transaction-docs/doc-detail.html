@@ -48,6 +48,7 @@
               locale.t(config().labels.whatsappDoc) + (b.billNumber ? ' ' + b.billNumber : '')
             "
             [action]="locale.t(config().labels.whatsappDoc)"
+            [beforeCapture]="beforeSend"
           />
         }
         @if (stores.canEdit()) {
@@ -116,6 +117,6 @@
       <p role="alert" class="rm-alert" style="margin-bottom: 12px">{{ locale.t(key) }}</p>
     }
 
-    <app-bill-invoice [bill]="b" [labels]="config().invoice" />
+    <app-bill-invoice [bill]="b" [labels]="config().invoice" [perspective]="perspective()" />
   }
 </section>
