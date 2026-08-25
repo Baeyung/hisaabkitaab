@@ -17,6 +17,14 @@
       </div>
     } @else {
       <div class="bill-lines">
+        <div class="bill-lines__head">
+          <span class="bill-line__name">{{ locale.t('bill.detail.col.item') }}</span>
+          <span class="bill-line__leader" aria-hidden="true"></span>
+          <span class="bill-line__calc num"
+            >{{ locale.t('bill.detail.col.qty') }} × {{ locale.t('bill.detail.col.rate') }} =
+            {{ locale.t('bill.detail.col.amount') }}</span
+          >
+        </div>
         @for (line of b.lines; track $index) {
           <div class="bill-line">
             <span class="bill-line__name">{{ line.itemName || '—' }}</span>
@@ -31,7 +39,8 @@
         }
       </div>
       <div class="bill-total">
-        <span class="sr-only">{{ locale.t(labels().goodsTotal) }}</span>
+        <span class="bill-total__label">{{ locale.t(labels().goodsTotal) }}</span>
+        <span class="bill-line__leader" aria-hidden="true"></span>
         <span class="bill-total__amt num">{{ locale.money(b.goodsTotal) }}</span>
       </div>
     }

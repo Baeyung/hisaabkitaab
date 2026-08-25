@@ -636,6 +636,22 @@ html[dir='rtl'] select.rm-input {
   gap: 7px;
   padding: 14px 16px;
 }
+.bill-lines__head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding-bottom: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.bill-lines__head .bill-line__name,
+.bill-lines__head .bill-line__calc {
+  font-weight: 700;
+  color: var(--kg-faint);
+}
 .bill-line {
   display: flex;
   align-items: baseline;
@@ -669,12 +685,23 @@ html[dir='rtl'] select.rm-input {
 }
 .bill-total {
   display: flex;
-  justify-content: flex-end;
+  align-items: baseline;
+  gap: 6px;
   margin: 0 16px;
-  padding-top: 8px;
+  padding: 8px 0 14px;
   border-top: 1px solid var(--kg-line-strong);
 }
+.bill-total__label {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
 .bill-total__amt {
+  flex: 0 0 auto;
   font-weight: 700;
   font-size: 15px;
 }
