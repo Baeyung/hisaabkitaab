@@ -948,6 +948,7 @@ export const en = {
   'bill.detail.col.qty': 'Qty',
   'bill.detail.col.rate': 'Rate',
   'bill.detail.col.amount': 'Amount',
+  'bill.detail.heading': '(Details)',
   'bill.detail.goodsTotal': 'Total',
   'bill.detail.cashReceived': 'Cash received',
   'bill.detail.outstanding': 'On khata',

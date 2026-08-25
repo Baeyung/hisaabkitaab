@@ -1229,6 +1229,17 @@ html[dir='rtl'] select.rm-input {
     padding: 10px 20px 14px 34px;
     background: var(--kg-cream);
     border-top: 1px dashed var(--kg-line-strong);
+    font-style: italic;
+    font-size: 10px;
+  }
+  .rm-subrow .bill-total__amt {
+    font-size: 10px;
+  }
+  .bill-subrow__heading {
+    margin: 0 0 4px;
+    font-style: italic;
+    font-weight: 700;
+    color: var(--kg-faint);
   }
   .rm-subrow .bill-lines {
     padding: 0 0 6px;

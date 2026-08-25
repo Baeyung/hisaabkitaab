@@ -160,6 +160,7 @@
                 @if (printer.docs().get(row.transactionId); as doc) {
                   <tr class="rm-subrow">
                     <td colspan="6">
+                      <p class="bill-subrow__heading">{{ locale.t('bill.detail.heading') }}</p>
                       <div class="bill-lines">
                         @for (line of doc.lines; track $index) {
                           <div class="bill-line">

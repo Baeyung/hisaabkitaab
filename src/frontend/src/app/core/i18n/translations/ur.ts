@@ -915,6 +915,7 @@ export const ur: Record<TranslationKey, string> = {
   'bill.detail.col.qty': 'مقدار',
   'bill.detail.col.rate': 'ریٹ',
   'bill.detail.col.amount': 'رقم',
+  'bill.detail.heading': '(تفصیل)',
   'bill.detail.goodsTotal': 'کل رقم',
   'bill.detail.cashReceived': 'نقد وصول',
   'bill.detail.outstanding': 'کھاتے میں',

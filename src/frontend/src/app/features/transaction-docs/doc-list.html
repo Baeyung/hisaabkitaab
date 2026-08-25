@@ -156,6 +156,7 @@
               @if (reportMode() && printDetail().get(bill.id); as detail) {
                 <tr class="rm-subrow">
                   <td colspan="7">
+                    <p class="bill-subrow__heading">{{ locale.t('bill.detail.heading') }}</p>
                     <div class="bill-lines">
                       @for (line of detail.lines; track $index) {
                         <div class="bill-line">
