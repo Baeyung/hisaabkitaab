@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import io.github.baeyung.hisaabkitaab.service.pdf.PdfRenderService;
 import io.github.baeyung.hisaabkitaab.service.report.ReportRequest;
+import io.github.baeyung.hisaabkitaab.service.report.ReportSendService;
 import io.github.baeyung.hisaabkitaab.service.report.ReportTokenService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,7 +96,7 @@ class DevToolsApiTest extends ApiTest
                 // Inline, so the browser opens it in a tab rather than filling a downloads
                 // folder — but still named, for whoever saves one out of the viewer.
                 .andExpect(header().string("Content-Disposition",
-                        "inline; filename=\"daily-report-" + TODAY + ".pdf\""));
+                        "inline; filename=\"" + ReportSendService.dailyFilename(TODAY) + "\""));
 
         // The scheduler's own page, with a token this shop's report would answer to. Asserted
         // through the token service rather than by shape: a URL that merely looks right but

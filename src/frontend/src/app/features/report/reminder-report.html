@@ -4,7 +4,7 @@
 
     <header class="rpt__head">
       <h1 class="rpt__title">Khata statement</h1>
-      <p class="rpt__date num">{{ r.statement.partyName }} · {{ r.date }}</p>
+      <p class="rpt__date num">{{ r.statement.partyName }} · {{ locale.date(r.date) }}</p>
     </header>
 
     <app-amount-legend />
@@ -16,7 +16,7 @@
     <section class="rpt__sec">
       <h2 class="rpt__h2">
         <span>Where this khata stands</span>
-        <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+        <span class="rpt__h2Meta">{{ r.store.name }} · {{ locale.date(r.date) }}</span>
       </h2>
 
       <dl class="rpt__glance">
@@ -30,7 +30,7 @@
         </div>
         <div class="rpt__fig">
           <dt>Last payment</dt>
-          <dd class="num">{{ r.statement.lastPaymentDate || 'None yet' }}</dd>
+          <dd class="num">{{ r.statement.lastPaymentDate ? locale.date(r.statement.lastPaymentDate!) : 'None yet' }}</dd>
         </div>
         <div class="rpt__fig">
           <dt>Oldest unpaid bill</dt>
@@ -56,7 +56,7 @@
     <section class="rpt__sec">
       <h2 class="rpt__h2">
         <span>Entries</span>
-        <span class="rpt__h2Meta">{{ r.statement.partyName }} · {{ r.date }}</span>
+        <span class="rpt__h2Meta">{{ r.statement.partyName }} · {{ locale.date(r.date) }}</span>
       </h2>
 
       @if (r.statement.rows.length === 0) {
@@ -76,7 +76,7 @@
           <tbody>
             @for (row of r.statement.rows; track row.transactionId) {
               <tr>
-                <td class="num">{{ row.date }}</td>
+                <td class="num">{{ locale.date(row.date) }}</td>
                 <td>
                   <span class="rm-tbl__name">{{
                     locale.describe(row.event, r.statement.partyName, row.amount, row.itemSummary)

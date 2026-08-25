@@ -95,4 +95,21 @@ export class LocaleService {
   money(n: number): string {
     return 'Rs ' + n.toLocaleString('en-US', { maximumFractionDigits: 2 });
   }
+
+  /**
+   * An ISO date (`yyyy-MM-dd`) or timestamp, as `DD/MM/YYYY` — the one date
+   * format every screen shows. A bare `yyyy-MM-dd` is read directly off the
+   * string rather than through `Date`, which parses it as UTC midnight and
+   * can roll it back a day west of Pakistan (matches `date.util.ts`'s
+   * local-day rule); a full timestamp still goes through `Date` so the local
+   * calendar day comes out right.
+   */
+  date(iso: string): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (m) {
+      return `${m[3]}/${m[2]}/${m[1]}`;
+    }
+    const d = new Date(iso);
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  }
 }

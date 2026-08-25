@@ -4,7 +4,7 @@
   <header class="rm-head">
     <div>
       <h1 class="rm-title num">{{ billNumber() || locale.t(config().labels.title) }}</h1>
-      <p class="rm-sub num">{{ billDate() }}</p>
+      <p class="rm-sub num">{{ locale.date(billDate()) }}</p>
       <p class="rm-billto">
         <span class="rm-billto__label">{{ locale.t('bill.detail.billTo') }}</span>
         <span class="rm-billto__name">{{ printParty() }}</span>

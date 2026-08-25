@@ -187,10 +187,9 @@ export class Cashbook {
     }
   }
 
-  /** "12 Jul, 14:05" from the row's entry timestamp — the range spans days, so the date matters. */
+  /** "26/08/2026, 14:05" from the row's entry timestamp — the range spans days, so the date matters. */
   time(occurredAt: string): string {
     const d = new Date(occurredAt);
-    const day = d.toLocaleDateString(this.locale.locale(), { month: 'short', day: 'numeric' });
-    return `${day}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    return `${this.locale.date(occurredAt)}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
 }

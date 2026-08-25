@@ -2,7 +2,7 @@
   <header class="rm-head">
     <div>
       <h1 class="rm-title num">{{ b.billNumber || locale.t(labels().fallbackTitle) }}</h1>
-      <p class="rm-sub num">{{ b.date }}</p>
+      <p class="rm-sub num">{{ locale.date(b.date) }}</p>
       <p class="rm-billto">
         <span class="rm-billto__label">{{ locale.t(labels().counterparty) }}</span>
         <span class="rm-billto__name">{{ b.partyName || locale.t(labels().noParty) }}</span>

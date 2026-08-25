@@ -1,6 +1,7 @@
 package io.github.baeyung.hisaabkitaab.service.report;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,15 +135,21 @@ public class ReportSendService
         sendLog.record(store, sender, to, filename, WhatsAppSendStatus.BLOCKED, source);
     }
 
-    /** {@code daily-report-2026-08-17.pdf} — dated, so a phone full of them stays readable. */
+    /**
+     * The app's display date, {@code dd/MM/yyyy}, with dashes standing in for the slashes a
+     * filename can't hold.
+     */
+    private static final DateTimeFormatter FILENAME_DATE = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+    /** {@code daily-report-17-08-2026.pdf} — dated, so a phone full of them stays readable. */
     public static String dailyFilename(LocalDate date)
     {
-        return "daily-report-" + date + ".pdf";
+        return "daily-report-" + FILENAME_DATE.format(date) + ".pdf";
     }
 
-    /** {@code khata-statement-2026-08-31.pdf}, named for the reader rather than for the shop. */
+    /** {@code khata-statement-31-08-2026.pdf}, named for the reader rather than for the shop. */
     public static String reminderFilename(LocalDate date)
     {
-        return "khata-statement-" + date + ".pdf";
+        return "khata-statement-" + FILENAME_DATE.format(date) + ".pdf";
     }
 }

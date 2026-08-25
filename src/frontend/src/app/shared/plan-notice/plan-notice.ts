@@ -208,11 +208,6 @@ export class PlanNotice {
   /** The plan's last day, worded as the app words dates elsewhere (cashbook, dashboard). */
   protected readonly endsOn = computed(() => {
     const iso = this.plan.expiresOn();
-    return iso
-      ? new Date(`${iso}T00:00:00`).toLocaleDateString(this.locale.locale(), {
-          month: 'short',
-          day: 'numeric',
-        })
-      : '';
+    return iso ? this.locale.date(iso) : '';
   });
 }

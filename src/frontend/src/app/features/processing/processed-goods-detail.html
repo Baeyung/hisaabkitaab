@@ -81,7 +81,7 @@
       <div>
         <h1 class="rm-title">{{ b.output?.name ?? locale.t('nav.processedGoods') }}</h1>
         <p class="rm-sub num">
-          {{ b.date }}
+          {{ locale.date(b.date) }}
           @if (b.billNumber) {
             · {{ b.billNumber }}
           }

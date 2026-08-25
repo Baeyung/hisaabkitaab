@@ -86,7 +86,7 @@
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.lastPayment') }}</span>
           <span class="rm-stat__value num">{{
-            stats().lastPaymentDate || locale.t('report.never')
+            stats().lastPaymentDate ? locale.date(stats().lastPaymentDate!) : locale.t('report.never')
           }}</span>
         </div>
       </div>
@@ -148,7 +148,7 @@
                   [class.rm-row--cleared]="row.cleared === true"
                   (click)="openDetail(row.event, row.transactionId)"
                 >
-                  <td class="num">{{ row.date }}</td>
+                  <td class="num">{{ locale.date(row.date) }}</td>
                   <td class="rm-cell-head">
                     @if (detailLink(row.event, row.transactionId); as link) {
                       <a [routerLink]="link" (click)="$event.stopPropagation()"

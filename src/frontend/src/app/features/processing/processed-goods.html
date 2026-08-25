@@ -62,7 +62,7 @@
                   }
                 </td>
                 <td [attr.data-label]="locale.t('processing.party')">{{ parties(batch) }}</td>
-                <td [attr.data-label]="locale.t('processing.list.col.date')">{{ batch.date }}</td>
+                <td [attr.data-label]="locale.t('processing.list.col.date')">{{ locale.date(batch.date) }}</td>
                 <td class="end num" [attr.data-label]="locale.t('processing.col.qty')">
                   {{ locale.qtyUnit(batch.output?.quantity ?? 0, batch.output?.unit ?? null) }}
                 </td>

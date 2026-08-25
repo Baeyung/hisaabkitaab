@@ -454,7 +454,7 @@ export class Dashboard {
 
   /** A day, as the printed table's row label. Public so the template can call it. */
   protected day(iso: string): string {
-    return this.shortDate(iso);
+    return this.locale.date(iso);
   }
 
   /** A plain-language sentence of the chart's numbers, for screen readers. */

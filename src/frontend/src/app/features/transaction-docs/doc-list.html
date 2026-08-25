@@ -124,7 +124,7 @@
                     {{ bill.billNumber || '—' }}
                   </a>
                 </td>
-                <td class="num">{{ bill.date }}</td>
+                <td class="num">{{ locale.date(bill.date) }}</td>
                 <td [attr.data-label]="locale.t(config().labels.colParty)">{{ bill.partyName || locale.t(config().invoice.noParty) }}</td>
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(bill.amount) }}</td>
                 <td class="end" [attr.data-label]="locale.t(config().invoice.cash)">

@@ -8,7 +8,7 @@
 
     <header class="rpt__head">
       <h1 class="rpt__title">Daily report</h1>
-      <p class="rpt__date num">{{ r.date }}</p>
+      <p class="rpt__date num">{{ locale.date(r.date) }}</p>
     </header>
 
     <app-amount-legend />
@@ -65,7 +65,7 @@
     <section class="rpt__sec rpt__sec--page">
       <h2 class="rpt__h2">
         <span class="rpt__h2No num">1</span>Cashbook
-        <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+        <span class="rpt__h2Meta">{{ r.store.name }} · {{ locale.date(r.date) }}</span>
       </h2>
 
       @if (r.cashbook.rows.length === 0) {
@@ -149,7 +149,7 @@
       <section class="rpt__sec rpt__sec--page">
         <h2 class="rpt__h2">
           <span class="rpt__h2No num">{{ group.no }}</span>{{ group.title }}
-          <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+          <span class="rpt__h2Meta">{{ r.store.name }} · {{ locale.date(r.date) }}</span>
         </h2>
 
         @if (group.docs.length === 0) {
@@ -225,7 +225,7 @@
     <section class="rpt__sec rpt__sec--page">
       <h2 class="rpt__h2">
         <span class="rpt__h2No num">4</span>Khatas
-        <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+        <span class="rpt__h2Meta">{{ r.store.name }} · {{ locale.date(r.date) }}</span>
       </h2>
 
       @if (owing().length === 0) {
@@ -273,7 +273,7 @@
     <section class="rpt__sec rpt__sec--page">
       <h2 class="rpt__h2">
         <span class="rpt__h2No num">5</span>Stock
-        <span class="rpt__h2Meta">{{ r.store.name }} · {{ r.date }}</span>
+        <span class="rpt__h2Meta">{{ r.store.name }} · {{ locale.date(r.date) }}</span>
       </h2>
 
       @if (goods().length === 0) {
