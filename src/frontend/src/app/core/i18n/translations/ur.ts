@@ -373,6 +373,11 @@ export const ur: Record<TranslationKey, string> = {
   'settings.items.opening.qtyPh': 'مقدار',
   'settings.items.opening.save': 'محفوظ کریں',
   'settings.items.opening.cancel': 'منسوخ',
+  'settings.items.copy.button': 'دوسری دکانوں میں کاپی کریں',
+  'settings.items.copy.hint':
+    'اوپر دی گئی ہر آئٹم آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے اسی نام کی آئٹم موجود ہے تو اسے چھوڑ دیا جائے گا، اس لیے دوبارہ کاپی کرنے سے کچھ اضافی نہیں بنے گا۔ شیلف پر موجود اسٹاک ساتھ نہیں جاتا، صرف کیٹلاگ کی تفصیلات جاتی ہیں۔',
+  'settings.items.copy.confirm': 'کاپی کریں',
+  'settings.items.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
 
   'settings.units.subtitle': 'اس دکان کے یونٹ ایک دوسرے میں کیسے تبدیل ہوتے ہیں۔',
   'settings.units.standard.title': 'معیاری تبدیلیاں',
@@ -425,6 +430,12 @@ export const ur: Record<TranslationKey, string> = {
   'settings.party.opening.youOwe': 'آپ کے ذمے ان کا',
   'settings.party.opening.save': 'محفوظ کریں',
   'settings.party.opening.cancel': 'منسوخ',
+  'settings.party.copy.button': 'دوسری دکانوں میں کاپی کریں',
+  'settings.party.copy.hint':
+    'اوپر دی گئی ہر پارٹی آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے اسی نام کی پارٹی موجود ہے تو اسے چھوڑ دیا جائے گا، اس لیے دوبارہ کاپی کرنے سے کچھ اضافی نہیں بنے گا۔',
+  'settings.party.copy.confirm': 'کاپی کریں',
+  'settings.party.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
+
   'sale.newEntry': 'نئی انٹری',
   'sale.billDate': 'تاریخ',
   'sale.party': 'پارٹی',

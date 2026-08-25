@@ -29,6 +29,60 @@
   font-size: 13.5px;
   color: var(--kg-muted);
 }
+.custom__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+/* Copy-to-other-stores panel: same card language as the empty/error states, since it is
+   asking a question rather than presenting a table row. Duplicated from units.css — see the
+   ponytail note above on the shared-stylesheet extraction being deferred. */
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  background: var(--kg-hover);
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+}
+.copy__hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-muted);
+  max-width: 60ch;
+}
+.copy__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.copy__item {
+  display: contents;
+}
+.copy__opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  cursor: pointer;
+}
+.copy__opt input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--kg-brand);
+  cursor: pointer;
+}
 
 /* ── table ─────────────────────────────────────────────────────────── */
 .tablewrap {

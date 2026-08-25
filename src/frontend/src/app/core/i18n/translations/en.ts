@@ -390,6 +390,11 @@ export const en = {
   'settings.items.opening.qtyPh': 'Quantity',
   'settings.items.opening.save': 'Save',
   'settings.items.opening.cancel': 'Cancel',
+  'settings.items.copy.button': 'Copy to other stores',
+  'settings.items.copy.hint':
+    "Copies every item above into the stores you pick — an item they already have (matched by name) is left alone, so copying twice adds nothing extra. Stock on the shelf doesn't come along, only the catalog details.",
+  'settings.items.copy.confirm': 'Copy',
+  'settings.items.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
   'settings.units.subtitle': 'How the units this shop uses turn into one another.',
   'settings.units.standard.title': 'Standard conversions',
@@ -444,6 +449,12 @@ export const en = {
   'settings.party.opening.youOwe': 'You owe them',
   'settings.party.opening.save': 'Save',
   'settings.party.opening.cancel': 'Cancel',
+  'settings.party.copy.button': 'Copy to other stores',
+  'settings.party.copy.hint':
+    "Copies every party above into the stores you pick — a party they already have (matched by name) is left alone, so copying twice adds nothing extra.",
+  'settings.party.copy.confirm': 'Copy',
+  'settings.party.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
+
   'sale.newEntry': 'New entry',
   'sale.billDate': 'Date',
   'sale.party': 'Party',

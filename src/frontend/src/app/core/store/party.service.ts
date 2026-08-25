@@ -42,4 +42,56 @@ export class PartyService {
   setOpeningBalance(id: string, draft: OpeningBalanceDraft): Promise<Balance> {
     return firstValueFrom(this.http.put<Balance>(`${this.url}/${id}/opening-balance`, draft));
   }
+
+  /**
+   * Copy this store's parties into other stores the caller also has a hand in — a shop with
+   * several branches shares one customer list instead of retyping it. Unlike unit conversions,
+   * creating a party is not an upsert, so a name already present in the target store (matched
+   * case-insensitively, trimmed) is left alone rather than duplicated — copying twice is a
+   * no-op, not a doubling. Opening balances are this store's own debt and don't travel.
+   *
+   * Best-effort per store: one party failing to create does not stop the rest, and one store
+   * failing does not stop the others. Returns the ids that came back with at least one failure.
+   */
+  async copyTo(storeIds: readonly string[]): Promise<string[]> {
+    const parties = await this.list();
+    const failed: string[] = [];
+
+    await Promise.all(
+      storeIds.map(async (id) => {
+        const url = this.stores.apiFor(id, 'parties');
+        let existingNames: Set<string>;
+        try {
+          const existing = await firstValueFrom(this.http.get<Party[]>(url));
+          existingNames = new Set(existing.map((p) => p.name.trim().toLowerCase()));
+        } catch {
+          failed.push(id);
+          return;
+        }
+
+        let ok = true;
+        for (const party of parties) {
+          if (existingNames.has(party.name.trim().toLowerCase())) {
+            continue;
+          }
+          try {
+            await firstValueFrom(
+              this.http.post<Party>(url, {
+                name: party.name,
+                contact: party.contact,
+                address: party.address,
+              } satisfies PartyDraft),
+            );
+          } catch {
+            ok = false;
+          }
+        }
+        if (!ok) {
+          failed.push(id);
+        }
+      }),
+    );
+
+    return failed;
+  }
 }
