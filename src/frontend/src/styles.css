@@ -1222,22 +1222,26 @@ html[dir='rtl'] select.rm-input {
   }
   .rm-subrow {
     display: table-row;
-    font-size: 10.5px;
-    color: #333;
   }
+  /* Indent + tint the attached bill/purchase detail so it reads as a nested
+     receipt under the entry above, not another row of the same table. */
   .rm-subrow td {
-    padding: 2px 8px;
+    padding: 10px 20px 14px 34px;
+    background: var(--kg-cream);
+    border-top: 1px dashed var(--kg-line-strong);
   }
-  .rm-subrow > td:nth-child(2) {
-    padding-left: 22px;
+  .rm-subrow .bill-lines {
+    padding: 0 0 6px;
   }
-  .rm-subrow--tot {
-    border-bottom: 1px solid #bbb;
+  .rm-subrow .bill-total,
+  .rm-subrow .rm-foot.bill-foot {
+    margin-inline: 0;
+    padding-inline: 0;
   }
-  .rm-subrow__tot {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px 16px;
+  .rm-subrow .rm-foot.bill-foot {
+    background: transparent;
+    border-top: none;
+    padding-block: 6px 0;
   }
   /* "Print all bills": each invoice starts a fresh page. The first invoice's
      letterhead watermark and brand line are position:fixed, so they already

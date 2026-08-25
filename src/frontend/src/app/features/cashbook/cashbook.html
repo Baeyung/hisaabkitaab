@@ -158,31 +158,42 @@
                   </tr>
                 }
                 @if (printer.docs().get(row.transactionId); as doc) {
-                  @for (line of doc.lines; track $index) {
-                    <tr class="rm-subrow">
-                      <td></td>
-                      <td>
-                        <span class="rm-tbl__name">{{ line.itemName || '—' }}</span>
-                        @if (line.quantity != null) {
-                          <span class="rm-tbl__meta num">{{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }}</span>
+                  <tr class="rm-subrow">
+                    <td colspan="6">
+                      <div class="bill-lines">
+                        @for (line of doc.lines; track $index) {
+                          <div class="bill-line">
+                            <span class="bill-line__name">{{ line.itemName || '—' }}</span>
+                            <span class="bill-line__leader" aria-hidden="true"></span>
+                            <span class="bill-line__calc num">
+                              @if (line.quantity != null) {
+                                {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
+                              }
+                              {{ locale.money(line.amount) }}
+                            </span>
+                          </div>
                         }
-                      </td>
-                      <td class="end num">{{ locale.money(line.amount) }}</td>
-                      <td></td>
-                      <td></td>
-                      <td class="rm-noprint"></td>
-                    </tr>
-                  }
-                  <tr class="rm-subrow rm-subrow--tot">
-                    <td></td>
-                    <td colspan="4" class="rm-subrow__tot">
-                      <span>{{ locale.t('bill.detail.goodsTotal') }} <b class="num">{{ locale.money(doc.goodsTotal) }}</b></span>
-                      <span>{{ locale.t(docKeys[doc.kind].cash) }} <b class="num" [class.amt--in]="doc.kind === 'bills'" [class.amt--out]="doc.kind === 'purchases'">{{ locale.money(doc.cashReceived) }}</b></span>
-                      @if (doc.outstanding.direction !== 'SETTLED') {
-                        <span>{{ locale.t(doc.partyName ? docKeys[doc.kind].outstanding : docKeys[doc.kind].discount) }} <b class="num">{{ locale.money(doc.outstanding.amount) }}</b></span>
-                      }
+                      </div>
+                      <div class="bill-total">
+                        <span class="bill-total__label">{{ locale.t('bill.detail.goodsTotal') }}</span>
+                        <span class="bill-line__leader" aria-hidden="true"></span>
+                        <span class="bill-total__amt num">{{ locale.money(doc.goodsTotal) }}</span>
+                      </div>
+                      <div class="rm-foot bill-foot">
+                        <div class="bill-line">
+                          <span class="bill-line__name">{{ locale.t(docKeys[doc.kind].cash) }}</span>
+                          <span class="bill-line__leader" aria-hidden="true"></span>
+                          <span class="bill-line__calc num" [class.amt--in]="doc.kind === 'bills'" [class.amt--out]="doc.kind === 'purchases'">{{ locale.money(doc.cashReceived) }}</span>
+                        </div>
+                        @if (doc.outstanding.direction !== 'SETTLED') {
+                          <div class="bill-line">
+                            <span class="bill-line__name">{{ locale.t(doc.partyName ? docKeys[doc.kind].outstanding : docKeys[doc.kind].discount) }}</span>
+                            <span class="bill-line__leader" aria-hidden="true"></span>
+                            <span class="bill-line__calc num">{{ locale.money(doc.outstanding.amount) }}</span>
+                          </div>
+                        }
+                      </div>
                     </td>
-                    <td class="rm-noprint"></td>
                   </tr>
                 }
               }
