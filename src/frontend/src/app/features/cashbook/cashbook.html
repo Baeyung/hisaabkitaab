@@ -78,9 +78,6 @@
     </div>
 
     <app-amount-legend />
-    @if (printer.docs().size > 0) {
-      <p class="rm-note rm-printonly">{{ locale.t('common.printDetails.note') }}</p>
-    }
 
     @if (cb.rows.length === 0) {
       <div class="rm-state">
@@ -106,26 +103,13 @@
                 <tr class="rm-rowspacer" aria-hidden="true"><td colspan="6" [style.height.px]="pad"></td></tr>
               }
               @for (row of win.rows(); track row.transactionId + row.occurredAt) {
-                <tr
-                  [class.rm-rowlink]="!!detailLink(row.event, row.transactionId)"
-                  [class.rm-row--linked]="printer.docs().has(row.transactionId)"
-                  [attr.id]="printer.docs().has(row.transactionId) ? 'entry-' + row.transactionId : null"
-                  (click)="openDetail(row.event, row.transactionId)"
-                >
+                <tr [class.rm-rowlink]="!!detailLink(row.event, row.transactionId)" (click)="openDetail(row.event, row.transactionId)">
                   <td class="num">{{ time(row.occurredAt) }}</td>
                   <td class="rm-cell-head">
                     @if (detailLink(row.event, row.transactionId); as link) {
                       <a [routerLink]="link" (click)="$event.stopPropagation()" class="rm-tbl__name">{{ locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</a>
                     } @else {
                       <span class="rm-tbl__name">{{ locale.describe(row.event, row.partyName, row.amount, row.itemSummary) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</span>
-                    }
-                    @if (docIndex().get(row.transactionId); as n) {
-                      <a class="rm-jumplink rm-printonly" [attr.href]="'#doc-' + row.transactionId">{{
-                        locale.t('common.printDetails.jumpLink', {
-                          n: n.toString(),
-                          total: printedDocs().length.toString(),
-                        })
-                      }}</a>
                     }
                   </td>
                   <td class="end num rm-cell-amt" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
@@ -173,6 +157,45 @@
                     </td>
                   </tr>
                 }
+                @if (printer.docs().get(row.transactionId); as doc) {
+                  <tr class="rm-subrow">
+                    <td colspan="6">
+                      <div class="bill-lines">
+                        @for (line of doc.lines; track $index) {
+                          <div class="bill-line">
+                            <span class="bill-line__name">{{ line.itemName || '—' }}</span>
+                            <span class="bill-line__leader" aria-hidden="true"></span>
+                            <span class="bill-line__calc num">
+                              @if (line.quantity != null) {
+                                {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
+                              }
+                              {{ locale.money(line.amount) }}
+                            </span>
+                          </div>
+                        }
+                      </div>
+                      <div class="bill-total">
+                        <span class="bill-total__label">{{ locale.t('bill.detail.goodsTotal') }}</span>
+                        <span class="bill-line__leader" aria-hidden="true"></span>
+                        <span class="bill-total__amt num">{{ locale.money(doc.goodsTotal) }}</span>
+                      </div>
+                      <div class="rm-foot bill-foot">
+                        <div class="bill-line">
+                          <span class="bill-line__name">{{ locale.t(docKeys[doc.kind].cash) }}</span>
+                          <span class="bill-line__leader" aria-hidden="true"></span>
+                          <span class="bill-line__calc num" [class.amt--in]="doc.kind === 'bills'" [class.amt--out]="doc.kind === 'purchases'">{{ locale.money(doc.cashReceived) }}</span>
+                        </div>
+                        @if (doc.outstanding.direction !== 'SETTLED') {
+                          <div class="bill-line">
+                            <span class="bill-line__name">{{ locale.t(doc.partyName ? docKeys[doc.kind].outstanding : docKeys[doc.kind].discount) }}</span>
+                            <span class="bill-line__leader" aria-hidden="true"></span>
+                            <span class="bill-line__calc num">{{ locale.money(doc.outstanding.amount) }}</span>
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
               }
               @if (win.padBottom(); as pad) {
                 <tr class="rm-rowspacer" aria-hidden="true"><td colspan="6" [style.height.px]="pad"></td></tr>
@@ -199,25 +222,6 @@
       <!-- Empty unless the user printed with details — then it closes the run. -->
       <app-print-items-summary [bills]="soldDocs()" />
       <app-print-items-summary [bills]="boughtDocs()" [title]="boughtTitle" />
-      @if (printedDocs().length > 0) {
-        <div class="rm-printonly rm-appendix">
-          @for (doc of printedDocs(); track doc.id; let i = $index) {
-            <div class="rm-print-invoice" [id]="'doc-' + doc.id">
-              <app-print-header />
-              <p class="rm-note rm-pagelabel">{{
-                locale.t('common.printDetails.pageLabel', {
-                  n: (i + 1).toString(),
-                  total: printedDocs().length.toString(),
-                })
-              }}</p>
-              <a class="rm-backlink" [attr.href]="'#entry-' + doc.id">{{
-                locale.t('common.printDetails.backToEntry')
-              }}</a>
-              <app-bill-invoice [bill]="doc" [labels]="docInvoiceLabels[doc.kind]" />
-            </div>
-          }
-        </div>
-      }
     }
   }
 </section>

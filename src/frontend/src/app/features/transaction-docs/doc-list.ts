@@ -117,24 +117,6 @@ export class DocList {
     () => new Map(this.printBills().map((b) => [b.id, b])),
   );
 
-  /**
-   * {@link printBills}, in table row order rather than fetch-response order — what the row's
-   * jump-link number and the appended page's own "#N of M" label both count against, so a
-   * viewer that can't follow the link can still find the page by counting.
-   */
-  protected readonly orderedPrintBills = computed(() =>
-    this.filtered()
-      .filter((b) => this.printDetail().has(b.id))
-      .map((b) => this.printDetail().get(b.id)!),
-  );
-
-  /** Bill id → its 1-based position in {@link orderedPrintBills} (report layout only). */
-  protected readonly docIndex = computed(() => {
-    const map = new Map<string, number>();
-    this.orderedPrintBills().forEach((b, i) => map.set(b.id, i + 1));
-    return map;
-  });
-
   /** Report footer — what the printed range added up to, signed the way this kind runs. */
   protected readonly printTotals = computed(() =>
     sumBills(this.printBills(), this.config().owing),

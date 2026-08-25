@@ -737,20 +737,13 @@ export const en = {
   // The prompt names the documents actually on the page — a customer's statement is
   // all bills, a supplier's all purchases, and the cashbook usually holds both.
   'common.printDetails.title': 'Bill details',
-  'common.printDetails.confirm': "Attach each bill's full page at the end, linked from its row?",
+  'common.printDetails.confirm': "Include each bill's item details as sub-rows?",
   'common.printDetails.purchases.title': 'Purchase details',
-  'common.printDetails.purchases.confirm':
-    "Attach each purchase's full page at the end, linked from its row?",
+  'common.printDetails.purchases.confirm': "Include each purchase's item details as sub-rows?",
   'common.printDetails.both.title': 'Item details',
-  'common.printDetails.both.confirm':
-    "Attach each bill's and purchase's full page at the end, linked from its row?",
+  'common.printDetails.both.confirm': 'Include the items on each bill and purchase as sub-rows?',
   'common.printDetails.with': 'With details',
   'common.printDetails.without': 'Without details',
-  'common.printDetails.note':
-    "Rows in blue are numbered to match the full bill or purchase attached at the end — tap to jump there, or find it by number if your PDF viewer doesn't support links.",
-  'common.printDetails.jumpLink': 'Attachment #{{n}} of {{total}} — view full page ↓',
-  'common.printDetails.pageLabel': 'Attachment #{{n}} of {{total}}',
-  'common.printDetails.backToEntry': '↑ Back to entry',
   'common.perspective.title': 'Whose view?',
   'common.perspective.confirm':
     'Print/send this from your shop’s view, or from the party’s view?',

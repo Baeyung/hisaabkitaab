@@ -2,7 +2,6 @@ import { ApplicationRef, Injectable, inject, signal } from '@angular/core';
 import { BillService } from '../core/store/bill.service';
 import { BillDetail, DocKind } from '../core/store/bill.models';
 import { TranslationKey } from '../core/i18n/translations/en';
-import { BILL_INVOICE_LABELS, InvoiceLabels, PURCHASE_INVOICE_LABELS } from './bill-invoice';
 
 /** The four strings the print prompt shows — `yes` resolves true, `no` false. */
 export interface PrintPromptKeys {
@@ -72,12 +71,6 @@ export const DOC_TOTAL_KEYS: Record<
 
 const KINDS = ['bills', 'purchases'] as const;
 
-/** Full invoice wording per kind — what the appended, jump-linked pages render with. */
-export const DOC_INVOICE_LABELS: Record<DocKind, InvoiceLabels> = {
-  bills: BILL_INVOICE_LABELS,
-  purchases: PURCHASE_INVOICE_LABELS,
-};
-
 /** Which side of the counter a printed/sent statement reads correctly from. */
 export type Perspective = 'store' | 'party';
 
@@ -91,11 +84,11 @@ const PERSPECTIVE_PROMPT: PrintPromptKeys = {
 /**
  * Print-with-document-details for the cashbook and ledger statement. Both screens
  * list SALE and PURCHASE rows that each stand for a document; on Print we ask (via
- * the themed <app-print-details-dialog> mounted in the shell) whether to attach
- * every one of them as a full invoice page at the end of the printout, jump-linked
- * from its row. The fetched documents live here keyed by transaction id — the
- * templates read `docs().get(row.transactionId)` to tint the row and link it to
- * its appended page — then window.print() runs.
+ * the themed <app-print-details-dialog> mounted in the shell) whether to expand
+ * every one of them into its line items as sub-rows beneath its row. The fetched
+ * documents live here keyed by transaction id — the templates read
+ * `docs().get(row.transactionId)` to render the print-only sub-rows — then
+ * window.print() runs.
  */
 @Injectable({ providedIn: 'root' })
 export class PrintDetailsService {

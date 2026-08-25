@@ -41,21 +41,6 @@ export const BILL_INVOICE_LABELS: InvoiceLabels = {
 };
 
 /**
- * A purchase read as paper: the supplier's bill, from your side of the counter.
- * "Cash paid" where a sale says received, "Bought from" where it says bill to.
- */
-export const PURCHASE_INVOICE_LABELS: InvoiceLabels = {
-  fallbackTitle: 'nav.purchases',
-  counterparty: 'purchases.detail.boughtFrom',
-  noParty: 'purchases.cashPurchase',
-  empty: 'purchases.detail.empty',
-  goodsTotal: 'bill.detail.goodsTotal',
-  cash: 'purchases.detail.cashPaid',
-  outstanding: 'purchases.detail.outstanding',
-  discount: 'purchases.detail.discount',
-};
-
-/**
  * One goods document rendered as an invoice — header (number, date, who it is
  * against), the line-items table and the totals footer. Purely presentational:
  * the parent owns loading/toolbar/delete chrome. Used by the single bill and
