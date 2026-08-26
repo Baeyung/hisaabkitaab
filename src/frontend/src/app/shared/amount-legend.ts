@@ -19,8 +19,10 @@ export type LegendKind = 'money' | 'stock';
  * is cloth arriving and cloth leaving — a red quantity there is stock gone out (or an item
  * that has been sold past what was ever recorded in), not money owed.
  *
- * The wording stays the shopkeeper's ("money in", not "credit") on purpose — the brief in
- * `.claude/APPLICATION_DOMAIN.md` §3.2 keeps double-entry vocabulary out of the UI.
+ * The money legend uses "credit"/"debit" (Urdu: jama/banaam) by explicit product decision —
+ * a deliberate, scoped exception to the "no accounting jargon" rule in
+ * `.claude/APPLICATION_DOMAIN.md` §11. The stock legend is unaffected; it still reads
+ * "stock in"/"stock out".
  *
  * It names the colour in text rather than leaving a swatch to do the work, so it still
  * reads on a cheap screen, in greyscale, and to someone who cannot tell the two apart.

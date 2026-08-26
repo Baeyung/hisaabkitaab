@@ -112,7 +112,7 @@ Deliver a real system, not one-off screens:
 ## 11. Explicitly DO NOT
 
 - Do **not** design a barcode/scan POS, product-grid tills, or anything that assumes automated item capture.
-- Do **not** surface accounting jargon (debit, credit, journal, ledger-account) to the shopkeeper.
+- Do **not** surface accounting jargon (debit, credit, journal, ledger-account) to the shopkeeper — except the money-in/money-out colour legend (`app/shared/amount-legend.ts`), which by explicit decision reads "credit"/"debit" (Urdu: jama/banaam).
 - Do **not** use decorative gradients, heavy shadows, or a generic SaaS-dashboard template look.
 - Do **not** design English-only; do not design tight English labels that break under longer Urdu strings.
 - Do **not** treat cash position and profit as the same number.

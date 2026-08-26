@@ -742,8 +742,8 @@ export const ur: Record<TranslationKey, string> = {
   'cashbook.col.amount': 'رقم',
   'cashbook.col.khata': 'کھاتے میں',
   'cashbook.col.running': 'میزان',
-  'legend.money.in': 'سبز = رقم کی آمد',
-  'legend.money.out': 'سرخ = رقم کا اخراج',
+  'legend.money.in': 'سبز = جمع',
+  'legend.money.out': 'سرخ = بنام',
   'legend.stock.in': 'سبز = مال کی آمد',
   'legend.stock.out': 'سرخ = مال کا اخراج',
   // Read aloud in place of the dash the column shows when an entry settled in full.

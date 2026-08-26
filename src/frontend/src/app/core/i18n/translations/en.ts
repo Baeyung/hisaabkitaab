@@ -771,8 +771,8 @@ export const en = {
   'cashbook.col.running': 'Balance',
   // The colour key that rides under the figures on every screen that paints them. Named in
   // words, not left to a swatch — see app/shared/amount-legend.ts.
-  'legend.money.in': 'Green = money in',
-  'legend.money.out': 'Red = money out',
+  'legend.money.in': 'Green = credit',
+  'legend.money.out': 'Red = debit',
   'legend.stock.in': 'Green = stock in',
   'legend.stock.out': 'Red = stock out',
   // Read aloud in place of the dash the column shows when an entry settled in full.
