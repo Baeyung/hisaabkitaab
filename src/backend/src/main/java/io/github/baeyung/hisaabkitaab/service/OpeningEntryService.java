@@ -85,13 +85,16 @@ public class OpeningEntryService
         }
 
         InOut inOut = direction == BalanceDirection.YOU_OWE_THEM ? InOut.OUT : InOut.IN;
+        LocalDate openedOn = openingDate(transactionLineRepository.findEarliestPartyDate(partyId, store.getId()));
 
         if (existing.isPresent())
         {
-            TransactionLine line = existing.get().getLines().getFirst();
+            Transaction transaction = existing.get();
+            TransactionLine line = transaction.getLines().getFirst();
             line.setValue(amount);
             line.setInOut(inOut);
-            transactionRepository.save(existing.get());
+            transaction.setEntryDate(openedOn);
+            transactionRepository.save(transaction);
         }
         else
         {
@@ -99,7 +102,7 @@ public class OpeningEntryService
                     .store(store)
                     .event(TransactionEvent.OPENING_BALANCE)
                     .party(party)
-                    .entryDate(LocalDate.now())
+                    .entryDate(openedOn)
                     .build();
             transaction.getLines().add(TransactionLine.builder()
                     .transaction(transaction)
@@ -148,17 +151,19 @@ public class OpeningEntryService
             return 0;
         }
 
+        // Date it at the store's first activity so it always sorts before real cash
+        // movements (folding into the cashbook opening); today if it has none yet.
+        LocalDate openedOn = openingDate(transactionRepository.findEarliestEntryDate(store.getId()));
+
         if (existing.isPresent())
         {
-            existing.get().getLines().getFirst().setValue(amount);
-            transactionRepository.save(existing.get());
+            Transaction transaction = existing.get();
+            transaction.getLines().getFirst().setValue(amount);
+            transaction.setEntryDate(openedOn);
+            transactionRepository.save(transaction);
         }
         else
         {
-            // Date it at the store's first activity so it always sorts before real cash
-            // movements (folding into the cashbook opening); today if it has none yet.
-            LocalDate earliest = transactionRepository.findEarliestEntryDate(store.getId());
-            LocalDate openedOn = earliest != null ? earliest : LocalDate.now();
             Transaction transaction = Transaction.builder()
                     .store(store)
                     .event(TransactionEvent.OPENING_CASH)
@@ -194,17 +199,21 @@ public class OpeningEntryService
             return BigDecimal.ZERO;
         }
 
+        LocalDate openedOn = openingDate(transactionLineRepository.findEarliestItemDate(itemId, store.getId()));
+
         if (existing.isPresent())
         {
-            existing.get().getLines().getFirst().setQuantity(quantity);
-            transactionRepository.save(existing.get());
+            Transaction transaction = existing.get();
+            transaction.getLines().getFirst().setQuantity(quantity);
+            transaction.setEntryDate(openedOn);
+            transactionRepository.save(transaction);
         }
         else
         {
             Transaction transaction = Transaction.builder()
                     .store(store)
                     .event(TransactionEvent.OPENING_STOCK)
-                    .entryDate(LocalDate.now())
+                    .entryDate(openedOn)
                     .build();
             transaction.getLines().add(TransactionLine.builder()
                     .transaction(transaction)
@@ -222,5 +231,57 @@ public class OpeningEntryService
                 store.getId(), quantity, item.getUnit());
 
         return quantity;
+    }
+
+    /**
+     * Nightly safety net for the store's opening entries. Setting an opening balance/stock
+     * already dates it at the earliest real activity known at that moment — but a shopkeeper
+     * can add an even earlier backdated sale, purchase, or receipt afterwards without ever
+     * touching Settings again, which nothing else re-dates. This walks every existing opening
+     * entry and moves it earlier if real activity now starts before it; it never creates one
+     * that was never set, and it's a no-op (no write) once nothing is left to correct.
+     */
+    public void repositionOpeningEntries(Store store)
+    {
+        String storeId = store.getId();
+
+        Map<String, LocalDate> partyDates = transactionLineRepository.findEarliestPartyDatesByStore(storeId).stream()
+                .collect(Collectors.toMap(TransactionLineRepository.PartyEarliestRow::getPartyId,
+                        TransactionLineRepository.PartyEarliestRow::getEarliestDate));
+        for (Transaction opening : transactionRepository.findByStoreAndEventNewestFirst(storeId, TransactionEvent.OPENING_BALANCE))
+        {
+            repositionIfEarlier(opening, partyDates.get(opening.getParty().getId()));
+        }
+
+        Map<String, LocalDate> itemDates = transactionLineRepository.findEarliestItemDatesByStore(storeId).stream()
+                .collect(Collectors.toMap(TransactionLineRepository.ItemEarliestRow::getItemId,
+                        TransactionLineRepository.ItemEarliestRow::getEarliestDate));
+        for (Transaction opening : transactionRepository.findByStoreAndEventNewestFirst(storeId, TransactionEvent.OPENING_STOCK))
+        {
+            repositionIfEarlier(opening, itemDates.get(opening.getLines().getFirst().getItem().getId()));
+        }
+
+        transactionRepository.findFirstByStoreIdAndEvent(storeId, TransactionEvent.OPENING_CASH)
+                .ifPresent(opening -> repositionIfEarlier(opening, transactionRepository.findEarliestEntryDate(storeId)));
+    }
+
+    /** Moves an opening transaction's date to {@code earliest} only when that's actually earlier than what it has now. */
+    private void repositionIfEarlier(Transaction opening, LocalDate earliest)
+    {
+        if (earliest == null || !earliest.isBefore(opening.getEntryDate()))
+        {
+            return;
+        }
+
+        log.info("repositioning {} of store {} from {} to {}",
+                opening.getEvent(), opening.getStore().getId(), opening.getEntryDate(), earliest);
+        opening.setEntryDate(earliest);
+        transactionRepository.save(opening);
+    }
+
+    /** Today's earliest known real activity, or right now when there is none yet. */
+    private static LocalDate openingDate(LocalDate earliest)
+    {
+        return earliest != null ? earliest : LocalDate.now();
     }
 }

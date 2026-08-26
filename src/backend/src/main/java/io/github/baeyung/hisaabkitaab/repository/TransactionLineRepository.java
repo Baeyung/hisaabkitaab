@@ -216,6 +216,60 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<ItemOpeningRow> findOpeningStockByStore(@Param("storeId") String storeId);
 
+    /**
+     * A party's earliest real ledger date — its own opening balance excluded — for dating
+     * or correcting that opening balance (see OpeningEntryService). Null when the party has
+     * no real activity yet.
+     */
+    @Query("""
+            select min(coalesce(tl.transaction.eventDate, tl.transaction.entryDate))
+            from TransactionLine tl
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.PARTY
+              and tl.party.id = :partyId
+              and tl.transaction.store.id = :storeId
+              and tl.transaction.event <> io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_BALANCE
+            """)
+    LocalDate findEarliestPartyDate(@Param("partyId") String partyId, @Param("storeId") String storeId);
+
+    /** Batch form of {@link #findEarliestPartyDate} — one query for every party in the store, for the nightly reposition job. */
+    @Query("""
+            select tl.party.id as partyId,
+                   min(coalesce(tl.transaction.eventDate, tl.transaction.entryDate)) as earliestDate
+            from TransactionLine tl
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.PARTY
+              and tl.transaction.store.id = :storeId
+              and tl.transaction.event <> io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_BALANCE
+            group by tl.party.id
+            """)
+    List<PartyEarliestRow> findEarliestPartyDatesByStore(@Param("storeId") String storeId);
+
+    /**
+     * An item's earliest real movement date — its own opening stock excluded — for dating
+     * or correcting that opening stock (see OpeningEntryService). Null when the item has no
+     * real movement yet.
+     */
+    @Query("""
+            select min(coalesce(tl.transaction.eventDate, tl.transaction.entryDate))
+            from TransactionLine tl
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.STOCK
+              and tl.item.id = :itemId
+              and tl.transaction.store.id = :storeId
+              and tl.transaction.event <> io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_STOCK
+            """)
+    LocalDate findEarliestItemDate(@Param("itemId") String itemId, @Param("storeId") String storeId);
+
+    /** Batch form of {@link #findEarliestItemDate} — one query for every item in the store, for the nightly reposition job. */
+    @Query("""
+            select tl.item.id as itemId,
+                   min(coalesce(tl.transaction.eventDate, tl.transaction.entryDate)) as earliestDate
+            from TransactionLine tl
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.STOCK
+              and tl.transaction.store.id = :storeId
+              and tl.transaction.event <> io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_STOCK
+            group by tl.item.id
+            """)
+    List<ItemEarliestRow> findEarliestItemDatesByStore(@Param("storeId") String storeId);
+
     interface PartyBalanceRow
     {
         String getPartyId();
@@ -244,6 +298,20 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
         String getItemId();
 
         BigDecimal getQuantity();
+    }
+
+    interface PartyEarliestRow
+    {
+        String getPartyId();
+
+        LocalDate getEarliestDate();
+    }
+
+    interface ItemEarliestRow
+    {
+        String getItemId();
+
+        LocalDate getEarliestDate();
     }
 
     interface ItemStockRow

@@ -101,7 +101,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     @EntityGraph(attributePaths = {"lines"})
     Optional<Transaction> findFirstByStoreIdAndEvent(String storeId, TransactionEvent event);
 
-    /** The store's earliest business date across all transactions — null when it has none yet. */
-    @Query("select min(coalesce(t.eventDate, t.entryDate)) from Transaction t where t.store.id = :storeId")
+    /**
+     * The store's earliest real trading date — null when it has none yet. Opening entries
+     * themselves are excluded so re-running this after they're already dated correctly
+     * doesn't just find its own date back (see OpeningEntryService).
+     */
+    @Query("""
+            select min(coalesce(t.eventDate, t.entryDate)) from Transaction t
+            where t.store.id = :storeId
+              and t.event not in (io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_BALANCE,
+                                   io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_STOCK,
+                                   io.github.baeyung.hisaabkitaab.enums.TransactionEvent.OPENING_CASH)
+            """)
     LocalDate findEarliestEntryDate(@Param("storeId") String storeId);
 }
