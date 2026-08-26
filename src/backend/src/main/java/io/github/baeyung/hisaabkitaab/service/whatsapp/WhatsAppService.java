@@ -194,7 +194,7 @@ public class WhatsAppService {
                     "index", "1",
                     "parameters", urlButtonParameters
                             .stream()
-                            .map(value -> Map.<String, Object>of("type", "text", "text", value))
+                            .map(value -> Map.<String, Object>of("type", "text", "text", "/" + value))
                             .toList()
             ));
         }
