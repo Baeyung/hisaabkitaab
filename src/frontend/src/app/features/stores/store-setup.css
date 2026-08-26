@@ -84,15 +84,18 @@
   background-position: 100% 0;
 }
 
-/* The rail sets the page's height: down to the fold, so the book lies open on
-   the desk rather than floating as a card with a dead strip of desk below it.
-   Kept just under the viewport — a sticky box taller than it stops sticking. */
+/* The rail matches the page's own height — `.book`'s grid stretches `.index`
+   to the taller side already, so height:100% of that (not a viewport calc)
+   is what puts the note at the rail's true foot. A viewport-height floor here
+   used to force the whole book open to the fold even when a step's content
+   was short, leaving a dead gap under both leaves; matching content instead
+   means a short step reads as a short page, not an unfinished one. */
 .index__inner {
   position: sticky;
   top: 0;
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 56px - 2 * var(--kg-page-pad));
+  height: 100%;
   padding-block: 22px;
 }
 
@@ -247,6 +250,26 @@
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--kg-muted);
+}
+
+/* A step change re-mounts this header and the spread below it (the @switch
+   swaps the whole block) — a small settle-in on each keeps turning the page
+   from feeling like a flat form swap, the way the written-line rows below
+   already do on their own arrival. */
+@media (prefers-reduced-motion: no-preference) {
+  .page__head,
+  .spread {
+    animation: setup-page-in 0.22s ease-out both;
+  }
+  .spread {
+    animation-delay: 0.03s;
+  }
+}
+@keyframes setup-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 
 /* ── the spread ────────────────────────────────────────────────────── */
@@ -442,6 +465,14 @@
 }
 .fld--money {
   max-width: 190px;
+}
+/* The country-code select alone is 116px, and app-phone-field's number input
+   allows itself to shrink to nothing (min-width: 0, needed elsewhere to stop
+   it overflowing a narrower row) — so a plain flex/grid share leaves too
+   little room and the placeholder digits clip mid-character. This floor
+   keeps a full example number ("3001234567") on screen. */
+.fld--phone {
+  min-width: 248px;
 }
 
 /* ── logo & watermark ──────────────────────────────────────────────── */

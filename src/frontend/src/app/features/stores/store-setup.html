@@ -80,7 +80,7 @@
                   <label class="fld__label" for="setup-address">{{ locale.t('settings.general.address') }}</label>
                   <input id="setup-address" class="fld__input" [formField]="shopForm.address" type="text" autocomplete="street-address" />
                 </div>
-                <div class="fld">
+                <div class="fld fld--phone">
                   <label class="fld__label" for="setup-contact">{{ locale.t('settings.general.contact') }}</label>
                   <app-phone-field inputId="setup-contact" [formField]="shopForm.contact" />
                 </div>
@@ -368,7 +368,7 @@
                       [attr.placeholder]="locale.t('setup.khatas.namePh')"
                     />
                   </div>
-                  <div class="fld fld--grow">
+                  <div class="fld fld--grow fld--phone">
                     <label class="fld__label" for="setup-party-contact">{{ locale.t('setup.khatas.contact') }}</label>
                     <app-phone-field
                       inputId="setup-party-contact"
