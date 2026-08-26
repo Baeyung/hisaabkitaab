@@ -32,8 +32,7 @@
 - [x] purchase screen
 - [x] cash received/udhaar on all screens
 - [x] monthly reports + party reminders, on whatsapp
-- [ ] button for sending whatsapp to all members
 - [ ] enhance mobile UI for better UX.
 - [ ] toasts on error/succes api
-- [ ] collapsable ledger screen so expenses can be seen easily
-- [ ] search in party/item management
+- [x] collapsable ledger screen so expenses can be seen easily
+- [x] search in party/item management

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { CashSaleRow, ExpenseCategoryGroup, PartyBalanceRow, PartyStatement } from './ledger.models';
+import { CashGroup, ExpenseCategoryGroup, PartyBalanceRow, PartyStatement } from './ledger.models';
 import { StoreService } from './store.service';
 
 /** Khata reads for the current store: party balances and per-party statements. */
@@ -27,8 +27,8 @@ export class LedgerService {
     return firstValueFrom(this.http.get<ExpenseCategoryGroup[]>(`${this.url}/expense-categories`));
   }
 
-  /** Walk-in sales — cash only, no party — chronological with a running total. */
-  listCashSales(): Promise<CashSaleRow[]> {
-    return firstValueFrom(this.http.get<CashSaleRow[]>(`${this.url}/cash-sales`));
+  /** Walk-in cash trade — no party — grouped into Sales and Purchases with their grand totals. */
+  listCash(): Promise<CashGroup[]> {
+    return firstValueFrom(this.http.get<CashGroup[]>(`${this.url}/cash`));
   }
 }

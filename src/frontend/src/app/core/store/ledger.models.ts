@@ -60,14 +60,22 @@ export interface ExpenseCategoryGroup {
   rows: ExpenseCategoryRow[];
 }
 
-/** One walk-in sale — cash only, no party — with the register's running total (GET /api/ledger/cash-sales). */
-export interface CashSaleRow {
+/** One walk-in cash line — a sale or purchase, no party — with the register's running total. */
+export interface CashRow {
   transactionId: string;
   date: string;
   occurredAt: string;
-  /** Goods on the sale ("Lawn Print × 12") — null when none were recorded. */
+  /** Goods on the line ("Lawn Print × 12") — null when none were recorded. */
   itemSummary: string | null;
   description: string | null;
   amount: number;
   runningTotal: number;
+}
+
+/** Walk-in cash trade of one kind, collapsed into a khata head (GET /api/ledger/cash). */
+export interface CashGroup {
+  kind: 'SALE' | 'PURCHASE';
+  count: number;
+  total: number;
+  rows: CashRow[];
 }

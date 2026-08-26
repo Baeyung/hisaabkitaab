@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -119,22 +120,34 @@ public class LedgerQueryService
     }
 
     /**
-     * Every walk-in sale — cash only, no party — chronological with a running total.
-     * These never post a PARTY line worth anything (see PartyProcessor), so they never
-     * surface among the party balances; this is the only place they show up in the khata.
+     * Walk-in cash trade — no party, so neither ever posts a PARTY line and neither
+     * surfaces among the party balances — grouped into Sales and Purchases, each with
+     * its grand total and chronological rows with a running total. Only a kind with at
+     * least one entry shows.
      */
-    public List<CashSaleRowResponse> listCashSales(String storeId)
+    public List<CashGroupResponse> listCash(String storeId)
     {
-        // ponytail: scans full cash-sale history each call; add a cached read-model if a shop's cash-sale count ever makes this slow.
-        List<TransactionLine> lines = transactionLineRepository.findCashSaleLinesByStore(storeId);
+        // ponytail: scans full cash history each call; add a cached read-model if a shop's cash-entry count ever makes this slow.
+        List<CashGroupResponse> groups = new ArrayList<>();
+        addCashGroup(groups, "SALE", transactionLineRepository.findCashSaleLinesByStore(storeId));
+        addCashGroup(groups, "PURCHASE", transactionLineRepository.findCashPurchaseLinesByStore(storeId));
+        return groups;
+    }
 
-        return RunningBalanceFolder.fold(
+    private void addCashGroup(List<CashGroupResponse> groups, String kind, List<TransactionLine> lines)
+    {
+        if (lines.isEmpty())
+        {
+            return;
+        }
+
+        List<CashRowResponse> rows = RunningBalanceFolder.fold(
                 lines,
                 0,
                 this::value,
                 (line, running) -> {
                     Transaction transaction = line.getTransaction();
-                    return new CashSaleRowResponse(
+                    return new CashRowResponse(
                             transaction.getId(),
                             transaction.getEventDate() != null ? transaction.getEventDate() : transaction.getEntryDate(),
                             transaction.getCreatedAt(),
@@ -145,6 +158,8 @@ public class LedgerQueryService
                     );
                 }
         );
+
+        groups.add(new CashGroupResponse(kind, rows.size(), rows.getLast().runningTotal(), rows));
     }
 
     public PartyStatementResponse getStatement(String storeId, String partyId)

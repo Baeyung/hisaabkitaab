@@ -5,7 +5,7 @@
       <h1 class="rm-title">{{ locale.t('nav.ledger') }}</h1>
       <p class="rm-sub">{{ locale.t('ledger.subtitle') }}</p>
     </div>
-    @if ((parties()?.length ?? 0) > 0 || cashSales().length > 0) {
+    @if ((parties()?.length ?? 0) > 0 || cashGroups().length > 0) {
       <div class="rm-actions rm-noprint">
         <button type="button" class="rm-btn rm-btn--ghost" (click)="print()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -32,7 +32,7 @@
       <p role="alert" class="rm-alert">{{ locale.t('ledger.loadError') }}</p>
       <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">{{ locale.t('settings.general.retry') }}</button>
     </div>
-  } @else if ((parties()?.length ?? 0) === 0 && categories().length === 0 && cashSales().length === 0) {
+  } @else if ((parties()?.length ?? 0) === 0 && categories().length === 0 && cashGroups().length === 0) {
     <div class="rm-state">
       <h2 class="rm-state__title">{{ locale.t('ledger.empty.title') }}</h2>
       <p class="rm-state__body">{{ locale.t('ledger.empty.body') }}</p>
@@ -167,51 +167,40 @@
       </details>
     }
 
-    @if (cashSales().length > 0) {
+    @if (cashGroups().length > 0) {
       <details
         class="fold fold--section"
-        [open]="cashSalesOpen() || capture.capturing()"
-        (toggle)="capture.capturing() || cashSalesOpen.set($any($event.target).open)"
+        [open]="cashOpen() || capture.capturing()"
+        (toggle)="capture.capturing() || cashOpen.set($any($event.target).open)"
       >
         <summary class="fold__sum fold__sum--section">
           <svg class="fold__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
             <path d="M6 9l6 6 6-6" />
           </svg>
-          {{ locale.t('ledger.cashSales.title') }}
-          <span class="fold__count">{{ cashSales().length }}</span>
+          {{ locale.t('ledger.cash.title') }}
+          <span class="fold__count">{{ cashGroups().length }}</span>
         </summary>
         <div class="fold__body">
           <div class="rm-tablewrap">
             <table class="rm-tbl">
               <thead>
                 <tr>
-                  <th scope="col">{{ locale.t('ledger.detail.col.date') }}</th>
-                  <th scope="col">{{ locale.t('ledger.detail.col.detail') }}</th>
-                  <th scope="col" class="end">{{ locale.t('ledger.detail.col.amount') }}</th>
-                  <th scope="col" class="end">{{ locale.t('ledger.category.detail.col.running') }}</th>
+                  <th scope="col">{{ locale.t('ledger.cash.col.type') }}</th>
+                  <th scope="col" class="end">{{ locale.t('ledger.category.col.count') }}</th>
+                  <th scope="col" class="end">{{ locale.t('ledger.cash.col.total') }}</th>
                 </tr>
               </thead>
-              <tbody [appRowWindow]="winCashSales">
-                @if (winCashSales.padTop(); as pad) {
-                  <tr class="rm-rowspacer" aria-hidden="true"><td colspan="4" [style.height.px]="pad"></td></tr>
-                }
-                @for (row of winCashSales.rows(); track row.transactionId + row.occurredAt) {
-                  <tr class="rm-rowlink" (click)="openCashSale(row.transactionId)">
-                    <td class="num">{{ locale.date(row.date) }}</td>
+              <tbody>
+                @for (group of cashGroups(); track group.kind) {
+                  <tr class="rm-rowlink" (click)="openCashGroup(group.kind)">
                     <td class="rm-cell-head">
-                      <a [routerLink]="stores.link('bill-management', row.transactionId)" (click)="$event.stopPropagation()" class="rm-tbl__name">
-                        {{ locale.describe('SALE', null, row.amount, row.itemSummary) }}
-                      </a>
-                      @if (row.description) {
-                        <em class="rm-note"> ({{ row.description }})</em>
-                      }
+                      <a [routerLink]="stores.link('ledger/cash', group.kind)" class="rm-tbl__name">{{ cashKindLabel(group.kind) }}</a>
                     </td>
-                    <td class="end num amt--in rm-cell-amt">{{ locale.money(row.amount) }}</td>
-                    <td class="end num" [attr.data-label]="locale.t('ledger.category.detail.col.running')">{{ locale.money(row.runningTotal) }}</td>
+                    <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">{{ group.count }}</td>
+                    <td class="end num rm-cell-amt">
+                      {{ locale.money(group.total) }}
+                    </td>
                   </tr>
-                }
-                @if (winCashSales.padBottom(); as pad) {
-                  <tr class="rm-rowspacer" aria-hidden="true"><td colspan="4" [style.height.px]="pad"></td></tr>
                 }
               </tbody>
             </table>

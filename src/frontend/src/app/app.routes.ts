@@ -156,6 +156,10 @@ export const routes: Routes = [
           import('./features/ledger/category-detail').then((m) => m.CategoryDetail),
       },
       {
+        path: 'ledger/cash/:key',
+        loadComponent: () => import('./features/ledger/cash-detail').then((m) => m.CashDetail),
+      },
+      {
         path: 'ledger/:partyId',
         loadComponent: () => import('./features/ledger/ledger-detail').then((m) => m.LedgerDetail),
       },

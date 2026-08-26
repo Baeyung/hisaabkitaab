@@ -1,0 +1,115 @@
+<section class="rm-page">
+  <app-print-header />
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (notFound()) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('ledger.cash.detail.notFound') }}</h2>
+      <a class="rm-btn rm-btn--ghost" [routerLink]="stores.link('ledger')">{{ locale.t('common.back') }}</a>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state">
+      <p role="alert" class="rm-alert">{{ locale.t('ledger.detail.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load(key())">{{ locale.t('settings.general.retry') }}</button>
+    </div>
+  } @else if (group(); as g) {
+    <header class="rm-head">
+      <div>
+        <h1 class="rm-title">{{ cashKindLabel(g.kind) }}</h1>
+        <p class="rm-sub">{{ locale.t('ledger.category.entries', { count: locale.formatNumber(g.count) }) }}</p>
+        <div class="rm-baqaya">
+          <span class="rm-baqaya__label">{{ locale.t('ledger.cash.col.total') }}</span>
+          <span class="rm-baqaya__amt num">{{ locale.money(g.total) }}</span>
+        </div>
+      </div>
+      <div class="rm-actions rm-noprint">
+        <button type="button" class="rm-btn rm-btn--ghost" (click)="print()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
+          </svg>
+          {{ locale.t('common.print') }}
+        </button>
+        <app-whatsapp-button
+          [document]="locale.t('whatsapp.doc.cash')"
+          [action]="locale.t('whatsapp.doc.cash')"
+        />
+      </div>
+    </header>
+
+    <app-amount-legend />
+
+    <div class="rm-card">
+      <div class="rm-toolbar rm-toolbar--filters rm-noprint">
+        <label class="rm-field rm-field--search">
+          <span class="rm-field__label">{{ locale.t('ledger.cash.search.label') }}</span>
+          <app-combobox
+            [value]="filters.q()"
+            (valueChange)="filters.replace({ q: $event })"
+            [placeholder]="locale.t('ledger.cash.search.ph')"
+            [ariaLabel]="locale.t('ledger.cash.search.ph')"
+          />
+        </label>
+        <div class="rm-field">
+          <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
+          <app-date-field
+            [value]="filters.from()"
+            (valueChange)="filters.set('from', $event)"
+            [ariaLabel]="locale.t('bill.filter.from')"
+          />
+        </div>
+        <div class="rm-field">
+          <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
+          <app-date-field
+            [value]="filters.to()"
+            (valueChange)="filters.set('to', $event)"
+            [ariaLabel]="locale.t('bill.filter.to')"
+          />
+        </div>
+      </div>
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('ledger.detail.col.date') }}</th>
+              <th scope="col">{{ locale.t('ledger.detail.col.detail') }}</th>
+              <th scope="col" class="end">{{ locale.t('ledger.detail.col.amount') }}</th>
+              <th scope="col" class="end">{{ locale.t('ledger.category.detail.col.running') }}</th>
+            </tr>
+          </thead>
+          <tbody [appRowWindow]="win">
+            @if (win.padTop(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="4" [style.height.px]="pad"></td></tr>
+            }
+            @for (row of win.rows(); track row.transactionId + row.occurredAt) {
+              <tr class="rm-rowlink" (click)="openBill(row.transactionId)">
+                <td class="num">{{ locale.date(row.date) }}</td>
+                <td class="rm-cell-head">
+                  <a [routerLink]="stores.link('bill-management', row.transactionId)" (click)="$event.stopPropagation()" class="rm-tbl__name">
+                    {{ locale.describe(g.kind, null, row.amount, row.itemSummary) }}
+                  </a>
+                  @if (row.description) {
+                    <em class="rm-note"> ({{ row.description }})</em>
+                  }
+                </td>
+                <td class="end num rm-cell-amt">{{ locale.money(row.amount) }}</td>
+                <td class="end num" [attr.data-label]="locale.t('ledger.category.detail.col.running')">{{ locale.money(row.runningTotal) }}</td>
+              </tr>
+            }
+            @if (win.padBottom(); as pad) {
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="4" [style.height.px]="pad"></td></tr>
+            }
+            @if (!filteredRows().length) {
+              <tr>
+                <td colspan="4">{{ locale.t(emptyKey()) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</section>

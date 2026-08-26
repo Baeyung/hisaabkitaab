@@ -5,7 +5,7 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { LedgerService } from '../../core/store/ledger.service';
 import { StoreService } from '../../core/store/store.service';
 import { BalanceDirection } from '../../core/store/balance.models';
-import { CashSaleRow, ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.models';
+import { CashGroup, ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.models';
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
@@ -45,18 +45,15 @@ export class Ledger {
 
   protected readonly parties = signal<PartyBalanceRow[] | null>(null);
   protected readonly categories = signal<ExpenseCategoryGroup[]>([]);
-  protected readonly cashSales = signal<CashSaleRow[]>([]);
+  protected readonly cashGroups = signal<CashGroup[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
 
   /** All three sections start shut — a khata with hundreds of parties would otherwise
-   *  force a scroll past all of them just to reach the expenses/cash-sales blocks below. */
+   *  force a scroll past all of them just to reach the expenses/cash blocks below. */
   protected readonly partiesOpen = signal(false);
   protected readonly categoriesOpen = signal(false);
-  protected readonly cashSalesOpen = signal(false);
-
-  /** The rows the cash-sales table renders — a busy till can run to thousands of entries. */
-  protected readonly winCashSales = rowWindow(this.cashSales);
+  protected readonly cashOpen = signal(false);
 
   /** `q` is the name/contact search, `dir` the way the baqaya points ('' = every khata). */
   protected readonly filters = urlFilters({ q: '', dir: '' });
@@ -117,6 +114,10 @@ export class Ledger {
   protected readonly categoryLabel = (name: string): string =>
     expenseCategoryLabel(name, (k) => this.locale.t(k));
 
+  /** "Sales" / "Purchases" for a cash group's kind. */
+  protected readonly cashKindLabel = (kind: string): string =>
+    this.locale.t(`ledger.cash.kind.${kind}` as TranslationKey);
+
   constructor() {
     void this.load();
   }
@@ -125,14 +126,14 @@ export class Ledger {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      const [parties, categories, cashSales] = await Promise.all([
+      const [parties, categories, cashGroups] = await Promise.all([
         this.api.list(),
         this.api.listExpenseCategories(),
-        this.api.listCashSales(),
+        this.api.listCash(),
       ]);
       this.parties.set(parties);
       this.categories.set(categories);
-      this.cashSales.set(cashSales);
+      this.cashGroups.set(cashGroups);
     } catch {
       this.loadError.set(true);
     } finally {
@@ -148,8 +149,8 @@ export class Ledger {
     void this.router.navigate(this.stores.link('ledger/category', category));
   }
 
-  openCashSale(transactionId: string): void {
-    void this.router.navigate(this.stores.link('bill-management', transactionId));
+  openCashGroup(kind: string): void {
+    void this.router.navigate(this.stores.link('ledger/cash', kind));
   }
 
   print(): void {
