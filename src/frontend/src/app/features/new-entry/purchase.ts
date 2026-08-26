@@ -35,6 +35,7 @@ export class Purchase {
       lineAdd: 'purchase.line.add',
       total: 'purchase.total',
       cash: 'purchase.paid',
+      discount: 'purchases.detail.discount',
       billNumber: 'purchase.billNumber',
       billNumberPh: 'purchase.billNumber.ph',
       description: 'purchase.description',

@@ -100,16 +100,14 @@
                 >
                   {{ locale.money(row.amount) }}
                 </td>
-                <td class="rpt__num num" [class]="tone(row.khata.direction)">
-                  @if (row.khata.direction === 'SETTLED') {
-                    —
+                <td class="rpt__num num">
+                  @if (row.partyName && row.khata.direction !== 'SETTLED') {
+                    <span [class]="tone(row.khata.direction)">{{ locale.money(row.khata.amount) }}</span>
+                  } @else if (row.discount) {
+                    {{ locale.money(row.discount) }}
+                    <span class="rm-tbl__meta">Discount</span>
                   } @else {
-                    {{ locale.money(row.khata.amount) }}
-                    <!-- The column already says "on khata"; it only needs naming when it isn't
-                         one, which with nobody to put it on it cannot be. -->
-                    @if (!row.partyName) {
-                      <span class="rm-tbl__meta">Discount</span>
-                    }
+                    —
                   }
                 </td>
                 <td class="rpt__num num">{{ locale.money(row.runningBalance) }}</td>
@@ -192,9 +190,15 @@
                   <th colspan="3">{{ group.cashLabel }}</th>
                   <td class="rpt__num num amt--in">{{ locale.money(doc.cashReceived) }}</td>
                 </tr>
-                @if (doc.outstanding.direction !== 'SETTLED') {
+                @if (doc.discount) {
                   <tr>
-                    <th colspan="3">{{ gapLabel(doc.partyName) }}</th>
+                    <th colspan="3">Discount</th>
+                    <td class="rpt__num num">{{ locale.money(doc.discount) }}</td>
+                  </tr>
+                }
+                @if (doc.partyName && doc.outstanding.direction !== 'SETTLED') {
+                  <tr>
+                    <th colspan="3">On khata</th>
                     <td class="rpt__num num" [class]="tone(doc.outstanding.direction)">
                       {{ locale.money(doc.outstanding.amount) }}
                     </td>

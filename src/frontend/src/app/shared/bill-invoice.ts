@@ -24,7 +24,7 @@ export interface InvoiceLabels {
   cash: TranslationKey;
   /** What the document left on the khata, whichever way it runs. */
   outstanding: TranslationKey;
-  /** An unbalanced document with nobody on it: a discount given, or one you were given. */
+  /** What was knocked off the bill: a discount given on a sale, or one taken on a purchase. */
   discount: TranslationKey;
 }
 

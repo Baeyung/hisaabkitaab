@@ -21,6 +21,7 @@ function bill(...lines: Partial<BillLine>[]): BillDetail {
     })),
     goodsTotal: 0,
     cashReceived: 0,
+    discount: 0,
     outstanding: { direction: 'SETTLED', amount: 0 },
   };
 }

@@ -109,13 +109,14 @@
               <th scope="col">{{ locale.t(config().labels.colParty) }}</th>
               <th scope="col" class="end">{{ locale.t(config().labels.colAmount) }}</th>
               <th scope="col" class="end">{{ locale.t(config().invoice.cash) }}</th>
+              <th scope="col" class="end">{{ locale.t(config().invoice.discount) }}</th>
               <th scope="col" class="end">{{ locale.t(config().invoice.outstanding) }}</th>
               <th scope="col" class="end rm-noprint"><span class="sr-only">{{ locale.t(config().labels.colActions) }}</span></th>
             </tr>
           </thead>
           <tbody [appRowWindow]="win">
             @if (win.padTop(); as pad) {
-              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="7" [style.height.px]="pad"></td></tr>
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="8" [style.height.px]="pad"></td></tr>
             }
             @for (bill of win.rows(); track bill.id) {
               <tr class="rm-rowlink" (click)="open(bill.id)">
@@ -129,6 +130,9 @@
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(bill.amount) }}</td>
                 <td class="end" [attr.data-label]="locale.t(config().invoice.cash)">
                   <span class="num rm-tbl__name amt--in">{{ locale.money(bill.cashReceived) }}</span>
+                </td>
+                <td class="end" [attr.data-label]="locale.t(config().invoice.discount)">
+                  <span class="num rm-tbl__name amt--settled">{{ bill.discount ? locale.money(bill.discount) : '—' }}</span>
                 </td>
                 <td class="end" [attr.data-label]="locale.t(config().invoice.outstanding)">
                   <app-khata-amount
@@ -155,7 +159,7 @@
 
               @if (reportMode() && printDetail().get(bill.id); as detail) {
                 <tr class="rm-subrow">
-                  <td colspan="7">
+                  <td colspan="8">
                     <p class="bill-subrow__heading">{{ locale.t('bill.detail.heading') }}</p>
                     <div class="bill-lines">
                       @for (line of detail.lines; track $index) {
@@ -182,9 +186,16 @@
                         <span class="bill-line__leader" aria-hidden="true"></span>
                         <span class="bill-line__calc num amt--in">{{ locale.money(detail.cashReceived) }}</span>
                       </div>
-                      @if (detail.outstanding.direction !== 'SETTLED') {
+                      @if (detail.discount) {
                         <div class="bill-line">
-                          <span class="bill-line__name">{{ locale.t(detail.partyName ? config().invoice.outstanding : config().invoice.discount) }}</span>
+                          <span class="bill-line__name">{{ locale.t(config().invoice.discount) }}</span>
+                          <span class="bill-line__leader" aria-hidden="true"></span>
+                          <span class="bill-line__calc num">{{ locale.money(detail.discount) }}</span>
+                        </div>
+                      }
+                      @if (detail.partyName && detail.outstanding.direction !== 'SETTLED') {
+                        <div class="bill-line">
+                          <span class="bill-line__name">{{ locale.t(config().invoice.outstanding) }}</span>
                           <span class="bill-line__leader" aria-hidden="true"></span>
                           <span class="bill-line__calc num">{{ locale.money(detail.outstanding.amount) }}</span>
                         </div>
@@ -196,7 +207,7 @@
 
               @if (confirmingId() === bill.id) {
                 <tr class="rm-confirm-row rm-noprint" (click)="$event.stopPropagation()">
-                  <td colspan="7">
+                  <td colspan="8">
                     <div class="rm-confirm">
                       <span class="rm-confirm__msg">
                         {{ locale.t(config().labels.deleteConfirm, { name: bill.billNumber || locale.t(config().invoice.noParty) }) }}
@@ -215,11 +226,11 @@
               }
             }
             @if (win.padBottom(); as pad) {
-              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="7" [style.height.px]="pad"></td></tr>
+              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="8" [style.height.px]="pad"></td></tr>
             }
             @if (!filtered().length) {
               <tr>
-                <td colspan="7">{{ locale.t(config().labels.searchNone) }}</td>
+                <td colspan="8">{{ locale.t(config().labels.searchNone) }}</td>
               </tr>
             }
           </tbody>

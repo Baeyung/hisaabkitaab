@@ -78,6 +78,7 @@ public class CashbookQueryService
                             line.getInOut(),
                             value(line),
                             PartyBalance.of(khataNet(khataNets, transaction)),
+                            transaction.getDiscount(),
                             running
                     );
                 }

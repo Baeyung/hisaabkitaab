@@ -985,7 +985,7 @@ export const en = {
   // Cash out, not in — the mirror of 'bill.detail.cashReceived'.
   'purchases.detail.cashPaid': 'Cash paid',
   'purchases.detail.outstanding': 'On khata',
-  // A cash purchase you paid less than in full for: a discount the supplier gave you.
+  // Whatever was knocked off the purchase before cash was weighed against it.
   'purchases.detail.discount': 'Discount',
   'purchases.detail.empty': 'No items on this purchase.',
   'purchases.detail.loadError': "Couldn't load this purchase. Please try again.",

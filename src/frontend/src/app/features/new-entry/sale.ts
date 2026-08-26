@@ -35,6 +35,7 @@ export class Sale {
       lineAdd: 'sale.line.add',
       total: 'sale.total',
       cash: 'sale.received',
+      discount: 'bill.detail.discount',
       billNumber: 'sale.billNumber',
       billNumberPh: 'sale.billNumber.ph',
       description: 'sale.description',

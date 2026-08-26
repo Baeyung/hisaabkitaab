@@ -57,9 +57,13 @@ public class PartyProcessor implements KindProcessor
     {
         if (givenInOut == null || InOut.UNKNOWN.name().equals(givenInOut.name()))
         {
+            // Discount is allowed for either event regardless of who (if anyone) is on it,
+            // so it comes off the bill before cash is weighed against it — never its own line.
+            double due = payload.getBillAmount() - discount(payload);
+
             if (TransactionEvent.SALE.name().equals(transactionEvent.name()))
             {
-                double amount = payload.getCashAmount() - payload.getBillAmount();
+                double amount = payload.getCashAmount() - due;
                 InOut inOut;
                 if (amount < 0.0d)
                 {
@@ -80,7 +84,7 @@ public class PartyProcessor implements KindProcessor
 
             if (TransactionEvent.PURCHASE.name().equals(transactionEvent.name()))
             {
-                double amount = payload.getBillAmount() - payload.getCashAmount();
+                double amount = due - payload.getCashAmount();
                 InOut inOut;
                 if (amount < 0.0d)
                 {
@@ -105,6 +109,11 @@ public class PartyProcessor implements KindProcessor
                 .inOut(givenInOut)
                 .amount(payload.getCashAmount())
                 .build();
+    }
+
+    private double discount(EventRequest payload)
+    {
+        return payload.getDiscountAmount() != null ? payload.getDiscountAmount() : 0;
     }
 
     @Getter

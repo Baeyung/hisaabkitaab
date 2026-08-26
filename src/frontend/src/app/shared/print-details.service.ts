@@ -49,9 +49,9 @@ export interface ExpandedDoc extends BillDetail {
 }
 
 /**
- * What the expanded sub-rows call the money on a document. Cash comes in on a bill
- * and goes out on a purchase, and an unbalanced one with no party is a discount you
- * gave or one you were given — same three figures, read from either side.
+ * What the expanded sub-rows call the money on a document. Cash comes in on a bill and
+ * goes out on a purchase, and the discount is whatever was explicitly knocked off it —
+ * same three figures, read from either side.
  */
 export const DOC_TOTAL_KEYS: Record<
   DocKind,

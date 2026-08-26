@@ -59,25 +59,24 @@
         {{ locale.t(config().labels.cash) }}
         <strong class="num amt--in">{{ locale.money(effectiveCash()) }}</strong>
       </span>
-      @if (balance() !== 0) {
-        @if (cashParty()) {
-          <span>
-            {{ locale.t('bill.detail.discount') }}
-            <strong class="num">{{ locale.money(abs(balance())) }}</strong>
-          </span>
-        } @else {
-          <span>
-            {{ locale.t('bill.detail.outstanding') }}
-            <strong class="num" [class]="balance() > 0 ? 'amt--out' : 'amt--in'">
-              {{ locale.money(abs(balance())) }}
-            </strong>
-            <span class="rm-tbl__meta">{{
-              balance() > 0
-                ? locale.t(config().labels.effectOutstanding)
-                : locale.t(config().labels.effectOverpaid)
-            }}</span>
-          </span>
-        }
+      @if (discountAmount() > 0) {
+        <span>
+          {{ locale.t(config().labels.discount) }}
+          <strong class="num">{{ locale.money(discountAmount()) }}</strong>
+        </span>
+      }
+      @if (!cashParty() && balance() !== 0) {
+        <span>
+          {{ locale.t('bill.detail.outstanding') }}
+          <strong class="num" [class]="balance() > 0 ? 'amt--out' : 'amt--in'">
+            {{ locale.money(abs(balance())) }}
+          </strong>
+          <span class="rm-tbl__meta">{{
+            balance() > 0
+              ? locale.t(config().labels.effectOutstanding)
+              : locale.t(config().labels.effectOverpaid)
+          }}</span>
+        </span>
       }
     </div>
   </div>
@@ -279,8 +278,23 @@
           inputmode="decimal"
           min="0"
           [attr.id]="config().idPrefix + '-cash'"
-          [value]="cashTouched() ? cash() : cashParty() ? total() : null"
+          [value]="cashTouched() ? cash() : cashParty() ? due() : null"
           (input)="setCash($any($event.target).value)"
+          [attr.placeholder]="'0'"
+        />
+      </div>
+      <div class="fld fld--inline">
+        <label class="fld__label" [attr.for]="config().idPrefix + '-discount'">
+          {{ locale.t(config().labels.discount) }}
+        </label>
+        <input
+          class="fld__input num"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          [attr.id]="config().idPrefix + '-discount'"
+          [value]="discount()"
+          (input)="setDiscount($any($event.target).value)"
           [attr.placeholder]="'0'"
         />
       </div>
@@ -376,6 +390,13 @@
               <span class="fx__sign">{{ stockFlow() === 'in' ? '▲' : '▼' }}</span>
               <span class="fx__label">{{ s.name }}</span>
               <span class="fx__amt num">{{ s.qty }}</span>
+            </li>
+          }
+          @if (discountAmount() > 0) {
+            <li class="fx__row">
+              <span class="fx__sign">−</span>
+              <span class="fx__label">{{ locale.t(config().labels.discount) }}</span>
+              <span class="fx__amt num">{{ locale.money(discountAmount()) }}</span>
             </li>
           }
           @if (balanceView(); as b) {

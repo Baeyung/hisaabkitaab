@@ -13,6 +13,8 @@ export interface EventRequest {
   transactionEvent: 'SALE' | 'PURCHASE' | 'RECEIPT' | 'PAYMENT' | 'EXPENSE' | 'ADJUSTMENT';
   cashAmount: number | null;
   billAmount: number | null;
+  /** Knocked off the bill before cash is weighed against it — only ever sent on a SALE/PURCHASE. */
+  discountAmount?: number | null;
   description: string | null;
   billNumber: string | null;
   billDate: string | null;

@@ -50,25 +50,24 @@
         <span class="bill-line__leader" aria-hidden="true"></span>
         <span class="bill-line__calc num amt--in">{{ locale.money(b.cashReceived) }}</span>
       </div>
-      @if (b.outstanding.direction !== 'SETTLED') {
-        @if (!b.partyName) {
-          <div class="bill-line">
-            <span class="bill-line__name">{{ locale.t(labels().discount) }}</span>
-            <span class="bill-line__leader" aria-hidden="true"></span>
-            <span class="bill-line__calc num">{{ locale.money(b.outstanding.amount) }}</span>
-          </div>
-        } @else {
-          <div class="bill-line">
-            <span class="bill-line__name"
-              >{{ locale.t(labels().outstanding) }}
-              <span class="rm-tbl__meta">{{ locale.t(toneKey(b.outstanding.direction)) }}</span></span
-            >
-            <span class="bill-line__leader" aria-hidden="true"></span>
-            <span class="bill-line__calc num" [class]="toneClass(b.outstanding.direction)">
-              {{ locale.money(b.outstanding.amount) }}
-            </span>
-          </div>
-        }
+      @if (b.discount) {
+        <div class="bill-line">
+          <span class="bill-line__name">{{ locale.t(labels().discount) }}</span>
+          <span class="bill-line__leader" aria-hidden="true"></span>
+          <span class="bill-line__calc num">{{ locale.money(b.discount) }}</span>
+        </div>
+      }
+      @if (b.partyName && b.outstanding.direction !== 'SETTLED') {
+        <div class="bill-line">
+          <span class="bill-line__name"
+            >{{ locale.t(labels().outstanding) }}
+            <span class="rm-tbl__meta">{{ locale.t(toneKey(b.outstanding.direction)) }}</span></span
+          >
+          <span class="bill-line__leader" aria-hidden="true"></span>
+          <span class="bill-line__calc num" [class]="toneClass(b.outstanding.direction)">
+            {{ locale.money(b.outstanding.amount) }}
+          </span>
+        </div>
       }
     </div>
   </div>

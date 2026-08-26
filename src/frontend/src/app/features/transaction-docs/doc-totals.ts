@@ -16,26 +16,24 @@ interface Remainder {
  * The two events are arithmetic mirrors, so `owing` says which way this kind's khata
  * runs and the khata figure comes out positive either way: on a bill an unpaid balance
  * is money owed to you, on a purchase it is money you owe the supplier. Anything
- * pointing the other way is an overpayment, and nets off. A document with nobody on it
- * that doesn't balance is a discount, not a khata entry — one you gave on a sale, or
- * one you were given on a purchase.
+ * pointing the other way is an overpayment, and nets off. `discount` is its own explicit
+ * figure now — entered on the entry screen for any party, cash or khata — so it's read
+ * straight off the document rather than inferred from an unbalanced, party-less one.
  *
  * The list column, the printed footer and the document itself all come through here, so
  * a row's "on khata" can never disagree with the total underneath it.
  */
 export function splitRemainder(
-  doc: { partyName: string | null; outstanding: Balance },
+  doc: { partyName: string | null; outstanding: Balance; discount: number },
   owing: OwingDirection,
 ): Remainder {
-  if (doc.outstanding.direction === 'SETTLED') {
-    return { khata: 0, discount: 0 };
-  }
-  if (!doc.partyName) {
-    return { khata: 0, discount: doc.outstanding.amount };
+  const discount = doc.discount;
+  if (!doc.partyName || doc.outstanding.direction === 'SETTLED') {
+    return { khata: 0, discount };
   }
   const signed =
     doc.outstanding.direction === owing ? doc.outstanding.amount : -doc.outstanding.amount;
-  return { khata: signed, discount: 0 };
+  return { khata: signed, discount };
 }
 
 /** What a printed run of documents adds up to — the report's footer line. */

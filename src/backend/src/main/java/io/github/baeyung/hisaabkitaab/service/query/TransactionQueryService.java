@@ -50,6 +50,7 @@ public class TransactionQueryService
                         transaction.getParty() != null ? transaction.getParty().getName() : null,
                         DocumentTotals.goods(transaction),
                         DocumentTotals.cash(transaction),
+                        transaction.getDiscount(),
                         outstanding(transaction)
                 ))
                 .toList();
@@ -129,6 +130,7 @@ public class TransactionQueryService
                 lines,
                 DocumentTotals.goods(transaction),
                 DocumentTotals.cash(transaction),
+                transaction.getDiscount(),
                 outstanding(transaction)
         );
     }

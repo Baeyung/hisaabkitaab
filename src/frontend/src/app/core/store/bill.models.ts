@@ -17,11 +17,12 @@ export interface BillSummary {
   amount: number;
   /** Cash that changed hands on it: taken in on a bill, paid out on a purchase. */
   cashReceived: number;
+  /** What was knocked off the bill before cash was weighed against it — explicit, entered on the entry screen. */
+  discount: number;
   /**
    * The same "on khata" figure the document's own page shows, so the list can say
-   * whether `amount` was paid, part-paid, or all on udhaar. With no party on the
-   * document there is no khata and an unbalanced one is a discount — read the two
-   * apart by `partyName`, exactly as {@link BillDetail} is.
+   * whether `amount` was paid, part-paid, or all on udhaar. Zero on a walk-in — there's
+   * no khata to put anything on; `discount` above is a separate figure entirely.
    */
   outstanding: Balance;
 }
@@ -47,5 +48,7 @@ export interface BillDetail {
   lines: BillLine[];
   goodsTotal: number;
   cashReceived: number;
+  /** What was knocked off the bill before cash was weighed against it — explicit, entered on the entry screen. */
+  discount: number;
   outstanding: Balance;
 }

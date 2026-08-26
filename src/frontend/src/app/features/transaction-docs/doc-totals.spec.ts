@@ -8,6 +8,7 @@ function bill(
   direction: BalanceDirection,
   amount: number,
   partyName: string | null,
+  discount = 0,
 ): BillDetail {
   return {
     id: 'b',
@@ -20,6 +21,7 @@ function bill(
     lines: [],
     goodsTotal,
     cashReceived,
+    discount,
     outstanding: { direction, amount },
   };
 }
@@ -30,6 +32,7 @@ function row(
   direction: BalanceDirection,
   outstanding: number,
   partyName: string | null,
+  discount = 0,
 ): BillSummary {
   return {
     id: 'b',
@@ -38,6 +41,7 @@ function row(
     partyName,
     amount,
     cashReceived,
+    discount,
     outstanding: { direction, amount: outstanding },
   };
 }
@@ -51,13 +55,20 @@ describe('sumBills', () => {
     expect(t).toEqual({ count: 2, revenue: 1500, cash: 1500, khata: 0, discount: 0 });
   });
 
-  it('books an unpaid party bill to khata and an unbalanced cash sale to discount', () => {
+  it('books a party balance to khata and a walk-in discount separately', () => {
     const t = sumBills([
       bill(1000, 600, 'THEY_OWE_YOU', 400, 'Ahmad'),
-      bill(500, 450, 'THEY_OWE_YOU', 50, null),
+      // No party, cash short of the goods by exactly the discount entered on it.
+      bill(500, 450, 'SETTLED', 0, null, 50),
     ]);
     expect(t.khata).toBe(400);
     expect(t.discount).toBe(50);
+  });
+
+  it('keeps a discount and a khata balance separate on the same party document', () => {
+    const t = sumBills([bill(1000, 600, 'THEY_OWE_YOU', 300, 'Ahmad', 100)]);
+    expect(t.khata).toBe(300);
+    expect(t.discount).toBe(100);
   });
 
   it('nets an overpaid party bill off the khata total', () => {
@@ -85,14 +96,14 @@ describe('sumBills', () => {
     expect(t).toEqual({ count: 2, revenue: 1000, cash: 500, khata: 500, discount: 0 });
   });
 
-  it('nets an overpaid purchase off, and books a short-paid cash purchase to discount', () => {
+  it('nets an overpaid purchase off, and totals a discount taken on a cash purchase', () => {
     const t = sumBills(
       [
         bill(800, 300, 'YOU_OWE_THEM', 500, 'Bilal Traders'),
         // Paid the supplier more than the goods came to — they owe you the difference.
         bill(500, 600, 'THEY_OWE_YOU', 100, 'Rafiq'),
-        // No supplier on it and short-paid: a discount you were given.
-        bill(300, 280, 'YOU_OWE_THEM', 20, null),
+        // No supplier on it, and the shortfall was an entered discount.
+        bill(300, 280, 'SETTLED', 0, null, 20),
       ],
       'YOU_OWE_THEM',
     );
@@ -114,8 +125,8 @@ describe('sumSummaries', () => {
     expect(t).toEqual({ count: 2, amount: 1500, cash: 1100, khata: 400, discount: 0 });
   });
 
-  it('books an unbalanced cash sale to discount, never to khata', () => {
-    const t = sumSummaries([row(500, 450, 'THEY_OWE_YOU', 50, null)]);
+  it('reads a walk-in discount off the row, never as khata', () => {
+    const t = sumSummaries([row(500, 450, 'SETTLED', 0, null, 50)]);
     expect(t.khata).toBe(0);
     expect(t.discount).toBe(50);
   });
@@ -152,7 +163,7 @@ describe('sumSummaries', () => {
     const summaries = sumSummaries(
       [
         row(1000, 600, 'THEY_OWE_YOU', 400, 'Ahmad'),
-        row(500, 450, 'THEY_OWE_YOU', 50, null),
+        row(500, 450, 'SETTLED', 0, null, 50),
         row(300, 300, 'SETTLED', 0, 'Bilal'),
       ],
       owing,
@@ -160,7 +171,7 @@ describe('sumSummaries', () => {
     const details = sumBills(
       [
         bill(1000, 600, 'THEY_OWE_YOU', 400, 'Ahmad'),
-        bill(500, 450, 'THEY_OWE_YOU', 50, null),
+        bill(500, 450, 'SETTLED', 0, null, 50),
         bill(300, 300, 'SETTLED', 0, 'Bilal'),
       ],
       owing,
@@ -171,13 +182,16 @@ describe('sumSummaries', () => {
     expect(summaries.cash).toBe(details.cash);
   });
 
-  // Goods = cash + khata + discount, per row and therefore over the run. If that ever fails
-  // the three columns are telling a shopkeeper three numbers that don't reconcile.
+  // Goods = cash + khata + discount, per row and therefore over the run — true even on a
+  // document that carries both a khata balance and a discount at once. If that ever fails
+  // the columns are telling a shopkeeper numbers that don't reconcile.
   it('leaves goods fully accounted for by cash, khata and discount', () => {
     const t = sumSummaries([
       row(1000, 600, 'THEY_OWE_YOU', 400, 'Ahmad'),
-      row(500, 450, 'THEY_OWE_YOU', 50, null),
+      row(500, 450, 'SETTLED', 0, null, 50),
       row(300, 300, 'SETTLED', 0, 'Bilal'),
+      // Combination: a khata party given a discount too.
+      row(800, 500, 'THEY_OWE_YOU', 200, 'Rafiq', 100),
     ]);
     expect(t.cash + t.khata + t.discount).toBe(t.amount);
   });

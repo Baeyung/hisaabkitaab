@@ -19,6 +19,8 @@ public class EventRequest
     TransactionEvent transactionEvent;
     Double cashAmount;
     Double billAmount;
+    /** Knocked off the bill before cash is weighed against it — SALE/PURCHASE only. */
+    Double discountAmount;
     String description;
     String billNumber;
     LocalDate billDate;

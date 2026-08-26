@@ -62,6 +62,15 @@ public class Transaction
 
     private String description;
 
+    /**
+     * What was knocked off the bill before cash was weighed against it — on a SALE or a
+     * PURCHASE, regardless of whether a party is on it. See {@code PartyProcessor}, which
+     * folds this into the due amount rather than treating it as its own line.
+     */
+    @Column(nullable = false)
+    @Builder.Default
+    private double discount = 0;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

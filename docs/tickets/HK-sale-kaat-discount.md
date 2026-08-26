@@ -1,21 +1,19 @@
-# HK — Sale: kaat (discount) on the bill
+# HK — Sale/purchase: kaat (discount) on the bill
 
-## Context
-The SALE entry screen (`features/new-entry/sale`) currently computes
-`billAmount = sum(qty × rate)` with no discount. The design mockup
-(`docs/mockup/Transaction Entry.dc.html`) includes a **kaat** field — a
-discount subtracted from the line total before the party is charged.
+## Status: done
 
-Deferred from the initial SALE build to keep scope tight.
+An explicit `discount` input now sits on both the SALE and PURCHASE entry screens
+(`features/new-entry/goods-entry`), for any party — walk-in, khata, or a bit of both.
 
-## What to add
-- A `kaat` input on the totals block (currency, default 0).
-- `billAmount = sum(qty × rate) − kaat`; the Effect panel's baqaya recomputes
-  off the discounted total. `cashAmount` (received) is unchanged.
-- Decide the contract: either extend `EventRequest` with a `kaat` field, or keep
-  sending the already-discounted `billAmount` (frontend-only). Backend
-  (`EventRequest`, `SaleEventProcessor`) has no kaat concept today.
-- i18n keys exist in the mockup: `kaat` → EN "Kaat" / UR "کاٹ".
+- `EventRequest.discountAmount` carries it to the backend; `Transaction.discount`
+  persists it (migration `V12__transaction_discount.sql`).
+- `PartyProcessor` folds it into the due amount (`bill − discount`) before weighing
+  cash against it, so a khata party's baqaya and a walk-in's settlement both come out
+  right from the same arithmetic — no more inferring a discount from an unbalanced,
+  party-less document.
+- Read back everywhere a document's totals show: `BillSummaryResponse`,
+  `BillDetailResponse`, `CashbookRowResponse`, and the entry screen's own Effect panel
+  and print preview.
 
-## Out of scope
-Per-line discounts (kaat is bill-level only).
+Per-line discounts are still out of scope — this is bill-level only, as originally
+proposed.

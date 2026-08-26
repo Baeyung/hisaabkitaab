@@ -29,6 +29,8 @@ export interface CashbookRow {
    * SETTLED on an entry that touches no party.
    */
   khata: Balance;
+  /** What a SALE/PURCHASE entry knocked off its bill — 0 on every other event. */
+  discount: number;
   runningBalance: number;
 }
 

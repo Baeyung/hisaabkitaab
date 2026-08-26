@@ -117,6 +117,7 @@ public class EventService
                         .eventDate(eventRequest.getBillDate())
                         .entryDate(LocalDate.now())
                         .description(cleanDescription(eventRequest))
+                        .discount(discount(eventRequest))
                         .build()
         );
 
@@ -162,6 +163,7 @@ public class EventService
         transaction.setBill(eventRequest.getBillNumber());
         transaction.setEventDate(eventRequest.getBillDate());
         transaction.setDescription(cleanDescription(eventRequest));
+        transaction.setDiscount(discount(eventRequest));
         transactionRepository.saveAndFlush(transaction);
 
         fanOut(eventRequest, transaction);
@@ -243,6 +245,11 @@ public class EventService
                 : null;
     }
 
+    private double discount(EventRequest eventRequest)
+    {
+        return eventRequest.getDiscountAmount() != null ? eventRequest.getDiscountAmount() : 0;
+    }
+
     /** Rebuild the entry form's request from an entry's stored lines (the inverse of the processors). */
     private EventRequest toRequest(Transaction transaction)
     {
@@ -290,6 +297,7 @@ public class EventService
                     .filter(item -> item.getQuantity() != null && item.getItemSoldAt() != null)
                     .mapToDouble(item -> item.getQuantity().doubleValue() * item.getItemSoldAt())
                     .sum());
+            request.setDiscountAmount(transaction.getDiscount());
         }
 
         return request;

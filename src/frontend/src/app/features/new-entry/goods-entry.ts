@@ -78,6 +78,8 @@ export interface GoodsEntryLabels {
   total: TranslationKey;
   /** "Cash received" on a sale, "Cash paid" on a purchase. */
   cash: TranslationKey;
+  /** Knocked off the bill before cash is weighed — one given on a sale, one taken on a purchase. */
+  discount: TranslationKey;
   billNumber: TranslationKey;
   billNumberPh: TranslationKey;
   description: TranslationKey;
@@ -134,8 +136,9 @@ export interface GoodsEntryConfig {
  * only, which the backend tolerates (it creates unknown items; party creation
  * lands later).
  *
- * Money: billAmount = sum(qty × rate); cashAmount = moved. No kaat yet — see
- * docs/tickets/HK-sale-kaat-discount.md.
+ * Money: billAmount = sum(qty × rate); cashAmount = moved; discountAmount is knocked off
+ * the bill before cash is weighed against it (see docs/tickets/HK-sale-kaat-discount.md) —
+ * the goods total itself stays the honest value of what moved, discount or not.
  *
  * Units: each line carries the unit it was sold or bought in, prefilled from the item and
  * usually left there. Sell in another one — a shop that stocks by the gaz handing over a roll
@@ -200,6 +203,8 @@ export class GoodsEntry {
   protected readonly billDate = signal(todayIso());
   protected readonly description = signal('');
   protected readonly cash = signal<number | null>(null);
+  /** Knocked off the bill before cash is weighed — allowed for any party, cash or khata. */
+  protected readonly discount = signal<number | null>(null);
 
   /** Whether the cash box has been edited. Until it is, a cash party shows the
    *  total as a prefill; once touched, whatever's in the box wins — including
@@ -226,19 +231,24 @@ export class GoodsEntry {
     this.validLines().reduce((sum, l) => sum + (l.qty as number) * (l.rate as number), 0),
   );
 
+  /** What's actually owed once the discount is knocked off — the figure cash is weighed
+   *  against, for a cash party or a khata one alike. */
+  protected readonly discountAmount = computed(() => this.discount() ?? 0);
+  protected readonly due = computed(() => this.total() - this.discountAmount());
+
   /** Cash moved. Once the box is touched it's exactly what changed hands; when
-   *  untouched a cash party prefills to the full total (paying less is a forced
-   *  discount), while a credit party defaults to nothing paid. */
+   *  untouched a cash party prefills to what's due after the discount, while a
+   *  credit party defaults to nothing paid. */
   protected readonly effectiveCash = computed(() => {
     if (this.cashTouched()) {
       return this.cash() ?? 0;
     }
-    return this.cashParty() ? this.total() : 0;
+    return this.cashParty() ? this.due() : 0;
   });
 
-  /** What's left unsettled on this bill. Positive → outstanding (sale: they owe
-   *  you; purchase: you owe them); negative → overpaid, which reads the other way. */
-  protected readonly balance = computed(() => this.total() - this.effectiveCash());
+  /** What's left unsettled on this bill, after the discount. Positive → outstanding
+   *  (sale: they owe you; purchase: you owe them); negative → overpaid. */
+  protected readonly balance = computed(() => this.due() - this.effectiveCash());
 
   protected readonly canSave = computed(() => this.validLines().length > 0 && !this.saving());
 
@@ -328,6 +338,7 @@ export class GoodsEntry {
       // doesn't override it with the total.
       this.cash.set(e.cashAmount);
       this.cashTouched.set(true);
+      this.discount.set(e.discountAmount ?? null);
       // A saved line is already in its item's unit — that is the only way a quantity is ever
       // stored — so it reopens in that unit with nothing to convert.
       const lines = e.items.map<Line>((item) => ({
@@ -493,6 +504,10 @@ export class GoodsEntry {
     this.cash.set(this.toNum(value));
   }
 
+  setDiscount(value: string): void {
+    this.discount.set(this.toNum(value));
+  }
+
   lineAmount(l: Line): number {
     return (l.qty ?? 0) * (l.rate ?? 0);
   }
@@ -550,6 +565,7 @@ export class GoodsEntry {
       transactionEvent: this.config().eventType,
       billAmount: total,
       cashAmount: this.effectiveCash(),
+      discountAmount: this.discountAmount(),
       billNumber: this.billNumber().trim() || null,
       billDate: this.billDate() || null,
       description: this.description().trim() || null,
@@ -608,6 +624,7 @@ export class GoodsEntry {
     this.description.set('');
     this.cash.set(null);
     this.cashTouched.set(false);
+    this.discount.set(null);
     this.lines.set([this.blankLine()]);
     this.errorKey.set(null);
     // Save + Next rhythm: land back on the first field so the next entry starts
@@ -637,8 +654,8 @@ export class GoodsEntry {
    *  balance is money owed *to* you (tone 'in', like the drawer filling), a
    *  purchase's is money you owe *out*. Overpaying flips it. */
   protected balanceView(): { tone: 'in' | 'out'; party: string; direction: string; amount: string } | null {
-    // A cash party has no khata, so any shortfall is a forced discount, not
-    // baqaya — it walks away settled, never owing.
+    // A cash party has no khata to put a shortfall on — the discount box above is the
+    // only adjustment a walk-in bill gets; anything past that has nowhere to land.
     if (this.cashParty()) {
       return null;
     }

@@ -17,6 +17,8 @@ public record BillDetailResponse(
         List<BillLineResponse> lines,
         double goodsTotal,
         double cashReceived,
+        /** What was knocked off the bill before cash was weighed against it — see {@code Transaction#discount}. */
+        double discount,
         PartyBalance outstanding
 )
 {

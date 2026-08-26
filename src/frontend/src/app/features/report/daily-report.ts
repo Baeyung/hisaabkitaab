@@ -171,15 +171,6 @@ export class DailyReportPage {
     }
   }
 
-  /**
-   * What the gap between the goods and the cash is called. With a party on the document it
-   * went on their khata; with nobody to put it on, it can only have been a discount — the
-   * same reading `KhataAmount` makes on every screen.
-   */
-  protected gapLabel(partyName: string | null): string {
-    return partyName ? 'On khata' : 'Discount';
-  }
-
   /** "14:05" — the report is one day, so the date the cashbook screen prints would be noise. */
   protected time(occurredAt: string): string {
     const d = new Date(occurredAt);

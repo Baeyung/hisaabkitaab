@@ -315,13 +315,16 @@
                             >{{ locale.money(doc.cashReceived) }}</span
                           >
                         </div>
-                        @if (doc.outstanding.direction !== 'SETTLED') {
+                        @if (doc.discount) {
                           <div class="bill-line">
-                            <span class="bill-line__name">{{
-                              locale.t(
-                                doc.partyName ? docKeys[doc.kind].outstanding : docKeys[doc.kind].discount
-                              )
-                            }}</span>
+                            <span class="bill-line__name">{{ locale.t(docKeys[doc.kind].discount) }}</span>
+                            <span class="bill-line__leader" aria-hidden="true"></span>
+                            <span class="bill-line__calc num">{{ locale.money(doc.discount) }}</span>
+                          </div>
+                        }
+                        @if (doc.partyName && doc.outstanding.direction !== 'SETTLED') {
+                          <div class="bill-line">
+                            <span class="bill-line__name">{{ locale.t(docKeys[doc.kind].outstanding) }}</span>
                             <span class="bill-line__leader" aria-hidden="true"></span>
                             <span class="bill-line__calc num">{{ locale.money(doc.outstanding.amount) }}</span>
                           </div>
