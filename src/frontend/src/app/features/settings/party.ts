@@ -76,12 +76,28 @@ export class SettingsParty {
   protected readonly copying = signal(false);
   protected readonly copyResult = signal<{ ok: number; total: number } | null>(null);
 
+  /** Client-side, over whatever page has loaded — a shop's party list is at most a few hundred. */
+  protected readonly query = signal('');
+
+  protected readonly filtered = computed(() => {
+    const q = this.query().trim().toLowerCase();
+    const all = this.parties() ?? [];
+    return q
+      ? all.filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            (p.contact ?? '').includes(q) ||
+            (p.address ?? '').toLowerCase().includes(q),
+        )
+      : all;
+  });
+
   /**
    * The rows the table renders. Windowing stops while any row has something of its own
    * open — the edit form, the delete prompt, the opening-balance box — for the same reason
    * as the items table: those rows hold what was typed, and only in the DOM.
    */
-  protected readonly win = rowWindow(computed(() => this.parties() ?? []), {
+  protected readonly win = rowWindow(this.filtered, {
     suspendWhile: () =>
       this.adding() ||
       this.editingId() !== null ||

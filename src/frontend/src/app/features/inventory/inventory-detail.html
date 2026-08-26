@@ -37,7 +37,56 @@
           <span class="rm-stat__value">{{ locale.t('inventory.service') }}</span>
         </div>
       }
+      @if (stores.isOwner()) {
+        <div class="rm-actions rm-noprint">
+          <button type="button" class="rm-btn rm-btn--danger" (click)="askDeleteItem()">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"
+              />
+            </svg>
+            {{ locale.t('inventory.detail.delete.action') }}
+          </button>
+        </div>
+      }
     </header>
+
+    @if (confirmingDeleteItem()) {
+      <div class="rm-confirm rm-confirm--card rm-noprint">
+        <span class="rm-confirm__msg">
+          {{ locale.t('inventory.detail.delete.confirm', { name: mv.name }) }}
+        </span>
+        <span class="rm-confirm__actions">
+          @if (deleteItemErrorKey(); as key) {
+            <span class="rm-alert" role="alert">{{ locale.t(key) }}</span>
+          }
+          <button
+            type="button"
+            class="rm-btn rm-btn--ghost rm-btn--sm"
+            (click)="cancelDeleteItem()"
+            [disabled]="deletingItem()"
+          >
+            {{ locale.t('inventory.detail.delete.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="rm-btn rm-btn--danger rm-btn--sm"
+            (click)="confirmDeleteItem()"
+            [disabled]="deletingItem()"
+          >
+            {{ locale.t('inventory.detail.delete.confirmBtn') }}
+          </button>
+        </span>
+      </div>
+    }
 
     @if (mv.rows.length === 0) {
       <div class="rm-state">

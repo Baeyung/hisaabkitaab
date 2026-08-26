@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
+import { PartyService } from '../../core/store/party.service';
 import { StoreService } from '../../core/store/store.service';
 import { EventService } from '../../core/store/event.service';
 import { PartyStatement, PartyStatementRow } from '../../core/store/ledger.models';
@@ -59,6 +60,7 @@ export class LedgerDetail {
 
   protected readonly stores = inject(StoreService);
   private readonly api = inject(LedgerService);
+  private readonly partyApi = inject(PartyService);
   private readonly events = inject(EventService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -68,6 +70,11 @@ export class LedgerDetail {
   protected readonly pendingDelete = signal<string | null>(null);
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<TranslationKey | null>(null);
+
+  /** Deleting the whole khata — owner-only, same as settings/party.ts, but reachable from here. */
+  protected readonly confirmingDeleteParty = signal(false);
+  protected readonly deletingParty = signal(false);
+  protected readonly deletePartyErrorKey = signal<TranslationKey | null>(null);
 
   /** Editable kind, and this user may write here — a viewer gets the statement, no controls. */
   protected canEdit(event: TransactionEventKind): boolean {
@@ -249,6 +256,27 @@ export class LedgerDetail {
       this.deleteError.set(deleteErrorKey(err, 'entry.delete.error'));
     } finally {
       this.deleting.set(false);
+    }
+  }
+
+  askDeleteParty(): void {
+    this.deletePartyErrorKey.set(null);
+    this.confirmingDeleteParty.set(true);
+  }
+
+  cancelDeleteParty(): void {
+    this.confirmingDeleteParty.set(false);
+  }
+
+  async confirmDeleteParty(): Promise<void> {
+    this.deletingParty.set(true);
+    this.deletePartyErrorKey.set(null);
+    try {
+      await this.partyApi.delete(this.partyId());
+      void this.router.navigate(this.stores.link('ledger'));
+    } catch {
+      this.deletePartyErrorKey.set('error.generic');
+      this.deletingParty.set(false);
     }
   }
 

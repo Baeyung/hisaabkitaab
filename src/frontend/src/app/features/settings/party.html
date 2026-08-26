@@ -78,6 +78,19 @@
       <button type="button" class="btn btn--primary" (click)="startAdd()">{{ locale.t('settings.party.empty.cta') }}</button>
     </div>
   } @else {
+    @if ((parties()?.length ?? 0) > 0 && !copyOpen()) {
+      <div class="toolbar">
+        <input
+          class="fld__input toolbar__search"
+          type="search"
+          [value]="query()"
+          (input)="query.set(searchInput.value)"
+          #searchInput
+          [attr.placeholder]="locale.t('settings.party.search.ph')"
+          [attr.aria-label]="locale.t('settings.party.search.ph')"
+        />
+      </div>
+    }
     <div class="tablewrap">
       <table class="tbl">
         <thead>
@@ -224,6 +237,10 @@
                   </td>
                 </tr>
               }
+            }
+          } @empty {
+            @if (!adding()) {
+              <tr><td colspan="5">{{ locale.t('settings.party.search.none') }}</td></tr>
             }
           }
           @if (win.padBottom(); as pad) {

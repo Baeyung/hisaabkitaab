@@ -87,13 +87,26 @@ export class SettingsItems {
   protected readonly copying = signal(false);
   protected readonly copyResult = signal<{ ok: number; total: number } | null>(null);
 
+  /** Client-side, over whatever page has loaded — a cloth shop's catalogue runs to a couple of thousand. */
+  protected readonly query = signal('');
+
+  protected readonly filtered = computed(() => {
+    const q = this.query().trim().toLowerCase();
+    const all = this.items() ?? [];
+    return q
+      ? all.filter(
+          (it) => it.name.toLowerCase().includes(q) || (it.unit ?? '').toLowerCase().includes(q),
+        )
+      : all;
+  });
+
   /**
    * The rows the table renders — a cloth shop's catalogue runs to a couple of thousand.
    * Windowing stops the moment any row opens something of its own: the edit form, the
    * delete prompt, the opening-stock box. Each is a `<tr>` holding state that only exists
    * in the DOM, and a window that scrolled it away would take what was typed with it.
    */
-  protected readonly win = rowWindow(computed(() => this.items() ?? []), {
+  protected readonly win = rowWindow(this.filtered, {
     suspendWhile: () =>
       this.adding() ||
       this.editingId() !== null ||

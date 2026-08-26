@@ -85,6 +85,14 @@
   cursor: pointer;
 }
 
+/* ── search toolbar ────────────────────────────────────────────────── */
+.toolbar {
+  margin-bottom: 14px;
+}
+.toolbar__search {
+  max-width: 320px;
+}
+
 /* ── table ─────────────────────────────────────────────────────────── */
 .tablewrap {
   overflow-x: auto;

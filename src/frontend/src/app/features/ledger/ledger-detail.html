@@ -60,8 +60,55 @@
           [action]="locale.t('whatsapp.doc.statement')"
           [beforeCapture]="expandForSend"
         />
+        @if (stores.isOwner()) {
+          <button type="button" class="rm-btn rm-btn--danger" (click)="askDeleteParty()">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"
+              />
+            </svg>
+            {{ locale.t('ledger.detail.delete.action') }}
+          </button>
+        }
       </div>
     </header>
+
+    @if (confirmingDeleteParty()) {
+      <div class="rm-confirm rm-confirm--card rm-noprint">
+        <span class="rm-confirm__msg">
+          {{ locale.t('ledger.detail.delete.confirm', { name: st.partyName }) }}
+        </span>
+        <span class="rm-confirm__actions">
+          @if (deletePartyErrorKey(); as key) {
+            <span class="rm-alert" role="alert">{{ locale.t(key) }}</span>
+          }
+          <button
+            type="button"
+            class="rm-btn rm-btn--ghost rm-btn--sm"
+            (click)="cancelDeleteParty()"
+            [disabled]="deletingParty()"
+          >
+            {{ locale.t('ledger.detail.delete.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="rm-btn rm-btn--danger rm-btn--sm"
+            (click)="confirmDeleteParty()"
+            [disabled]="deletingParty()"
+          >
+            {{ locale.t('ledger.detail.delete.confirmBtn') }}
+          </button>
+        </span>
+      </div>
+    }
 
     @if (st.rows.length === 0) {
       <div class="rm-state">
