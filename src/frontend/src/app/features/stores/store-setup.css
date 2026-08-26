@@ -466,14 +466,6 @@
 .fld--money {
   max-width: 190px;
 }
-/* The country-code select alone is 116px, and app-phone-field's number input
-   allows itself to shrink to nothing (min-width: 0, needed elsewhere to stop
-   it overflowing a narrower row) — so a plain flex/grid share leaves too
-   little room and the placeholder digits clip mid-character. This floor
-   keeps a full example number ("3001234567") on screen. */
-.fld--phone {
-  min-width: 248px;
-}
 
 /* ── logo & watermark ──────────────────────────────────────────────── */
 .media {
@@ -538,11 +530,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 13px;
-}
-/* Tuned so a whole quick-add row fits one line in the working leaf rather than
-   wrapping and leaving a hole beside the last field. */
-.fld--grow {
-  flex: 1 1 150px;
 }
 .fld--full {
   flex: 1 1 100%;
@@ -954,12 +941,6 @@
   .quick .fld--money {
     max-width: none;
     flex: 1 1 140px;
-  }
-  /* At this width a name field sharing its line ends up the narrowest box on the
-     card. The named thing takes the line; the short numeric boxes pair off under
-     it — Unit with Sale price, Cost price with Opening stock. */
-  .quick .fld--grow {
-    flex: 1 1 100%;
   }
   .foot .btn--primary {
     flex: 1;

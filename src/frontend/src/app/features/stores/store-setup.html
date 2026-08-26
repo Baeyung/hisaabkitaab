@@ -76,11 +76,11 @@
                     <span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span>
                   }
                 </div>
-                <div class="fld">
+                <div class="fld fld--wide">
                   <label class="fld__label" for="setup-address">{{ locale.t('settings.general.address') }}</label>
                   <input id="setup-address" class="fld__input" [formField]="shopForm.address" type="text" autocomplete="street-address" />
                 </div>
-                <div class="fld fld--phone">
+                <div class="fld fld--wide">
                   <label class="fld__label" for="setup-contact">{{ locale.t('settings.general.contact') }}</label>
                   <app-phone-field inputId="setup-contact" [formField]="shopForm.contact" />
                 </div>
@@ -172,7 +172,7 @@
                    some items carry folds away underneath it. -->
               <form class="quick" (submit)="$event.preventDefault(); addItem()">
                 <div class="quick__fields">
-                  <div class="fld fld--grow">
+                  <div class="fld fld--full">
                     <label class="fld__label" for="setup-item-name">{{ locale.t('setup.goods.name') }}</label>
                     <input
                       #firstField
@@ -184,6 +184,8 @@
                       [attr.placeholder]="locale.t('setup.goods.namePh')"
                     />
                   </div>
+                </div>
+                <div class="quick__fields">
                   <div class="fld fld--unit">
                     <label class="fld__label" for="setup-item-unit">{{ locale.t('setup.goods.unit') }}</label>
                     <input
@@ -368,7 +370,7 @@
                       [attr.placeholder]="locale.t('setup.khatas.namePh')"
                     />
                   </div>
-                  <div class="fld fld--grow fld--phone">
+                  <div class="fld fld--full">
                     <label class="fld__label" for="setup-party-contact">{{ locale.t('setup.khatas.contact') }}</label>
                     <app-phone-field
                       inputId="setup-party-contact"
@@ -376,7 +378,7 @@
                       (valueChange)="partyRow.update((r) => ({ ...r, contact: $event }))"
                     />
                   </div>
-                  <div class="fld fld--grow">
+                  <div class="fld fld--full">
                     <label class="fld__label" for="setup-party-address">{{ locale.t('setup.khatas.address') }}</label>
                     <input
                       id="setup-party-address"
