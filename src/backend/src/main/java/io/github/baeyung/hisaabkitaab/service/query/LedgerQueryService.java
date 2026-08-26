@@ -118,6 +118,35 @@ public class LedgerQueryService
         return new ExpenseCategoryGroupResponse(category, rows.size(), total, rows);
     }
 
+    /**
+     * Every walk-in sale — cash only, no party — chronological with a running total.
+     * These never post a PARTY line worth anything (see PartyProcessor), so they never
+     * surface among the party balances; this is the only place they show up in the khata.
+     */
+    public List<CashSaleRowResponse> listCashSales(String storeId)
+    {
+        // ponytail: scans full cash-sale history each call; add a cached read-model if a shop's cash-sale count ever makes this slow.
+        List<TransactionLine> lines = transactionLineRepository.findCashSaleLinesByStore(storeId);
+
+        return RunningBalanceFolder.fold(
+                lines,
+                0,
+                this::value,
+                (line, running) -> {
+                    Transaction transaction = line.getTransaction();
+                    return new CashSaleRowResponse(
+                            transaction.getId(),
+                            transaction.getEventDate() != null ? transaction.getEventDate() : transaction.getEntryDate(),
+                            transaction.getCreatedAt(),
+                            ItemSummary.of(transaction),
+                            transaction.getDescription(),
+                            value(line),
+                            running
+                    );
+                }
+        );
+    }
+
     public PartyStatementResponse getStatement(String storeId, String partyId)
     {
         // findByIdForStore 404s on another store's party; the lines are then scoped to the

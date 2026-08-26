@@ -88,6 +88,21 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     List<TransactionLine> findExpenseLinesByStore(@Param("storeId") String storeId);
 
+    /**
+     * Every cash line of a SALE with no party — a walk-in sale that never touches a khata,
+     * so it never appears among the party balances.
+     */
+    @Query("""
+            select tl from TransactionLine tl
+            join fetch tl.transaction t
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
+              and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.SALE
+              and t.party is null
+              and t.store.id = :storeId
+            order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
+            """)
+    List<TransactionLine> findCashSaleLinesByStore(@Param("storeId") String storeId);
+
     /** One net balance per party over its full PARTY-line history (positive = they owe the store). */
     @Query("""
             select tl.party.id as partyId,

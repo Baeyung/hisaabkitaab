@@ -844,6 +844,7 @@ export const en = {
   'ledger.category.entries': '{{count}} entries',
   'ledger.category.detail.col.running': 'Running total',
   'ledger.category.detail.notFound': 'This expense category was not found.',
+  'ledger.cashSales.title': 'Cash sales',
   'inventory.subtitle': 'Current stock of everything you sell.',
   'inventory.search.ph': 'Search items…',
   'inventory.search.none': 'No items match your search.',

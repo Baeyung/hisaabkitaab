@@ -59,3 +59,15 @@ export interface ExpenseCategoryGroup {
   total: number;
   rows: ExpenseCategoryRow[];
 }
+
+/** One walk-in sale — cash only, no party — with the register's running total (GET /api/ledger/cash-sales). */
+export interface CashSaleRow {
+  transactionId: string;
+  date: string;
+  occurredAt: string;
+  /** Goods on the sale ("Lawn Print × 12") — null when none were recorded. */
+  itemSummary: string | null;
+  description: string | null;
+  amount: number;
+  runningTotal: number;
+}

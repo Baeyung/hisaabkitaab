@@ -5,7 +5,7 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { LedgerService } from '../../core/store/ledger.service';
 import { StoreService } from '../../core/store/store.service';
 import { BalanceDirection } from '../../core/store/balance.models';
-import { ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.models';
+import { CashSaleRow, ExpenseCategoryGroup, PartyBalanceRow } from '../../core/store/ledger.models';
 import { expenseCategoryLabel } from '../../core/store/event.models';
 import { directionClass, directionKey } from '../../shared/balance.util';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
@@ -45,13 +45,18 @@ export class Ledger {
 
   protected readonly parties = signal<PartyBalanceRow[] | null>(null);
   protected readonly categories = signal<ExpenseCategoryGroup[]>([]);
+  protected readonly cashSales = signal<CashSaleRow[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
 
-  /** Both sections start shut — a khata with hundreds of parties would otherwise
-   *  force a scroll past all of them just to reach the expenses block below. */
+  /** All three sections start shut — a khata with hundreds of parties would otherwise
+   *  force a scroll past all of them just to reach the expenses/cash-sales blocks below. */
   protected readonly partiesOpen = signal(false);
   protected readonly categoriesOpen = signal(false);
+  protected readonly cashSalesOpen = signal(false);
+
+  /** The rows the cash-sales table renders — a busy till can run to thousands of entries. */
+  protected readonly winCashSales = rowWindow(this.cashSales);
 
   /** `q` is the name/contact search, `dir` the way the baqaya points ('' = every khata). */
   protected readonly filters = urlFilters({ q: '', dir: '' });
@@ -120,9 +125,14 @@ export class Ledger {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      const [parties, categories] = await Promise.all([this.api.list(), this.api.listExpenseCategories()]);
+      const [parties, categories, cashSales] = await Promise.all([
+        this.api.list(),
+        this.api.listExpenseCategories(),
+        this.api.listCashSales(),
+      ]);
       this.parties.set(parties);
       this.categories.set(categories);
+      this.cashSales.set(cashSales);
     } catch {
       this.loadError.set(true);
     } finally {
@@ -136,6 +146,10 @@ export class Ledger {
 
   openCategory(category: string): void {
     void this.router.navigate(this.stores.link('ledger/category', category));
+  }
+
+  openCashSale(transactionId: string): void {
+    void this.router.navigate(this.stores.link('bill-management', transactionId));
   }
 
   print(): void {

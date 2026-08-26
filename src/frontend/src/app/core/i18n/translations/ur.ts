@@ -865,6 +865,7 @@ export const ur: Record<TranslationKey, string> = {
   'ledger.category.entries': '{{count}} اندراج',
   'ledger.category.detail.col.running': 'چلتا میزان',
   'ledger.category.detail.notFound': 'یہ خرچ کی قسم نہیں ملی۔',
+  'ledger.cashSales.title': 'نقد فروخت',
   'inventory.subtitle': 'آپ کے مال کا موجودہ اسٹاک۔',
   'inventory.search.ph': 'آئٹم تلاش کریں…',
   'inventory.search.none': 'تلاش سے کوئی آئٹم نہیں ملا۔',
