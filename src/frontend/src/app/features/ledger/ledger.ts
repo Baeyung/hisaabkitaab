@@ -49,14 +49,28 @@ export class Ledger {
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
 
-  /** All three sections start shut — a khata with hundreds of parties would otherwise
-   *  force a scroll past all of them just to reach the expenses/cash blocks below. */
-  protected readonly partiesOpen = signal(false);
-  protected readonly categoriesOpen = signal(false);
-  protected readonly cashOpen = signal(false);
+  /** `q` is the name/contact search, `dir` the way the baqaya points ('' = every khata),
+   *  `pOpen`/`cOpen`/`kOpen` whether the parties/categories/cash sections are expanded —
+   *  in the URL so Back and a copied link land on the sections the user left open. All
+   *  three default shut: a khata with hundreds of parties would otherwise force a scroll
+   *  past all of them just to reach the expenses/cash blocks below. */
+  protected readonly filters = urlFilters({ q: '', dir: '', pOpen: '', cOpen: '', kOpen: '' });
 
-  /** `q` is the name/contact search, `dir` the way the baqaya points ('' = every khata). */
-  protected readonly filters = urlFilters({ q: '', dir: '' });
+  protected readonly partiesOpen = computed(() => this.filters.pOpen() === '1');
+  protected readonly categoriesOpen = computed(() => this.filters.cOpen() === '1');
+  protected readonly cashOpen = computed(() => this.filters.kOpen() === '1');
+
+  protected toggleParties(open: boolean): void {
+    this.filters.replace({ pOpen: open ? '1' : '' });
+  }
+
+  protected toggleCategories(open: boolean): void {
+    this.filters.replace({ cOpen: open ? '1' : '' });
+  }
+
+  protected toggleCash(open: boolean): void {
+    this.filters.replace({ kOpen: open ? '1' : '' });
+  }
 
   /** The direction rows, worded exactly as the balance column words them. */
   protected readonly directionOptions = computed(() => [

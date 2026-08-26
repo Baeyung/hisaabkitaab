@@ -45,7 +45,7 @@
     <details
       class="fold fold--section"
       [open]="partiesOpen() || capture.capturing()"
-      (toggle)="capture.capturing() || partiesOpen.set($any($event.target).open)"
+      (toggle)="capture.capturing() || toggleParties($any($event.target).open)"
     >
       <summary class="fold__sum fold__sum--section">
         <svg class="fold__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
@@ -129,7 +129,7 @@
       <details
         class="fold fold--section"
         [open]="categoriesOpen() || capture.capturing()"
-        (toggle)="capture.capturing() || categoriesOpen.set($any($event.target).open)"
+        (toggle)="capture.capturing() || toggleCategories($any($event.target).open)"
       >
         <summary class="fold__sum fold__sum--section">
           <svg class="fold__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
@@ -171,7 +171,7 @@
       <details
         class="fold fold--section"
         [open]="cashOpen() || capture.capturing()"
-        (toggle)="capture.capturing() || cashOpen.set($any($event.target).open)"
+        (toggle)="capture.capturing() || toggleCash($any($event.target).open)"
       >
         <summary class="fold__sum fold__sum--section">
           <svg class="fold__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
