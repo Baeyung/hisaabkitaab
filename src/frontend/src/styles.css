@@ -301,6 +301,117 @@ html[dir='rtl'] .kg-flip {
   color: var(--kg-ink);
 }
 
+/* ── the fold ──────────────────────────────────────────────────────
+   A native <details>/<summary> collapse, shut by default so the common case
+   stays short and the rest is still one click away. Base rules size it for a
+   small "more fields" toggle inside a card (see store-setup); .fold--section
+   below resizes the same mechanics to read as a page section heading (see
+   the ledger screen's party list and expenses-by-category blocks). */
+.fold {
+  padding-top: 13px;
+  border-top: 1px solid var(--kg-line);
+}
+/* Closed on both sides once it is open, so what follows reads as the card's
+   own control rather than the last thing inside the fold. */
+.fold[open] {
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--kg-line);
+}
+.fold__sum {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  padding: 4px 6px;
+  margin-inline-start: -6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  /* Both are needed to drop the native triangle; the pseudo-element is what
+     Safari and older WebKit actually read. */
+  list-style: none;
+}
+.fold__sum::-webkit-details-marker {
+  display: none;
+}
+.fold__sum:hover {
+  color: var(--kg-brand);
+}
+.fold__sum:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+/* A chevron that turns rather than points: a caret swinging right would have to
+   be flipped again for Urdu, and down-to-up is the same gesture in both. */
+.fold__chev {
+  flex: none;
+  transition: transform 0.18s ease;
+}
+.fold[open] .fold__chev {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fold__chev {
+    transition: none;
+  }
+}
+.fold__body {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding-top: 13px;
+}
+
+/* Page-section variant: the fold IS the card (border, radius, background),
+   so a shut section still reads as a normal card with a clickable header —
+   not bare text floating on the page. Used for the ledger screen's party
+   list and its expenses-by-category block. */
+.fold--section {
+  margin-top: 22px;
+  padding: 0;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.fold--section[open] {
+  padding: 0;
+}
+.fold__sum--section {
+  width: auto;
+  margin-inline-start: 0;
+  padding: 15px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kg-ink);
+  border-radius: 0;
+}
+.fold__sum--section:hover {
+  color: var(--kg-ink);
+  background: var(--kg-fill-subtle);
+}
+.fold--section[open] > .fold__sum--section {
+  border-bottom: 1px solid var(--kg-line);
+}
+.fold__sum--section .fold__chev {
+  width: 17px;
+  height: 17px;
+}
+.fold--section .fold__body {
+  display: block;
+  padding-top: 0;
+}
+.fold__count {
+  padding: 1px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  background: var(--kg-fill-subtle);
+  border-radius: 999px;
+}
+
 /* "Bill to <party>" chip under the bill header title */
 .rm-billto {
   display: inline-flex;

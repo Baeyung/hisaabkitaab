@@ -562,66 +562,9 @@
   white-space: nowrap;
 }
 
-/* ── the fold ──────────────────────────────────────────────────────
-   What only some items carry — a cost price, stock on hand, whether it is work
-   rather than cloth. Ruled off from the line above it and shut by default, so
-   the common case is three boxes and the full case is still one click away. */
-.fold {
-  padding-top: 13px;
-  border-top: 1px solid var(--kg-line);
-}
-/* Closed on both sides once it is open, so "Add item" below reads as the card's
-   button rather than the last control inside the fold. */
-.fold[open] {
-  padding-bottom: 13px;
-  border-bottom: 1px solid var(--kg-line);
-}
-.fold__sum {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  width: fit-content;
-  padding: 4px 6px;
-  margin-inline-start: -6px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--kg-muted);
-  border-radius: 8px;
-  cursor: pointer;
-  /* Both are needed to drop the native triangle; the pseudo-element is what
-     Safari and older WebKit actually read. */
-  list-style: none;
-}
-.fold__sum::-webkit-details-marker {
-  display: none;
-}
-.fold__sum:hover {
-  color: var(--kg-brand);
-}
-.fold__sum:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--kg-focus);
-}
-/* A chevron that turns rather than points: a caret swinging right would have to
-   be flipped again for Urdu, and down-to-up is the same gesture in both. */
-.fold__chev {
-  flex: none;
-  transition: transform 0.18s ease;
-}
-.fold[open] .fold__chev {
-  transform: rotate(180deg);
-}
-@media (prefers-reduced-motion: reduce) {
-  .fold__chev {
-    transition: none;
-  }
-}
-.fold__body {
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-  padding-top: 13px;
-}
+/* The .fold collapsible pattern (base rules + the section-header variant used
+   by items with "more fields") now lives in the global styles.css, shared with
+   the ledger screen's collapsible sections. */
 
 .check {
   display: flex;

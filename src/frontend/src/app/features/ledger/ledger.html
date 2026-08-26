@@ -42,104 +42,129 @@
     <app-amount-legend />
 
     @if ((parties()?.length ?? 0) > 0) {
-    <!-- What the list was narrowed to, so a printed page says so on its face. -->
-    @if (filters.q().trim()) {
-      <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.filter', { query: filters.q().trim() }) }}</p>
-    }
-    @if (filters.dir()) {
-      <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.direction', { filter: directionFilterLabel() }) }}</p>
-    }
-    <div class="rm-card">
-      <div class="rm-toolbar rm-toolbar--filters rm-noprint">
-        <label class="rm-field rm-field--search">
-          <span class="rm-field__label">{{ locale.t('ledger.filter.search') }}</span>
-          <app-combobox
-            [value]="filters.q()"
-            [options]="nameOptions()"
-            (valueChange)="filters.replace({ q: $event })"
-            [placeholder]="locale.t('ledger.search.ph')"
-            [ariaLabel]="locale.t('ledger.search.ph')"
-          />
-        </label>
-        <label class="rm-field">
-          <span class="rm-field__label">{{ locale.t('ledger.filter.direction') }}</span>
-          <app-select
-            [options]="directionOptions()"
-            [value]="filters.dir()"
-            (valueChange)="filters.set('dir', $event)"
-            [ariaLabel]="locale.t('ledger.filter.direction')"
-          />
-        </label>
-      </div>
-      <div class="rm-tablewrap">
-        <table class="rm-tbl">
-          <thead>
-            <tr>
-              <th scope="col">{{ locale.t('ledger.col.party') }}</th>
-              <th scope="col">{{ locale.t('ledger.col.contact') }}</th>
-              <th scope="col" class="end">{{ locale.t('ledger.col.balance') }}</th>
-            </tr>
-          </thead>
-          <tbody [appRowWindow]="win">
-            @if (win.padTop(); as pad) {
-              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="3" [style.height.px]="pad"></td></tr>
-            }
-            @for (party of win.rows(); track party.partyId) {
-              <tr class="rm-rowlink" (click)="open(party.partyId)">
-                <td class="rm-cell-head">
-                  <a [routerLink]="stores.link('ledger', party.partyId)" class="rm-tbl__name">{{ party.name }}</a>
-                </td>
-                <td class="num" [attr.data-label]="locale.t('ledger.col.contact')">{{ party.contact || '—' }}</td>
-                <td class="end rm-cell-amt">
-                  <span class="num rm-tbl__name" [class]="directionClass(party.balance.direction)">
-                    {{ locale.money(party.balance.amount) }}
-                  </span>
-                  <span class="rm-tbl__meta">{{ locale.t(directionKey(party.balance.direction)) }}</span>
-                </td>
-              </tr>
-            }
-            @if (win.padBottom(); as pad) {
-              <tr class="rm-rowspacer" aria-hidden="true"><td colspan="3" [style.height.px]="pad"></td></tr>
-            }
-            @if (!filtered().length) {
-              <tr>
-                <td colspan="3">{{ locale.t(emptyKey()) }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-    }
-
-    @if (categories().length > 0) {
-      <h2 class="rm-subhead">{{ locale.t('ledger.category.title') }}</h2>
-      <div class="rm-card">
+    <details
+      class="fold fold--section"
+      [open]="partiesOpen() || capture.capturing()"
+      (toggle)="capture.capturing() || partiesOpen.set($any($event.target).open)"
+    >
+      <summary class="fold__sum fold__sum--section">
+        <svg class="fold__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+        {{ locale.t('ledger.parties.title') }}
+        <span class="fold__count">{{ filtered().length }}</span>
+      </summary>
+      <div class="fold__body">
+        <!-- What the list was narrowed to, so a printed page says so on its face. -->
+        @if (filters.q().trim()) {
+          <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.filter', { query: filters.q().trim() }) }}</p>
+        }
+        @if (filters.dir()) {
+          <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.direction', { filter: directionFilterLabel() }) }}</p>
+        }
+        <div class="rm-toolbar rm-toolbar--filters rm-noprint">
+          <label class="rm-field rm-field--search">
+            <span class="rm-field__label">{{ locale.t('ledger.filter.search') }}</span>
+            <app-combobox
+              [value]="filters.q()"
+              [options]="nameOptions()"
+              (valueChange)="filters.replace({ q: $event })"
+              [placeholder]="locale.t('ledger.search.ph')"
+              [ariaLabel]="locale.t('ledger.search.ph')"
+            />
+          </label>
+          <label class="rm-field">
+            <span class="rm-field__label">{{ locale.t('ledger.filter.direction') }}</span>
+            <app-select
+              [options]="directionOptions()"
+              [value]="filters.dir()"
+              (valueChange)="filters.set('dir', $event)"
+              [ariaLabel]="locale.t('ledger.filter.direction')"
+            />
+          </label>
+        </div>
         <div class="rm-tablewrap">
           <table class="rm-tbl">
             <thead>
               <tr>
-                <th scope="col">{{ locale.t('ledger.category.col.name') }}</th>
-                <th scope="col" class="end">{{ locale.t('ledger.category.col.count') }}</th>
-                <th scope="col" class="end">{{ locale.t('ledger.category.col.total') }}</th>
+                <th scope="col">{{ locale.t('ledger.col.party') }}</th>
+                <th scope="col">{{ locale.t('ledger.col.contact') }}</th>
+                <th scope="col" class="end">{{ locale.t('ledger.col.balance') }}</th>
               </tr>
             </thead>
-            <tbody>
-              @for (group of categories(); track group.category) {
-                <tr class="rm-rowlink" (click)="openCategory(group.category)">
+            <tbody [appRowWindow]="win">
+              @if (win.padTop(); as pad) {
+                <tr class="rm-rowspacer" aria-hidden="true"><td colspan="3" [style.height.px]="pad"></td></tr>
+              }
+              @for (party of win.rows(); track party.partyId) {
+                <tr class="rm-rowlink" (click)="open(party.partyId)">
                   <td class="rm-cell-head">
-                    <a [routerLink]="stores.link('ledger/category', group.category)" class="rm-tbl__name">{{ categoryLabel(group.category) }}</a>
+                    <a [routerLink]="stores.link('ledger', party.partyId)" class="rm-tbl__name">{{ party.name }}</a>
                   </td>
-                  <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">{{ group.count }}</td>
-                  <td class="end num amt--out rm-cell-amt">
-                    {{ locale.money(group.total) }}
+                  <td class="num" [attr.data-label]="locale.t('ledger.col.contact')">{{ party.contact || '—' }}</td>
+                  <td class="end rm-cell-amt">
+                    <span class="num rm-tbl__name" [class]="directionClass(party.balance.direction)">
+                      {{ locale.money(party.balance.amount) }}
+                    </span>
+                    <span class="rm-tbl__meta">{{ locale.t(directionKey(party.balance.direction)) }}</span>
                   </td>
+                </tr>
+              }
+              @if (win.padBottom(); as pad) {
+                <tr class="rm-rowspacer" aria-hidden="true"><td colspan="3" [style.height.px]="pad"></td></tr>
+              }
+              @if (!filtered().length) {
+                <tr>
+                  <td colspan="3">{{ locale.t(emptyKey()) }}</td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
       </div>
+    </details>
+    }
+
+    @if (categories().length > 0) {
+      <details
+        class="fold fold--section"
+        [open]="categoriesOpen() || capture.capturing()"
+        (toggle)="capture.capturing() || categoriesOpen.set($any($event.target).open)"
+      >
+        <summary class="fold__sum fold__sum--section">
+          <svg class="fold__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+          {{ locale.t('ledger.category.title') }}
+          <span class="fold__count">{{ categories().length }}</span>
+        </summary>
+        <div class="fold__body">
+          <div class="rm-tablewrap">
+            <table class="rm-tbl">
+              <thead>
+                <tr>
+                  <th scope="col">{{ locale.t('ledger.category.col.name') }}</th>
+                  <th scope="col" class="end">{{ locale.t('ledger.category.col.count') }}</th>
+                  <th scope="col" class="end">{{ locale.t('ledger.category.col.total') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (group of categories(); track group.category) {
+                  <tr class="rm-rowlink" (click)="openCategory(group.category)">
+                    <td class="rm-cell-head">
+                      <a [routerLink]="stores.link('ledger/category', group.category)" class="rm-tbl__name">{{ categoryLabel(group.category) }}</a>
+                    </td>
+                    <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">{{ group.count }}</td>
+                    <td class="end num amt--out rm-cell-amt">
+                      {{ locale.money(group.total) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
     }
   }
 </section>

@@ -781,6 +781,7 @@ export const en = {
   'cashbook.empty.body': 'Entries with cash in or out will show here as you record them.',
   'cashbook.loadError': "Couldn't load the cashbook. Please try again.",
   'ledger.subtitle': "Every party's khata and baqaya.",
+  'ledger.parties.title': 'Parties',
   'ledger.search.ph': 'Search parties…',
   'ledger.search.none': 'No parties match your search.',
   'ledger.filter.search': 'Party',

@@ -15,6 +15,7 @@ import { Select } from '../../shared/select/select';
 import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { AmountLegend } from '../../shared/amount-legend';
+import { CaptureModeService } from '../../shared/capture-mode.service';
 
 /**
  * The khata list: every party with their baqaya and which way it points.
@@ -40,11 +41,17 @@ export class Ledger {
   protected readonly stores = inject(StoreService);
   private readonly api = inject(LedgerService);
   private readonly router = inject(Router);
+  protected readonly capture = inject(CaptureModeService);
 
   protected readonly parties = signal<PartyBalanceRow[] | null>(null);
   protected readonly categories = signal<ExpenseCategoryGroup[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
+
+  /** Both sections start shut — a khata with hundreds of parties would otherwise
+   *  force a scroll past all of them just to reach the expenses block below. */
+  protected readonly partiesOpen = signal(false);
+  protected readonly categoriesOpen = signal(false);
 
   /** `q` is the name/contact search, `dir` the way the baqaya points ('' = every khata). */
   protected readonly filters = urlFilters({ q: '', dir: '' });
