@@ -362,9 +362,13 @@ select.fld__input {
   color: var(--kg-muted);
   cursor: pointer;
 }
-.iconbtn--danger:hover:not(:disabled) {
-  border-color: var(--kg-tint-out-edge);
+.iconbtn--danger {
   color: var(--kg-out);
+  border-color: var(--kg-tint-out-edge);
+}
+.iconbtn--danger:hover:not(:disabled) {
+  background: var(--kg-tint-out-hover);
+  border-color: var(--kg-out);
 }
 .iconbtn:disabled {
   opacity: 0.4;
@@ -509,6 +513,11 @@ select.fld__input {
 }
 
 /* ── responsive ──────────────────────────────────────────────────────────── */
+/* Below tablet width the form loses its own card: `main` already paints
+   --kg-surface behind the whole page, so a same-coloured card on top of it
+   was a border doing all the work of a container. The items grid keeps its
+   box — it's the one thing on this screen worth framing — everything else
+   goes flat and leans on spacing + hairlines instead. */
 @container (max-width: 860px) {
   .sale {
     grid-template-columns: 1fr;
@@ -516,10 +525,31 @@ select.fld__input {
   .rail {
     position: static;
   }
+  .sale__form {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+  .totals {
+    padding: 16px 0 0;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--kg-line);
+    border-radius: 0;
+  }
+  .rail .panel {
+    padding: 16px 0 0;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--kg-line);
+    border-radius: 0;
+  }
 }
 @container (max-width: 560px) {
   .sale {
     padding: 14px;
+    gap: 24px;
   }
   /* The date/bill stack is a fixed 170px, which leaves the title about 70px on a
      small phone. Drop it to its own full-width line instead of crushing them
@@ -533,16 +563,34 @@ select.fld__input {
   .grid__head {
     display: none;
   }
+  /* Each row is a flat strip, not a box inside the box: a hairline underneath
+     reads as one list rather than the "card in a card in a card" the grid
+     used to be. The amount gets its own full-width line below qty/unit/rate
+     instead of being squeezed into the 40px remove-button track — that's
+     what was wrapping "Rs 5,000,000" into two jittering lines. */
   .grid__row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+    /* The remove button is a fixed 40px, not a fraction of the row — a written
+       line's design field gives up exactly the button's width, no more. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 40px;
     grid-template-areas:
-      'design design remove'
-      'qty unit amount'
-      'rate rate amount';
+      'design design design remove'
+      'qty unit rate .'
+      'amount amount amount amount';
     gap: 8px;
-    padding: 10px;
-    border: 1px solid var(--kg-line);
-    border-radius: 10px;
+    padding: 12px 0;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--kg-line);
+  }
+  /* A blank line has no remove button to make room for, so nothing is
+     reserved for it — the design field runs edge to edge instead of
+     leaving a dead 40px gap on the right. */
+  .grid__row--waiting {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      'design design design'
+      'qty unit rate'
+      'amount amount amount';
   }
   .grid__row > :nth-child(1) {
     grid-area: design;
@@ -559,10 +607,18 @@ select.fld__input {
   .grid__amount {
     grid-area: amount;
     align-self: center;
+    margin-top: 2px;
+    font-size: 17px;
   }
   .grid__row > .iconbtn {
     grid-area: remove;
     justify-self: end;
+  }
+  /* The waiting row's template has no "remove" area at all — without this the
+     hidden button falls back to auto-placement and opens an extra implicit
+     row underneath, showing up as a blank gap under the blank line. */
+  .grid__row--waiting > .iconbtn {
+    display: none;
   }
 }
 
