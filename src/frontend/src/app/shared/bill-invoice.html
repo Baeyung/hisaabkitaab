@@ -48,7 +48,7 @@
       <div class="bill-line">
         <span class="bill-line__name">{{ locale.t(labels().cash) }}</span>
         <span class="bill-line__leader" aria-hidden="true"></span>
-        <span class="bill-line__calc num amt--in">{{ locale.money(b.cashReceived) }}</span>
+        <span class="bill-line__calc num" [class]="cashClass()">{{ locale.money(b.cashReceived) }}</span>
       </div>
       @if (b.discount) {
         <div class="bill-line">

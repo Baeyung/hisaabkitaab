@@ -1,9 +1,9 @@
 import { Component, inject, input } from '@angular/core';
 import { LocaleService } from '../core/i18n/locale.service';
 import { TranslationKey } from '../core/i18n/translations/en';
-import { BillDetail } from '../core/store/bill.models';
+import { BillDetail, DocKind } from '../core/store/bill.models';
 import { BalanceDirection } from '../core/store/balance.models';
-import { directionClass, directionKey, invertDirection } from './balance.util';
+import { directionClass, directionKey, invertDirection, invertInOut } from './balance.util';
 import { Perspective } from './print-details.service';
 
 /**
@@ -58,6 +58,8 @@ export const BILL_INVOICE_LABELS: InvoiceLabels = {
 export class BillInvoice {
   readonly bill = input.required<BillDetail>();
   readonly labels = input<InvoiceLabels>(BILL_INVOICE_LABELS);
+  /** Bills receive cash, purchases pay it out — 'bills' is the default every pre-purchase caller means. */
+  readonly kind = input<DocKind>('bills');
   /** Store's own view by default; 'party' flips the outstanding figure's colour/label. */
   readonly perspective = input<Perspective>('store');
 
@@ -73,5 +75,11 @@ export class BillInvoice {
 
   protected toneClass(direction: BalanceDirection): string {
     return directionClass(this.sided(direction));
+  }
+
+  /** The cash line's own colour: green on a bill, red on a purchase, flipped for the party's copy. */
+  protected cashClass(): string {
+    const inOut = this.kind() === 'bills' ? 'IN' : 'OUT';
+    return (this.perspective() === 'party' ? invertInOut(inOut) : inOut) === 'IN' ? 'amt--in' : 'amt--out';
   }
 }

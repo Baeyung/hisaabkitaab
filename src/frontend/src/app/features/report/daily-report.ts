@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BalanceDirection } from '../../core/store/balance.models';
-import { BillDetail } from '../../core/store/bill.models';
+import { BillDetail, DocKind } from '../../core/store/bill.models';
 import { directionClass } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { ReportService } from './report.service';
@@ -22,6 +22,7 @@ interface Chapter {
 interface DocGroup {
   no: number;
   title: string;
+  kind: DocKind;
   /** "Cash received" on a bill; "Cash paid" on a purchase. */
   cashLabel: string;
   /** What a document with nobody on it is called — the app's own words for a walk-in. */
@@ -96,6 +97,7 @@ export class DailyReportPage {
       {
         no: 2,
         title: 'Bills',
+        kind: 'bills',
         cashLabel: 'Cash received',
         noParty: 'Cash sale',
         ...this.totals(r.bills),
@@ -103,6 +105,7 @@ export class DailyReportPage {
       {
         no: 3,
         title: 'Purchases',
+        kind: 'purchases',
         cashLabel: 'Cash paid',
         noParty: 'Cash purchase',
         ...this.totals(r.purchases),

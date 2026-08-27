@@ -129,7 +129,7 @@
                 <td [attr.data-label]="locale.t(config().labels.colParty)">{{ bill.partyName || locale.t(config().invoice.noParty) }}</td>
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(bill.amount) }}</td>
                 <td class="end" [attr.data-label]="locale.t(config().invoice.cash)">
-                  <span class="num rm-tbl__name amt--in">{{ locale.money(bill.cashReceived) }}</span>
+                  <span class="num rm-tbl__name" [class.amt--in]="config().kind === 'bills'" [class.amt--out]="config().kind === 'purchases'">{{ locale.money(bill.cashReceived) }}</span>
                 </td>
                 <td class="end" [attr.data-label]="locale.t(config().invoice.discount)">
                   <span class="num rm-tbl__name amt--settled">{{ bill.discount ? locale.money(bill.discount) : '—' }}</span>
@@ -184,7 +184,7 @@
                       <div class="bill-line">
                         <span class="bill-line__name">{{ locale.t(config().invoice.cash) }}</span>
                         <span class="bill-line__leader" aria-hidden="true"></span>
-                        <span class="bill-line__calc num amt--in">{{ locale.money(detail.cashReceived) }}</span>
+                        <span class="bill-line__calc num" [class.amt--in]="config().kind === 'bills'" [class.amt--out]="config().kind === 'purchases'">{{ locale.money(detail.cashReceived) }}</span>
                       </div>
                       @if (detail.discount) {
                         <div class="bill-line">
@@ -249,7 +249,7 @@
         </span>
         <span>
           {{ locale.t(config().invoice.cash) }}
-          <strong class="num amt--in">{{ locale.money(listTotals().cash) }}</strong>
+          <strong class="num" [class.amt--in]="config().kind === 'bills'" [class.amt--out]="config().kind === 'purchases'">{{ locale.money(listTotals().cash) }}</strong>
         </span>
         <span>
           {{ locale.t(config().invoice.outstanding) }}
@@ -278,7 +278,7 @@
             </span>
             <span>
               {{ locale.t(config().invoice.cash) }}
-              <strong class="num amt--in">{{ locale.money(printTotals().cash) }}</strong>
+              <strong class="num" [class.amt--in]="config().kind === 'bills'" [class.amt--out]="config().kind === 'purchases'">{{ locale.money(printTotals().cash) }}</strong>
             </span>
             <span>
               {{ locale.t(config().invoice.outstanding) }}

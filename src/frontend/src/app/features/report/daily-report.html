@@ -188,7 +188,7 @@
                 </tr>
                 <tr>
                   <th colspan="3">{{ group.cashLabel }}</th>
-                  <td class="rpt__num num amt--in">{{ locale.money(doc.cashReceived) }}</td>
+                  <td class="rpt__num num" [class.amt--in]="group.kind === 'bills'" [class.amt--out]="group.kind === 'purchases'">{{ locale.money(doc.cashReceived) }}</td>
                 </tr>
                 @if (doc.discount) {
                   <tr>
@@ -217,7 +217,7 @@
               </tr>
               <tr>
                 <th colspan="3">{{ group.cashLabel }}</th>
-                <td class="rpt__num num amt--in">{{ locale.money(group.cashTotal) }}</td>
+                <td class="rpt__num num" [class.amt--in]="group.kind === 'bills'" [class.amt--out]="group.kind === 'purchases'">{{ locale.money(group.cashTotal) }}</td>
               </tr>
             </tbody>
           </table>

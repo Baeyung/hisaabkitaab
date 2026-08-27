@@ -57,7 +57,7 @@
       </span>
       <span>
         {{ locale.t(config().labels.cash) }}
-        <strong class="num amt--in">{{ locale.money(effectiveCash()) }}</strong>
+        <strong class="num" [class.amt--in]="config().drawerFlow === 'in'" [class.amt--out]="config().drawerFlow === 'out'">{{ locale.money(effectiveCash()) }}</strong>
       </span>
       @if (discountAmount() > 0) {
         <span>
