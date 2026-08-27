@@ -19,6 +19,7 @@ import {
   invertEventKind,
   invertInOut,
   khataAmount,
+  paidAmount,
 } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { todayIso } from '../../shared/date.util';
@@ -187,6 +188,7 @@ export class LedgerDetail {
   }
 
   protected readonly khataAmount = khataAmount;
+  protected readonly paidAmount = paidAmount;
 
   /** Bilingual label for an event kind — all kinds have a `report.event.*` key. */
   protected readonly eventLabel = (kind: TransactionEventKind): string =>

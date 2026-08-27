@@ -91,3 +91,17 @@ export function directionClass(direction: BalanceDirection): string {
 export function khataAmount(row: { inOut: 'IN' | 'OUT' | 'NONE'; amount: number }): number | null {
   return row.inOut === 'NONE' || Math.abs(row.amount) < 0.005 ? null : row.amount;
 }
+
+/**
+ * The Paid column's own figure, or null when showing it would just repeat the row.
+ * A RECEIPT/PAYMENT is nothing but cash — its khata column already carries the same
+ * number, and the description already names the party — so the Paid column would be
+ * a third copy of the same figure. SALE/PURCHASE/PROCESSING keep it, since there it's
+ * the cash portion of a bill the khata column doesn't otherwise show.
+ */
+export function paidAmount(row: {
+  event: TransactionEventKind;
+  cashAmount: number | null;
+}): number | null {
+  return row.event === 'RECEIPT' || row.event === 'PAYMENT' ? null : row.cashAmount;
+}

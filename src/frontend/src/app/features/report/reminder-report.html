@@ -92,7 +92,7 @@
                   {{ row.goodsTotal === null ? '—' : locale.money(row.goodsTotal) }}
                 </td>
                 <td class="rpt__num num">
-                  {{ row.cashAmount === null ? '—' : locale.money(row.cashAmount) }}
+                  {{ paidAmount(row) === null ? '—' : locale.money(paidAmount(row)!) }}
                 </td>
                 <td
                   class="rpt__num num"

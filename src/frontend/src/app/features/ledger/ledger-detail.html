@@ -228,10 +228,10 @@
                   </td>
                   <td
                     class="end num"
-                    [class.is-empty]="row.cashAmount === null"
+                    [class.is-empty]="paidAmount(row) === null"
                     [attr.data-label]="locale.t('ledger.detail.col.paid')"
                   >
-                    {{ row.cashAmount === null ? '—' : locale.money(row.cashAmount) }}
+                    {{ paidAmount(row) === null ? '—' : locale.money(paidAmount(row)!) }}
                   </td>
                   <td
                     class="end num rm-cell-amt"

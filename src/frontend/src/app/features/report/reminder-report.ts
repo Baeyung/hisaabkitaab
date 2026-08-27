@@ -8,6 +8,7 @@ import {
   invertEventKind,
   invertInOut,
   khataAmount,
+  paidAmount,
 } from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { ReportService } from './report.service';
@@ -48,6 +49,7 @@ export class ReminderReportPage {
   }
 
   protected readonly khataAmount = khataAmount;
+  protected readonly paidAmount = paidAmount;
 
   /**
    * This copy goes to the party, not the shop — every direction and IN/OUT read
