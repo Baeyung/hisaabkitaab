@@ -1,4 +1,5 @@
 import { BalanceDirection } from '../core/store/balance.models';
+import { TransactionEventKind } from '../core/store/cashbook.models';
 import { TranslationKey } from '../core/i18n/translations/en';
 
 /**
@@ -45,6 +46,28 @@ export function invertInOut(inOut: 'IN' | 'OUT' | 'NONE'): 'IN' | 'OUT' | 'NONE'
       return 'IN';
     default:
       return inOut;
+  }
+}
+
+/**
+ * Names an entry the way the party on the other end of the counter would say it — a
+ * SALE from the shop's side is a PURCHASE from theirs, a RECEIPT the shop took in is a
+ * PAYMENT they made. Every other kind (processing, expense, opening balances...) has no
+ * "other side" to be renamed from, so it passes through unchanged. Used everywhere a
+ * statement leaves the shop's own screen, same as {@link invertDirection}.
+ */
+export function invertEventKind(event: TransactionEventKind): TransactionEventKind {
+  switch (event) {
+    case 'SALE':
+      return 'PURCHASE';
+    case 'PURCHASE':
+      return 'SALE';
+    case 'RECEIPT':
+      return 'PAYMENT';
+    case 'PAYMENT':
+      return 'RECEIPT';
+    default:
+      return event;
   }
 }
 

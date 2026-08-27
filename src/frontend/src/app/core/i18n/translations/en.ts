@@ -774,6 +774,13 @@ export const en = {
   // words, not left to a swatch — see app/shared/amount-legend.ts.
   'legend.money.in': 'Green = credit',
   'legend.money.out': 'Red = debit',
+  // Party-statement wording (LedgerDetail, the reminder report): the same colours, said
+  // in plain words for whoever is actually holding the page, since "credit"/"debit" only
+  // makes sense once you know whose account it is.
+  'legend.money.store.in': 'Green = they were billed',
+  'legend.money.store.out': 'Red = they paid you',
+  'legend.money.party.in': 'Green = you paid',
+  'legend.money.party.out': 'Red = you were billed',
   'legend.stock.in': 'Green = stock in',
   'legend.stock.out': 'Red = stock out',
   // Read aloud in place of the dash the column shows when an entry settled in full.

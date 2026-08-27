@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { LocaleService } from '../core/i18n/locale.service';
 import { TranslationKey } from '../core/i18n/translations/en';
+import { Perspective } from './print-details.service';
 
 /** Which pair of words the colours stand for on the screen the legend sits on. */
 export type LegendKind = 'money' | 'stock';
@@ -23,6 +24,15 @@ export type LegendKind = 'money' | 'stock';
  * a deliberate, scoped exception to the "no accounting jargon" rule in
  * `.claude/APPLICATION_DOMAIN.md` §11. The stock legend is unaffected; it still reads
  * "stock in"/"stock out".
+ *
+ * "Credit"/"debit" only means something once you know whose account it is, which is fine on
+ * the shop's own screens but not on a page that leaves the shop — a party statement (print or
+ * WhatsApp) flips who green and red favour along with everything else on it (see
+ * `LedgerDetail.perspective` / `balance.util#invertInOut`), so the caption has to say whose
+ * side it's read from too. Passing {@link perspective} swaps the jargon for that: "they were
+ * billed"/"they paid you" on the shop's own copy, "you paid"/"you were billed" on the
+ * party's. Leave it unset on screens that aren't one party's statement (the cashbook,
+ * dashboard, ledger list...) and the legend keeps the plain credit/debit wording.
  *
  * It names the colour in text rather than leaving a swatch to do the work, so it still
  * reads on a cheap screen, in greyscale, and to someone who cannot tell the two apart.
@@ -51,10 +61,20 @@ export class AmountLegend {
   protected readonly locale = inject(LocaleService);
 
   readonly kind = input<LegendKind>('money');
+  /** Whose statement this is, on a screen that is one party's — see the class doc. */
+  readonly perspective = input<Perspective | null>(null);
 
-  protected readonly keys = computed<{ in: TranslationKey; out: TranslationKey }>(() =>
-    this.kind() === 'stock'
-      ? { in: 'legend.stock.in', out: 'legend.stock.out' }
-      : { in: 'legend.money.in', out: 'legend.money.out' },
-  );
+  protected readonly keys = computed<{ in: TranslationKey; out: TranslationKey }>(() => {
+    if (this.kind() === 'stock') {
+      return { in: 'legend.stock.in', out: 'legend.stock.out' };
+    }
+    switch (this.perspective()) {
+      case 'store':
+        return { in: 'legend.money.store.in', out: 'legend.money.store.out' };
+      case 'party':
+        return { in: 'legend.money.party.in', out: 'legend.money.party.out' };
+      default:
+        return { in: 'legend.money.in', out: 'legend.money.out' };
+    }
+  });
 }

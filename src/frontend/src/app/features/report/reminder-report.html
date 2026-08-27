@@ -7,7 +7,7 @@
       <p class="rpt__date num">{{ r.statement.partyName }} · {{ locale.date(r.date) }}</p>
     </header>
 
-    <app-amount-legend />
+    <app-amount-legend perspective="party" />
 
     <!--
       The reminder's whole argument, said once at the top: what is owed, and how long the
@@ -79,7 +79,7 @@
                 <td class="num">{{ locale.date(row.date) }}</td>
                 <td>
                   <span class="rm-tbl__name">{{
-                    locale.describe(row.event, r.statement.partyName, row.amount, row.itemSummary)
+                    describeRow(row.event, row.amount, row.itemSummary)
                   }}</span>
                   @if (row.description) {
                     <span class="rm-tbl__meta">{{ row.description }}</span>

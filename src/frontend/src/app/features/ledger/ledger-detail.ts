@@ -5,6 +5,7 @@ import { LedgerService } from '../../core/store/ledger.service';
 import { PartyService } from '../../core/store/party.service';
 import { StoreService } from '../../core/store/store.service';
 import { EventService } from '../../core/store/event.service';
+import { DocKind } from '../../core/store/bill.models';
 import { PartyStatement, PartyStatementRow } from '../../core/store/ledger.models';
 import { Balance, BalanceDirection } from '../../core/store/balance.models';
 import { TransactionEventKind } from '../../core/store/cashbook.models';
@@ -15,6 +16,7 @@ import {
   directionClass,
   directionKey,
   invertDirection,
+  invertEventKind,
   invertInOut,
   khataAmount,
 } from '../../shared/balance.util';
@@ -162,6 +164,26 @@ export class LedgerDetail {
 
   protected rowInOut(row: PartyStatementRow): 'IN' | 'OUT' | 'NONE' {
     return this.perspective() === 'party' ? invertInOut(row.inOut) : row.inOut;
+  }
+
+  /**
+   * The row's own wording, renamed for whoever is holding the page: a SALE reads
+   * "Purchased ..." on the party's copy, not "Sold to [their own name]" — so the party
+   * name is dropped too, since it would otherwise read as the party's name addressed
+   * back to themselves.
+   */
+  protected describeRow(row: PartyStatementRow, partyName: string): string {
+    const party = this.perspective() === 'party' ? null : partyName;
+    const event = this.perspective() === 'party' ? invertEventKind(row.event) : row.event;
+    return this.locale.describe(event, party, row.amount, row.itemSummary);
+  }
+
+  /** A sub-row's bills/purchases wording and colour, flipped the same way as {@link sided}. */
+  protected sidedDocKind(kind: DocKind): DocKind {
+    if (this.perspective() !== 'party') {
+      return kind;
+    }
+    return kind === 'bills' ? 'purchases' : 'bills';
   }
 
   protected readonly khataAmount = khataAmount;

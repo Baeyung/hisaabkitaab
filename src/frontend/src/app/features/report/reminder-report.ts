@@ -1,7 +1,14 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { BalanceDirection } from '../../core/store/balance.models';
-import { directionClass, invertDirection, invertInOut, khataAmount } from '../../shared/balance.util';
+import { TransactionEventKind } from '../../core/store/cashbook.models';
+import {
+  directionClass,
+  invertDirection,
+  invertEventKind,
+  invertInOut,
+  khataAmount,
+} from '../../shared/balance.util';
 import { PrintHeader } from '../../shared/print-header';
 import { ReportService } from './report.service';
 import { PartyReminder } from './report.models';
@@ -66,6 +73,19 @@ export class ReminderReportPage {
   /** The khata column's IN/OUT, flipped to the party's side same as {@link tone}. */
   protected rowInOut(row: { inOut: 'IN' | 'OUT' | 'NONE' }): 'IN' | 'OUT' | 'NONE' {
     return invertInOut(row.inOut);
+  }
+
+  /**
+   * The row's own wording, renamed for the party holding this page: a SALE reads
+   * "Purchased ..." here, not "Sold to [their own name]" — so the party name is left out,
+   * same reasoning as `LedgerDetail.describeRow`.
+   */
+  protected describeRow(
+    event: TransactionEventKind,
+    amount: number,
+    items: string | null,
+  ): string {
+    return this.locale.describe(invertEventKind(event), null, amount, items);
   }
 
   private async load(storeId: string, partyId: string, date: string, token: string): Promise<void> {

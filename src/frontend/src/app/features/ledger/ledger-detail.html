@@ -122,7 +122,12 @@
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.totalPaid') }}</span>
-          <span class="rm-stat__value num amt--in">{{ locale.money(stats().totalPaid) }}</span>
+          <span
+            class="rm-stat__value num"
+            [class.amt--in]="perspective() === 'party'"
+            [class.amt--out]="perspective() === 'store'"
+            >{{ locale.money(stats().totalPaid) }}</span
+          >
         </div>
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.outstanding') }}</span>
@@ -138,7 +143,7 @@
         </div>
       </div>
 
-      <app-amount-legend />
+      <app-amount-legend [perspective]="perspective()" />
 
       <div class="rm-card">
         <div class="rm-toolbar rm-toolbar--filters rm-noprint">
@@ -199,13 +204,13 @@
                   <td class="rm-cell-head">
                     @if (detailLink(row.event, row.transactionId); as link) {
                       <a [routerLink]="link" (click)="$event.stopPropagation()"
-                        >{{ locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}
+                        >{{ describeRow(row, st.partyName) }}
                         @if (row.description) {
                           <em class="rm-note"> ({{ row.description }})</em>
                         }
                       </a>
                     } @else {
-                      {{ locale.describe(row.event, st.partyName, row.amount, row.itemSummary) }}
+                      {{ describeRow(row, st.partyName) }}
                       @if (row.description) {
                         <em class="rm-note"> ({{ row.description }})</em>
                       }
@@ -353,25 +358,25 @@
                       </div>
                       <div class="rm-foot bill-foot">
                         <div class="bill-line">
-                          <span class="bill-line__name">{{ locale.t(docKeys[doc.kind].cash) }}</span>
+                          <span class="bill-line__name">{{ locale.t(docKeys[sidedDocKind(doc.kind)].cash) }}</span>
                           <span class="bill-line__leader" aria-hidden="true"></span>
                           <span
                             class="bill-line__calc num"
-                            [class.amt--in]="doc.kind === 'bills'"
-                            [class.amt--out]="doc.kind === 'purchases'"
+                            [class.amt--in]="sidedDocKind(doc.kind) === 'bills'"
+                            [class.amt--out]="sidedDocKind(doc.kind) === 'purchases'"
                             >{{ locale.money(doc.cashReceived) }}</span
                           >
                         </div>
                         @if (doc.discount) {
                           <div class="bill-line">
-                            <span class="bill-line__name">{{ locale.t(docKeys[doc.kind].discount) }}</span>
+                            <span class="bill-line__name">{{ locale.t(docKeys[sidedDocKind(doc.kind)].discount) }}</span>
                             <span class="bill-line__leader" aria-hidden="true"></span>
                             <span class="bill-line__calc num">{{ locale.money(doc.discount) }}</span>
                           </div>
                         }
                         @if (doc.partyName && doc.outstanding.direction !== 'SETTLED') {
                           <div class="bill-line">
-                            <span class="bill-line__name">{{ locale.t(docKeys[doc.kind].outstanding) }}</span>
+                            <span class="bill-line__name">{{ locale.t(docKeys[sidedDocKind(doc.kind)].outstanding) }}</span>
                             <span class="bill-line__leader" aria-hidden="true"></span>
                             <span class="bill-line__calc num">{{ locale.money(doc.outstanding.amount) }}</span>
                           </div>
