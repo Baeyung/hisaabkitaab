@@ -142,7 +142,8 @@
           >
             {{ line.open ? '−' : '+' }} {{ locale.t('processing.supplier.add') }}
           </button>
-          <!-- what this row will actually take off the shelf, once it has been converted -->
+          <!-- what this row will actually take off the shelf, once it has been converted —
+               plus the price per stock unit, the other side of the rate box above -->
           <app-unit-note
             [qty]="line.qty"
             [unit]="line.unit"
@@ -151,6 +152,23 @@
             direction="out"
             (editRate)="askRawUnit(line.key, true)"
           />
+          @if (line.factor) {
+            <label class="conv-price">
+              <span class="conv-price__label">
+                {{ locale.t('units.note.pricePer', { unit: stockUnit(line.name) ?? '' }) }}
+              </span>
+              <input
+                class="conv-price__input"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="any"
+                [value]="pricePerUnit(line)"
+                (input)="setRawPricePerUnit(line.key, $any($event.target).value)"
+                [attr.aria-label]="locale.t('units.note.pricePer', { unit: stockUnit(line.name) ?? '' })"
+              />
+            </label>
+          }
         </div>
 
         @if (line.open) {
@@ -332,6 +350,23 @@
             direction="out"
             (editRate)="askProcUnit(line.key, true)"
           />
+          @if (line.factor) {
+            <label class="conv-price">
+              <span class="conv-price__label">
+                {{ locale.t('units.note.pricePer', { unit: stockUnit(line.name) ?? '' }) }}
+              </span>
+              <input
+                class="conv-price__input"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="any"
+                [value]="pricePerUnit(line)"
+                (input)="setProcPricePerUnit(line.key, $any($event.target).value)"
+                [attr.aria-label]="locale.t('units.note.pricePer', { unit: stockUnit(line.name) ?? '' })"
+              />
+            </label>
+          }
         </div>
 
         @if (line.open) {
@@ -472,6 +507,23 @@
           direction="in"
           (editRate)="askOutputUnit(true)"
         />
+        @if (outputFactor()) {
+          <label class="conv-price">
+            <span class="conv-price__label">
+              {{ locale.t('units.note.pricePer', { unit: stockUnit(outputName()) ?? '' }) }}
+            </span>
+            <input
+              class="conv-price__input"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              [value]="outputPricePerUnit()"
+              (input)="setOutputPricePerUnit($any($event.target).value)"
+              [attr.aria-label]="locale.t('units.note.pricePer', { unit: stockUnit(outputName()) ?? '' })"
+            />
+          </label>
+        }
       </div>
     </div>
 

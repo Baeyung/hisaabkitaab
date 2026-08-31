@@ -29,7 +29,7 @@ import { UnitConversionService } from '../../core/units/unit-conversion.service'
 import { UnitService } from '../../core/units/unit.service';
 import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
 import { UnitNote } from '../../shared/conversion-slip/unit-note';
-import { UNIT_SUGGESTIONS, convertQty, sameUnit } from '../../core/units/units';
+import { UNIT_SUGGESTIONS, convertQty, round2, sameUnit } from '../../core/units/units';
 
 /** One line of cloth on the bill. `key` is a stable id for @for tracking. */
 interface Line {
@@ -52,12 +52,6 @@ interface Line {
 /** How a converted pair is keyed on a line — folded, so case never looks like a new pair. */
 function pairKey(from: string, to: string): string {
   return `${from.trim().toLowerCase()}>${to.trim().toLowerCase()}`;
-}
-
-/** Money precision — the same two places a taught rate's own inversion (1/x) can otherwise
- *  leave hanging off a rescaled rate, e.g. 2099.9999999999995 for a plainly-typed 2100. */
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
 }
 
 /**

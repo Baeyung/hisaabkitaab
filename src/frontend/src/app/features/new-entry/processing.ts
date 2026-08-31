@@ -23,7 +23,13 @@ import { UnitConversionService } from '../../core/units/unit-conversion.service'
 import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
 import { UnitNote } from '../../shared/conversion-slip/unit-note';
 import { UnitService } from '../../core/units/unit.service';
-import { UNIT_SUGGESTIONS, convertQty, resolveFactor, sameUnit } from '../../core/units/units';
+import {
+  UNIT_SUGGESTIONS,
+  convertQty,
+  resolveFactor,
+  round2,
+  sameUnit,
+} from '../../core/units/units';
 
 /**
  * One input row. `key` is a stable id for @for tracking.
@@ -406,12 +412,52 @@ export class Processing {
     await this.askForLine(this.procLines(), key, (change) => this.patchProc(key, change), force);
   }
 
+  /** Price per stock unit, backed out of whatever the row currently holds — same idea as the
+   *  sale and purchase grids' rate box: the goods are worth the same per stock unit whether
+   *  the row is written in it or in something else. */
+  private baseRate(l: Line): number | null {
+    if (l.rate == null) {
+      return null;
+    }
+    return l.factor ? l.rate / l.factor : l.rate;
+  }
+
+  /** What the price/stockUnit box under a converted row reads — null until there's both a
+   *  rate and a factor to divide it by, i.e. exactly when the note under the row is showing. */
+  protected pricePerUnit(l: Line): number | null {
+    if (!l.factor || l.rate == null) {
+      return null;
+    }
+    return round2(l.rate / l.factor);
+  }
+
+  /** The price/stockUnit box under a converted raw row — the other side of its rate box. */
+  setRawPricePerUnit(key: number, value: string): void {
+    const line = this.rawLines().find((l) => l.key === key);
+    const price = toNum(value);
+    this.patchRaw(key, {
+      rate: price == null ? null : line?.factor ? round2(price * line.factor) : price,
+    });
+  }
+
+  /** Same, for a processing-item row. */
+  setProcPricePerUnit(key: number, value: string): void {
+    const line = this.procLines().find((l) => l.key === key);
+    const price = toNum(value);
+    this.patchProc(key, {
+      rate: price == null ? null : line?.factor ? round2(price * line.factor) : price,
+    });
+  }
+
   /**
    * Open the slip for one row and keep what it settles on.
    *
-   * Normally silent for a pair the row has already agreed on, so leaving the unit box without
-   * changing it asks nothing; `force` is the note under the row asking to be reopened, which
-   * is the shopkeeper deliberately revisiting a rate.
+   * A pair this shop (or the built-in table) already has an answer for is applied straight
+   * away, with the rate scaled to match — the same "100/gaz reads 2100 in than(21gz)" rule
+   * the sale and purchase grids use — and only a pair nobody has ever answered stops to ask.
+   * Silent when the pair is already agreed, so tabbing through a row asks nothing; `force` is
+   * the note under the row asking to be reopened, which always shows the sum, even for a pair
+   * that was applied silently, since revisiting the rate is the point of the click.
    *
    * Declining puts the unit box back to the shelf's unit rather than leaving the row as it
    * was: a quantity sitting in a unit nothing converts is the exact mistake this feature
@@ -430,57 +476,123 @@ export class Processing {
 
     const stock = this.stockUnit(line.name);
     const entered = line.unit.trim();
+    const base = this.baseRate(line);
     if (!stock || !entered || sameUnit(entered, stock)) {
-      apply({ factor: null, factorFor: null });
+      apply({ factor: null, factorFor: null, rate: base == null ? line.rate : round2(base) });
       return;
     }
     if (!force && line.factorFor === pairKey(entered, stock)) {
       return; // already agreed, for this very pair
     }
 
-    const answer = await this.slip.open({
-      itemName: line.name.trim(),
-      from: entered,
-      to: stock,
-      qty: line.qty,
-    });
+    const known = force ? null : this.conversions.factor(entered, stock);
+    let factor: number;
+    if (known) {
+      factor = known.value;
+    } else {
+      const answer = await this.slip.open({
+        itemName: line.name.trim(),
+        from: entered,
+        to: stock,
+        qty: line.qty,
+      });
+      if (answer === null) {
+        apply({
+          unit: stock,
+          factor: null,
+          factorFor: null,
+          rate: base == null ? line.rate : round2(base),
+        });
+        return;
+      }
+      factor = answer.factor;
+    }
 
-    apply(
-      answer === null
-        ? { unit: stock, factor: null, factorFor: null }
-        : { factor: answer.factor, factorFor: pairKey(entered, stock) },
-    );
+    apply({
+      factor,
+      factorFor: pairKey(entered, stock),
+      rate: base == null ? line.rate : round2(base * factor),
+    });
   }
 
-  /** The output's unit box was left — the same question, about what the batch made. */
+  /** What {@link typedUnitCost} means per stock unit — the figure a unit change on the output
+   *  row has to preserve, the same idea as {@link baseRate} for the raw and processing grids.
+   *  Null when the box has never been typed over: the suggested cost re-derives itself fresh
+   *  from the batch total every time, so there's nothing here that needs carrying across. */
+  private baseUnitCost(): number | null {
+    if (!this.unitCostTouched() || this.typedUnitCost() == null) {
+      return null;
+    }
+    const factor = this.outputFactor();
+    return factor ? (this.typedUnitCost() as number) / factor : (this.typedUnitCost() as number);
+  }
+
+  /** What the price/stockUnit box beside the output's shelf note reads — null until there's a
+   *  factor to divide the batch's cost/unit by. */
+  protected outputPricePerUnit(): number | null {
+    const factor = this.outputFactor();
+    return factor ? round2(this.unitCost() / factor) : null;
+  }
+
+  /** The output's price/stockUnit box — the other side of the cost/unit box above it. */
+  setOutputPricePerUnit(value: string): void {
+    const price = toNum(value);
+    const factor = this.outputFactor();
+    this.unitCostTouched.set(true);
+    this.typedUnitCost.set(price == null ? null : factor ? round2(price * factor) : price);
+  }
+
+  /**
+   * The output's unit box was left — the same question, about what the batch made. Same
+   * silent-apply-when-known rule as {@link askForLine}, and the same rate-preserving rescale,
+   * but only when the cost box has actually been typed over: the computed suggestion already
+   * re-derives itself fresh from the batch total in whatever unit is currently entered.
+   */
   async askOutputUnit(force = false): Promise<void> {
     const name = this.outputName();
     const stock = this.stockUnit(name);
     const entered = this.outputUnit().trim();
+    const base = this.baseUnitCost();
 
     if (!stock || !entered || sameUnit(entered, stock)) {
       this.outputFactor.set(null);
       this.outputFactorFor.set(null);
+      if (base != null) {
+        this.typedUnitCost.set(round2(base));
+      }
       return;
     }
     if (!force && this.outputFactorFor() === pairKey(entered, stock)) {
       return;
     }
 
-    const answer = await this.slip.open({
-      itemName: name.trim(),
-      from: entered,
-      to: stock,
-      qty: this.outputQty(),
-    });
-
-    if (answer === null) {
-      this.outputUnit.set(stock);
-      this.outputFactor.set(null);
-      this.outputFactorFor.set(null);
+    const known = force ? null : this.conversions.factor(entered, stock);
+    let factor: number;
+    if (known) {
+      factor = known.value;
     } else {
-      this.outputFactor.set(answer.factor);
-      this.outputFactorFor.set(pairKey(entered, stock));
+      const answer = await this.slip.open({
+        itemName: name.trim(),
+        from: entered,
+        to: stock,
+        qty: this.outputQty(),
+      });
+      if (answer === null) {
+        this.outputUnit.set(stock);
+        this.outputFactor.set(null);
+        this.outputFactorFor.set(null);
+        if (base != null) {
+          this.typedUnitCost.set(round2(base));
+        }
+        return;
+      }
+      factor = answer.factor;
+    }
+
+    this.outputFactor.set(factor);
+    this.outputFactorFor.set(pairKey(entered, stock));
+    if (base != null) {
+      this.typedUnitCost.set(round2(base * factor));
     }
   }
 

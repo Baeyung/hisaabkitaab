@@ -269,6 +269,16 @@ export function formatFactor(factor: number): string {
   return String(rounded);
 }
 
+/**
+ * Money precision — the same rounding {@link convertQty} does, under its own name so a rate
+ * being rescaled by a factor doesn't read as a quantity being converted. Without it, a taught
+ * rate's own inversion (1/x) leaves a rescaled rate reading 2099.9999999999995 for a shopkeeper
+ * who plainly typed 2100.
+ */
+export function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 /** One rate the shop taught us, as {@link resolveFactor} needs it: `1 fromUnit = factor toUnit`. */
 export interface TaughtRate {
   fromUnit: string;
