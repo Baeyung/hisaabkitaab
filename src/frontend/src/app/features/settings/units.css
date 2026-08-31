@@ -1,6 +1,15 @@
-/* Store Settings › Unit Conversions — only what this screen adds on top of
-   settings-table.css: the read-only standard-rates list, the preset chips,
-   and the read-only pair shown in place of two fields while editing. */
+/* Store Settings › Units — only what this screen adds on top of settings-table.css: the two
+   collapsible sections, the read-only standard-rates list, the preset chips, and the
+   read-only pair shown in place of two fields while editing a conversion. */
+
+/* .fold--section already carries its own margin-top (styles.css), so the two sections and
+   the page header space themselves correctly with no extra rule here. Its body is flush by
+   default — the ledger page's own tables carry their edge padding themselves. This screen's
+   shared .std/.copy/.tablewrap blocks are built to sit inside the page's usual padding
+   instead, same as every other Store Settings screen. */
+.fold--section .fold__body {
+  padding: 18px;
+}
 
 .std {
   margin-bottom: 24px;

@@ -3,7 +3,9 @@ package io.github.baeyung.hisaabkitaab.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,15 +44,19 @@ public class UnitConversionController
                 .toList());
     }
 
-    /**
-     * There is no delete. A rate is never wrong in a way that having none would fix — the
-     * shopkeeper who mistyped 22 for 2.2 wants 2.2, and typing it over in the slip is what
-     * lands here. Nothing in the app asks for a pair to go back to having no answer.
-     */
     @PutMapping
     public ResponseEntity<UnitConversionResponse> save(@Valid @RequestBody UnitConversionRequest request,
             @CurrentStore(StoreRole.EDITOR) Store store)
     {
         return ResponseEntity.ok(UnitConversionResponse.of(unitConversionService.save(request, store)));
+    }
+
+    /** Forgets a rate taught by mistake — the pair goes back to having no answer, and the
+     *  slip asks again the next time an entry needs it. */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id, @CurrentStore(StoreRole.EDITOR) Store store)
+    {
+        unitConversionService.delete(id, store.getId());
+        return ResponseEntity.noContent().build();
     }
 }

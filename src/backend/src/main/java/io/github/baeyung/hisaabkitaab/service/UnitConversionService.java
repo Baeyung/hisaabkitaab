@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import io.github.baeyung.hisaabkitaab.dto.units.UnitConversionRequest;
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.UnitConversion;
+import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.UnitConversionRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -93,6 +94,19 @@ public class UnitConversionService
                 .toUnit(pair.to())
                 .factor(pair.factor())
                 .build());
+    }
+
+    /** Forgets a rate outright — for the pair taught by mistake, where the right factor is
+     *  "none" rather than a correction {@link #save} could apply. */
+    public void delete(String id, String storeId)
+    {
+        UnitConversion conversion = repository.findById(id)
+                .filter(c -> c.getStore().getId().equals(storeId))
+                .orElseThrow(() -> ResourceNotFoundException.forEntity("UnitConversion", id));
+
+        log.info("deleting conversion {} ({} -> {}) from store {}",
+                id, conversion.getFromUnit(), conversion.getToUnit(), storeId);
+        repository.delete(conversion);
     }
 
     /**

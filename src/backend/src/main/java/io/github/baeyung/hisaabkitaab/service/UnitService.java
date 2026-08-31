@@ -4,12 +4,15 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.baeyung.hisaabkitaab.entity.Store;
 import io.github.baeyung.hisaabkitaab.entity.Unit;
+import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.UnitRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -80,5 +83,54 @@ public class UnitService
                 .stream()
                 .map(Unit::getName)
                 .toList();
+    }
+
+    /** The store's units, for the Manage Units screen — same rows {@link #listNames} reads,
+     *  with the id a rename or delete needs to target one. */
+    @Transactional(readOnly = true)
+    public List<Unit> list(String storeId)
+    {
+        return repository.findByStoreIdOrderByNameAsc(storeId);
+    }
+
+    /**
+     * Renames a unit, refusing a name that already belongs to another unit of this store —
+     * case-insensitively, the same rule {@link #resolveOrCreate} applies when a name is typed
+     * for the first time, so "Meter" and "meter" never end up as two rows either way. The
+     * rename only relabels this row: an item or a past entry recorded under the old name keeps
+     * it, since neither stores a reference to this table, only the text as typed.
+     */
+    public Unit rename(Store store, String id, String name)
+    {
+        Unit unit = findByIdForStore(id, store.getId());
+        String wanted = name.trim();
+
+        repository.findByStoreIdAndNameIgnoreCase(store.getId(), wanted)
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "A unit named \"" + wanted + "\" already exists.");
+                });
+
+        log.info("renaming unit {} \"{}\" -> \"{}\" in store {}", id, unit.getName(), wanted, store.getId());
+        unit.setName(wanted);
+        return repository.save(unit);
+    }
+
+    /** Drops a unit from this store's offered list. Nothing else references this row — an
+     *  item, a transaction line or a conversion rate carries the unit as its own text, not a
+     *  link to it — so removing it only narrows what a shopkeeper is offered from here on. */
+    public void delete(Store store, String id)
+    {
+        Unit unit = findByIdForStore(id, store.getId());
+        log.info("deleting unit {} \"{}\" from store {}", id, unit.getName(), store.getId());
+        repository.delete(unit);
+    }
+
+    private Unit findByIdForStore(String id, String storeId)
+    {
+        return repository.findById(id)
+                .filter(u -> u.getStore().getId().equals(storeId))
+                .orElseThrow(() -> ResourceNotFoundException.forEntity("Unit", id));
     }
 }

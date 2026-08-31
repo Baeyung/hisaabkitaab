@@ -104,6 +104,22 @@ export class UnitConversionService {
   }
 
   /**
+   * Forget a rate taught by mistake — the pair goes back to having no answer, and the slip
+   * asks again the next time an entry needs it. Same swallow-and-report-false shape as
+   * {@link teach}: the Store Settings screen is the only caller, and it reads the flag to
+   * report the failure rather than pretending the row is gone.
+   */
+  async delete(id: string): Promise<boolean> {
+    try {
+      await firstValueFrom(this.http.delete(`${this.url}/${id}`));
+      this._rates.update((rates) => rates.filter((r) => r.id !== id));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Copy this store's rates into other stores the caller also has a hand in — a shop with
    * five branches teaches its than/bori/roll once rather than five times. Same `PUT`, one
    * call per rate per store, so a store that already has a rate for a pair gets it

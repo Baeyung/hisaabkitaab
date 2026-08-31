@@ -120,7 +120,7 @@ export const en = {
   'nav.settings.users': 'Manage Users',
   'nav.settings.items': 'Items',
   'nav.settings.party': 'Parties',
-  'nav.settings.units': 'Unit Conversions',
+  'nav.settings.units': 'Units',
   'nav.settings.menu': 'Menu',
   'nav.settings.reports': 'Reports',
   // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
@@ -398,13 +398,21 @@ export const en = {
   'settings.items.copy.confirm': 'Copy',
   'settings.items.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
-  'settings.units.subtitle': 'How the units this shop uses turn into one another.',
+  'settings.units.subtitle': 'Manage the units this shop uses, and how they convert into one another.',
+  'settings.units.manage.section': 'Manage units',
+  'settings.units.manage.subtitle':
+    "The names offered on every entry screen's unit box. Renaming or removing one here leaves anything already recorded untouched — an item or a past entry keeps its own unit as typed.",
+  'settings.units.manage.col.name': 'Name',
+  'settings.units.manage.empty.body': 'No units yet.',
+  'settings.units.manage.loadError': "Couldn't load your units. Please try again.",
+  'settings.units.manage.duplicate': 'A unit with that name already exists.',
+  'settings.units.manage.delete.confirm': 'Remove "{{name}}" from your units list?',
+  'settings.units.conversions.section': 'Conversions',
   'settings.units.standard.title': 'Standard conversions',
   'settings.units.standard.subtitle':
     'Built in — the same in every shop, so there is nothing to add for these.',
-  'settings.units.custom.title': "This shop's conversions",
   'settings.units.custom.subtitle':
-    'Trade units your suppliers use — a than, a bori, a roll — only this shop can say what one is worth.',
+    'Trade units your suppliers use — a than, a bori, a roll — only this shop can say what one is worth. Type one that isn’t on the list yet and it is created the moment you save.',
   'settings.units.add': 'Add conversion',
   'settings.units.examples.title': 'Try one:',
   'settings.units.col.from': 'From',
@@ -416,6 +424,7 @@ export const en = {
   'settings.units.empty.body':
     'Nothing taught yet. Add one below, or answer the conversion slip the first time you use it on an entry.',
   'settings.units.loadError': "Couldn't load your conversions. Please try again.",
+  'settings.units.delete.confirm': 'Remove the {{from}} → {{to}} conversion?',
   'settings.units.copy.button': 'Copy to other stores',
   'settings.units.copy.hint':
     "Copies every rate above into the stores you pick — it overwrites a rate they already have for the same pair, and leaves everything else in them alone.",
