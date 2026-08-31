@@ -415,6 +415,7 @@ export const en = {
     'Trade units your suppliers use — a than, a bori, a roll — only this shop can say what one is worth. Type one that isn’t on the list yet and it is created the moment you save.',
   'settings.units.add': 'Add conversion',
   'settings.units.examples.title': 'Try one:',
+  'settings.units.col.conversion': 'Conversion',
   'settings.units.col.from': 'From',
   'settings.units.col.to': 'To',
   'settings.units.col.factor': 'Rate',

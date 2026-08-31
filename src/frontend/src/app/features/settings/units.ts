@@ -14,6 +14,7 @@ import {
   UNIT_SUGGESTIONS,
   builtInFactor,
   formatFactor,
+  readableRate,
   sameUnit,
 } from '../../core/units/units';
 
@@ -237,10 +238,11 @@ export class SettingsUnits {
   startEdit(rate: UnitConversionRate): void {
     this.resetRateRowState();
     this.editingId.set(rate.id);
+    const r = readableRate(rate);
     this.draft.set({
-      fromUnit: rate.fromUnit,
-      toUnit: rate.toUnit,
-      factor: Number(formatFactor(rate.factor)),
+      fromUnit: r.fromUnit,
+      toUnit: r.toUnit,
+      factor: Number(formatFactor(r.factor)),
     });
   }
 
@@ -303,8 +305,11 @@ export class SettingsUnits {
     this.errorKey.set(null);
   }
 
-  protected displayFactor(rate: UnitConversionRate): string {
-    return formatFactor(rate.factor);
+  /** The row as the shop reads it — see {@link readableRate} for why this can differ from
+   *  the alphabetically-sorted pair the backend actually stores. */
+  protected displayRate(rate: UnitConversionRate): { fromUnit: string; toUnit: string; factor: string } {
+    const r = readableRate(rate);
+    return { fromUnit: r.fromUnit, toUnit: r.toUnit, factor: formatFactor(r.factor) };
   }
 
   startCopy(): void {

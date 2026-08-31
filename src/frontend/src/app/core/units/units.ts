@@ -277,6 +277,21 @@ export interface TaughtRate {
 }
 
 /**
+ * A taught rate the way a shopkeeper reads it back, not the way the backend files it.
+ * `UnitConversionService` on the backend sorts every pair alphabetically before storing it, so
+ * "1 than = 21 gaz" and "1 gaz = 0.0476 than" are one row either way — correct for not storing
+ * the same fact twice, but the row a shop taught as "1 than = 21 gaz" would otherwise redisplay
+ * as the alphabetically-earlier "gaz". A rate and its inverse are the same fact, so picking
+ * whichever direction keeps the factor at 1 or above is free: it costs nothing to compute and
+ * turns the row back into the "one big unit = many small units" sentence a shop actually typed.
+ */
+export function readableRate<T extends TaughtRate>(rate: T): T {
+  return rate.factor >= 1
+    ? rate
+    : { ...rate, fromUnit: rate.toUnit, toUnit: rate.fromUnit, factor: 1 / rate.factor };
+}
+
+/**
  * How far a chained rate may wander. Two hops covers the case that matters — a trade unit the
  * shop taught against one measure, converted into another measure of the same family ("than →
  * metre → gaz") — and stopping there keeps the slip's `via` line short enough to read and to

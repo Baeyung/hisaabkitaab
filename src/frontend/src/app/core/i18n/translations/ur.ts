@@ -397,6 +397,7 @@ export const ur: Record<TranslationKey, string> = {
     'آپ کے سپلائرز کے استعمال کردہ یونٹس — تھان، بوری، رول — صرف یہ دکان بتا سکتی ہے کہ ان کی قیمت کیا ہے۔ جو نام فہرست میں نہیں وہ لکھیں، محفوظ کرتے ہی بن جائے گا۔',
   'settings.units.add': 'تبدیلی شامل کریں',
   'settings.units.examples.title': 'ایک آزمائیں:',
+  'settings.units.col.conversion': 'تبدیلی',
   'settings.units.col.from': 'سے',
   'settings.units.col.to': 'تک',
   'settings.units.col.factor': 'شرح',

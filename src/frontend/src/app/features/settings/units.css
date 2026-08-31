@@ -137,13 +137,44 @@
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
 
-/* The pair shown as text while editing — same baseline as the field it stands beside. */
-.efld--pair {
+/* Custom conversions read as one sentence, both at rest ("1 than = 16 gaz", built in the
+   template) and while adding/editing: literal "1", the from-unit box, "=", the factor,
+   the to-unit box. Editing a taught rate only ever changes the number, so the two units
+   render as .conv__static text instead of boxes there — same baseline as the literals so
+   the sentence still reads as one line. */
+.conv {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  /* Bottom-align so the labelled fields' inputs sit on the same line as the plain "1" / "="
+     text and the fixed-pair spans shown while editing — the caption above a field is the
+     part allowed to sit higher, not the control itself. */
+  align-items: flex-end;
+  gap: 10px;
+}
+.conv__lit,
+.conv__static {
   font-size: 15px;
   font-weight: 600;
   color: var(--kg-ink);
+  flex: none;
+  /* Matches the field inputs' own bottom padding so "1"/"=" and a fixed unit name sit on
+     the same baseline as the boxes beside them, not flush with their outer edge. */
+  padding-bottom: 11px;
+}
+.conv__field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.conv__unit {
+  flex: 1 1 160px;
+  min-width: 110px;
+  max-width: 220px;
+}
+.conv__factor {
+  flex: 0 0 100px;
+  width: 100px;
+  text-align: center;
 }
 
 @container (max-width: 720px) {
