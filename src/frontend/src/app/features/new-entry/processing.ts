@@ -422,6 +422,18 @@ export class Processing {
     return l.factor ? l.rate / l.factor : l.rate;
   }
 
+  /** The shelf amount a row's quantity currently represents — the figure a unit change has to
+   *  preserve, the same idea as {@link baseRate} for the price above it. Without this, retyping
+   *  a settled row's unit box leaves the number in the quantity box untouched, and it is
+   *  silently re-read under the new unit — "70 gz" becomes "70 than(16gz)", sixteen times what
+   *  was actually on the table. */
+  private baseQty(l: Line): number | null {
+    if (l.qty == null) {
+      return null;
+    }
+    return l.factor ? convertQty(l.qty, l.factor) : l.qty;
+  }
+
   /** What the price/stockUnit box under a converted row reads — null until there's both a
    *  rate and a factor to divide it by, i.e. exactly when the note under the row is showing. */
   protected pricePerUnit(l: Line): number | null {
@@ -477,8 +489,14 @@ export class Processing {
     const stock = this.stockUnit(line.name);
     const entered = line.unit.trim();
     const base = this.baseRate(line);
+    const baseQty = this.baseQty(line);
     if (!stock || !entered || sameUnit(entered, stock)) {
-      apply({ factor: null, factorFor: null, rate: base == null ? line.rate : round2(base) });
+      apply({
+        factor: null,
+        factorFor: null,
+        rate: base == null ? line.rate : round2(base),
+        qty: baseQty == null ? line.qty : round2(baseQty),
+      });
       return;
     }
     if (!force && line.factorFor === pairKey(entered, stock)) {
@@ -502,6 +520,7 @@ export class Processing {
           factor: null,
           factorFor: null,
           rate: base == null ? line.rate : round2(base),
+          qty: baseQty == null ? line.qty : round2(baseQty),
         });
         return;
       }
@@ -512,6 +531,7 @@ export class Processing {
       factor,
       factorFor: pairKey(entered, stock),
       rate: base == null ? line.rate : round2(base * factor),
+      qty: baseQty == null ? line.qty : round2(baseQty / factor),
     });
   }
 
@@ -525,6 +545,18 @@ export class Processing {
     }
     const factor = this.outputFactor();
     return factor ? (this.typedUnitCost() as number) / factor : (this.typedUnitCost() as number);
+  }
+
+  /** The output quantity's shelf equivalent — {@link baseQty} for the output row's own signals
+   *  rather than a {@link Line}. Unlike cost, the quantity box has no fresh suggestion to fall
+   *  back on, so there is nothing to gate on being "touched": whatever was typed is always
+   *  what has to survive the unit box changing underneath it. */
+  private baseOutputQty(): number | null {
+    if (this.outputQty() == null) {
+      return null;
+    }
+    const factor = this.outputFactor();
+    return factor ? convertQty(this.outputQty() as number, factor) : (this.outputQty() as number);
   }
 
   /** What the price/stockUnit box beside the output's shelf note reads — null until there's a
@@ -553,12 +585,16 @@ export class Processing {
     const stock = this.stockUnit(name);
     const entered = this.outputUnit().trim();
     const base = this.baseUnitCost();
+    const baseQty = this.baseOutputQty();
 
     if (!stock || !entered || sameUnit(entered, stock)) {
       this.outputFactor.set(null);
       this.outputFactorFor.set(null);
       if (base != null) {
         this.typedUnitCost.set(round2(base));
+      }
+      if (baseQty != null) {
+        this.outputQty.set(round2(baseQty));
       }
       return;
     }
@@ -584,6 +620,9 @@ export class Processing {
         if (base != null) {
           this.typedUnitCost.set(round2(base));
         }
+        if (baseQty != null) {
+          this.outputQty.set(round2(baseQty));
+        }
         return;
       }
       factor = answer.factor;
@@ -593,6 +632,9 @@ export class Processing {
     this.outputFactorFor.set(pairKey(entered, stock));
     if (base != null) {
       this.typedUnitCost.set(round2(base * factor));
+    }
+    if (baseQty != null) {
+      this.outputQty.set(round2(baseQty / factor));
     }
   }
 
