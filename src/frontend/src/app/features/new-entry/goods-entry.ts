@@ -26,6 +26,7 @@ import { PrintHeader } from '../../shared/print-header';
 import { DateField } from '../../shared/date-field/date-field';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { UnitConversionService } from '../../core/units/unit-conversion.service';
+import { UnitService } from '../../core/units/unit.service';
 import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
 import { UnitNote } from '../../shared/conversion-slip/unit-note';
 import { UNIT_SUGGESTIONS, convertQty, sameUnit } from '../../core/units/units';
@@ -163,10 +164,15 @@ export class GoodsEntry {
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
   private readonly conversions = inject(UnitConversionService);
+  private readonly unitApi = inject(UnitService);
   private readonly slip = inject(ConversionSlipService);
 
-  /** Offered under every unit box — the measures the app converts, then the trade units. */
-  protected readonly unitOptions = UNIT_SUGGESTIONS;
+  /**
+   * Offered under every unit box. Starts from the built-in defaults and is replaced by the
+   * store's own list once it loads, which includes any trade unit this shop has already typed
+   * on an item or a conversion rate.
+   */
+  protected readonly unitOptions = signal<readonly string[]>(UNIT_SUGGESTIONS);
 
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
@@ -312,6 +318,12 @@ export class GoodsEntry {
     // alongside rather than awaited: it swallows its own failure, and the fixed table still
     // answers gaz and metre without it.
     void this.conversions.load();
+    // Same treatment for the store's unit list: the built-in defaults already loaded above
+    // work fine until this arrives.
+    void this.unitApi
+      .names()
+      .then((names) => this.unitOptions.set(names))
+      .catch(() => {});
     // Both lists 404 before a store exists; that's not an error here — you can
     // still type free-text names, they just won't match an id.
     const [parties, items] = await Promise.all([

@@ -22,6 +22,7 @@ import { DateField } from '../../shared/date-field/date-field';
 import { UnitConversionService } from '../../core/units/unit-conversion.service';
 import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
 import { UnitNote } from '../../shared/conversion-slip/unit-note';
+import { UnitService } from '../../core/units/unit.service';
 import { UNIT_SUGGESTIONS, convertQty, resolveFactor, sameUnit } from '../../core/units/units';
 
 /**
@@ -118,10 +119,11 @@ export class Processing {
   private readonly partyApi = inject(PartyService);
   private readonly api = inject(ProcessingService);
   private readonly conversions = inject(UnitConversionService);
+  private readonly unitApi = inject(UnitService);
   private readonly slip = inject(ConversionSlipService);
 
   /** Offered under every unit box, so a trade unit is a choice and not a guess. */
-  protected readonly unitOptions = UNIT_SUGGESTIONS;
+  protected readonly unitOptions = signal<readonly string[]>(UNIT_SUGGESTIONS);
 
   /** Batch-number box — where the cursor goes after a Save + Next. */
   private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
@@ -269,6 +271,12 @@ export class Processing {
     // The shop's own rates, so a than the shopkeeper already explained is not asked about
     // again. Swallows its own failure — the fixed table still answers metre and gaz.
     void this.conversions.load();
+    // Same treatment for the store's unit list: the built-in defaults already loaded above
+    // work fine until this arrives.
+    void this.unitApi
+      .names()
+      .then((names) => this.unitOptions.set(names))
+      .catch(() => {});
   }
 
   private async loadItems(): Promise<void> {

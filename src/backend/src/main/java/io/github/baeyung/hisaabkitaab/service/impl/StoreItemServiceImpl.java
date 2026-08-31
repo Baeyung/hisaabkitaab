@@ -18,6 +18,7 @@ import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionRepository;
 import io.github.baeyung.hisaabkitaab.service.StoreItemService;
+import io.github.baeyung.hisaabkitaab.service.UnitService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -30,6 +31,7 @@ public class StoreItemServiceImpl implements StoreItemService
     private final StoreItemRepository storeItemRepository;
     private final TransactionRepository transactionRepository;
     private final TransactionLineRepository transactionLineRepository;
+    private final UnitService unitService;
 
     @Override
     @Transactional(readOnly = true)
@@ -69,6 +71,7 @@ public class StoreItemServiceImpl implements StoreItemService
                 .build();
 
         StoreItem saved = storeItemRepository.save(item);
+        unitService.resolveOrCreate(store, saved.getUnit());
         log.info("created item {} \"{}\" ({}) in store {}",
                 saved.getId(), saved.getName(), saved.getUnit(), store.getId());
         return saved;
@@ -92,6 +95,7 @@ public class StoreItemServiceImpl implements StoreItemService
         // rather than on the items page is where an unexplained duplicate comes from.
         log.info("no item id on the entry, creating \"{}\" ({}) in store {}", name, unit, store.getId());
 
+        unitService.resolveOrCreate(store, unit);
         return storeItemRepository.save(StoreItem.builder()
                 .store(store)
                 .name(name)
@@ -116,6 +120,7 @@ public class StoreItemServiceImpl implements StoreItemService
         item.setCostPrice(changes.getCostPrice());
         item.setService(changes.isService());
 
+        unitService.resolveOrCreate(item.getStore(), item.getUnit());
         return storeItemRepository.save(item);
     }
 

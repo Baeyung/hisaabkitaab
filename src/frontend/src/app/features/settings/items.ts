@@ -7,6 +7,7 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreItemService } from '../../core/store/store-item.service';
 import { StoreItem, StoreItemDraft } from '../../core/store/store-item.models';
 import { UnitConversionService } from '../../core/units/unit-conversion.service';
+import { UnitService } from '../../core/units/unit.service';
 import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { UnitNote } from '../../shared/conversion-slip/unit-note';
@@ -53,6 +54,7 @@ export class SettingsItems {
   /** Deleting an item is the owner's — it erases everything booked against it. */
   protected readonly stores = inject(StoreService);
   private readonly conversions = inject(UnitConversionService);
+  private readonly unitApi = inject(UnitService);
   private readonly slip = inject(ConversionSlipService);
 
   protected readonly items = signal<StoreItem[] | null>(null);
@@ -136,16 +138,24 @@ export class SettingsItems {
   });
 
   /**
-   * Free-text datalist hints; the shopkeeper can still type any. Shared with the entry screens
-   * so the same names are offered everywhere — a unit typed one way here and another way on a
-   * sale is a unit the app has to be taught twice.
+   * Free-text datalist hints; the shopkeeper can still type any. Starts from the built-in
+   * defaults and is replaced by the store's own list once it loads — which already includes
+   * these plus whatever trade units this shop has typed elsewhere, so the same names are
+   * offered everywhere a unit typed one way here and another way on a sale is a unit the app
+   * would otherwise have to be taught twice.
    */
-  protected readonly unitSuggestions = UNIT_SUGGESTIONS;
+  protected readonly unitSuggestions = signal<readonly string[]>(UNIT_SUGGESTIONS);
 
   constructor() {
     this.load();
     // For the opening-stock editor below; swallows its own failure.
     void this.conversions.load();
+    this.unitApi
+      .names()
+      .then((names) => this.unitSuggestions.set(names))
+      .catch(() => {
+        // Non-fatal: the built-in defaults already loaded above still work.
+      });
   }
 
   async load(): Promise<void> {

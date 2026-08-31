@@ -30,6 +30,7 @@ import io.github.baeyung.hisaabkitaab.repository.WhatsAppSendRepository;
 import io.github.baeyung.hisaabkitaab.security.RequiresPlanCapacity;
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.StoreService;
+import io.github.baeyung.hisaabkitaab.service.UnitService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -46,6 +47,7 @@ public class StoreServiceImpl implements StoreService
     private final UserRepository userRepository;
     private final StoreAccessRepository storeAccessRepository;
     private final ExpenseCategoryService expenseCategoryService;
+    private final UnitService unitService;
     private final WhatsAppBlockRepository whatsAppBlockRepository;
     private final WhatsAppSendRepository whatsAppSendRepository;
 
@@ -110,6 +112,7 @@ public class StoreServiceImpl implements StoreService
 
         Store saved = storeRepository.save(store);
         expenseCategoryService.seedDefaults(saved);
+        unitService.seedDefaults(saved);
         log.info("created store {} \"{}\" for owner {}", saved.getId(), saved.getName(), ownerId);
         return StoreSummary.of(saved, StoreRole.OWNER);
     }
@@ -164,6 +167,7 @@ public class StoreServiceImpl implements StoreService
         storeItemRepository.deleteAll(items);
         partyRepository.deleteAll(parties);
         expenseCategoryService.deleteByStore(storeId);
+        unitService.deleteByStore(storeId);
         storeAccessRepository.deleteByStoreId(storeId);
         // A block outlives the party it was made for, but not the shop it was made against:
         // there is nothing left to be blocked from once the shop is gone.

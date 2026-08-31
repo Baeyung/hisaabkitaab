@@ -186,7 +186,7 @@
           />
           <app-combobox
             [small]="true"
-            [options]="unitOptions"
+            [options]="unitOptions()"
             [value]="line.unit"
             (valueChange)="setUnit(line.key, $event)"
             (focusout)="askUnit(line.key)"

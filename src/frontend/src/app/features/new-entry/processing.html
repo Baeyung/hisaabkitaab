@@ -64,7 +64,7 @@
             <app-combobox
               [small]="true"
               [inputId]="'raw-unit-' + line.key"
-              [options]="unitOptions"
+              [options]="unitOptions()"
               [value]="line.unit"
               (valueChange)="patchRaw(line.key, { unit: $event })"
               (focusout)="askRawUnit(line.key)"
@@ -236,7 +236,7 @@
             <app-combobox
               [small]="true"
               [inputId]="'proc-unit-' + line.key"
-              [options]="unitOptions"
+              [options]="unitOptions()"
               [value]="line.unit"
               (valueChange)="patchProc(line.key, { unit: $event })"
               (focusout)="askProcUnit(line.key)"
@@ -409,7 +409,7 @@
           <app-combobox
             [small]="true"
             inputId="output-unit"
-            [options]="unitOptions"
+            [options]="unitOptions()"
             [value]="outputUnit()"
             (valueChange)="outputUnit.set($event)"
             (focusout)="askOutputUnit()"

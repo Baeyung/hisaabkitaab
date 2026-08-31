@@ -5,6 +5,7 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
 import { UnitConversionService } from '../../core/units/unit-conversion.service';
+import { UnitService } from '../../core/units/unit.service';
 import { UnitConversionRate } from '../../core/units/unit-conversion.models';
 import {
   EXAMPLE_CONVERSIONS,
@@ -48,6 +49,7 @@ export class SettingsUnits {
   protected readonly locale = inject(LocaleService);
   private readonly stores = inject(StoreService);
   private readonly conversions = inject(UnitConversionService);
+  private readonly unitApi = inject(UnitService);
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
@@ -68,7 +70,8 @@ export class SettingsUnits {
     min(p.factor, 0.00000001);
   });
 
-  protected readonly unitSuggestions = UNIT_SUGGESTIONS;
+  /** Starts from the built-in defaults, replaced by the store's own list once it loads. */
+  protected readonly unitSuggestions = signal<readonly string[]>(UNIT_SUGGESTIONS);
   protected readonly tradeExamples = TRADE_UNIT_EXAMPLES;
   /** The standard table's examples, with the fixed factor each pair already has. */
   protected readonly standardExamples = EXAMPLE_CONVERSIONS.map((pair) => ({
@@ -106,6 +109,12 @@ export class SettingsUnits {
 
   constructor() {
     void this.load();
+    void this.unitApi
+      .names()
+      .then((names) => this.unitSuggestions.set(names))
+      .catch(() => {
+        // Non-fatal: the built-in defaults already loaded above still work.
+      });
   }
 
   async load(): Promise<void> {

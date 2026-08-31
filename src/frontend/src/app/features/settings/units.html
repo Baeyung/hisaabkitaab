@@ -204,7 +204,7 @@
 </ng-template>
 
 <datalist id="unit-suggestions">
-  @for (u of unitSuggestions; track u) {
+  @for (u of unitSuggestions(); track u) {
     <option [value]="u"></option>
   }
 </datalist>

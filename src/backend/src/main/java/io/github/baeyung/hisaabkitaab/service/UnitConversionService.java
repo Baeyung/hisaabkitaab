@@ -46,6 +46,7 @@ public class UnitConversionService
     private static final MathContext INVERSION = new MathContext(20, RoundingMode.HALF_UP);
 
     private final UnitConversionRepository repository;
+    private final UnitService unitService;
 
     @Transactional(readOnly = true)
     public List<UnitConversion> findByStore(String storeId)
@@ -60,6 +61,12 @@ public class UnitConversionService
      */
     public UnitConversion save(UnitConversionRequest request, Store store)
     {
+        // A pair taught here is, as often as not, the first time either unit has been typed
+        // anywhere — the conversion slip is where a shop meets its own trade units. Registering
+        // both as-typed (not folded/reordered) is what makes them show up on entry screens too.
+        unitService.resolveOrCreate(store, request.fromUnit());
+        unitService.resolveOrCreate(store, request.toUnit());
+
         Pair pair = canonical(request.fromUnit(), request.toUnit(), request.factor());
 
         UnitConversion existing = repository
