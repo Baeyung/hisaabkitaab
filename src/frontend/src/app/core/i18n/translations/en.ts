@@ -624,6 +624,7 @@ export const en = {
   'units.note.offShelf': 'off the shelf',
   'units.note.aria': 'Converted: {{entered}} goes on the shelf as {{shelf}}. Change the rate.',
   'units.note.ariaOff': 'Converted: {{entered}} goes off the shelf as {{shelf}}. Change the rate.',
+  'units.note.pricePer': 'Price/{{unit}}',
   'receipt.newEntry': 'New entry',
   'receipt.party': 'Party',
   'receipt.party.ph': 'Type an existing party name…',

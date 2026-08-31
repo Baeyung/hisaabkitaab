@@ -273,10 +273,69 @@ select.fld__input {
   }
 }
 
-/* The standing conversion note, one line under the row it belongs to. */
+/* The standing conversion note, one line under the row it belongs to — the shelf pill plus,
+   beside it, the price/stock-unit box. Wraps on narrow screens rather than pushing the row
+   wide, since the two are related but neither depends on sharing a line with the other. */
 .grid__conv {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin-top: -2px;
   padding-inline-start: 4px;
+}
+
+/* The rate's other face: same pill shape as the shelf note beside it, but quiet rather than
+   amber — this is an ordinary field to type in, not the app flagging something. */
+.conv-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  color: var(--kg-muted);
+  background: transparent;
+  border: 1px solid var(--kg-line);
+  border-radius: 999px;
+}
+.conv-price__label {
+  overflow: hidden;
+  color: var(--kg-faint);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.conv-price__input {
+  width: 62px;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  color: var(--kg-ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--kg-line-hover);
+}
+.conv-price__input:hover,
+.conv-price__input:focus {
+  border-bottom-color: var(--kg-brand);
+}
+.conv-price__input:focus {
+  outline: none;
+}
+.conv-price__input:focus-visible {
+  outline: 2px solid var(--kg-focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.conv-price__input::-webkit-outer-spin-button,
+.conv-price__input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.conv-price__input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* ── totals + money ──────────────────────────────────────────────────────── */

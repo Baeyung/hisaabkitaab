@@ -232,7 +232,8 @@
           </button>
         </div>
 
-        <!-- what this line will actually take off the shelf, once it has been converted -->
+        <!-- what this line will actually take off the shelf, once it has been converted —
+             plus the price per stock unit, the other side of the rate box above -->
         @if (line.factor) {
           <div class="grid__conv">
             <app-unit-note
@@ -243,6 +244,21 @@
               [direction]="stockFlow()"
               (editRate)="askUnit(line.key, true)"
             />
+            <label class="conv-price">
+              <span class="conv-price__label">
+                {{ locale.t('units.note.pricePer', { unit: lineUnit(line.design) }) }}
+              </span>
+              <input
+                class="conv-price__input"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="any"
+                [value]="pricePerUnit(line)"
+                (input)="setPricePerUnit(line.key, $any($event.target).value)"
+                [attr.aria-label]="locale.t('units.note.pricePer', { unit: lineUnit(line.design) })"
+              />
+            </label>
           </div>
         }
       }

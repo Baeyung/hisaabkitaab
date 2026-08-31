@@ -54,6 +54,12 @@ function pairKey(from: string, to: string): string {
   return `${from.trim().toLowerCase()}>${to.trim().toLowerCase()}`;
 }
 
+/** Money precision — the same two places a taught rate's own inversion (1/x) can otherwise
+ *  leave hanging off a rescaled rate, e.g. 2099.9999999999995 for a plainly-typed 2100. */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 /**
  * The screen's copy. Keys are passed in as literals rather than built from a
  * prefix because `TranslationKey` is a union of the dictionary's literal keys —
@@ -472,13 +478,29 @@ export class GoodsEntry {
     this.patchLine(key, (l) => ({ ...l, unit: value }));
   }
 
+  /** Price per stock unit, backed out of whatever the line currently holds — the rate as
+   *  typed if it's still in the stock unit, or the rate scaled back down by the line's own
+   *  factor once it's been converted. This is the figure a unit change has to preserve: the
+   *  goods are worth the same per gaz whether the line is written in gaz or in than. */
+  private baseRate(l: Line): number | null {
+    if (l.rate == null) {
+      return null;
+    }
+    return l.factor ? l.rate / l.factor : l.rate;
+  }
+
   /**
-   * The unit box was left. Anything but the item's own unit has to be agreed before the line
-   * can post, so the slip opens; declining puts the box back to the shelf's unit, because a
-   * quantity in a unit nothing converts is exactly the mistake being guarded against.
+   * The unit box was left. Anything but the item's own unit has to be converted before the
+   * line can post. A pair this shop (or the built-in table) already has an answer for is
+   * applied straight away, with the rate scaled to match — a line worth 100/gaz reads 2100
+   * once it's written in than(21gz) — and only a pair nobody has ever answered stops to ask.
+   *
+   * Declining puts the box back to the shelf's unit, because a quantity in a unit nothing
+   * converts is exactly the mistake being guarded against.
    *
    * Silent when the pair is already agreed, so tabbing through a line asks nothing; `force` is
-   * the note under the line asking to be reopened.
+   * the note under the line asking to be reopened — reopening always shows the sum, even for a
+   * pair that was applied silently, since revisiting the rate is the point of the click.
    */
   async askUnit(key: number, force = false): Promise<void> {
     const line = this.lines().find((l) => l.key === key);
@@ -488,26 +510,70 @@ export class GoodsEntry {
 
     const stock = this.lineUnit(line.design);
     const entered = line.unit.trim();
+    const base = this.baseRate(line);
     if (!stock || !entered || sameUnit(entered, stock)) {
-      this.patchLine(key, (l) => ({ ...l, factor: null, factorFor: null }));
+      this.patchLine(key, (l) => ({
+        ...l,
+        factor: null,
+        factorFor: null,
+        rate: base == null ? l.rate : round2(base),
+      }));
       return;
     }
     if (!force && line.factorFor === pairKey(entered, stock)) {
       return;
     }
 
-    const answer = await this.slip.open({
-      itemName: line.design.trim(),
-      from: entered,
-      to: stock,
-      qty: line.qty,
-    });
+    const known = force ? null : this.conversions.factor(entered, stock);
+    let factor: number;
+    if (known) {
+      factor = known.value;
+    } else {
+      const answer = await this.slip.open({
+        itemName: line.design.trim(),
+        from: entered,
+        to: stock,
+        qty: line.qty,
+      });
+      if (answer === null) {
+        this.patchLine(key, (l) => ({
+          ...l,
+          unit: stock,
+          factor: null,
+          factorFor: null,
+          rate: base == null ? l.rate : round2(base),
+        }));
+        return;
+      }
+      factor = answer.factor;
+    }
 
-    this.patchLine(key, (l) =>
-      answer === null
-        ? { ...l, unit: stock, factor: null, factorFor: null }
-        : { ...l, factor: answer.factor, factorFor: pairKey(entered, stock) },
-    );
+    this.patchLine(key, (l) => ({
+      ...l,
+      factor,
+      factorFor: pairKey(entered, stock),
+      rate: base == null ? l.rate : round2(base * factor),
+    }));
+  }
+
+  /** The price/stockUnit box under a converted line — the other side of {@link setRate}. Typing
+   *  here rescales the rate the same way typing the rate rescales this, so whichever one the
+   *  shopkeeper actually knows is the one they can type. */
+  setPricePerUnit(key: number, value: string): void {
+    const price = this.toNum(value);
+    this.patchLine(key, (l) => ({
+      ...l,
+      rate: price == null ? null : l.factor ? round2(price * l.factor) : price,
+    }));
+  }
+
+  /** What {@link setPricePerUnit} reads back — null until there's both a rate and a factor to
+   *  divide it by, i.e. exactly when the note under the line is showing. */
+  protected pricePerUnit(l: Line): number | null {
+    if (!l.factor || l.rate == null) {
+      return null;
+    }
+    return round2(l.rate / l.factor);
   }
 
   setQty(key: number, value: string): void {

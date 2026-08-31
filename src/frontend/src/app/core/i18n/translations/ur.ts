@@ -601,6 +601,7 @@ export const ur: Record<TranslationKey, string> = {
   'units.note.offShelf': 'اسٹاک سے',
   'units.note.aria': 'تبدیل شدہ: {{entered}} اسٹاک میں {{shelf}} کے طور پر جائے گا۔ شرح بدلیں۔',
   'units.note.ariaOff': 'تبدیل شدہ: {{entered}} اسٹاک سے {{shelf}} کے طور پر جائے گا۔ شرح بدلیں۔',
+  'units.note.pricePer': 'قیمت/{{unit}}',
   'receipt.newEntry': 'نئی انٹری',
   'receipt.party': 'پارٹی',
   'receipt.party.ph': 'موجودہ پارٹی کا نام لکھیں…',
