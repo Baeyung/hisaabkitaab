@@ -320,10 +320,7 @@ export class GoodsEntry {
     void this.conversions.load();
     // Same treatment for the store's unit list: the built-in defaults already loaded above
     // work fine until this arrives.
-    void this.unitApi
-      .names()
-      .then((names) => this.unitOptions.set(names))
-      .catch(() => {});
+    void this.refreshUnitOptions();
     // Both lists 404 before a store exists; that's not an error here — you can
     // still type free-text names, they just won't match an id.
     const [parties, items] = await Promise.all([
@@ -332,6 +329,16 @@ export class GoodsEntry {
     ]);
     this.parties.set(parties);
     this.items.set(items);
+  }
+
+  /** Re-pulls the store's unit list — called after a save, since a line's unit box may have
+   *  just taught the store a name that isn't in the built-in defaults yet. */
+  private async refreshUnitOptions(): Promise<void> {
+    try {
+      this.unitOptions.set(await this.unitApi.names());
+    } catch {
+      // Non-fatal: the built-in defaults already loaded work fine on their own.
+    }
   }
 
   private async loadEntry(id: string): Promise<void> {
@@ -608,10 +615,14 @@ export class GoodsEntry {
       const editId = this.editId();
       if (editId) {
         await this.events.updateEvent(editId, request);
+        void this.refreshUnitOptions();
         this.location.back();
         return;
       }
       await this.events.publishEvent(request);
+      // A line's unit box may have just taught the store a name — refresh so the next line
+      // (or the next entry) offers it without waiting for a page reload.
+      void this.refreshUnitOptions();
       this.recent.push(
         `${this.locale.t(labels.recentLabel)} · ${partyLabel} · ${this.locale.money(total)}`,
         this.locale.t(labels.recentCash, { amount: this.locale.money(request.cashAmount ?? 0) }),

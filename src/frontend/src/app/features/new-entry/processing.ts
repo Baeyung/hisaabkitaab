@@ -273,10 +273,17 @@ export class Processing {
     void this.conversions.load();
     // Same treatment for the store's unit list: the built-in defaults already loaded above
     // work fine until this arrives.
-    void this.unitApi
-      .names()
-      .then((names) => this.unitOptions.set(names))
-      .catch(() => {});
+    void this.refreshUnitOptions();
+  }
+
+  /** Re-pulls the store's unit list — called after a save, since a raw/processing/output
+   *  row's unit box may have just taught the store a name that isn't in the defaults yet. */
+  private async refreshUnitOptions(): Promise<void> {
+    try {
+      this.unitOptions.set(await this.unitApi.names());
+    } catch {
+      // Non-fatal: the built-in defaults already loaded work fine on their own.
+    }
   }
 
   private async loadItems(): Promise<void> {
@@ -612,6 +619,7 @@ export class Processing {
       // party typed in free.
       await this.loadItems();
       this.parties.set(await this.partyApi.list().catch(() => this.parties()));
+      void this.refreshUnitOptions();
       this.reset();
     } catch {
       this.errorKey.set('error.generic');

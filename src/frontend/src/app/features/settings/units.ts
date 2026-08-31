@@ -109,12 +109,18 @@ export class SettingsUnits {
 
   constructor() {
     void this.load();
-    void this.unitApi
-      .names()
-      .then((names) => this.unitSuggestions.set(names))
-      .catch(() => {
-        // Non-fatal: the built-in defaults already loaded above still work.
-      });
+    void this.refreshUnitOptions();
+  }
+
+  /** Re-pulls the store's unit list — called after a save, since a rate's from/to unit may
+   *  just have been typed for the first time and wouldn't otherwise show up in the datalist
+   *  until the page reloads. */
+  private async refreshUnitOptions(): Promise<void> {
+    try {
+      this.unitSuggestions.set(await this.unitApi.names());
+    } catch {
+      // Non-fatal: the built-in defaults already loaded work fine on their own.
+    }
   }
 
   async load(): Promise<void> {
@@ -168,6 +174,7 @@ export class SettingsUnits {
     this.saving.set(false);
     if (ok) {
       this.cancel();
+      void this.refreshUnitOptions();
     } else {
       this.errorKey.set('error.generic');
     }

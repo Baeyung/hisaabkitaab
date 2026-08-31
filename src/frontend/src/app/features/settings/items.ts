@@ -150,12 +150,17 @@ export class SettingsItems {
     this.load();
     // For the opening-stock editor below; swallows its own failure.
     void this.conversions.load();
-    this.unitApi
-      .names()
-      .then((names) => this.unitSuggestions.set(names))
-      .catch(() => {
-        // Non-fatal: the built-in defaults already loaded above still work.
-      });
+    void this.refreshUnitOptions();
+  }
+
+  /** Re-pulls the store's unit list — called after a save, since the unit just typed on this
+   *  row may be new and wouldn't otherwise show up in the datalist until the page reloads. */
+  private async refreshUnitOptions(): Promise<void> {
+    try {
+      this.unitSuggestions.set(await this.unitApi.names());
+    } catch {
+      // Non-fatal: the built-in defaults already loaded work fine on their own.
+    }
   }
 
   async load(): Promise<void> {
@@ -219,6 +224,9 @@ export class SettingsItems {
         this.items.update((list) => [withOpening, ...(list ?? [])]);
       }
       this.resetRowState();
+      // The unit just typed on this row may be new to the store — refresh so it shows up
+      // in the datalist without waiting for a page reload.
+      void this.refreshUnitOptions();
     } catch {
       this.rowErrorKey.set('error.generic');
     } finally {
