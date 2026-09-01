@@ -1412,6 +1412,16 @@ html[dir='rtl'] select.rm-input {
     grid-template-columns: 1fr;
   }
 
+  /* Party search + direction filter: unlike the from/to date pairs below,
+     these aren't a related pair — each is its own control, so each gets its
+     own row instead of squeezing side by side. */
+  .fold--section .fold__body .rm-toolbar--filters .rm-field {
+    flex: 1 1 100%;
+  }
+  .fold--section .fold__body .rm-field--search {
+    max-width: none;
+  }
+
   /* Two date fields sit as a pair rather than one field per row — .df caps
      itself at 170px but shrinks below that, so a flex basis is enough. */
   .rm-toolbar {
