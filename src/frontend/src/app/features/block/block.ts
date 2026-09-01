@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LanguageToggle } from '../../shared/language-toggle/language-toggle';
+import { ToastService } from '../../shared/toast/toast.service';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -70,10 +71,6 @@ import { environment } from '../../../environments/environment';
             </dl>
 
             <p class="blk__warn" role="note">{{ locale.t('block.warning') }}</p>
-
-            @if (failed()) {
-              <p class="blk__body" role="alert">{{ locale.t('block.failed') }}</p>
-            }
 
             <button
               type="button"
@@ -192,6 +189,7 @@ export class Block {
 
   protected readonly locale = inject(LocaleService);
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
 
   protected readonly status = signal<BlockStatus | null>(null);
   protected readonly loading = signal(true);
@@ -203,8 +201,6 @@ export class Block {
    */
   protected readonly invalid = signal(false);
 
-  /** Set only for a confirm that did not go through; the page stays on the question. */
-  protected readonly failed = signal(false);
   protected readonly blocking = signal(false);
 
   /** As much of the number as we are shown: •••• and its last four digits. */
@@ -230,7 +226,6 @@ export class Block {
       return;
     }
     this.blocking.set(true);
-    this.failed.set(false);
     try {
       // The answer to the POST is the same shape the GET returns and is the newer of the two,
       // so it replaces it outright rather than prompting a reload.
@@ -238,7 +233,7 @@ export class Block {
         await firstValueFrom(this.http.post<BlockStatus>(this.url(this.token()), null)),
       );
     } catch {
-      this.failed.set(true);
+      this.toast.error(this.locale.t('block.failed'));
     } finally {
       this.blocking.set(false);
     }

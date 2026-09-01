@@ -8,6 +8,7 @@ import { StoreDraft } from '../../core/store/store.models';
 import { toDigits } from '../../shared/digits-only';
 import { PhoneField } from '../../shared/phone-field/phone-field';
 import { readImageFile } from '../../shared/image-file';
+import { ToastService } from '../../shared/toast/toast.service';
 
 const EMPTY_DRAFT: StoreDraft = { name: '', address: '', contact: '', logoUri: '', watermarkUri: '' };
 
@@ -31,13 +32,12 @@ export class SettingsGeneral {
   protected readonly locale = inject(LocaleService);
   protected readonly stores = inject(StoreService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
   private readonly deleteDialog = viewChild<ElementRef<HTMLDialogElement>>('deleteDialog');
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly saving = signal(false);
-  protected readonly savedKey = signal<TranslationKey | null>(null);
-  protected readonly errorKey = signal<TranslationKey | null>(null);
   protected readonly imageErrorKey = signal<TranslationKey | null>(null);
 
   /** Opening drawer balance — cash on hand at onboarding. null = field empty (clears it). */
@@ -76,7 +76,6 @@ export class SettingsGeneral {
   protected readonly confirmingDelete = signal(false);
   protected readonly typedName = signal('');
   protected readonly deleting = signal(false);
-  protected readonly deleteErrorKey = signal<TranslationKey | null>(null);
 
   /** The saved name, not the edited one — an unsaved rename must not move the target. */
   protected readonly storeName = computed(() => this.stores.current()?.name ?? '');
@@ -96,13 +95,6 @@ export class SettingsGeneral {
 
   constructor() {
     this.load();
-    // A fresh edit supersedes the last "saved" confirmation.
-    effect(() => {
-      this.model();
-      this.openingCash();
-      this.easyMode();
-      this.savedKey.set(null);
-    });
     // A native <dialog> so focus-trap, Escape and the backdrop come for free.
     // Both signals are read before the guard: the query resolves a tick after the
     // first run, and an early return that skipped them would never re-run.
@@ -160,7 +152,6 @@ export class SettingsGeneral {
       return;
     }
     this.saving.set(true);
-    this.errorKey.set(null);
     try {
       // A shared user's save carries only the drawer balance — the store fields are
       // disabled for them, and the backend would refuse the update anyway.
@@ -169,9 +160,9 @@ export class SettingsGeneral {
         await this.saveEasyMode();
       }
       await this.stores.setOpeningCash(this.openingCash() ?? 0);
-      this.savedKey.set('settings.general.saved');
+      this.toast.success(this.locale.t('settings.general.saved'));
     } catch {
-      this.errorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -216,7 +207,6 @@ export class SettingsGeneral {
 
   openDelete(): void {
     this.typedName.set('');
-    this.deleteErrorKey.set(null);
     this.confirmingDelete.set(true);
   }
 
@@ -227,14 +217,14 @@ export class SettingsGeneral {
       return;
     }
     this.deleting.set(true);
-    this.deleteErrorKey.set(null);
     try {
       await this.stores.delete(store.id);
+      this.toast.success(this.locale.t('toast.deleted', { label: this.storeName() }));
       // Out of the store route before anything re-reads the store that no longer
       // exists. If that was the user's last shop the picker sends them to setup.
       await this.router.navigate(['/stores']);
     } catch {
-      this.deleteErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
       this.deleting.set(false);
     }
   }

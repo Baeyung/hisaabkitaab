@@ -7,6 +7,7 @@ import { StoreService } from '../../core/store/store.service';
 import { MemberService } from '../../core/store/member.service';
 import { OveragePerson, OverageStore, PlanService } from '../../core/plan/plan.service';
 import { OuterBar } from '../../shared/outer-bar/outer-bar';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /**
  * "Your plan no longer covers all of this" — where an account using more than it is entitled
@@ -41,6 +42,7 @@ export class PlanLimits {
   private readonly stores = inject(StoreService);
   private readonly members = inject(MemberService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
@@ -198,6 +200,7 @@ export class PlanLimits {
       // The list carries `suspended` on every card and the shell reads it, so it has to be
       // re-fetched rather than patched — a stale entry would leave a re-opened shop read-only.
       await this.stores.list().catch(() => null);
+      this.toast.success(this.locale.t('planLimits.saved'));
       await this.router.navigate(['/stores']);
     } catch {
       this.errorKey.set('error.generic');
@@ -228,6 +231,7 @@ export class PlanLimits {
       }
       this.people.update((list) => list.filter((p) => p.userId !== person.userId));
       this.confirmingPersonId.set(null);
+      this.toast.success(this.locale.t('toast.deleted', { label: this.displayName(person) }));
     } catch {
       this.errorKey.set('error.generic');
       // Partially removed: what is left is whatever the reload says, never what we assumed.
@@ -264,6 +268,7 @@ export class PlanLimits {
     try {
       await this.stores.delete(store.id);
       this.deletingStore.set(null);
+      this.toast.success(this.locale.t('toast.deleted', { label: store.name }));
       // The shop is gone from every count, so the whole screen is re-read rather than the
       // one card dropped — its people may have gone with it.
       await this.load();

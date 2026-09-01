@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -7,7 +7,7 @@ import { ExpenseCategoryService } from '../../core/store/expense-category.servic
 import { EventRequest, expenseCategoryLabel } from '../../core/store/event.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
-import { ToastState } from '../../shared/toast-state';
+import { ToastService } from '../../shared/toast/toast.service';
 import { DateField } from '../../shared/date-field/date-field';
 
 /** Sentinel <select> value that reveals the "add a new category" text field. */
@@ -33,7 +33,7 @@ const ADD_NEW = '__new__';
  * "no party" flag: that component is about the party↔cash pair, and its whole
  * surface (autocomplete, unknown-name guard, baqaya row) is party machinery
  * this screen has no use for. The logic they genuinely share is extracted
- * instead — see `shared/recent-log`, `shared/toast-state`, `LocaleService.money`.
+ * instead — see `shared/recent-log`, `shared/toast/toast.service`, `LocaleService.money`.
  */
 @Component({
   selector: 'app-expense',
@@ -54,7 +54,7 @@ export class Expense {
   /** Bill-number box — where the cursor goes after a Save + Next. */
   private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
 
-  protected readonly toast = new ToastState();
+  private readonly toast = inject(ToastService);
   protected readonly recent = new RecentLog();
 
   protected readonly addNew = ADD_NEW;
@@ -79,7 +79,6 @@ export class Expense {
     expenseCategoryLabel(name, (k) => this.locale.t(k));
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.toast.dispose());
     void this.init();
   }
 
@@ -120,7 +119,7 @@ export class Expense {
         this.billDate.set(e.billDate);
       }
     } catch {
-      this.toast.show(this.locale.t('error.generic'));
+      this.toast.error(this.locale.t('error.generic'));
     }
   }
 
@@ -158,10 +157,13 @@ export class Expense {
 
     const chosen = this.chosenCategory();
 
+    const label = this.locale.t('expense.recent.label');
+
     try {
       const editId = this.editId();
       if (editId) {
         await this.events.updateEvent(editId, request);
+        this.toast.success(this.locale.t('toast.updated', { label }));
         this.location.back();
         return;
       }
@@ -172,13 +174,11 @@ export class Expense {
       }
       // Details go on the sub-line, where Payment/Receipt put their counterparty:
       // it's the free-text half and can run long, so it reads better small.
-      this.recent.push(
-        `${this.locale.t('expense.recent.label')} · ${this.locale.money(amount)}`,
-        details,
-      );
+      this.recent.push(`${label} · ${this.locale.money(amount)}`, details);
+      this.toast.success(this.locale.t('toast.saved', { label }));
       this.reset();
     } catch {
-      this.toast.show(this.locale.t('error.generic'));
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }

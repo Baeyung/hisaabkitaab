@@ -3,13 +3,13 @@ import { NgTemplateOutlet } from '@angular/common';
 import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { StoreService } from '../../core/store/store.service';
-import { TranslationKey } from '../../core/i18n/translations/en';
 import { Balance } from '../../core/store/balance.models';
 import { PartyService } from '../../core/store/party.service';
 import { OpeningDirection, Party, PartyDraft } from '../../core/store/party.models';
 import { toDigits } from '../../shared/digits-only';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { PhoneField } from '../../shared/phone-field/phone-field';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /** Form-facing shape: contact/address are non-null strings for the inputs (blank → null on send). */
 interface PartyForm {
@@ -43,6 +43,7 @@ export class SettingsParty {
   private readonly api = inject(PartyService);
   /** Deleting a khata is the owner's — it erases every transaction with them. */
   protected readonly stores = inject(StoreService);
+  private readonly toast = inject(ToastService);
 
   protected readonly parties = signal<Party[] | null>(null);
   protected readonly loading = signal(true);
@@ -107,7 +108,6 @@ export class SettingsParty {
   protected readonly openingAmount = signal<number | null>(null);
   protected readonly openingDir = signal<OpeningDirection>('THEY_OWE_YOU');
   protected readonly saving = signal(false);
-  protected readonly rowErrorKey = signal<TranslationKey | null>(null);
   /** What the row's opening balance was when the editor opened — only a change is sent. */
   private readonly openingBefore = signal<Balance | null>(null);
 
@@ -169,7 +169,6 @@ export class SettingsParty {
       return;
     }
     this.saving.set(true);
-    this.rowErrorKey.set(null);
     const draft = this.normalized();
     try {
       const editId = this.editingId();
@@ -182,9 +181,10 @@ export class SettingsParty {
       } else {
         this.parties.update((list) => [withBalance, ...(list ?? [])]);
       }
+      this.toast.success(this.locale.t(editId ? 'toast.updated' : 'toast.saved', { label: saved.name }));
       this.resetRowState();
     } catch {
-      this.rowErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -219,14 +219,15 @@ export class SettingsParty {
       return;
     }
     this.saving.set(true);
-    this.rowErrorKey.set(null);
     try {
       const balance = await this.api.setOpeningBalance(id, { amount, direction: this.openingDir() });
       const openingBalance = balance.direction === 'SETTLED' ? null : balance;
       this.parties.update((list) => (list ?? []).map((p) => (p.id === id ? { ...p, openingBalance } : p)));
+      const name = this.parties()?.find((p) => p.id === id)?.name ?? '';
+      this.toast.success(this.locale.t('toast.updated', { label: name }));
       this.resetRowState();
     } catch {
-      this.rowErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -243,13 +244,14 @@ export class SettingsParty {
 
   async confirmDelete(id: string): Promise<void> {
     this.saving.set(true);
-    this.rowErrorKey.set(null);
     try {
+      const name = this.parties()?.find((p) => p.id === id)?.name ?? '';
       await this.api.delete(id);
       this.parties.update((list) => (list ?? []).filter((p) => p.id !== id));
       this.confirmingId.set(null);
+      this.toast.success(this.locale.t('toast.deleted', { label: name }));
     } catch {
-      this.rowErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -303,7 +305,6 @@ export class SettingsParty {
     this.confirmingId.set(null);
     this.openingId.set(null);
     this.copyOpen.set(false);
-    this.rowErrorKey.set(null);
   }
 
   /** Trim text; blank contact/address become null so the backend stores nothing. */

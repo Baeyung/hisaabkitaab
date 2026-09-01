@@ -1,9 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { LocaleService } from '../../core/i18n/locale.service';
-import { TranslationKey } from '../../core/i18n/translations/en';
 import { PlanService } from '../../core/plan/plan.service';
 import { StoreService } from '../../core/store/store.service';
 import { ReportSettings, StoreSettings } from '../../core/store/store.models';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /** What a shop that has never opened this screen means: nothing goes out. Mirrors the backend. */
 const OFF: ReportSettings = {
@@ -44,10 +44,9 @@ export class SettingsReports {
   protected readonly locale = inject(LocaleService);
   protected readonly stores = inject(StoreService);
   protected readonly plan = inject(PlanService);
+  private readonly toast = inject(ToastService);
 
   protected readonly saving = signal(false);
-  protected readonly savedKey = signal<TranslationKey | null>(null);
-  protected readonly errorKey = signal<TranslationKey | null>(null);
 
   /** Edited locally and only sent on save, like every other settings screen here. */
   protected readonly form = signal<ReportSettings>({ ...OFF, ...this.saved()?.reports });
@@ -59,7 +58,6 @@ export class SettingsReports {
   protected readonly contactCap = computed(() => this.plan.reminderContacts());
 
   protected set<K extends keyof ReportSettings>(key: K, value: ReportSettings[K]): void {
-    this.savedKey.set(null);
     this.form.update((f) => ({ ...f, [key]: value }));
   }
 
@@ -76,15 +74,14 @@ export class SettingsReports {
 
   async save(): Promise<void> {
     this.saving.set(true);
-    this.errorKey.set(null);
     try {
       // Spread the stored document rather than rebuilding it: the endpoint replaces the whole
       // arrangement, and this screen has no business touching the shop's menu.
       const settings = this.stores.current()?.settings;
       await this.stores.updateSettings({ ...(settings as StoreSettings), reports: this.form() });
-      this.savedKey.set('settings.reports.saved');
+      this.toast.success(this.locale.t('settings.reports.saved'));
     } catch {
-      this.errorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }

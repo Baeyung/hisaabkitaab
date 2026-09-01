@@ -199,22 +199,10 @@
         </div>
       </section>
 
-      @if (errorKey(); as key) {
-        <p role="alert" class="set__alert">{{ locale.t(key) }}</p>
-      }
-
       <div class="set__foot">
         <button type="submit" class="btn btn--primary" [disabled]="saving()">
           {{ saving() ? locale.t('settings.general.saving') : locale.t('settings.general.save') }}
         </button>
-        <span class="set__status" role="status" aria-live="polite">
-          @if (savedKey(); as key) {
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <path d="M4 12l5 5L20 6" />
-            </svg>
-            {{ locale.t(key) }}
-          }
-        </span>
       </div>
     </form>
 
@@ -260,10 +248,6 @@
           (input)="typedName.set($any($event.target).value)"
         />
       </div>
-
-      @if (deleteErrorKey(); as key) {
-        <p role="alert" class="set__alert del__alert">{{ locale.t(key) }}</p>
-      }
 
       <div class="rm-dialog__actions">
         <button

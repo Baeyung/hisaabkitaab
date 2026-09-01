@@ -1,7 +1,6 @@
 import { ApplicationRef, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
-import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
 import { BillService } from '../../core/store/bill.service';
 import { EventService } from '../../core/store/event.service';
@@ -26,6 +25,7 @@ import { PrintDetailsService } from '../../shared/print-details.service';
 import { DocConfig } from './doc-config';
 import { sumBills, sumSummaries } from './doc-totals';
 import { AmountLegend } from '../../shared/amount-legend';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /**
  * A run of goods documents — every bill, or every purchase — newest first,
@@ -62,6 +62,7 @@ export class DocList {
   protected readonly stores = inject(StoreService);
   private readonly api = inject(BillService);
   private readonly events = inject(EventService);
+  private readonly toast = inject(ToastService);
   private readonly ledger = inject(LedgerService);
   private readonly inventory = inject(InventoryService);
   private readonly router = inject(Router);
@@ -103,7 +104,6 @@ export class DocList {
 
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly deleting = signal(false);
-  protected readonly deleteError = signal<TranslationKey | null>(null);
 
   /** Full details of the filtered documents, fetched on Print for either layout. */
   protected readonly printBills = signal<BillDetail[]>([]);
@@ -241,7 +241,6 @@ export class DocList {
   }
 
   askDelete(id: string): void {
-    this.deleteError.set(null);
     this.confirmingId.set(id);
   }
 
@@ -251,13 +250,13 @@ export class DocList {
 
   async confirmDelete(id: string): Promise<void> {
     this.deleting.set(true);
-    this.deleteError.set(null);
     try {
       await this.events.deleteEvent(id);
       this.bills.update((list) => (list ?? []).filter((b) => b.id !== id));
       this.confirmingId.set(null);
+      this.toast.success(this.locale.t('entry.delete.success'));
     } catch (err) {
-      this.deleteError.set(deleteErrorKey(err, this.config().labels.deleteError));
+      this.toast.error(this.locale.t(deleteErrorKey(err, this.config().labels.deleteError)));
     } finally {
       this.deleting.set(false);
     }

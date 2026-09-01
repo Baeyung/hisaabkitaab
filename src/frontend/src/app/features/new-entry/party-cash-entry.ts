@@ -1,13 +1,4 @@
-import {
-  Component,
-  DestroyRef,
-  ElementRef,
-  computed,
-  inject,
-  input,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -18,7 +9,7 @@ import { Party } from '../../core/store/party.models';
 import { EventRequest } from '../../core/store/event.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
-import { ToastState } from '../../shared/toast-state';
+import { ToastService } from '../../shared/toast/toast.service';
 import { Combobox } from '../../shared/combobox/combobox';
 import { DateField } from '../../shared/date-field/date-field';
 
@@ -97,7 +88,7 @@ export class PartyCashEntry {
   /** Bill-number box — where the cursor goes after a Save + Next. */
   private readonly firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
 
-  protected readonly toast = new ToastState();
+  private readonly toast = inject(ToastService);
 
   /** Autocomplete source; empty when there's no store yet (list 404s). */
   protected readonly parties = signal<Party[]>([]);
@@ -120,7 +111,6 @@ export class PartyCashEntry {
   );
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.toast.dispose());
     void this.init();
   }
 
@@ -151,7 +141,7 @@ export class PartyCashEntry {
       }
     } catch {
       // Missing or not editable (e.g. an opening entry) — fall back to the blank add form.
-      this.toast.show(this.locale.t('error.generic'));
+      this.toast.error(this.locale.t('error.generic'));
     }
   }
 
@@ -170,7 +160,7 @@ export class PartyCashEntry {
     const party = this.matchParty(name);
     if (!party) {
       // Recorded against existing parties only — no API call for an unknown name.
-      this.toast.show(this.locale.t(labels.partyUnknown, { name }));
+      this.toast.error(this.locale.t(labels.partyUnknown, { name }));
       return;
     }
 
@@ -187,21 +177,25 @@ export class PartyCashEntry {
       items: [],
     };
 
+    const label = this.locale.t(labels.recentLabel);
+
     try {
       const editId = this.editId();
       if (editId) {
         await this.events.updateEvent(editId, request);
+        this.toast.success(this.locale.t('toast.updated', { label }));
         this.location.back();
         return;
       }
       await this.events.publishEvent(request);
       this.recent.push(
-        `${this.locale.t(labels.recentLabel)} · ${party.name} · ${this.locale.money(amount)}`,
+        `${label} · ${party.name} · ${this.locale.money(amount)}`,
         this.locale.t(labels.recentCounterparty, { party: party.name }),
       );
+      this.toast.success(this.locale.t('toast.saved', { label }));
       this.reset();
     } catch {
-      this.toast.show(this.locale.t('error.generic'));
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }

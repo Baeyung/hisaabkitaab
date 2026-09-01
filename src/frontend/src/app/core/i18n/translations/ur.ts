@@ -81,6 +81,9 @@ export const ur: Record<TranslationKey, string> = {
   'validation.passwordMismatch': 'دونوں پاس ورڈ ایک جیسے ہونے چاہئیں',
   'phone.country': 'کنٹری کوڈ',
   'error.generic': 'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
+  'toast.saved': '{{label}} محفوظ ہو گیا',
+  'toast.updated': '{{label}} اپڈیٹ ہو گیا',
+  'toast.deleted': '{{label}} حذف ہو گیا',
   'home.welcome': 'خوش آمدید، {{name}}',
   'home.logout': 'لاگ آؤٹ',
   'lang.legend': 'زبان',
@@ -213,6 +216,7 @@ export const ur: Record<TranslationKey, string> = {
   'planLimits.bar.people': 'آپ کے پلان کے لیے افراد زیادہ ہیں',
   'planLimits.bar.ready': 'یہ آپ کے پلان کے مطابق ہے۔',
   'planLimits.bar.save': 'محفوظ کریں اور آگے بڑھیں',
+  'planLimits.saved': 'پلان اپڈیٹ ہو گیا',
 
   'planLimits.delete.title': 'یہ دکان حذف کریں؟',
   'planLimits.delete.body':
@@ -675,6 +679,7 @@ export const ur: Record<TranslationKey, string> = {
     'یہ اندراج حذف کریں؟ یہ اسے مستقل طور پر ہٹا دے گا اور نقد، کھاتہ اور اسٹاک پر اس کا اثر ختم کر دے گا۔',
   'entry.delete.confirmBtn': 'حذف کریں',
   'entry.delete.error': 'اندراج حذف نہیں ہو سکا۔ دوبارہ کوشش کریں۔',
+  'entry.delete.success': 'اندراج حذف ہو گیا',
   'print.items.title': 'اس مدت میں فروخت ہونے والے آئٹمز',
   'print.items.bought': 'اس مدت میں خریدے گئے آئٹمز',
   'whatsapp.send': 'واٹس ایپ پر بھیجیں',
@@ -854,6 +859,7 @@ export const ur: Record<TranslationKey, string> = {
     "'{{name}}' حذف کریں؟ ان کے ساتھ تمام لین دین بھی حذف ہو جائیں گی۔",
   'ledger.detail.delete.cancel': 'منسوخ',
   'ledger.detail.delete.confirmBtn': 'حذف کریں',
+  'ledger.detail.delete.success': 'کھاتہ حذف ہو گیا',
   'report.totalBilled': 'کل بل',
   'report.totalPaid': 'کل ادائیگی',
   'report.outstanding': 'باقایا',

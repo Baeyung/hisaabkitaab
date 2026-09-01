@@ -46,9 +46,6 @@
         <h2 class="acct__title">
           {{ locale.t(isOwner() ? 'settings.users.account.ownerTitle' : 'settings.users.account.title') }}
         </h2>
-        @if (accountSaved()) {
-          <span class="acct__ok" role="status">{{ locale.t('settings.users.account.saved') }}</span>
-        }
         @if (!editing()) {
           <button
             type="button"

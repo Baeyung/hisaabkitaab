@@ -20,6 +20,7 @@ import { StoreItem } from '../../core/store/store-item.models';
 import { EventRequest } from '../../core/store/event.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
+import { ToastService } from '../../shared/toast/toast.service';
 import { ruleLines } from '../../shared/ruled-lines';
 import { Combobox } from '../../shared/combobox/combobox';
 import { PrintHeader } from '../../shared/print-header';
@@ -221,7 +222,7 @@ export class GoodsEntry {
   protected readonly recent = new RecentLog();
 
   protected readonly saving = signal(false);
-  protected readonly errorKey = signal<'error.generic' | null>(null);
+  private readonly toast = inject(ToastService);
 
   /** Stock moves against the cash: out of the shop on a sale, into it on a purchase. */
   protected readonly stockFlow = computed<'in' | 'out'>(() =>
@@ -371,7 +372,7 @@ export class GoodsEntry {
       }));
       this.lines.set(this.rule(lines));
     } catch {
-      this.errorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     }
   }
 
@@ -633,7 +634,6 @@ export class GoodsEntry {
       return;
     }
     this.saving.set(true);
-    this.errorKey.set(null);
 
     const labels = this.config().labels;
     const total = this.total();
@@ -671,11 +671,14 @@ export class GoodsEntry {
       }),
     };
 
+    const label = this.locale.t(labels.recentLabel);
+
     try {
       const editId = this.editId();
       if (editId) {
         await this.events.updateEvent(editId, request);
         void this.refreshUnitOptions();
+        this.toast.success(this.locale.t('toast.updated', { label }));
         this.location.back();
         return;
       }
@@ -684,12 +687,13 @@ export class GoodsEntry {
       // (or the next entry) offers it without waiting for a page reload.
       void this.refreshUnitOptions();
       this.recent.push(
-        `${this.locale.t(labels.recentLabel)} · ${partyLabel} · ${this.locale.money(total)}`,
+        `${label} · ${partyLabel} · ${this.locale.money(total)}`,
         this.locale.t(labels.recentCash, { amount: this.locale.money(request.cashAmount ?? 0) }),
       );
+      this.toast.success(this.locale.t('toast.saved', { label }));
       this.reset();
     } catch {
-      this.errorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -709,7 +713,6 @@ export class GoodsEntry {
     this.cashTouched.set(false);
     this.discount.set(null);
     this.lines.set([this.blankLine()]);
-    this.errorKey.set(null);
     // Save + Next rhythm: land back on the first field so the next entry starts
     // typing straight away instead of reaching for the mouse.
     this.firstField()?.nativeElement.focus();

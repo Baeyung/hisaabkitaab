@@ -42,4 +42,5 @@
 - [x] enhance the ledger view such that it shows the amount of total receivables and total payables
 - [x] ledger to contain search/filter(checkbox?) by area/adress so that when going on ograi a single page can be given
 - [ ] address to be shown in ledger?
+- [ ] numbers being cut off in pdfs, and screen, due to large amounts, need to look into that!
 - 

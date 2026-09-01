@@ -16,6 +16,7 @@ import { StoreItem } from '../../core/store/store-item.models';
 import { Party } from '../../core/store/party.models';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
+import { ToastService } from '../../shared/toast/toast.service';
 import { ruleLines } from '../../shared/ruled-lines';
 import { Combobox } from '../../shared/combobox/combobox';
 import { DateField } from '../../shared/date-field/date-field';
@@ -191,7 +192,7 @@ export class Processing {
 
   protected readonly recent = new RecentLog();
   protected readonly saving = signal(false);
-  protected readonly errorKey = signal<'error.generic' | null>(null);
+  private readonly toast = inject(ToastService);
 
   /**
    * Rows that count. A row needs a name and a quantity; a zero price is allowed, because
@@ -729,7 +730,6 @@ export class Processing {
       return;
     }
     this.saving.set(true);
-    this.errorKey.set(null);
 
     const outputName = this.outputName().trim();
     const outputQty = this.outputQty() as number;
@@ -774,9 +774,12 @@ export class Processing {
       await this.loadItems();
       this.parties.set(await this.partyApi.list().catch(() => this.parties()));
       void this.refreshUnitOptions();
+      this.toast.success(
+        this.locale.t('toast.saved', { label: this.locale.t('processing.recent.label') }),
+      );
       this.reset();
     } catch {
-      this.errorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -797,7 +800,6 @@ export class Processing {
     this.unitCostTouched.set(false);
     this.typedWastage.set(null);
     this.wastageTouched.set(false);
-    this.errorKey.set(null);
     // Save + Next rhythm: land back on the first field so the next batch starts typing.
     this.firstField()?.nativeElement.focus();
   }

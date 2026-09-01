@@ -1,13 +1,13 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
-import { TranslationKey } from '../../core/i18n/translations/en';
 import { InventoryService } from '../../core/store/inventory.service';
 import { StoreItemService } from '../../core/store/store-item.service';
 import { StoreService } from '../../core/store/store.service';
 import { ItemMovement } from '../../core/store/inventory.models';
 import { AmountLegend } from '../../shared/amount-legend';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /**
  * One item's movement history with the running on-hand quantity. The item id
@@ -27,13 +27,13 @@ export class InventoryDetail {
   private readonly api = inject(InventoryService);
   private readonly itemApi = inject(StoreItemService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly movement = signal<ItemMovement | null>(null);
 
   /** Deleting the whole item — owner-only, same as settings/items.ts, but reachable from here. */
   protected readonly confirmingDeleteItem = signal(false);
   protected readonly deletingItem = signal(false);
-  protected readonly deleteItemErrorKey = signal<TranslationKey | null>(null);
 
   /**
    * The rows the table renders. A cloth a shop moves every day runs to thousands of
@@ -68,7 +68,6 @@ export class InventoryDetail {
   }
 
   askDeleteItem(): void {
-    this.deleteItemErrorKey.set(null);
     this.confirmingDeleteItem.set(true);
   }
 
@@ -78,12 +77,13 @@ export class InventoryDetail {
 
   async confirmDeleteItem(): Promise<void> {
     this.deletingItem.set(true);
-    this.deleteItemErrorKey.set(null);
     try {
+      const name = this.movement()?.name ?? '';
       await this.itemApi.delete(this.itemId());
+      this.toast.success(this.locale.t('toast.deleted', { label: name }));
       void this.router.navigate(this.stores.link('inventory'));
     } catch {
-      this.deleteItemErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
       this.deletingItem.set(false);
     }
   }

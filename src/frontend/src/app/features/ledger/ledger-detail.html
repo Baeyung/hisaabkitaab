@@ -87,9 +87,6 @@
           {{ locale.t('ledger.detail.delete.confirm', { name: st.partyName }) }}
         </span>
         <span class="rm-confirm__actions">
-          @if (deletePartyErrorKey(); as key) {
-            <span class="rm-alert" role="alert">{{ locale.t(key) }}</span>
-          }
           <button
             type="button"
             class="rm-btn rm-btn--ghost rm-btn--sm"
@@ -308,9 +305,6 @@
                       <div class="rm-confirm">
                         <span class="rm-confirm__msg">{{ locale.t('entry.delete.confirm') }}</span>
                         <span class="rm-confirm__actions">
-                          @if (deleteError(); as key) {
-                            <span class="rm-alert" role="alert">{{ locale.t(key) }}</span>
-                          }
                           <button
                             type="button"
                             class="rm-btn rm-btn--ghost rm-btn--sm"

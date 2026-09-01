@@ -79,6 +79,9 @@ export const en = {
   'validation.passwordMismatch': 'Both passwords must match',
   'phone.country': 'Country code',
   'error.generic': 'Something went wrong. Please try again.',
+  'toast.saved': '{{label}} saved',
+  'toast.updated': '{{label}} updated',
+  'toast.deleted': '{{label}} deleted',
   'home.welcome': 'Welcome, {{name}}',
   'home.logout': 'Log out',
   'lang.legend': 'Language',
@@ -231,6 +234,7 @@ export const en = {
   'planLimits.bar.people': 'Too many people for your plan',
   'planLimits.bar.ready': 'That fits your plan.',
   'planLimits.bar.save': 'Save and continue',
+  'planLimits.saved': 'Plan updated',
 
   'planLimits.delete.title': 'Delete this shop?',
   'planLimits.delete.body':
@@ -699,6 +703,7 @@ export const en = {
     'Delete this entry? This permanently removes it and undoes its effect on cash, khata and stock.',
   'entry.delete.confirmBtn': 'Delete',
   'entry.delete.error': "Couldn't delete this entry. Please try again.",
+  'entry.delete.success': 'Entry deleted',
   'print.items.title': 'Items sold in this period',
   'print.items.bought': 'Items bought in this period',
   'whatsapp.send': 'Send on WhatsApp',
@@ -836,6 +841,7 @@ export const en = {
     "Delete '{{name}}'? This also deletes every transaction with them.",
   'ledger.detail.delete.cancel': 'Cancel',
   'ledger.detail.delete.confirmBtn': 'Delete',
+  'ledger.detail.delete.success': 'Khata deleted',
   'report.totalBilled': 'Total billed',
   'report.totalPaid': 'Total paid',
   'report.outstanding': 'Outstanding',

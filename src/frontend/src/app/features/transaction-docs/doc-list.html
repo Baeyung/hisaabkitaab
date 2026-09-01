@@ -97,9 +97,6 @@
       @if (printError()) {
         <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t(config().labels.printError) }}</p>
       }
-      @if (deleteError(); as key) {
-        <p role="alert" class="rm-alert" style="margin: 12px 16px">{{ locale.t(key) }}</p>
-      }
       <div class="rm-tablewrap">
         <table class="rm-tbl">
           <thead>

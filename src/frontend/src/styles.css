@@ -48,6 +48,8 @@
   --kg-out: #a8342a; /* you owe them (payable) */
   --kg-out-solid: #a8342a; /* destructive fill under --kg-on-out */
   --kg-on-out: #ffffff;
+  --kg-in-solid: #1f7a4d; /* success fill under --kg-on-in */
+  --kg-on-in: #ffffff;
   --kg-amber: #c98a2b;
   --kg-blue: #1d4e7a;
 
@@ -167,6 +169,8 @@
     --kg-out: #f0776a;
     --kg-out-solid: #e2695c;
     --kg-on-out: #2a1310;
+    --kg-in-solid: #2c8c64;
+    --kg-on-in: #ffffff;
     --kg-amber: #e0a94a;
     --kg-blue: #7ab0e0;
 

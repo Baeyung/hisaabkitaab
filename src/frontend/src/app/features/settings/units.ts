@@ -8,6 +8,7 @@ import { UnitConversionService } from '../../core/units/unit-conversion.service'
 import { Unit, UnitService } from '../../core/units/unit.service';
 import { UnitConversionRate } from '../../core/units/unit-conversion.models';
 import { Combobox } from '../../shared/combobox/combobox';
+import { ToastService } from '../../shared/toast/toast.service';
 import {
   EXAMPLE_CONVERSIONS,
   TRADE_UNIT_EXAMPLES,
@@ -59,6 +60,7 @@ export class SettingsUnits {
   private readonly stores = inject(StoreService);
   private readonly conversions = inject(UnitConversionService);
   private readonly unitApi = inject(UnitService);
+  private readonly toast = inject(ToastService);
 
   // ── Manage Units ────────────────────────────────────────────────────
   protected readonly units = signal<Unit[] | null>(null);
@@ -177,6 +179,7 @@ export class SettingsUnits {
     try {
       const saved = await this.unitApi.rename(id, this.unitDraft().name.trim());
       this.units.update((list) => (list ?? []).map((u) => (u.id === id ? saved : u)));
+      this.toast.success(this.locale.t('toast.saved', { label: saved.name }));
       this.resetUnitRowState();
     } catch (err) {
       const status = (err as { status?: number } | null)?.status;
@@ -197,13 +200,14 @@ export class SettingsUnits {
 
   async confirmDeleteUnit(id: string): Promise<void> {
     this.unitSaving.set(true);
-    this.unitErrorKey.set(null);
     try {
+      const name = this.units()?.find((u) => u.id === id)?.name ?? '';
       await this.unitApi.delete(id);
       this.units.update((list) => (list ?? []).filter((u) => u.id !== id));
       this.confirmingUnitId.set(null);
+      this.toast.success(this.locale.t('toast.deleted', { label: name }));
     } catch {
-      this.unitErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.unitSaving.set(false);
     }
@@ -268,6 +272,7 @@ export class SettingsUnits {
     });
     this.saving.set(false);
     if (ok) {
+      this.toast.success(this.locale.t('toast.saved', { label: `${d.fromUnit} → ${d.toUnit}` }));
       this.cancel();
       // A rate just taught may have created a unit neither box had before — refresh the list
       // Manage Units shows and every combobox on this screen offers.
@@ -288,13 +293,17 @@ export class SettingsUnits {
 
   async confirmDeleteRate(id: string): Promise<void> {
     this.saving.set(true);
-    this.errorKey.set(null);
+    const rate = this.rates().find((r) => r.id === id);
     const ok = await this.conversions.delete(id);
     this.saving.set(false);
     if (ok) {
       this.confirmingRateId.set(null);
+      const label = rate ? this.displayRate(rate) : null;
+      this.toast.success(
+        this.locale.t('toast.deleted', { label: label ? `${label.fromUnit} → ${label.toUnit}` : '' }),
+      );
     } else {
-      this.errorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     }
   }
 

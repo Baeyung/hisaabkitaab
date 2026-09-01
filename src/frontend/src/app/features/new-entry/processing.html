@@ -554,10 +554,6 @@
       />
     </div>
 
-    @if (errorKey(); as key) {
-      <p role="alert" class="alert">{{ locale.t(key) }}</p>
-    }
-
     <div class="sale__actions">
       <button type="button" class="btn btn--ghost" (click)="reset()">
         {{ locale.t('processing.clear') }}

@@ -10,6 +10,7 @@ import { PlanService } from '../../core/plan/plan.service';
 import { GrantableRole, InviteDraft, Member } from '../../core/store/member.models';
 import { PHONE_PATTERN } from '../../shared/digits-only';
 import { dialOf, PhoneField } from '../../shared/phone-field/phone-field';
+import { ToastService } from '../../shared/toast/toast.service';
 
 const EMPTY_INVITE: InviteDraft = { email: '', role: 'EDITOR' };
 
@@ -44,6 +45,7 @@ export class SettingsUsers {
   private readonly plan = inject(PlanService);
   private readonly auth = inject(AuthService);
   private readonly stores = inject(StoreService);
+  private readonly toast = inject(ToastService);
 
   protected readonly isOwner = this.stores.isOwner;
   protected readonly me = inject(AuthStore).currentUser;
@@ -65,7 +67,6 @@ export class SettingsUsers {
    * Parties is read until someone asks to edit it.
    */
   protected readonly editing = signal(false);
-  protected readonly accountSaved = signal(false);
   /** What to put back if the edit is abandoned — the form writes straight into `account`. */
   private beforeEdit: { name: string; contactNumber: string } | null = null;
 
@@ -140,7 +141,6 @@ export class SettingsUsers {
       ]);
       this.account.set({ name: user.name, contactNumber: user.contactNumber });
       this.editing.set(false);
-      this.accountSaved.set(false);
       this.members.set(members);
     } catch {
       this.loadError.set(true);
@@ -152,7 +152,6 @@ export class SettingsUsers {
   startEditAccount(): void {
     this.beforeEdit = this.account();
     this.accountErrorKey.set(null);
-    this.accountSaved.set(false);
     this.editing.set(true);
   }
 
@@ -175,7 +174,7 @@ export class SettingsUsers {
       await this.auth.updateProfile(saved);
       this.account.set(saved);
       this.editing.set(false);
-      this.accountSaved.set(true);
+      this.toast.success(this.locale.t('settings.users.account.saved'));
     } catch (err) {
       // The one the user can act on is a number that is already someone else's login.
       const status = (err as { status?: number } | null)?.status;
@@ -214,6 +213,7 @@ export class SettingsUsers {
       });
       this.members.update((list) => [...(list ?? []), member]);
       this.inviting.set(false);
+      this.toast.success(this.locale.t('toast.saved', { label: member.email }));
       // A seat may have just been spent — re-read rather than counting locally, since whether
       // it was depends on shops this screen cannot see.
       void this.plan.refresh().catch(() => null);
@@ -235,6 +235,7 @@ export class SettingsUsers {
     try {
       const updated = await this.api.changeRole(member.userId, role);
       this.members.update((list) => (list ?? []).map((m) => (m.userId === member.userId ? updated : m)));
+      this.toast.success(this.locale.t('toast.updated', { label: this.displayName(updated) }));
     } catch {
       this.errorKey.set('error.generic');
     } finally {
@@ -255,9 +256,13 @@ export class SettingsUsers {
     this.saving.set(true);
     this.errorKey.set(null);
     try {
+      const name = this.members()?.find((m) => m.userId === userId);
       await this.api.remove(userId);
       this.members.update((list) => (list ?? []).filter((m) => m.userId !== userId));
       this.confirmingId.set(null);
+      this.toast.success(
+        this.locale.t('toast.deleted', { label: name ? this.displayName(name) : '' }),
+      );
       // Frees a seat only if that was their last shop here, which is the server's to decide.
       void this.plan.refresh().catch(() => null);
     } catch {

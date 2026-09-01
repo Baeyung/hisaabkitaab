@@ -3,7 +3,6 @@ import { NgTemplateOutlet } from '@angular/common';
 import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { StoreService } from '../../core/store/store.service';
-import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreItemService } from '../../core/store/store-item.service';
 import { StoreItem, StoreItemDraft } from '../../core/store/store-item.models';
 import { UnitConversionService } from '../../core/units/unit-conversion.service';
@@ -12,6 +11,7 @@ import { ConversionSlipService } from '../../shared/conversion-slip/conversion-s
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { UnitNote } from '../../shared/conversion-slip/unit-note';
 import { UNIT_SUGGESTIONS, convertQty, sameUnit } from '../../core/units/units';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /** Form-facing shape: `unit` is a non-null string for the text input (blank → null on send). */
 interface ItemForm {
@@ -56,6 +56,7 @@ export class SettingsItems {
   private readonly conversions = inject(UnitConversionService);
   private readonly unitApi = inject(UnitService);
   private readonly slip = inject(ConversionSlipService);
+  private readonly toast = inject(ToastService);
 
   protected readonly items = signal<StoreItem[] | null>(null);
   protected readonly loading = signal(true);
@@ -129,7 +130,6 @@ export class SettingsItems {
   /** What the row's opening stock was when the editor opened — only a change is sent. */
   private readonly openingBefore = signal<number | null>(null);
   protected readonly saving = signal(false);
-  protected readonly rowErrorKey = signal<TranslationKey | null>(null);
 
   protected readonly draft = signal<ItemForm>({ ...EMPTY_FORM });
   protected readonly itemForm = form(this.draft, (p) => {
@@ -205,7 +205,6 @@ export class SettingsItems {
       return;
     }
     this.saving.set(true);
-    this.rowErrorKey.set(null);
     const draft = this.normalized();
     try {
       const editId = this.editingId();
@@ -223,12 +222,13 @@ export class SettingsItems {
       } else {
         this.items.update((list) => [withOpening, ...(list ?? [])]);
       }
+      this.toast.success(this.locale.t(editId ? 'toast.updated' : 'toast.saved', { label: saved.name }));
       this.resetRowState();
       // The unit just typed on this row may be new to the store — refresh so it shows up
       // in the datalist without waiting for a page reload.
       void this.refreshUnitOptions();
     } catch {
-      this.rowErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -304,16 +304,17 @@ export class SettingsItems {
     const factor = this.openingFactor();
     const qty = factor ? convertQty(typed, factor) : typed;
     this.saving.set(true);
-    this.rowErrorKey.set(null);
     try {
       const stored = await this.api.setOpeningStock(id, qty);
       const openingStock = stored > 0 ? stored : null;
       this.items.update((list) =>
         (list ?? []).map((it) => (it.id === id ? { ...it, openingStock } : it)),
       );
+      const name = this.items()?.find((it) => it.id === id)?.name ?? '';
+      this.toast.success(this.locale.t('toast.updated', { label: name }));
       this.resetRowState();
     } catch {
-      this.rowErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -330,13 +331,14 @@ export class SettingsItems {
 
   async confirmDelete(id: string): Promise<void> {
     this.saving.set(true);
-    this.rowErrorKey.set(null);
     try {
+      const name = this.items()?.find((it) => it.id === id)?.name ?? '';
       await this.api.delete(id);
       this.items.update((list) => (list ?? []).filter((it) => it.id !== id));
       this.confirmingId.set(null);
+      this.toast.success(this.locale.t('toast.deleted', { label: name }));
     } catch {
-      this.rowErrorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -419,7 +421,6 @@ export class SettingsItems {
     this.openingFactor.set(null);
     this.openingFactorFor.set(null);
     this.copyOpen.set(false);
-    this.rowErrorKey.set(null);
   }
 
   /** Trim text; a blank unit becomes null so the backend stores nothing. */

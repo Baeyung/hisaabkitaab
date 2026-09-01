@@ -65,9 +65,6 @@
           {{ locale.t('inventory.detail.delete.confirm', { name: mv.name }) }}
         </span>
         <span class="rm-confirm__actions">
-          @if (deleteItemErrorKey(); as key) {
-            <span class="rm-alert" role="alert">{{ locale.t(key) }}</span>
-          }
           <button
             type="button"
             class="rm-btn rm-btn--ghost rm-btn--sm"

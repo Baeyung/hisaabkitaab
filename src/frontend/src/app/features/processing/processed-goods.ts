@@ -2,12 +2,12 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
-import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
 import { EventService } from '../../core/store/event.service';
 import { ProcessingService } from '../../core/store/processing.service';
 import { StoreService } from '../../core/store/store.service';
 import { ProcessingRow } from '../../core/store/processing.models';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /**
  * Every batch this shop has run, newest first. A row names what came out, who it was run
@@ -32,6 +32,7 @@ export class ProcessedGoods {
   private readonly api = inject(ProcessingService);
   private readonly events = inject(EventService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly batches = signal<ProcessingRow[] | null>(null);
   protected readonly loading = signal(true);
@@ -47,7 +48,6 @@ export class ProcessedGoods {
     suspendWhile: () => this.confirmingId() !== null,
   });
   protected readonly deleting = signal(false);
-  protected readonly deleteError = signal<TranslationKey | null>(null);
 
   constructor() {
     void this.load();
@@ -83,7 +83,6 @@ export class ProcessedGoods {
 
   askDelete(id: string): void {
     this.confirmingId.set(id);
-    this.deleteError.set(null);
   }
 
   cancelDelete(): void {
@@ -92,13 +91,13 @@ export class ProcessedGoods {
 
   async confirmDelete(id: string): Promise<void> {
     this.deleting.set(true);
-    this.deleteError.set(null);
     try {
       await this.events.deleteEvent(id);
       this.batches.update((list) => (list ?? []).filter((b) => b.transactionId !== id));
       this.confirmingId.set(null);
+      this.toast.success(this.locale.t('entry.delete.success'));
     } catch (err) {
-      this.deleteError.set(deleteErrorKey(err, 'processing.list.deleteError'));
+      this.toast.error(this.locale.t(deleteErrorKey(err, 'processing.list.deleteError')));
     } finally {
       this.deleting.set(false);
     }

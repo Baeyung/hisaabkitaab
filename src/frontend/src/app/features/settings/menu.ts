@@ -11,6 +11,7 @@ import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
 import { ChromeItem, MenuSetting, StoreSettings } from '../../core/store/store.models';
 import { NAV, NavGroup, NavItem, NavLeaf, mergeMenu } from '../../layout/shell/nav';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /** The foot controls a shop may switch off, in the order the sidebar stacks them. */
 const CHROME: ReadonlyArray<{ item: ChromeItem; label: TranslationKey }> = [
@@ -49,12 +50,11 @@ const CHROME: ReadonlyArray<{ item: ChromeItem; label: TranslationKey }> = [
 export class SettingsMenu {
   protected readonly locale = inject(LocaleService);
   protected readonly stores = inject(StoreService);
+  private readonly toast = inject(ToastService);
 
   protected readonly chromeControls = CHROME;
 
   protected readonly saving = signal(false);
-  protected readonly savedKey = signal<TranslationKey | null>(null);
-  protected readonly errorKey = signal<TranslationKey | null>(null);
 
   /**
    * The whole menu, hidden entries included — this is the one screen that has to show what it
@@ -97,7 +97,6 @@ export class SettingsMenu {
     if (to < 0 || to >= rows.length || from === to) {
       return;
     }
-    this.touch();
     if (group) {
       this.items.update((items) =>
         items.map((item) => {
@@ -135,7 +134,6 @@ export class SettingsMenu {
 
   protected setChrome(item: ChromeItem, event: Event): void {
     const shown = (event.target as HTMLInputElement).checked;
-    this.touch();
     this.hideChrome.update((hidden) => {
       const next = new Set(hidden);
       shown ? next.delete(item) : next.add(item);
@@ -157,7 +155,6 @@ export class SettingsMenu {
     key: TranslationKey,
     change: Pick<Partial<NavLeaf>, 'label' | 'hidden'>,
   ): void {
-    this.touch();
     this.items.update((items) =>
       items.map((item) => {
         if (group === null) {
@@ -178,19 +175,17 @@ export class SettingsMenu {
 
   /** Back to the menu the app ships with. Local until saved, like every other edit here. */
   protected reset(): void {
-    this.touch();
     this.items.set(mergeMenu(NAV, []));
     this.hideChrome.set(new Set());
   }
 
   async save(): Promise<void> {
     this.saving.set(true);
-    this.errorKey.set(null);
     try {
       await this.stores.updateSettings(this.toSettings());
-      this.savedKey.set('settings.menu.saved');
+      this.toast.success(this.locale.t('settings.menu.saved'));
     } catch {
-      this.errorKey.set('error.generic');
+      this.toast.error(this.locale.t('error.generic'));
     } finally {
       this.saving.set(false);
     }
@@ -224,10 +219,5 @@ export class SettingsMenu {
       // be what silently switches a shop's nightly report and khata reminders back off.
       reports: this.saved()?.reports,
     };
-  }
-
-  /** Any fresh edit supersedes the last "saved" confirmation. */
-  private touch(): void {
-    this.savedKey.set(null);
   }
 }

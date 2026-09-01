@@ -252,9 +252,6 @@
                         </button>
                       </span>
                     </div>
-                    @if (rowErrorKey(); as key) {
-                      <span role="alert" class="fld__err opening__err">{{ locale.t(key) }}</span>
-                    }
                   </td>
                 </tr>
               }
@@ -335,11 +332,6 @@
   @if (itemForm.name().touched() && itemForm.name().invalid()) {
     <tr class="tbl__rowmsg">
       <td colspan="7"><span role="alert" class="fld__err">{{ locale.t('validation.required') }}</span></td>
-    </tr>
-  }
-  @if (rowErrorKey(); as key) {
-    <tr class="tbl__rowmsg">
-      <td colspan="7"><span role="alert" class="fld__err">{{ locale.t(key) }}</span></td>
     </tr>
   }
 </ng-template>

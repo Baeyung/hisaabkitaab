@@ -13,6 +13,7 @@ import { OpeningDirection, Party } from '../../core/store/party.models';
 import { PhoneField } from '../../shared/phone-field/phone-field';
 import { OuterBar } from '../../shared/outer-bar/outer-bar';
 import { readImageFile } from '../../shared/image-file';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /** The three sections of the register, in the order they are opened. */
 type Step = 'shop' | 'goods' | 'khatas';
@@ -76,6 +77,7 @@ export class StoreSetup {
   private readonly itemApi = inject(StoreItemService);
   private readonly partyApi = inject(PartyService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   /**
    * The shop this run is filling in — read from the route, not from whichever shop
@@ -240,6 +242,7 @@ export class StoreSetup {
       if (cash && cash > 0) {
         await this.stores.setOpeningCash(cash);
       }
+      this.toast.success(this.locale.t('toast.saved', { label: created.name }));
       // replaceUrl: Back from the goods section must land on the picker, not on
       // the create form again — that path ends in a second, accidental shop.
       await this.router.navigate(['/s', created.id, 'setup'], { replaceUrl: true });
