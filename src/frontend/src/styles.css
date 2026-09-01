@@ -1386,6 +1386,36 @@ html[dir='rtl'] select.rm-input {
     display: none !important;
   }
 
+  /* The ledger's fold--section cards (parties/categories/cash) read as
+     collapsible UI on screen — border, background, clickable summary with
+     chevron and count pill. None of that means anything on paper, so print
+     flattens each one to a plain title followed by its table. */
+  .fold--section {
+    margin-top: 16px;
+    background: none;
+    border: none;
+    border-radius: 0;
+  }
+  .fold--section[open] > .fold__sum--section {
+    border-bottom: none;
+  }
+  .fold__sum--section {
+    padding: 0 0 8px;
+    font-size: 13px;
+    cursor: default;
+    break-after: avoid-page;
+  }
+  .fold__chev,
+  .fold__count {
+    display: none;
+  }
+  .fold--section .fold__body {
+    padding: 0;
+  }
+  .fold--section .fold__body > .rm-stats:first-child {
+    margin-top: 0;
+  }
+
   @page {
     margin: 12mm;
   }
