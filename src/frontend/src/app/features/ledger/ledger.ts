@@ -111,6 +111,18 @@ export class Ledger {
   /** The rows the table renders — a wholesaler's khata runs to hundreds of parties. */
   protected readonly win = rowWindow(this.filtered);
 
+  /**
+   * Sum of every red baqaya (you owe them) and every green one (they owe you),
+   * over the same rows the table shows — so narrowing by search or direction
+   * narrows these totals too, same as the count in the section header.
+   */
+  protected readonly partyTotals = computed(() => {
+    const rows = this.filtered();
+    const sum = (dir: BalanceDirection) =>
+      rows.reduce((total, p) => (p.balance.direction === dir ? total + p.balance.amount : total), 0);
+    return { receivable: sum('THEY_OWE_YOU'), payable: sum('YOU_OWE_THEM') };
+  });
+
   /** "Nothing matched" reads differently when it was the search that emptied the table. */
   protected readonly emptyKey = computed<TranslationKey>(() =>
     this.filters.q().trim() ? 'ledger.search.none' : 'ledger.filter.none',

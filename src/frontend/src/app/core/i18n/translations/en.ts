@@ -801,6 +801,8 @@ export const en = {
   'cashbook.loadError': "Couldn't load the cashbook. Please try again.",
   'ledger.subtitle': "Every party's khata and baqaya.",
   'ledger.parties.title': 'Parties',
+  'ledger.parties.totalReceivable': 'Total receivable',
+  'ledger.parties.totalPayable': 'Total payable',
   'ledger.search.ph': 'Search parties…',
   'ledger.search.none': 'No parties match your search.',
   'ledger.filter.search': 'Party',

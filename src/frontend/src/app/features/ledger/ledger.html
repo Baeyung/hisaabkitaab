@@ -55,6 +55,16 @@
         <span class="fold__count">{{ filtered().length }}</span>
       </summary>
       <div class="fold__body">
+        <div class="rm-stats">
+          <div class="rm-stat">
+            <span class="rm-stat__label">{{ locale.t('ledger.parties.totalReceivable') }}</span>
+            <span class="rm-stat__value num amt--in">{{ locale.money(partyTotals().receivable) }}</span>
+          </div>
+          <div class="rm-stat">
+            <span class="rm-stat__label">{{ locale.t('ledger.parties.totalPayable') }}</span>
+            <span class="rm-stat__value num amt--out">{{ locale.money(partyTotals().payable) }}</span>
+          </div>
+        </div>
         <!-- What the list was narrowed to, so a printed page says so on its face. -->
         @if (filters.q().trim()) {
           <p class="rm-sub rm-printonly">{{ locale.t('ledger.print.filter', { query: filters.q().trim() }) }}</p>

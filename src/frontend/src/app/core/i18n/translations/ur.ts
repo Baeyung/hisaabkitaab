@@ -819,6 +819,8 @@ export const ur: Record<TranslationKey, string> = {
   'dash.print.share': 'سیل کا {{pct}}%',
   'ledger.subtitle': 'ہر پارٹی کا کھاتہ اور بقایا۔',
   'ledger.parties.title': 'پارٹیاں',
+  'ledger.parties.totalReceivable': 'کل لینا',
+  'ledger.parties.totalPayable': 'کل دینا',
   'ledger.search.ph': 'پارٹی تلاش کریں…',
   'ledger.search.none': 'تلاش سے کوئی پارٹی نہیں ملی۔',
   'ledger.filter.search': 'پارٹی',
