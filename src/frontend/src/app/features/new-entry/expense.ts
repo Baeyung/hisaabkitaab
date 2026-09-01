@@ -5,9 +5,11 @@ import { LocaleService } from '../../core/i18n/locale.service';
 import { EventService } from '../../core/store/event.service';
 import { ExpenseCategoryService } from '../../core/store/expense-category.service';
 import { EventRequest, expenseCategoryLabel } from '../../core/store/event.models';
+import { StoreService } from '../../core/store/store.service';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { ToastService } from '../../shared/toast/toast.service';
+import { BillNumberService } from '../../shared/bill-number.service';
 import { DateField } from '../../shared/date-field/date-field';
 
 /** Sentinel <select> value that reveals the "add a new category" text field. */
@@ -47,6 +49,8 @@ export class Expense {
   private readonly categoryApi = inject(ExpenseCategoryService);
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
+  private readonly storeSvc = inject(StoreService);
+  private readonly bill = inject(BillNumberService);
 
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
@@ -87,7 +91,15 @@ export class Expense {
     const id = this.route.snapshot.paramMap.get('entryId');
     if (id) {
       await this.loadEntry(id);
+    } else {
+      this.billNumber.set(this.nextBillNumber());
     }
+  }
+
+  /** The store-based suggestion for a fresh entry's bill number — see {@link BillNumberService}. */
+  private nextBillNumber(): string {
+    const store = this.storeSvc.current();
+    return store ? this.bill.next(store.id, store.name) : '';
   }
 
   private async loadCategories(): Promise<void> {
@@ -168,6 +180,10 @@ export class Expense {
         return;
       }
       await this.events.publishEvent(request);
+      const store = this.storeSvc.current();
+      if (store) {
+        this.bill.record(store.id, store.name, request.billNumber);
+      }
       // A brand-new head is now saved server-side; surface it in the dropdown right away.
       if (chosen && !this.categories().includes(chosen)) {
         this.categories.update((names) => [...names, chosen].sort());
@@ -193,7 +209,7 @@ export class Expense {
   reset(): void {
     this.amount.set(null);
     this.details.set('');
-    this.billNumber.set('');
+    this.billNumber.set(this.nextBillNumber());
     this.category.set('UNCATEGORIZED');
     this.newCategory.set('');
     // Save + Next rhythm: land back on the first field so the next entry starts

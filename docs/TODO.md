@@ -33,7 +33,7 @@
 - [x] cash received/udhaar on all screens
 - [x] monthly reports + party reminders, on whatsapp
 - [x] enhance mobile UI for better UX.
-- [ ] toasts on error/succes api
+- [x] toasts on error/succes api
 - [x] collapsable ledger screen so expenses can be seen easily
 - [x] search in party/item management
 - [x] processed goods to honour the changed units

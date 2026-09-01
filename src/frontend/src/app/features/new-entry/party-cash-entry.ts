@@ -7,9 +7,11 @@ import { PartyService } from '../../core/store/party.service';
 import { EventService } from '../../core/store/event.service';
 import { Party } from '../../core/store/party.models';
 import { EventRequest } from '../../core/store/event.models';
+import { StoreService } from '../../core/store/store.service';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { ToastService } from '../../shared/toast/toast.service';
+import { BillNumberService } from '../../shared/bill-number.service';
 import { Combobox } from '../../shared/combobox/combobox';
 import { DateField } from '../../shared/date-field/date-field';
 
@@ -81,6 +83,8 @@ export class PartyCashEntry {
   private readonly events = inject(EventService);
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
+  private readonly storeSvc = inject(StoreService);
+  private readonly bill = inject(BillNumberService);
 
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
@@ -119,7 +123,15 @@ export class PartyCashEntry {
     const id = this.route.snapshot.paramMap.get('entryId');
     if (id) {
       await this.loadEntry(id);
+    } else {
+      this.billNumber.set(this.nextBillNumber());
     }
+  }
+
+  /** The store-based suggestion for a fresh entry's bill number — see {@link BillNumberService}. */
+  private nextBillNumber(): string {
+    const store = this.storeSvc.current();
+    return store ? this.bill.next(store.id, store.name) : '';
   }
 
   private async loadParties(): Promise<void> {
@@ -188,6 +200,10 @@ export class PartyCashEntry {
         return;
       }
       await this.events.publishEvent(request);
+      const store = this.storeSvc.current();
+      if (store) {
+        this.bill.record(store.id, store.name, request.billNumber);
+      }
       this.recent.push(
         `${label} · ${party.name} · ${this.locale.money(amount)}`,
         this.locale.t(labels.recentCounterparty, { party: party.name }),
@@ -208,7 +224,7 @@ export class PartyCashEntry {
 
   reset(): void {
     this.partyName.set('');
-    this.billNumber.set('');
+    this.billNumber.set(this.nextBillNumber());
     this.description.set('');
     this.amount.set(null);
     // Save + Next rhythm: land back on the first field so the next entry starts

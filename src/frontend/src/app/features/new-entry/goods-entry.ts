@@ -18,9 +18,11 @@ import { EventService } from '../../core/store/event.service';
 import { Party } from '../../core/store/party.models';
 import { StoreItem } from '../../core/store/store-item.models';
 import { EventRequest } from '../../core/store/event.models';
+import { StoreService } from '../../core/store/store.service';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { ToastService } from '../../shared/toast/toast.service';
+import { BillNumberService } from '../../shared/bill-number.service';
 import { ruleLines } from '../../shared/ruled-lines';
 import { Combobox } from '../../shared/combobox/combobox';
 import { PrintHeader } from '../../shared/print-header';
@@ -164,6 +166,8 @@ export class GoodsEntry {
   private readonly events = inject(EventService);
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
+  private readonly storeSvc = inject(StoreService);
+  private readonly bill = inject(BillNumberService);
   private readonly conversions = inject(UnitConversionService);
   private readonly unitApi = inject(UnitService);
   private readonly slip = inject(ConversionSlipService);
@@ -311,7 +315,15 @@ export class GoodsEntry {
     const id = this.route.snapshot.paramMap.get('entryId');
     if (id) {
       await this.loadEntry(id);
+    } else {
+      this.billNumber.set(this.nextBillNumber());
     }
+  }
+
+  /** The store-based suggestion for a fresh entry's bill number — see {@link BillNumberService}. */
+  private nextBillNumber(): string {
+    const store = this.storeSvc.current();
+    return store ? this.bill.next(store.id, store.name) : '';
   }
 
   private async loadSources(): Promise<void> {
@@ -683,6 +695,10 @@ export class GoodsEntry {
         return;
       }
       await this.events.publishEvent(request);
+      const store = this.storeSvc.current();
+      if (store) {
+        this.bill.record(store.id, store.name, request.billNumber);
+      }
       // A line's unit box may have just taught the store a name — refresh so the next line
       // (or the next entry) offers it without waiting for a page reload.
       void this.refreshUnitOptions();
@@ -707,7 +723,7 @@ export class GoodsEntry {
   reset(): void {
     this.partyName.set('');
     this.cashParty.set(false);
-    this.billNumber.set('');
+    this.billNumber.set(this.nextBillNumber());
     this.description.set('');
     this.cash.set(null);
     this.cashTouched.set(false);

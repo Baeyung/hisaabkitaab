@@ -14,9 +14,11 @@ import { ProcessingService } from '../../core/store/processing.service';
 import { ProcessingInput } from '../../core/store/processing.models';
 import { StoreItem } from '../../core/store/store-item.models';
 import { Party } from '../../core/store/party.models';
+import { StoreService } from '../../core/store/store.service';
 import { todayIso } from '../../shared/date.util';
 import { RecentLog } from '../../shared/recent-log';
 import { ToastService } from '../../shared/toast/toast.service';
+import { BillNumberService } from '../../shared/bill-number.service';
 import { ruleLines } from '../../shared/ruled-lines';
 import { Combobox } from '../../shared/combobox/combobox';
 import { DateField } from '../../shared/date-field/date-field';
@@ -125,6 +127,8 @@ export class Processing {
   private readonly itemApi = inject(StoreItemService);
   private readonly partyApi = inject(PartyService);
   private readonly api = inject(ProcessingService);
+  private readonly storeSvc = inject(StoreService);
+  private readonly bill = inject(BillNumberService);
   private readonly conversions = inject(UnitConversionService);
   private readonly unitApi = inject(UnitService);
   private readonly slip = inject(ConversionSlipService);
@@ -281,6 +285,13 @@ export class Processing {
     // Same treatment for the store's unit list: the built-in defaults already loaded above
     // work fine until this arrives.
     void this.refreshUnitOptions();
+    this.billNumber.set(this.nextBillNumber());
+  }
+
+  /** The store-based suggestion for a fresh entry's bill number — see {@link BillNumberService}. */
+  private nextBillNumber(): string {
+    const store = this.storeSvc.current();
+    return store ? this.bill.next(store.id, store.name) : '';
   }
 
   /** Re-pulls the store's unit list — called after a save, since a raw/processing/output
@@ -740,6 +751,7 @@ export class Processing {
     // the unrounded one would leave the batch costing a few paisa more or less than it did.
     const shelfQty = outputFactor ? convertQty(outputQty, outputFactor) : outputQty;
     const batchCost = outputQty * this.unitCost();
+    const billNumber = this.billNumber().trim() || null;
 
     try {
       await this.api.process({
@@ -753,11 +765,15 @@ export class Processing {
           unitCost: outputFactor && shelfQty > 0 ? batchCost / shelfQty : this.unitCost(),
           wastage: outputFactor ? convertQty(this.wastage(), outputFactor) : this.wastage(),
         },
-        billNumber: this.billNumber().trim() || null,
+        billNumber,
         billDate: this.billDate() || null,
         description: this.description().trim() || null,
       });
 
+      const store = this.storeSvc.current();
+      if (store) {
+        this.bill.record(store.id, store.name, billNumber);
+      }
       this.recent.push(
         `${this.locale.t('processing.recent.label')} · ${outputName} · ${this.locale.money(this.unitCost())}`,
         this.locale.t('processing.recent.made', {
@@ -786,7 +802,7 @@ export class Processing {
   }
 
   reset(): void {
-    this.billNumber.set('');
+    this.billNumber.set(this.nextBillNumber());
     this.description.set('');
     this.rawLines.set([this.blankLine()]);
     this.procLines.set([this.blankLine()]);
