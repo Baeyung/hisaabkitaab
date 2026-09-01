@@ -104,7 +104,12 @@ export class Ledger {
     const q = this.filters.q().trim().toLowerCase();
     const rows = this.byDirection();
     return q
-      ? rows.filter((p) => p.name.toLowerCase().includes(q) || (p.contact ?? '').includes(q))
+      ? rows.filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            (p.contact ?? '').toLowerCase().includes(q) ||
+            (p.address ?? '').toLowerCase().includes(q),
+        )
       : rows;
   });
 

@@ -821,7 +821,7 @@ export const ur: Record<TranslationKey, string> = {
   'ledger.parties.title': 'پارٹیاں',
   'ledger.parties.totalReceivable': 'کل لینا',
   'ledger.parties.totalPayable': 'کل دینا',
-  'ledger.search.ph': 'پارٹی تلاش کریں…',
+  'ledger.search.ph': 'نام یا پتہ تلاش کریں…',
   'ledger.search.none': 'تلاش سے کوئی پارٹی نہیں ملی۔',
   'ledger.filter.search': 'پارٹی',
   'ledger.filter.direction': 'بقایا',

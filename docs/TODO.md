@@ -39,7 +39,7 @@
 - [x] processed goods to honour the changed units
 - [ ] profit analysis on the reports given everything is honored (cost price, sale price, discount, item soldAt, etc all tje vars should be respected)
 - [x] bill management to have filter against a party? (handled via ledger details, it has filters for this)
-- [ ] enhance the ledger view such that it shows the amount of total receivables and total payables
+- [x] enhance the ledger view such that it shows the amount of total receivables and total payables
 - [ ] ledger to contain search/filter(checkbox?) by area/adress so that when going on ograi a single page can be given
 - [ ] address to be shown in ledger?
 - 

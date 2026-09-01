@@ -6,6 +6,7 @@ public record PartyBalanceResponse(
         String partyId,
         String name,
         String contact,
+        String address,
         PartyBalance balance
 )
 {

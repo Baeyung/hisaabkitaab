@@ -403,6 +403,15 @@ html[dir='rtl'] .kg-flip {
   display: block;
   padding-top: 0;
 }
+/* Tables sit flush against the card edges and set their own inset via cell
+   padding; a stat strip (.rm-stats) is a card-in-a-card and needs the same
+   16px inset plus top breathing room instead. */
+.fold--section .fold__body .rm-stats {
+  padding-inline: 16px;
+}
+.fold--section .fold__body > .rm-stats:first-child {
+  margin-top: 16px;
+}
 .fold__count {
   padding: 1px 8px;
   font-size: 11.5px;
@@ -1396,6 +1405,11 @@ html[dir='rtl'] select.rm-input {
   }
   .rm-stat__value {
     font-size: 18px;
+  }
+  /* Only two stats here (receivable/payable) — stack them instead of
+     cramming both amounts into a shrunk two-column row. */
+  .fold--section .fold__body .rm-stats {
+    grid-template-columns: 1fr;
   }
 
   /* Two date fields sit as a pair rather than one field per row — .df caps

@@ -803,7 +803,7 @@ export const en = {
   'ledger.parties.title': 'Parties',
   'ledger.parties.totalReceivable': 'Total receivable',
   'ledger.parties.totalPayable': 'Total payable',
-  'ledger.search.ph': 'Search parties…',
+  'ledger.search.ph': 'Search by name or address…',
   'ledger.search.none': 'No parties match your search.',
   'ledger.filter.search': 'Party',
   'ledger.filter.direction': 'Baqaya',

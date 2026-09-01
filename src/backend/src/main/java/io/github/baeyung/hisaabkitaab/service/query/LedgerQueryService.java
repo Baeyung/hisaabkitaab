@@ -62,6 +62,7 @@ public class LedgerQueryService
                         party.getId(),
                         party.getName(),
                         party.getContact(),
+                        party.getAddress(),
                         PartyBalance.of(balances.getOrDefault(party.getId(), 0.0))
                 ))
                 .toList();

@@ -6,6 +6,7 @@ export interface PartyBalanceRow {
   partyId: string;
   name: string;
   contact: string | null;
+  address: string | null;
   balance: Balance;
 }
 
