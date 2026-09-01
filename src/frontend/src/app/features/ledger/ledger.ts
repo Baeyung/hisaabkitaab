@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
@@ -16,6 +16,9 @@ import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { AmountLegend } from '../../shared/amount-legend';
 import { CaptureModeService } from '../../shared/capture-mode.service';
+
+/** The three foldable blocks on the ledger page — what Print/WhatsApp let the user pick between. */
+type Section = 'parties' | 'categories' | 'cash';
 
 /**
  * The khata list: every party with their baqaya and which way it points.
@@ -35,6 +38,21 @@ import { CaptureModeService } from '../../shared/capture-mode.service';
     RowWindowDirective,
   ],
   templateUrl: './ledger.html',
+  styles: `
+    .rm-sections {
+      margin: 0 0 20px;
+      padding: 0;
+      border: 0;
+    }
+    .rm-sections__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  `,
 })
 export class Ledger {
   protected readonly locale = inject(LocaleService);
@@ -184,7 +202,75 @@ export class Ledger {
     void this.router.navigate(this.stores.link('ledger/cash', kind));
   }
 
-  print(): void {
-    window.print();
+  /** Which of the three sections actually have anything in them right now. */
+  protected readonly hasSection = computed(() => ({
+    parties: (this.parties()?.length ?? 0) > 0,
+    categories: this.categories().length > 0,
+    cash: this.cashGroups().length > 0,
+  }));
+
+  /** What Print/WhatsApp will include — ticked by default, narrowed by the section dialog. */
+  protected readonly printSections = signal<Record<Section, boolean>>({
+    parties: true,
+    categories: true,
+    cash: true,
+  });
+
+  protected readonly canConfirmSections = computed(() => {
+    const has = this.hasSection();
+    const pick = this.printSections();
+    return (has.parties && pick.parties) || (has.categories && pick.categories) || (has.cash && pick.cash);
+  });
+
+  private readonly sectionDlg = viewChild.required<ElementRef<HTMLDialogElement>>('sectionDlg');
+  private resolveSectionPick: ((ok: boolean) => void) | null = null;
+
+  /**
+   * Asks which sections to include, unless there is only one with anything in it — nothing to
+   * choose between then. Print and WhatsApp both capture whatever the DOM currently shows (see
+   * printable-html.ts), so hiding a section here via `.rm-noprint` is what keeps it out of
+   * either — the same mechanism the toolbars and filters already use to stay off the page.
+   */
+  private pickSections(): Promise<boolean> {
+    const has = this.hasSection();
+    if (Number(has.parties) + Number(has.categories) + Number(has.cash) <= 1) {
+      return Promise.resolve(true);
+    }
+    this.printSections.set({ ...has });
+    this.sectionDlg().nativeElement.showModal();
+    return new Promise((resolve) => (this.resolveSectionPick = resolve));
   }
+
+  protected toggleSection(section: Section): void {
+    this.printSections.update((pick) => ({ ...pick, [section]: !pick[section] }));
+  }
+
+  protected confirmSectionPick(event: Event): void {
+    event.preventDefault();
+    this.sectionDlg().nativeElement.close();
+    this.resolveSectionPick?.(true);
+    this.resolveSectionPick = null;
+  }
+
+  protected cancelSectionPick(event: Event): void {
+    event.preventDefault();
+    this.sectionDlg().nativeElement.close();
+    this.resolveSectionPick?.(false);
+    this.resolveSectionPick = null;
+  }
+
+  protected onSectionBackdrop(event: MouseEvent): void {
+    if (event.target === this.sectionDlg().nativeElement) {
+      this.cancelSectionPick(event);
+    }
+  }
+
+  async print(): Promise<void> {
+    if (await this.pickSections()) {
+      window.print();
+    }
+  }
+
+  /** Passed to the WhatsApp button as `beforeCapture` — same section prompt Print uses. */
+  protected readonly beforeSend = (): Promise<boolean> => this.pickSections();
 }

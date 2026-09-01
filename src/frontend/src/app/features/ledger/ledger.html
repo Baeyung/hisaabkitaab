@@ -16,6 +16,7 @@
         <app-whatsapp-button
           [document]="locale.t('whatsapp.doc.khataList')"
           [action]="locale.t('whatsapp.doc.khataList')"
+          [beforeCapture]="beforeSend"
         />
       </div>
     }
@@ -44,6 +45,7 @@
     @if ((parties()?.length ?? 0) > 0) {
     <details
       class="fold fold--section"
+      [class.rm-noprint]="!printSections().parties"
       [open]="partiesOpen() || capture.capturing()"
       (toggle)="capture.capturing() || toggleParties($any($event.target).open)"
     >
@@ -138,6 +140,7 @@
     @if (categories().length > 0) {
       <details
         class="fold fold--section"
+        [class.rm-noprint]="!printSections().categories"
         [open]="categoriesOpen() || capture.capturing()"
         (toggle)="capture.capturing() || toggleCategories($any($event.target).open)"
       >
@@ -180,6 +183,7 @@
     @if (cashGroups().length > 0) {
       <details
         class="fold fold--section"
+        [class.rm-noprint]="!printSections().cash"
         [open]="cashOpen() || capture.capturing()"
         (toggle)="capture.capturing() || toggleCash($any($event.target).open)"
       >
@@ -219,4 +223,47 @@
       </details>
     }
   }
+
+  <dialog
+    #sectionDlg
+    class="rm-dialog"
+    (cancel)="cancelSectionPick($event)"
+    (click)="onSectionBackdrop($event)"
+  >
+    <h2 class="rm-dialog__title">{{ locale.t('ledger.sections.title') }}</h2>
+    <p class="rm-dialog__body">{{ locale.t('ledger.sections.body') }}</p>
+    <fieldset class="rm-sections">
+      @if (hasSection().parties) {
+        <label class="rm-sections__row">
+          <input type="checkbox" [checked]="printSections().parties" (change)="toggleSection('parties')" />
+          {{ locale.t('ledger.parties.title') }}
+        </label>
+      }
+      @if (hasSection().categories) {
+        <label class="rm-sections__row">
+          <input type="checkbox" [checked]="printSections().categories" (change)="toggleSection('categories')" />
+          {{ locale.t('ledger.category.title') }}
+        </label>
+      }
+      @if (hasSection().cash) {
+        <label class="rm-sections__row">
+          <input type="checkbox" [checked]="printSections().cash" (change)="toggleSection('cash')" />
+          {{ locale.t('ledger.cash.title') }}
+        </label>
+      }
+    </fieldset>
+    <div class="rm-dialog__actions">
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="cancelSectionPick($event)">
+        {{ locale.t('common.cancel') }}
+      </button>
+      <button
+        type="button"
+        class="rm-btn rm-btn--primary"
+        [disabled]="!canConfirmSections()"
+        (click)="confirmSectionPick($event)"
+      >
+        {{ locale.t('ledger.sections.continue') }}
+      </button>
+    </div>
+  </dialog>
 </section>
