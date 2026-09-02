@@ -265,6 +265,13 @@
 .efld {
   display: grid;
   gap: 5px;
+  /* Grid items refuse to shrink below their content's natural size by default,
+     which pushed the whole row past the card edge on narrow phones — this is
+     what lets the field actually shrink to the column it's given. */
+  min-width: 0;
+}
+.efld app-phone-field {
+  min-width: 0;
 }
 .efld__lbl {
   font-size: 10.5px;
