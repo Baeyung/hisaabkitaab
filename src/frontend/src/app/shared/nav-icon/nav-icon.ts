@@ -30,6 +30,7 @@ export type NavIcon =
   | 'users'
   | 'items'
   | 'units'
+  | 'reports'
   | 'menu';
 
 @Component({
@@ -139,6 +140,13 @@ export type NavIcon =
         @case ('units') {
           <rect x="3" y="8" width="18" height="8" rx="1.5" />
           <path d="M7.5 8v3.5M12 8v5M16.5 8v3.5" />
+        }
+        <!-- A sheet that leaves on a schedule: the nightly report and the khata reminders. -->
+        @case ('reports') {
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6" />
+          <path d="M9 8h4M9 12h3" />
+          <circle cx="17.5" cy="16.5" r="4.5" />
+          <path d="M17.5 14.4v2.1l1.4 1" />
         }
         @case ('menu') {
           <path d="M4 7h16M4 12h16M4 17h10" />

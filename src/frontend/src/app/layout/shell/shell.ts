@@ -14,7 +14,7 @@ import { PlanService } from '../../core/plan/plan.service';
 import { PlanNotice } from '../../shared/plan-notice/plan-notice';
 import { ChromeItem } from '../../core/store/store.models';
 import { NavIconMark } from '../../shared/nav-icon/nav-icon';
-import { NavLeaf, arranged } from './nav';
+import { NavLink, arranged } from './nav';
 import { DevTools } from '../../shared/dev-tools/dev-tools';
 import { DevToolsService } from '../../core/dev/dev-tools.service';
 import { NavHistoryService } from '../../core/nav/nav-history.service';
@@ -99,7 +99,7 @@ export class Shell {
    * every click back to the dashboard, which is what `editorGuard` does to a typed URL) reads
    * as the app being broken rather than as the plan having lapsed.
    */
-  protected blocked(item: Pick<NavLeaf, 'writes'>): boolean {
+  protected blocked(item: Pick<NavLink, 'writes'>): boolean {
     return item.writes === true && !this.stores.canEdit();
   }
 
@@ -148,7 +148,7 @@ export class Shell {
     return typeof window !== 'undefined' && window.matchMedia(query).matches;
   }
 
-  toggleGroup(key: TranslationKey): void {
+  toggleGroup(key: string): void {
     this.openGroups.update((set) => {
       const next = new Set(set);
       next.has(key) ? next.delete(key) : next.add(key);
@@ -156,7 +156,7 @@ export class Shell {
     });
   }
 
-  isGroupOpen(key: TranslationKey): boolean {
+  isGroupOpen(key: string): boolean {
     return this.openGroups().has(key);
   }
 

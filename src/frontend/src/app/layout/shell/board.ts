@@ -1,6 +1,6 @@
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { NavIcon } from '../../shared/nav-icon/nav-icon';
-import { NavItem, NavLeaf } from './nav';
+import { NavItem, NavLink } from './nav';
 
 /**
  * What a band's colour means. Exactly one thing: which way money moves — `in` and `out` are
@@ -17,7 +17,7 @@ import { NavItem, NavLeaf } from './nav';
 export type BoardTone = 'in' | 'out' | 'read';
 
 /** One button on the board: a menu entry, its mark, and the key that opens it. */
-export interface BoardTile extends NavLeaf {
+export interface BoardTile extends NavLink {
   icon: NavIcon;
   /**
    * The number key that opens this button, or 0 for the ones past nine, which have no
@@ -164,7 +164,7 @@ const OVERFLOW: TabDef = {
 };
 
 /** A menu entry with a path, flattened out of its group and carrying what the group decided. */
-type Reachable = NavLeaf & { icon: NavIcon };
+type Reachable = NavLink;
 
 /**
  * Every entry the caller can actually open, by key.
@@ -172,19 +172,19 @@ type Reachable = NavLeaf & { icon: NavIcon };
  * Groups are flattened away — the board has no drawers, so "New Entry" as a heading has
  * nothing to hold. What the group *decided*, though, comes down with its children: `writes`
  * is set on the New Entry group rather than on each of its six screens, and a child that
- * dropped it would come out of a closed shop looking usable.
+ * dropped it would come out of a closed shop looking usable. Its mark is not among them —
+ * every entry carries its own, so the overflow tab draws a promoted screen correctly.
  */
 function reachable(menu: readonly NavItem[]): Map<string, Reachable> {
   const out = new Map<string, Reachable>();
   for (const item of menu) {
     if (item.kind === 'link') {
-      out.set(item.key, { ...item, icon: item.icon });
+      out.set(item.key, { ...item });
       continue;
     }
     for (const child of item.children) {
       out.set(child.key, {
         ...child,
-        icon: item.icon,
         writes: child.writes ?? item.writes,
         requires: child.requires ?? item.requires,
       });

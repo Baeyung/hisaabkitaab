@@ -346,6 +346,20 @@ export const en = {
   'settings.menu.section.items': 'Menu items',
   'settings.menu.items.help':
     'Drag to reorder, or use the arrows. Rename anything to what you call it, and switch off what you never open. Everyone working in this shop sees the menu you set here.',
+  'settings.menu.items.grouping':
+    'Make your own groups for the screens you use together — Sale and Bill Management on one, say. The move button on a row asks where to put it.',
+  'settings.menu.addGroup': 'New group',
+  'settings.menu.newGroup': 'New group',
+  'settings.menu.groupName': 'Name this group',
+  'settings.menu.groupEmpty': 'Nothing in here yet. Move an entry in from its own row.',
+  'settings.menu.nameGroups': 'Name every group before saving.',
+  'settings.menu.move': 'Move {{item}} to another group',
+  'settings.menu.moveTo': 'Move {{item}} to',
+  'settings.menu.topLevel': 'Top level',
+  'settings.menu.hereNow': 'Now',
+  'settings.menu.moveToNew': 'A new group',
+  'settings.menu.removeGroup': 'Remove the group {{item}}',
+  'settings.menu.removeGroupHint': 'Remove the group. What is in it stays, one level up.',
   'settings.menu.items.notALock':
     'Switching an item off tidies the menu — it does not lock the screen. Who can open what is set in Manage Users.',
   'settings.menu.show': 'Show in menu',

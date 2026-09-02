@@ -3,10 +3,31 @@
 The sidebar as shipped. The table lives in `src/frontend/src/app/layout/shell/nav.ts` (`NAV`);
 this is its readable form. Every path is store-relative — the shell prefixes `/s/:storeId`.
 
-An owner arranges this per shop under **Settings → Menu**: reorder, rename, hide. That is
-presentation only — `arranged()` runs role filtering first, so no arrangement hands anyone a
-screen their role does not reach. In easy mode the same arranged menu is drawn as the board
-(one page of big buttons) instead of the sidebar.
+An owner arranges this per shop under **Settings → Menu**: regroup, reorder, rename, hide.
+That is presentation only — `arranged()` runs role filtering first, so no arrangement hands
+anyone a screen their role does not reach. In easy mode the same arranged menu is drawn as the
+board (one page of big buttons) instead of the sidebar.
+
+The groups below are where things ship, not where they are stuck. Any entry can be moved out
+of its group, onto the top level, or into a group the shop made for itself — a "Counter"
+holding Sale and Bill Management, say. A shop's own group carries a `grp:` key instead of a
+translation key and is named by the shop, since there is no built-in wording to fall back to;
+one that was never named is dissolved on the way back in, its entries kept. Nesting is one
+level deep, which is what the sidebar draws.
+
+Two controls, two jobs. Dragging a row, and the up/down arrows beside it, reorder it inside the
+list it is already in. The move button next to those is how a row changes list: it lists every
+destination by name — the top level, each group, or a new group made on the spot — rather than
+guessing one, so any entry reaches any group in a single move. Dragging between the two levels
+is not offered: `CdkDropList` hides the enclosing `cdkDropListGroup` from lists nested inside
+it, so the CDK never delivers such a drag, and hand-wiring it only works one way (see the class
+comment on `SettingsMenu`).
+
+Two locks survive any arrangement: an item marked 🔒 cannot be hidden, and neither can a group
+holding one — otherwise dragging Menu into a group of your own and switching that group off
+would be the way to strand yourself. Emptying a group is not hiding it: drag every entry out
+and the heading has nothing left to hold, so the sidebar drops it and every screen that was
+behind it is one click nearer.
 
 Legend: **E** editor or above, **O** owner only, no mark = everyone. † = records something, so it is greyed with a
 reason while the shop is closed by its plan, rather than dropped. 🔒 = cannot be hidden.

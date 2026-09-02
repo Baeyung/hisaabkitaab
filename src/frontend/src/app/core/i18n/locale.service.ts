@@ -39,6 +39,20 @@ export class LocaleService {
     this.setLocale(this._locale() === 'en' ? 'ur' : 'en');
   }
 
+  /**
+   * What a menu entry is called. The shop's own name wins — one string for both languages,
+   * because a shop's word for something is its own word whichever language the app is in —
+   * and the built-in wording stands in when it never set one.
+   *
+   * Not just `item.label || t(item.key)`, because a group a shop made for itself has no
+   * built-in wording to fall back to: its key is an id (`grp:k3x1`), not a translation key.
+   * `mergeMenu` already refuses to build an unnamed one, so the empty string here is the
+   * belt to that document-level brace rather than something the sidebar is expected to draw.
+   */
+  navLabel(item: { key: string; label?: string }): string {
+    return item.label || dictionaries[this._locale()][item.key as TranslationKey] || '';
+  }
+
   t(key: TranslationKey, params?: Record<string, string>): string {
     let value = dictionaries[this._locale()][key];
     if (params) {

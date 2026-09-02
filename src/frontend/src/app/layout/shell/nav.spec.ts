@@ -1,5 +1,5 @@
 import { MenuSetting } from '../../core/store/store.models';
-import { NAV, NavGroup, NavItem, mergeMenu, navFor, visible } from './nav';
+import { NAV, NavGroup, NavItem, isCustomGroup, mergeMenu, navFor, visible } from './nav';
 
 /** Top-level keys, in order — what most of these assertions are really about. */
 const keys = (items: readonly NavItem[]) => items.map((item) => item.key);
@@ -91,6 +91,79 @@ describe('mergeMenu', () => {
     expect(merged.find((item) => item.key === 'nav.ledger')?.label).toBeUndefined();
   });
 
+  it('puts an entry wherever the document put it, group or no group', () => {
+    // The whole of custom grouping in one assertion: Sale ships inside New Entry, and a shop
+    // that wants it on the top level beside Ledger gets it there.
+    const merged = mergeMenu(NAV, [at('nav.sale'), at('nav.ledger')]);
+
+    expect(keys(merged).slice(0, 2)).toEqual(['nav.sale', 'nav.ledger']);
+    expect(groupIn(merged, 'nav.newEntry')?.children.map((c) => c.key)).not.toContain('nav.sale');
+  });
+
+  it('builds a group a shop made for itself out of screens that ship apart', () => {
+    const merged = mergeMenu(NAV, [
+      at('grp:counter', {
+        label: 'Counter',
+        children: [at('nav.sale'), at('nav.billManagement')],
+      }),
+    ]);
+
+    const counter = groupIn(merged, 'grp:counter');
+    expect(counter?.label).toBe('Counter');
+    expect(counter?.children.map((c) => c.key)).toEqual(['nav.sale', 'nav.billManagement']);
+    // Borrowed from the first entry in it, since a group a shop made has no mark of its own.
+    expect(counter?.icon).toBe('sale');
+    // And neither screen is left behind where it ships.
+    expect(keys(merged)).not.toContain('nav.billManagement');
+    expect(groupIn(merged, 'nav.newEntry')?.children.map((c) => c.key)).not.toContain('nav.sale');
+  });
+
+  it('dissolves a group a shop never named, keeping what was in it', () => {
+    // It has no name in either language, so there is no heading to draw — but the two screens
+    // someone put together are not the thing to throw away.
+    const merged = mergeMenu(NAV, [
+      at('grp:blank', { children: [at('nav.sale'), at('nav.payment')] }),
+    ]);
+
+    expect(keys(merged).some(isCustomGroup)).toBe(false);
+    expect(keys(merged).slice(0, 2)).toEqual(['nav.sale', 'nav.payment']);
+  });
+
+  it('empties a built-in group rather than duplicating what was dragged out of it', () => {
+    const merged = mergeMenu(NAV, [
+      at('nav.newEntry', { children: [] }),
+      ...(NAV.find((i) => i.key === 'nav.newEntry') as NavGroup).children.map((c) => at(c.key)),
+    ]);
+
+    expect(groupIn(merged, 'nav.newEntry')?.children.length).toBe(0);
+    // Gone from the sidebar, but every screen that was in it is one click nearer, not lost.
+    expect(keys(visible(merged))).not.toContain('nav.newEntry');
+    expect(keys(merged)).toContain('nav.sale');
+  });
+
+  it('refuses to hide a group holding a screen that may not be hidden', () => {
+    // The way round the lock, if it worked: drag Menu into a group of your own, then switch
+    // the group off. The lock is on what the group holds, not on which group it is.
+    const merged = mergeMenu(NAV, [
+      at('grp:mine', {
+        label: 'Mine',
+        hidden: true,
+        children: [at('nav.settings.menu')],
+      }),
+    ]);
+
+    expect(groupIn(merged, 'grp:mine')?.hidden).toBe(false);
+    expect(keys(visible(merged))).toContain('grp:mine');
+  });
+
+  it('hides a group a shop made when nothing in it is locked', () => {
+    const merged = mergeMenu(NAV, [
+      at('grp:mine', { label: 'Mine', hidden: true, children: [at('nav.sale')] }),
+    ]);
+
+    expect(groupIn(merged, 'grp:mine')?.hidden).toBe(true);
+  });
+
   it('cannot hand a role a screen it is not entitled to', () => {
     // The arrangement runs *after* navFor, never instead of it. A stored document naming
     // an editors-only group must not put it back into a viewer's menu.
@@ -136,6 +209,18 @@ describe('visible', () => {
     );
 
     expect(groupIn(shown, 'nav.newEntry')?.children.length).toBe(1);
+  });
+
+  it('cannot smuggle a screen in through a group a shop made', () => {
+    // A hand-edited document naming an editors-only screen inside a shop's own group is still
+    // read after navFor, so there is nothing there to place.
+    const merged = mergeMenu(navFor('VIEWER'), [
+      at('grp:mine', { label: 'Mine', children: [at('nav.sale'), at('nav.settings.items')] }),
+    ]);
+
+    // The group survives as a heading over nothing, which is exactly what `visible` drops.
+    expect(groupIn(merged, 'grp:mine')?.children).toEqual([]);
+    expect(keys(visible(merged))).not.toContain('grp:mine');
   });
 
   it('is the identity on a shop that has never arranged anything', () => {
