@@ -76,9 +76,11 @@
   list-style: none;
 }
 .rows--sub {
-  /* Indented from the group's own row, and mirrored under Urdu for free. */
+  /* Indented from the group's own row, and mirrored under Urdu for free. The end
+     side matches .row__main's padding so nested rows sit inside the group card
+     rather than flush against its border. */
   margin: 6px 0 4px;
-  padding-inline-start: 26px;
+  padding-inline: 26px 9px;
 }
 
 .row {
