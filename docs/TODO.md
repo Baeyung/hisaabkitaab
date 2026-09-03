@@ -44,5 +44,6 @@
 - [ ] address to be shown in ledger?
 - [ ] numbers being cut off in pdfs, and screen, due to large amounts, need to look into that!
 - [x] slow req /ledger/expense-categories (shipped every expense row to render a count and a total — 4MB; heads are rolled up in SQL now and rows fetched per head. gzip on too)
-- [ ] filling date entries in dropdown is hassle, it should have / prefilled so user can type in one go, with place holder, DD/MM/YYYY, also allow YY
+- [x] filling date entries in dropdown is hassle, it should have / prefilled so user can type in one go, with place holder, DD/MM/YYYY, also allow YY
 - [x] custom menus in easy mode, custom grouping of menus, renaming the groups etc
+- [ ] editing/deletion of expenses

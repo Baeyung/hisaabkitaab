@@ -21,9 +21,11 @@ interface Cell {
   inMonth: boolean;
 }
 
-/** Local calendar day of `d` as an ISO `yyyy-MM-dd` string (never UTC). */
+/** Local calendar day of `d` as an ISO `yyyy-MM-dd` string (never UTC). The
+ *  year is padded too: a half-typed one (202 on the way to 2026) would other-
+ *  wise build a 3-digit string that {@link parseIso} then refuses. */
 function toIso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${String(d.getFullYear()).padStart(4, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /** Parse an ISO `yyyy-MM-dd` to a local-noon Date (noon dodges DST edges). */
@@ -58,6 +60,13 @@ function parseTyped(s: string): string | null {
   return toIso(dt);
 }
 
+/** Character spans of the day / month / year segments in `dd/mm/yyyy`. */
+const SEGS: readonly (readonly [number, number])[] = [
+  [0, 2],
+  [3, 5],
+  [6, 10],
+];
+
 /**
  * Styled date field — a themed replacement for `<input type="date">`, whose
  * drop-down calendar the browser draws with zero CSS hooks. Trigger and popup
@@ -65,6 +74,10 @@ function parseTyped(s: string): string | null {
  * `overflow:hidden` via fixed positioning anchored to the trigger's rect.
  *
  * `value` / `valueChange` carry an ISO `yyyy-MM-dd` string (empty = unset).
+ * The typed field is a `dd/mm/yyyy` mask, prefilled with the selected day (or
+ * today) and edited one segment at a time — digits fill the highlighted segment
+ * and hop to the next, so the slashes are never typed. ←/→ or a click pick a
+ * segment; Enter commits, ↓ drops into the grid, Esc closes.
  * ARIA date-picker-dialog pattern: a `role=grid` of day buttons with roving
  * tabindex. Keyboard (while a day is focused): ←/→ ±1 day, ↑/↓ ±1 week,
  * Home/End week ends, PageUp/PageDown ±1 month, Enter/Space pick, Esc close.
@@ -115,32 +128,77 @@ function parseTyped(s: string): string | null {
           [style.top.px]="pop().top"
           [style.left.px]="pop().left"
         >
+          <!-- dir=ltr: the mask is read day-first whichever way the page runs, so
+               the segment spans below stay the ones the eye sees. -->
           <input
             #typedEl
             class="df__type"
-            [class.df__type--error]="typed() !== '' && !typedValid()"
+            [class.df__type--error]="!typedValid()"
             type="text"
+            dir="ltr"
             inputmode="numeric"
             autocomplete="off"
             [attr.aria-label]="locale.t('date.typeLabel')"
             [attr.placeholder]="locale.t('date.typeHint')"
             [value]="typed()"
-            (input)="onTyped($any($event.target).value)"
+            (focus)="focusSeg(0)"
+            (click)="onTypedClick($any($event.target))"
+            (input)="onTypedInput($any($event.target))"
             (keydown)="onTypedKeydown($event)"
           />
           <div class="df__head">
-            <button type="button" class="df__nav" (click)="shiftMonth(-1)" [attr.aria-label]="locale.t('date.prevMonth')">
-              <svg class="kg-flip" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+            <button
+              type="button"
+              class="df__nav"
+              (click)="shiftMonth(-1)"
+              [attr.aria-label]="locale.t('date.prevMonth')"
+            >
+              <svg
+                class="kg-flip"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
             </button>
-            <span class="df__title" [attr.id]="gridLabelId" aria-live="polite">{{ monthLabel() }}</span>
-            <button type="button" class="df__nav" (click)="shiftMonth(1)" [attr.aria-label]="locale.t('date.nextMonth')">
-              <svg class="kg-flip" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+            <span class="df__title" [attr.id]="gridLabelId" aria-live="polite">{{
+              monthLabel()
+            }}</span>
+            <button
+              type="button"
+              class="df__nav"
+              (click)="shiftMonth(1)"
+              [attr.aria-label]="locale.t('date.nextMonth')"
+            >
+              <svg
+                class="kg-flip"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
             </button>
           </div>
           <div class="df__grid" role="grid" [attr.aria-labelledby]="gridLabelId">
             <div class="df__row df__row--head" role="row">
               @for (wd of weekdays(); track $index) {
-                <span class="df__wd" role="columnheader" [attr.aria-label]="wd.long">{{ wd.short }}</span>
+                <span class="df__wd" role="columnheader" [attr.aria-label]="wd.long">{{
+                  wd.short
+                }}</span>
               }
             </div>
             @for (week of weeks(); track $index) {
@@ -196,7 +254,9 @@ function parseTyped(s: string): string | null {
       border: 1px solid var(--kg-line-strong);
       border-radius: 10px;
       cursor: pointer;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
     }
     .df__btn:hover:not(:focus):not(:disabled) {
       border-color: var(--kg-brand);
@@ -250,6 +310,14 @@ function parseTyped(s: string): string | null {
       background: var(--kg-surface);
       border: 1px solid var(--kg-line-strong);
       border-radius: 7px;
+      /* Even columns, so the segment under edit sits still as digits land. */
+      font-variant-numeric: tabular-nums;
+    }
+    /* The highlight marks the segment being edited, not stray selected text —
+       so it wears the picked day's colour instead of the browser's blue. */
+    .df__type::selection {
+      color: var(--kg-on-brand);
+      background: var(--kg-brand-solid);
     }
     .df__type:focus {
       outline: none;
@@ -279,7 +347,9 @@ function parseTyped(s: string): string | null {
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.15s ease, color 0.15s ease;
+      transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
     }
     .df__nav:hover {
       color: var(--kg-brand);
@@ -325,7 +395,9 @@ function parseTyped(s: string): string | null {
       border: 1px solid transparent;
       border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.12s ease, color 0.12s ease;
+      transition:
+        background-color 0.12s ease,
+        color 0.12s ease;
     }
     .df__day:hover {
       background: var(--kg-surface);
@@ -373,8 +445,12 @@ export class DateField {
   protected readonly viewMonth = signal(new Date());
   /** The day carrying roving focus / active highlight while the grid is open. */
   protected readonly focusedIso = signal(this.today);
-  /** Contents of the typed-date field. */
+  /** Contents of the typed-date field — always a full `dd/mm/yyyy` mask. */
   protected readonly typed = signal('');
+  /** Segment being edited: 0 day, 1 month, 2 year. */
+  private seg = 0;
+  /** Digits entered into that segment since it was selected. */
+  private segDigits = '';
   /** Fresh object per request so the focus effect always re-runs (nonce). */
   private readonly focusReq = signal<{ iso: string } | null>(null);
 
@@ -445,7 +521,7 @@ export class DateField {
       const el = this.typedEl()?.nativeElement;
       if (el) {
         el.focus();
-        el.select();
+        this.focusSeg(0);
       }
     });
     // Move DOM focus onto a day when grid navigation requests it (nonce-driven).
@@ -472,7 +548,9 @@ export class DateField {
     const start = parseIso(this.value()) ?? new Date();
     this.viewMonth.set(new Date(start.getFullYear(), start.getMonth(), 1, 12));
     this.focusedIso.set(this.value() || this.today);
-    this.typed.set(this.value() ? isoToTyped(this.value()) : '');
+    // Prefilled, so the field is always a real date to edit rather than an
+    // empty box to fill in; unset falls back to today, the day already ringed.
+    this.typed.set(isoToTyped(this.value() || this.today));
     this.focusReq.set(null); // keep focus on the typed field, not a day
     this.positionPopup();
     this.open.set(true);
@@ -484,7 +562,10 @@ export class DateField {
 
   private positionPopup(): void {
     this.pop.set(
-      anchorPopup(this.trigger().nativeElement.getBoundingClientRect(), this.popEl()?.nativeElement),
+      anchorPopup(
+        this.trigger().nativeElement.getBoundingClientRect(),
+        this.popEl()?.nativeElement,
+      ),
     );
   }
 
@@ -514,14 +595,101 @@ export class DateField {
     if (focus) this.focusReq.set({ iso });
   }
 
-  protected onTyped(v: string): void {
-    this.typed.set(v);
-    const iso = parseTyped(v);
-    if (iso) this.jumpTo(iso, false); // highlight in the grid, keep typing
+  /** Highlight segment `i` (clamped) and make it the target for typed digits. */
+  protected focusSeg(i: number): void {
+    this.seg = Math.min(Math.max(i, 0), SEGS.length - 1);
+    this.segDigits = '';
+    const [s, e] = SEGS[this.seg];
+    this.typedEl()?.nativeElement.setSelectionRange(s, e);
+  }
+
+  /** Overwrite the current segment, keeping it highlighted for the next digit. */
+  private writeSeg(text: string): void {
+    const [s, e] = SEGS[this.seg];
+    const next = this.typed().slice(0, s) + text + this.typed().slice(e);
+    this.typed.set(next);
+    const el = this.typedEl()?.nativeElement;
+    if (el) {
+      el.value = next;
+      el.setSelectionRange(s, e);
+    }
+    const iso = parseTyped(next);
+    if (iso) this.jumpTo(iso, false); // the grid follows what is being typed
+  }
+
+  /**
+   * Fill the highlighted segment, moving on once it can hold nothing more: a
+   * day starting 4-9 or a month starting 2-9 has to be the whole number, so it
+   * hands over on the first digit. A second digit that would overflow (a 3 after
+   * 1 in the month) starts the segment again rather than being dropped.
+   */
+  private typeDigit(d: string): void {
+    if (this.seg === 2) {
+      this.segDigits = (this.segDigits + d).slice(-4);
+      this.writeSeg(this.segDigits.padStart(4, '0'));
+      return;
+    }
+    const max = this.seg === 0 ? 31 : 12;
+    if (this.segDigits !== '') {
+      const both = +(this.segDigits + d);
+      if (both >= 1 && both <= max) {
+        this.segDigits += d;
+        this.writeSeg(String(both).padStart(2, '0'));
+        this.focusSeg(this.seg + 1);
+        return;
+      }
+      this.segDigits = ''; // overflow: this digit opens the segment instead
+    }
+    this.segDigits = d;
+    this.writeSeg('0' + d);
+    if (+d * 10 > max) this.focusSeg(this.seg + 1);
+  }
+
+  /** Put the caret's segment under edit, so a click lands on month or year. */
+  protected onTypedClick(el: HTMLInputElement): void {
+    const at = el.selectionStart ?? 0;
+    this.focusSeg(SEGS.findIndex(([, end]) => at <= end));
+  }
+
+  /** Keydown owns the digits, so this only sees paste and drop: take a whole
+   *  date, and otherwise restore the mask the field is meant to hold. */
+  protected onTypedInput(el: HTMLInputElement): void {
+    const iso = parseTyped(el.value);
+    if (iso) {
+      this.typed.set(isoToTyped(iso));
+      this.jumpTo(iso, false);
+    }
+    el.value = this.typed();
+    this.focusSeg(0);
   }
 
   protected onTypedKeydown(e: KeyboardEvent): void {
+    if (/^\d$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      this.typeDigit(e.key);
+      return;
+    }
     switch (e.key) {
+      // The separators are already there — typing one just moves on, which is
+      // what the habit of typing them was reaching for anyway.
+      case '/':
+      case '-':
+      case '.':
+      case 'ArrowRight':
+        e.preventDefault();
+        this.focusSeg(this.seg + 1);
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        this.focusSeg(this.seg - 1);
+        break;
+      case 'Backspace':
+      case 'Delete':
+        // Nothing to clear: the mask always holds a date. Re-open the segment,
+        // then step back once it is already clean.
+        e.preventDefault();
+        this.focusSeg(this.segDigits === '' ? this.seg - 1 : this.seg);
+        break;
       case 'Enter': {
         e.preventDefault();
         const iso = parseTyped(this.typed());
