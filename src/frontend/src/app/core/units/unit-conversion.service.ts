@@ -90,16 +90,17 @@ export class UnitConversionService {
    * want the conversion to proceed can ignore the returned flag.
    *
    * The Store Settings conversions screen is the one caller that does care, since there a
-   * failure is the whole point of the click rather than a footnote to it — it reads the flag
-   * and reports the failure instead of pretending the rate was saved.
+   * failure is the whole point of the click rather than a footnote to it — it reads the row
+   * back — to report a failure, and to spot an edit that moved a rate onto a different pair,
+   * which comes back as a different id than the one being edited.
    */
-  async teach(draft: UnitConversionDraft): Promise<boolean> {
+  async teach(draft: UnitConversionDraft): Promise<UnitConversionRate | null> {
     try {
       const saved = await firstValueFrom(this.http.put<UnitConversionRate>(this.url, draft));
       this._rates.update((rates) => [...rates.filter((r) => r.id !== saved.id), saved]);
-      return true;
+      return saved;
     } catch {
-      return false;
+      return null;
     }
   }
 

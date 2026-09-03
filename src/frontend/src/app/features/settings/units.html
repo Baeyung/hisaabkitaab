@@ -331,31 +331,27 @@
   </details>
 </section>
 
-<!-- Reused for both the "add" row and an in-place edit. While editing, the pair is the row's
-     identity (there is no rename here — that is what Manage Units is for) so it is shown as
-     text and only the factor is a field. -->
+<!-- Reused for both the "add" row and an in-place edit: the same three fields either way. A
+     rate is keyed by its pair, so changing the pair while editing moves the rate onto the new
+     one (see `save()`) rather than leaving the old row behind. -->
 <ng-template #editRow>
   <tr class="tbl__edit">
     <td colspan="2">
       <div class="edit">
         <!-- Reads as one sentence, same shape as the standard list above: "1 <from> = <factor> <to>".
-             The pair is only pickable while adding — editing a taught rate can only change the
-             number, so the units show as fixed text either side of it. -->
+             Both units and the number are editable whether adding or correcting — a rate typed
+             against the wrong unit is fixed here rather than deleted and retyped. -->
         <div class="conv">
           <span class="conv__lit">1</span>
-          @if (editingId() !== null) {
-            <span class="conv__static">{{ draft().fromUnit }}</span>
-          } @else {
-            <label class="conv__field conv__unit">
-              <span class="efld__lbl">{{ locale.t('settings.units.col.from') }}</span>
-              <app-combobox
-                [value]="draft().fromUnit"
-                [options]="unitSuggestions()"
-                (valueChange)="setDraftUnit('fromUnit', $event)"
-                [ariaLabel]="locale.t('settings.units.col.from')"
-              />
-            </label>
-          }
+          <label class="conv__field conv__unit">
+            <span class="efld__lbl">{{ locale.t('settings.units.col.from') }}</span>
+            <app-combobox
+              [value]="draft().fromUnit"
+              [options]="unitSuggestions()"
+              (valueChange)="setDraftUnit('fromUnit', $event)"
+              [ariaLabel]="locale.t('settings.units.col.from')"
+            />
+          </label>
           <span class="conv__lit">=</span>
           <input
             class="fld__input conv__factor"
@@ -365,19 +361,15 @@
             step="any"
             [attr.aria-label]="locale.t('settings.units.col.factor')"
           />
-          @if (editingId() !== null) {
-            <span class="conv__static">{{ draft().toUnit }}</span>
-          } @else {
-            <label class="conv__field conv__unit">
-              <span class="efld__lbl">{{ locale.t('settings.units.col.to') }}</span>
-              <app-combobox
-                [value]="draft().toUnit"
-                [options]="unitSuggestions()"
-                (valueChange)="setDraftUnit('toUnit', $event)"
-                [ariaLabel]="locale.t('settings.units.col.to')"
-              />
-            </label>
-          }
+          <label class="conv__field conv__unit">
+            <span class="efld__lbl">{{ locale.t('settings.units.col.to') }}</span>
+            <app-combobox
+              [value]="draft().toUnit"
+              [options]="unitSuggestions()"
+              (valueChange)="setDraftUnit('toUnit', $event)"
+              [ariaLabel]="locale.t('settings.units.col.to')"
+            />
+          </label>
         </div>
 
         <div class="edit__foot">

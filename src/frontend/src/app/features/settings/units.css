@@ -139,26 +139,23 @@
 
 /* Custom conversions read as one sentence, both at rest ("1 than = 16 gaz", built in the
    template) and while adding/editing: literal "1", the from-unit box, "=", the factor,
-   the to-unit box. Editing a taught rate only ever changes the number, so the two units
-   render as .conv__static text instead of boxes there — same baseline as the literals so
-   the sentence still reads as one line. */
+   the to-unit box. */
 .conv {
   display: flex;
   flex-wrap: wrap;
   /* Bottom-align so the labelled fields' inputs sit on the same line as the plain "1" / "="
-     text and the fixed-pair spans shown while editing — the caption above a field is the
-     part allowed to sit higher, not the control itself. */
+     text — the caption above a field is the part allowed to sit higher, not the control
+     itself. */
   align-items: flex-end;
   gap: 10px;
 }
-.conv__lit,
-.conv__static {
+.conv__lit {
   font-size: 15px;
   font-weight: 600;
   color: var(--kg-ink);
   flex: none;
-  /* Matches the field inputs' own bottom padding so "1"/"=" and a fixed unit name sit on
-     the same baseline as the boxes beside them, not flush with their outer edge. */
+  /* Matches the field inputs' own bottom padding so "1"/"=" sit on the same baseline as
+     the boxes beside them, not flush with their outer edge. */
   padding-bottom: 11px;
 }
 .conv__field {

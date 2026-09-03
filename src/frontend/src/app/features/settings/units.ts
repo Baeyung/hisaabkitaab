@@ -265,13 +265,20 @@ export class SettingsUnits {
     this.saving.set(true);
     this.errorKey.set(null);
     const d = this.draft();
-    const ok = await this.conversions.teach({
+    const editingId = this.editingId();
+    const saved = await this.conversions.teach({
       fromUnit: d.fromUnit.trim(),
       toUnit: d.toUnit.trim(),
       factor: d.factor as number,
     });
+    // Editing the pair, not just the number: the backend keys a rate by its pair, so the new
+    // pair comes back as a different row and the one being edited is left behind. Dropping it
+    // is what makes this an edit rather than an extra rate.
+    if (saved && editingId !== null && saved.id !== editingId) {
+      await this.conversions.delete(editingId);
+    }
     this.saving.set(false);
-    if (ok) {
+    if (saved) {
       this.toast.success(this.locale.t('toast.saved', { label: `${d.fromUnit} → ${d.toUnit}` }));
       this.cancel();
       // A rate just taught may have created a unit neither box had before — refresh the list
