@@ -111,6 +111,79 @@ class EventEditApiTest extends ApiTest
                 .andExpect(jsonPath("$[0].currentStock").value(25));
     }
 
+    /**
+     * An expense is edited from its category statement, so the head it is filed under has
+     * to travel with the edit: re-derived onto the new CASH line, and the old head — now
+     * empty — gone from the khata rather than left behind as a stale link.
+     */
+    @Test
+    void editingAnExpenseMovesItBetweenHeads() throws Exception
+    {
+        String user = "3200000011";
+        signup(user);
+        String store = createStore(user, "Rehman Fabrics");
+
+        String today = LocalDate.now().toString();
+        mvc.perform(post(api(store, "/event")).with(as(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "transactionEvent":"EXPENSE",
+                                  "cashAmount":500,
+                                  "billDate":"%s",
+                                  "description":"bijli ka bill",
+                                  "expenseCategory":"BILLS"
+                                }
+                                """.formatted(today)))
+                .andExpect(status().isOk());
+
+        String entryId = tree(mvc.perform(get(api(store, "/ledger/expense-categories/BILLS")).with(as(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(500.0))
+                .andReturn())
+                .get("rows").get(0).get("transactionId").asText();
+
+        // Prefill: the head comes back with the entry, or the edit screen silently
+        // re-files it under UNCATEGORIZED on save.
+        mvc.perform(get(api(store, "/event/" + entryId)).with(as(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactionEvent").value("EXPENSE"))
+                .andExpect(jsonPath("$.cashAmount").value(500.0))
+                .andExpect(jsonPath("$.description").value("bijli ka bill"))
+                .andExpect(jsonPath("$.expenseCategory").value("BILLS"));
+
+        // Wrong head and wrong amount: it was rent, and it was 800.
+        mvc.perform(put(api(store, "/event/" + entryId)).with(as(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "transactionEvent":"EXPENSE",
+                                  "cashAmount":800,
+                                  "billDate":"%s",
+                                  "description":"dukan ka kiraya",
+                                  "expenseCategory":"RENT"
+                                }
+                                """.formatted(today)))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(get(api(store, "/ledger/expense-categories/RENT")).with(as(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(1))
+                .andExpect(jsonPath("$.total").value(800.0));
+        mvc.perform(get(api(store, "/ledger/expense-categories/BILLS")).with(as(user)))
+                .andExpect(status().isNotFound());
+
+        // Delete puts the drawer back: no expense, no head.
+        mvc.perform(delete(api(store, "/event/" + entryId)).with(as(user)))
+                .andExpect(status().isNoContent());
+        mvc.perform(get(api(store, "/ledger/expense-categories")).with(as(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get(api(store, "/cashbook")).with(as(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalOut").value(0.0));
+    }
+
     @Test
     void editingAnotherOwnersEntryIs404() throws Exception
     {
