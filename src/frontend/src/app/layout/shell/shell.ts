@@ -14,7 +14,7 @@ import { PlanService } from '../../core/plan/plan.service';
 import { PlanNotice } from '../../shared/plan-notice/plan-notice';
 import { ChromeItem } from '../../core/store/store.models';
 import { NavIconMark } from '../../shared/nav-icon/nav-icon';
-import { NavLink, arranged } from './nav';
+import { NavGroup, NavLink, arranged } from './nav';
 import { DevTools } from '../../shared/dev-tools/dev-tools';
 import { DevToolsService } from '../../core/dev/dev-tools.service';
 import { NavHistoryService } from '../../core/nav/nav-history.service';
@@ -91,6 +91,16 @@ export class Shell {
       plan: !hidden.has('PLAN'),
     };
   });
+
+  /**
+   * What a sidebar group holds. Always links: `arranged` is called above with the sidebar's
+   * own depth, so nothing nested deeper than one level survives into this menu. The type
+   * allows more because the board's groups hold bands, and the two share one shape — this is
+   * where the sidebar says which half of it it draws.
+   */
+  protected links(group: NavGroup): NavLink[] {
+    return group.children.filter((child): child is NavLink => child.kind === 'link');
+  }
 
   /**
    * Whether a menu item is offered but not usable: it records something, and the owner's plan

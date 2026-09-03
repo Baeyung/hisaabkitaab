@@ -2,7 +2,9 @@
   <header class="set__head">
     <div class="set__titles">
       <h1 class="set__title">{{ locale.t('nav.settings.menu') }}</h1>
-      <p class="set__sub">{{ locale.t('settings.menu.subtitle') }}</p>
+      <p class="set__sub">
+        {{ locale.t(easy ? 'settings.menu.subtitleEasy' : 'settings.menu.subtitle') }}
+      </p>
     </div>
   </header>
 
@@ -10,83 +12,46 @@
     <!-- ── the menu itself ───────────────────────────────────────── -->
     <section class="sec" aria-labelledby="sec-items">
       <div class="sec__intro">
-        <h2 class="sec__eyebrow" id="sec-items">{{ locale.t('settings.menu.section.items') }}</h2>
-        <p class="sec__desc">{{ locale.t('settings.menu.items.help') }}</p>
-        <p class="sec__desc">{{ locale.t('settings.menu.items.grouping') }}</p>
+        <h2 class="sec__eyebrow" id="sec-items">
+          {{ locale.t(easy ? 'settings.menu.section.board' : 'settings.menu.section.items') }}
+        </h2>
+        <p class="sec__desc">
+          {{ locale.t(easy ? 'settings.menu.board.help' : 'settings.menu.items.help') }}
+        </p>
+        <p class="sec__desc">
+          {{ locale.t(easy ? 'settings.menu.board.grouping' : 'settings.menu.items.grouping') }}
+        </p>
         <!-- Said plainly and once: an entry taken out of the menu is out of sight, not out
              of reach. Who may open what is roles, and this screen does not touch them. -->
         <p class="sec__note">{{ locale.t('settings.menu.items.notALock') }}</p>
       </div>
 
       <div class="sec__fields">
-        <!-- Each list sorts its own rows and nothing else. A row changes list through the
-             move button in its controls, never by being dragged across — see the class
-             comment for why the CDK cannot carry a drag between these two levels. -->
+        <!-- One template drawn at every depth, because a list of rows is the same object
+             whether it is the whole menu, a group inside it, or a band inside that. Each
+             list sorts its own rows and nothing else: a row changes list through the move
+             button in its controls, never by being dragged across — see the class comment
+             for why the CDK cannot carry a drag between these levels. -->
         <div>
-          <ul class="rows" cdkDropList [cdkDropListData]="topList" (cdkDropListDropped)="drop($event)">
-            @for (item of items(); track item.key; let i = $index; let count = $count) {
-              <li
-                class="row"
-                [class.row--off]="item.hidden"
-                [class.row--group]="item.kind === 'group'"
-                cdkDrag
-                [cdkDragData]="item"
-                cdkDragPreviewContainer="parent"
-              >
-                <ng-container
-                  *ngTemplateOutlet="row; context: { $implicit: item, group: null, i, count }"
-                />
-
-                <!-- A group's own entries. Rendered as a well rather than an indent: the whole
-                     of this screen is about what is inside what, so being inside has to be
-                     something you can see, not something you infer from a margin. -->
-                @if (item.kind === 'group') {
-                  <div class="well">
-                    <ul
-                      class="rows rows--sub"
-                      cdkDropList
-                      [cdkDropListData]="listOf(item)"
-                      (cdkDropListDropped)="drop($event)"
-                    >
-                      @for (
-                        child of item.children;
-                        track child.key;
-                        let j = $index;
-                        let subCount = $count
-                      ) {
-                        <li
-                          class="row row--sub"
-                          [class.row--off]="child.hidden"
-                          cdkDrag
-                          [cdkDragData]="child"
-                          cdkDragPreviewContainer="parent"
-                        >
-                          <ng-container
-                            *ngTemplateOutlet="
-                              row;
-                              context: { $implicit: child, group: item, i: j, count: subCount }
-                            "
-                          />
-                        </li>
-                      } @empty {
-                        <!-- An empty group is an invitation, not an error: it is what you
-                             have the moment you make one. Inside the list rather than under
-                             it, so the words are standing on the drop target they name. -->
-                        <li class="well__empty">{{ locale.t('settings.menu.groupEmpty') }}</li>
-                      }
-                    </ul>
-                  </div>
-                }
-              </li>
-            }
-          </ul>
+          <ng-container
+            *ngTemplateOutlet="list; context: { $implicit: items(), parent: null, depth: 1 }"
+          />
         </div>
 
         <button type="button" class="addgroup" (click)="addGroup()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
             <path d="M12 6v12M6 12h12" />
           </svg>
-          {{ locale.t('settings.menu.addGroup') }}
+          {{ locale.t(easy ? 'settings.menu.addTab' : 'settings.menu.addGroup') }}
         </button>
 
         @if (attempted() && unnamed().length) {
@@ -119,7 +84,9 @@
         <!-- Why the language switcher is not in the list above. Said here rather than left
              for someone to wonder about: it is the way out of a language you cannot read,
              and no shop setting may take it away. -->
-        <p class="sec__note sec__note--inline">{{ locale.t('settings.menu.chrome.languageWhy') }}</p>
+        <p class="sec__note sec__note--inline">
+          {{ locale.t('settings.menu.chrome.languageWhy') }}
+        </p>
       </div>
     </section>
 
@@ -132,7 +99,9 @@
       </button>
       <span class="set__status" role="status" aria-live="polite">
         @if (hiddenCount() > 0) {
-          <span class="set__count">{{ locale.t('settings.menu.hiddenCount', { n: hiddenCount().toString() }) }}</span>
+          <span class="set__count">{{
+            locale.t('settings.menu.hiddenCount', { n: hiddenCount().toString() })
+          }}</span>
         }
       </span>
     </div>
@@ -168,13 +137,15 @@
       (click)="moveTo(null)"
     >
       <span class="dest__tick" aria-hidden="true"></span>
-      {{ locale.t('settings.menu.topLevel') }}
+      {{ locale.t(easy ? 'settings.menu.topLevelEasy' : 'settings.menu.topLevel') }}
       @if (!m.from) {
         <span class="dest__here">{{ locale.t('settings.menu.hereNow') }}</span>
       }
     </button>
 
-    @for (g of groups(); track g.key) {
+    <!-- Only the groups this row actually fits in: an entry fits anywhere, a group needs
+         room for what it is bringing with it, and neither fits inside itself. -->
+    @for (g of destinations(); track g.key) {
       <button
         type="button"
         class="dest__opt"
@@ -192,34 +163,52 @@
     }
 
     <!-- Making the group and filling it are one step here, because they are one thought:
-         nobody makes an empty group for its own sake. -->
-    <button
-      type="button"
-      class="dest__opt dest__opt--new"
-      role="menuitem"
-      (click)="moveToNewGroup()"
-    >
-      <svg class="dest__plus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
-        <path d="M12 6v12M6 12h12" />
-      </svg>
-      {{ locale.t('settings.menu.moveToNew') }}
-    </button>
+         nobody makes an empty group for its own sake. Offered only where the new group would
+         have room for what is going into it — a board tab is already as deep as the board
+         goes, so there is no group to put one inside. -->
+    @if (canNestInNew(m.item)) {
+      <button
+        type="button"
+        class="dest__opt dest__opt--new"
+        role="menuitem"
+        (click)="moveToNewGroup()"
+      >
+        <svg
+          class="dest__plus"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M12 6v12M6 12h12" />
+        </svg>
+        {{ locale.t(easy ? 'settings.menu.moveToNewTab' : 'settings.menu.moveToNew') }}
+      </button>
+    }
   </div>
 }
 
 <!-- One row, drawn the same wherever it sits — which is the point of the screen: an entry is
      the same thing at the top level and inside a group, so it must not look like two things.
-     `group` is the group it is in, or null for the top level; `i` its place in that list. -->
-<ng-template #row let-item let-group="group" let-i="i" let-count="count">
+     `group` is the group it is in, or null for the top level; `i` its place in that list;
+     `depth` how far down it sits, which only the colour control asks about. -->
+<ng-template #row let-item let-group="group" let-i="i" let-count="count" let-depth="depth">
   <div class="row__main">
     <!-- Mouse and touch reordering. aria-hidden and not focusable: cdkDrag has no keyboard
          mode, so the arrows beside it are the keyboard path and announcing a handle that
          cannot be operated would be a dead end. -->
     <span class="row__grip" cdkDragHandle aria-hidden="true">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
-        <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
-        <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+        <circle cx="9" cy="6" r="1.6" />
+        <circle cx="15" cy="6" r="1.6" />
+        <circle cx="9" cy="12" r="1.6" />
+        <circle cx="15" cy="12" r="1.6" />
+        <circle cx="9" cy="18" r="1.6" />
+        <circle cx="15" cy="18" r="1.6" />
       </svg>
     </span>
 
@@ -236,7 +225,7 @@
       [value]="item.label ?? ''"
       [placeholder]="placeholder(item)"
       [attr.aria-label]="locale.t('settings.menu.nameFor', { item: name(item) })"
-      (input)="rename(group, item.key, $event)"
+      (input)="rename(item.key, $event)"
     />
 
     <div class="row__moves">
@@ -248,7 +237,16 @@
         [attr.title]="locale.t('settings.menu.up', { item: name(item) })"
         (click)="nudge(group, i, -1)"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 15l6-6 6 6" /></svg>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+        >
+          <path d="M6 15l6-6 6 6" />
+        </svg>
       </button>
       <button
         type="button"
@@ -258,16 +256,28 @@
         [attr.title]="locale.t('settings.menu.down', { item: name(item) })"
         (click)="nudge(group, i, 1)"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6" /></svg>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
       </button>
 
       <!-- The one control that changes which list a row is in. It does not guess a
            destination the way an in/out arrow has to — it asks, and every group in the menu
            is on the list by name, so a row reaches any of them in one move rather than
-           being walked down the menu until the right group happens to be above it. Groups
-           have no such button: one level of nesting means a group is only ever top level.
-           The bracket mirrors under Urdu with the rest of the screen. -->
-      @if (item.kind === 'link') {
+           being walked down the menu until the right group happens to be above it. A row
+           with nowhere to go has no button: every group in the sidebar, where one level of
+           nesting leaves a group only ever at the top level, and every tab of the board,
+           which is three levels tall and so fits nowhere but the top either. A band does
+           have one — it can move to any tab. The bracket mirrors under Urdu with the rest
+           of the screen. -->
+      @if (canMove(item, group)) {
         <button
           type="button"
           class="mv"
@@ -278,8 +288,20 @@
           [attr.title]="locale.t('settings.menu.move', { item: name(item) })"
           (click)="openMove(item, group, i, $event)"
         >
-          <svg class="kg-flip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 4h5a1 1 0 011 1v14a1 1 0 01-1 1h-5" /><path d="M11 12H3" /><path d="M7 8l4 4-4 4" />
+          <svg
+            class="kg-flip"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M14 4h5a1 1 0 011 1v14a1 1 0 01-1 1h-5" />
+            <path d="M11 12H3" />
+            <path d="M7 8l4 4-4 4" />
           </svg>
         </button>
       }
@@ -294,12 +316,40 @@
           [attr.title]="locale.t('settings.menu.removeGroupHint')"
           (click)="removeGroup(item)"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13M10 11v5M14 11v5" />
           </svg>
         </button>
       }
     </div>
+
+    <!-- A band's colour, and the one control on this screen that is not about placement.
+         Three values because it reports one fact — which way money moves — and a fourth
+         would be decoration competing with it. Only bands of the board have one. -->
+    @if (showsTone(item, depth)) {
+      <select
+        class="tone"
+        [attr.data-tone]="item.tone ?? 'read'"
+        [attr.aria-label]="locale.t('settings.menu.toneFor', { item: name(item) })"
+        [value]="item.tone ?? 'read'"
+        (change)="setTone(item.key, $event)"
+      >
+        @for (option of tones; track option.tone) {
+          <option [value]="option.tone" [selected]="(item.tone ?? 'read') === option.tone">
+            {{ locale.t(option.label) }}
+          </option>
+        }
+      </select>
+    }
 
     <label
       class="sw"
@@ -311,10 +361,61 @@
         type="checkbox"
         [checked]="!item.hidden"
         [disabled]="locksMenu(item)"
-        (change)="setShown(group, item.key, $event)"
+        (change)="setShown(item.key, $event)"
       />
       <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
       <span class="sw__text">{{ locale.t('settings.menu.show') }}</span>
     </label>
   </div>
+</ng-template>
+
+<!-- A list of rows, and every list of rows on the screen: the whole menu, a group inside it,
+     a band inside that. One template rather than one per depth, because the depths differ in
+     nothing but how far in they are drawn — and the board has three of them where the sidebar
+     has two, which would otherwise be a second copy of all of this. -->
+<ng-template #list let-rows let-parent="parent" let-depth="depth">
+  <ul
+    class="rows"
+    [class.rows--sub]="depth > 1"
+    cdkDropList
+    [cdkDropListData]="parent"
+    (cdkDropListDropped)="drop($event)"
+  >
+    @for (item of rows; track item.key; let i = $index; let count = $count) {
+      <li
+        class="row"
+        [class.row--sub]="depth > 1"
+        [class.row--off]="item.hidden"
+        [class.row--group]="item.kind === 'group'"
+        cdkDrag
+        [cdkDragData]="item"
+        cdkDragPreviewContainer="parent"
+      >
+        <ng-container
+          *ngTemplateOutlet="row; context: { $implicit: item, group: parent, i, count, depth }"
+        />
+
+        <!-- What is inside a group. Rendered as a well rather than an indent: the whole of
+             this screen is about what is inside what, so being inside has to be something
+             you can see, not something you infer from a margin. -->
+        @if (item.kind === 'group') {
+          <div class="well">
+            <ng-container
+              *ngTemplateOutlet="
+                list;
+                context: { $implicit: item.children, parent: item, depth: depth + 1 }
+              "
+            />
+          </div>
+        }
+      </li>
+    } @empty {
+      <!-- An empty group is an invitation, not an error: it is what you have the moment you
+           make one. Inside the list rather than under it, so the words are standing on the
+           drop target they name. -->
+      @if (parent) {
+        <li class="well__empty">{{ locale.t('settings.menu.groupEmpty') }}</li>
+      }
+    }
+  </ul>
 </ng-template>

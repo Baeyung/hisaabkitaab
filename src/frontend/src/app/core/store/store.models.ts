@@ -14,6 +14,16 @@ export type StoreRole = 'VIEWER' | 'EDITOR' | 'OWNER';
 export type ChromeItem = 'THEME' | 'INSTALL' | 'PLAN';
 
 /**
+ * What a band of the easy-mode board is coloured for. Exactly one thing: which way money
+ * moves — `in` and `out` are the only tones that say so, and `read` is everything else,
+ * which takes the app's own accent rather than a direction.
+ *
+ * Lives here rather than beside the board it draws because a shop picks it and it is saved:
+ * it is part of the stored document's vocabulary, the way `ChromeItem` above is.
+ */
+export type BoardTone = 'in' | 'out' | 'read';
+
+/**
  * One entry in a shop's arranged menu, keyed by the same `TranslationKey` the built-in menu
  * uses (`nav.ledger`) — every item in `NAV` already carries a stable id, so arranging one
  * needs no new ones. Mirrors the backend `MenuSetting`.
@@ -24,18 +34,15 @@ export interface MenuSetting {
   hidden?: boolean;
   /** What this shop calls it, or absent to keep the built-in name. One string for both languages. */
   label?: string;
+  /**
+   * Which way money moves through a band of the board. Only the board's middle level carries
+   * one; absent everywhere else, including everywhere in the sidebar's document.
+   */
+  tone?: BoardTone;
   /** A group's sub-entries in order. Absent on a plain link. */
   children?: MenuSetting[];
 }
 
-/**
- * How a shop's owner has arranged the app for everyone working in it. Mirrors the backend
- * `StoreSettings`, and arrives on every store — the shell needs it to draw the first frame.
- *
- * `menu` is not authoritative and is never read directly: `mergeMenu()` in
- * `layout/shell/nav.ts` reconciles it against the menu this build actually has, so an
- * arrangement saved before a screen existed still shows that screen.
- */
 /**
  * When this shop's scheduled reports go out, and who the reminders chase. Mirrors the backend
  * `ReportSettings`, and unlike the rest of this document the backend genuinely reads it —
@@ -65,8 +72,23 @@ export interface ReportSettings {
   reminderMinDaysStale: number;
 }
 
+/**
+ * How a shop's owner has arranged the app for everyone working in it. Mirrors the backend
+ * `StoreSettings`, and arrives on every store — the shell needs it to draw the first frame.
+ *
+ * Neither arrangement is authoritative and neither is read directly: `mergeMenu()` in
+ * `layout/shell/nav.ts` reconciles each against the menu this build actually has, so an
+ * arrangement saved before a screen existed still shows that screen.
+ */
 export interface StoreSettings {
   menu: MenuSetting[];
+  /**
+   * The same thing again for the easy-mode board, arranged separately and kept separately, so
+   * a shop that switches between the two finds each as it left it. Optional on the way in
+   * only because an arrangement saved before the board could be arranged has no field for it;
+   * absent reads as the board the app ships with.
+   */
+  easyMenu?: MenuSetting[];
   hideChrome: ChromeItem[];
   /**
    * Optional on the way in only because an arrangement saved before reports existed has no

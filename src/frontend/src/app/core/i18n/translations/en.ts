@@ -344,6 +344,19 @@ export const en = {
   'settings.general.danger.deleting': 'Deleting…',
   'settings.menu.subtitle': 'Arrange the menu the way your shop works.',
   'settings.menu.section.items': 'Menu items',
+  'settings.menu.subtitleEasy': 'Arrange the board the way your shop works.',
+  'settings.menu.section.board': 'Board buttons',
+  'settings.menu.board.help':
+    'Drag to reorder, or use the arrows. Rename anything to what you call it, and switch off what you never open. Everyone working in this shop sees the board you set here.',
+  'settings.menu.board.grouping':
+    'A group at the top level is a tab of the board; a group inside one is a band of that tab. A band carries a colour that says which way money moves through it.',
+  'settings.menu.addTab': 'New tab',
+  'settings.menu.topLevelEasy': 'Its own tab',
+  'settings.menu.moveToNewTab': 'A new tab',
+  'settings.menu.toneFor': 'Colour for {{item}}',
+  'settings.menu.tone.in': 'Money in',
+  'settings.menu.tone.out': 'Money out',
+  'settings.menu.tone.read': 'Neither',
   'settings.menu.items.help':
     'Drag to reorder, or use the arrows. Rename anything to what you call it, and switch off what you never open. Everyone working in this shop sees the menu you set here.',
   'settings.menu.items.grouping':

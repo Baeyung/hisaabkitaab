@@ -325,6 +325,19 @@ export const ur: Record<TranslationKey, string> = {
   'settings.general.danger.deleting': 'حذف ہو رہی ہے…',
   'settings.menu.subtitle': 'مینو کو اپنی دکان کے مطابق ترتیب دیں۔',
   'settings.menu.section.items': 'مینو کے آئٹمز',
+  'settings.menu.subtitleEasy': 'بورڈ کو اپنی دکان کے مطابق ترتیب دیں۔',
+  'settings.menu.section.board': 'بورڈ کے بٹن',
+  'settings.menu.board.help':
+    'ترتیب بدلنے کے لیے کھینچیں، یا تیر استعمال کریں۔ کسی بھی بٹن کا نام اپنی مرضی کا رکھیں، اور جو کبھی نہیں کھولتے اسے بند کر دیں۔ اس دکان میں کام کرنے والے سب کو وہی بورڈ نظر آئے گا جو آپ یہاں سیٹ کریں گے۔',
+  'settings.menu.board.grouping':
+    'سب سے اوپر والا گروپ بورڈ کا ایک ٹیب ہوتا ہے، اور اُس کے اندر والا گروپ اُسی ٹیب کی ایک پٹی۔ ہر پٹی کا ایک رنگ ہوتا ہے جو بتاتا ہے کہ رقم کس طرف جا رہی ہے۔',
+  'settings.menu.addTab': 'نیا ٹیب',
+  'settings.menu.topLevelEasy': 'اپنا الگ ٹیب',
+  'settings.menu.moveToNewTab': 'ایک نیا ٹیب',
+  'settings.menu.toneFor': '{{item}} کا رنگ',
+  'settings.menu.tone.in': 'رقم اندر',
+  'settings.menu.tone.out': 'رقم باہر',
+  'settings.menu.tone.read': 'کوئی نہیں',
   'settings.menu.items.help':
     'ترتیب بدلنے کے لیے کھینچیں، یا تیر استعمال کریں۔ کسی بھی آئٹم کا نام اپنی مرضی کا رکھیں، اور جو کبھی نہیں کھولتے اسے بند کر دیں۔ اس دکان میں کام کرنے والے سب کو وہی مینو نظر آئے گا جو آپ یہاں سیٹ کریں گے۔',
   'settings.menu.items.grouping':

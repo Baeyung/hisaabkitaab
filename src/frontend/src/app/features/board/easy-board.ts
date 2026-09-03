@@ -10,7 +10,14 @@ import { ThemeToggle } from '../../shared/theme-toggle/theme-toggle';
 import { InstallButton } from '../../shared/install-button/install-button';
 import { NavIconMark } from '../../shared/nav-icon/nav-icon';
 import { arranged } from '../../layout/shell/nav';
-import { BoardTile, boardFor, openSheet } from '../../layout/shell/board';
+import {
+  BoardBand,
+  BoardTab,
+  BoardTile,
+  EASY_NAV,
+  boardFor,
+  openSheet,
+} from '../../layout/shell/board';
 
 /**
  * The board — easy mode's home, and the whole of its navigation.
@@ -49,8 +56,15 @@ export class EasyBoard {
   /** Which sheet is open, bound straight off `?tab=` by withComponentInputBinding. */
   readonly tab = input<string>();
 
+  /**
+   * The board this shop arranged, or the one the app ships with until it arranges one.
+   *
+   * Its own document and its own shipped table, kept apart from the sidebar's on purpose: the
+   * two are different shapes for different rooms, and a shop that switches between them finds
+   * each as it left it. Three levels deep because that is what a board is — tab, band, button.
+   */
   protected readonly tabs = computed(() =>
-    boardFor(arranged(this.stores.role(), this.stores.current()?.settings?.menu)),
+    boardFor(arranged(this.stores.role(), this.stores.current()?.settings?.easyMenu, EASY_NAV, 3)),
   );
 
   /**
@@ -142,6 +156,15 @@ export class EasyBoard {
     return tile.label || this.locale.t(tile.key);
   }
 
+  /**
+   * What a tab or a band is called: the shop's own word for it, or the built-in one. A band a
+   * shop assembled itself has only the name it typed, which is why this goes through
+   * `navLabel` rather than translating the key — there is nothing to translate.
+   */
+  protected heading(part: BoardTab | BoardBand): string {
+    return this.locale.navLabel({ key: part.key ?? '', label: part.label });
+  }
+
   /** Offered but not usable: it records something, and the plan has this shop closed. */
   protected blocked(tile: BoardTile): boolean {
     return tile.writes === true && !this.stores.canEdit();
@@ -152,7 +175,7 @@ export class EasyBoard {
    * so Back returns from a *screen* to the sheet it was opened from, and stacking every tab
    * press in front of that would bury it.
    */
-  protected open(key: TranslationKey): void {
+  protected open(key: string): void {
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tab: key },

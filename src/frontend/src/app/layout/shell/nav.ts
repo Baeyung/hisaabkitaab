@@ -1,5 +1,5 @@
 import { TranslationKey } from '../../core/i18n/translations/en';
-import { MenuSetting, StoreRole } from '../../core/store/store.models';
+import { BoardTone, MenuSetting, StoreRole } from '../../core/store/store.models';
 import { NavIcon } from '../../shared/nav-icon/nav-icon';
 
 export type { NavIcon };
@@ -69,6 +69,16 @@ export interface NavLink {
   hidden?: boolean;
 }
 
+/**
+ * A heading with entries under it: a drawer of the sidebar, or — on the board, which is the
+ * same menu cut for a counter — a tab, or one band of a tab.
+ *
+ * `children` is `NavItem[]` rather than `NavLink[]` because those two shapes are two depths
+ * of the same idea and only the depth differs: the sidebar draws one level of nesting, the
+ * board draws two (tab → band → tile). Which of the two a table is allowed is the `maxDepth`
+ * argument to {@link mergeMenu}, not a second type — a group is a group at either depth, and
+ * two types would mean two of everything that walks one.
+ */
 export interface NavGroup {
   kind: 'group';
   /** A built-in group's translation key, or the id of one this shop made. */
@@ -79,7 +89,12 @@ export interface NavGroup {
   locked?: NavLink['locked'];
   label?: NavLink['label'];
   hidden?: NavLink['hidden'];
-  children: NavLink[];
+  /**
+   * Which way money moves through this band of the board, for the one level of the board
+   * that is coloured. Nothing in the sidebar reads it, and nothing sets it there.
+   */
+  tone?: BoardTone;
+  children: NavItem[];
 }
 
 export type NavItem = NavLink | NavGroup;
@@ -191,16 +206,22 @@ export const NAV: NavItem[] = [
 /** Weakest first, mirroring the backend `StoreRole` — a role carries every rank below it. */
 const RANK: Record<StoreRole, number> = { VIEWER: 0, EDITOR: 1, OWNER: 2 };
 
-/** The menu as one role sees it: items above their role are dropped, empty groups with them. */
-export function navFor(role: StoreRole | null): NavItem[] {
+/**
+ * The menu as one role sees it: items above their role are dropped, empty groups with them.
+ *
+ * `table` is which shipped menu to filter — {@link NAV} for the sidebar, `EASY_NAV` for the
+ * board. It is also how this recurses into a group's children, which is why the two are one
+ * parameter: a group nested inside a group is filtered by exactly the rules its parent was.
+ */
+export function navFor(role: StoreRole | null, table: readonly NavItem[] = NAV): NavItem[] {
   const allowed = (item: { requires?: NavLink['requires'] }) =>
     !item.requires || (role !== null && RANK[role] >= RANK[item.requires]);
 
-  return NAV.filter(allowed).flatMap<NavItem>((item) => {
+  return table.filter(allowed).flatMap<NavItem>((item) => {
     if (item.kind === 'link') {
       return [item];
     }
-    const children = item.children.filter(allowed);
+    const children = navFor(role, item.children);
     return children.length ? [{ ...item, children }] : [];
   });
 }
@@ -208,6 +229,19 @@ export function navFor(role: StoreRole | null): NavItem[] {
 /** A shop's name for an item, or nothing — a blank override is not an override. */
 function labelOf(setting: MenuSetting | undefined): string | undefined {
   return setting?.label?.trim() || undefined;
+}
+
+const TONES: readonly BoardTone[] = ['in', 'out', 'read'];
+
+/**
+ * The colour a saved band asked for, or nothing.
+ *
+ * Checked against the list rather than trusted, because the backend stores this document
+ * without knowing what any of it means — a hand-edited row could hold any string, and one
+ * that reached the board would land in a `data-tone` attribute no stylesheet answers.
+ */
+function toneOf(setting: MenuSetting | undefined): BoardTone | undefined {
+  return setting?.tone && TONES.includes(setting.tone) ? setting.tone : undefined;
 }
 
 /**
@@ -219,8 +253,33 @@ function labelOf(setting: MenuSetting | undefined): string | undefined {
  * tag — and an empty group never reaches the sidebar at all (see {@link visible}), so the
  * fallback is only ever seen on this screen while the group is still being filled.
  */
-function borrowedIcon(children: readonly NavLink[]): NavIcon {
+function borrowedIcon(children: readonly NavItem[]): NavIcon {
   return children[0]?.icon ?? 'menu';
+}
+
+/**
+ * How many levels of list an item takes up where it lands: 1 for an entry, and for a group
+ * one more than the deepest thing under it.
+ *
+ * An empty group still counts as 2. It is empty because it was made a moment ago and has not
+ * been filled yet, so measuring it as the 1 level it currently occupies would let it be put
+ * somewhere with no room for the first thing dropped into it — a heading that can never hold
+ * anything is worse than one that was never offered.
+ *
+ * This is what a move is checked against: a group is not one thing being placed, it is
+ * everything under it being placed with it, and a board tab carries a whole level of bands.
+ */
+export function height(item: NavItem): number {
+  return item.kind === 'link' ? 1 : 1 + Math.max(1, ...item.children.map(height));
+}
+
+/**
+ * Whether an item is, or contains at any depth, a screen that may not be hidden. The rule the
+ * lock actually rests on: without it, dragging Menu into a group of your own and switching
+ * that group off would be the way around it.
+ */
+export function holdsLocked(item: NavItem): boolean {
+  return item.locked === true || (item.kind === 'group' && item.children.some(holdsLocked));
 }
 
 /**
@@ -239,6 +298,15 @@ function borrowedIcon(children: readonly NavLink[]): NavIcon {
  * left — so no arrangement can hand anyone a screen their role does not reach, whatever is in
  * the stored document.
  *
+ * ## Depth
+ *
+ * `maxDepth` is how many levels of list the surface being drawn actually has: 2 for the
+ * sidebar (a drawer of entries) and 3 for the board (a tab of bands of buttons). A group
+ * standing deeper than that is dissolved rather than drawn, its children kept one level up —
+ * the same bargain an unnamed group gets, and for the same reason: a heading nothing can
+ * render is worse than no heading. It is a number and not two code paths because the two
+ * surfaces differ only in how deep they go.
+ *
  * ## Forward compatibility
  *
  * A stored arrangement is a list of keys written at some past version, so it will eventually
@@ -249,24 +317,28 @@ function borrowedIcon(children: readonly NavLink[]): NavIcon {
  * be seen and moved. A duplicate key, only reachable from a hand-edited document, is taken
  * once.
  */
-export function mergeMenu(nav: readonly NavItem[], saved: readonly MenuSetting[] = []): NavItem[] {
+export function mergeMenu(
+  nav: readonly NavItem[],
+  saved: readonly MenuSetting[] = [],
+  maxDepth = 2,
+): NavItem[] {
   // What this build has to place, flattened: placement comes from the document, so where an
   // entry ships no longer decides where it may go.
   const links = new Map<string, NavLink>();
   const builtInGroups = new Map<string, NavGroup>();
-  for (const item of nav) {
-    if (item.kind === 'link') {
-      links.set(item.key, item);
-      continue;
+  const catalogue = (items: readonly NavItem[]): void => {
+    for (const item of items) {
+      if (item.kind === 'link') {
+        links.set(item.key, item);
+        continue;
+      }
+      builtInGroups.set(item.key, item);
+      catalogue(item.children);
     }
-    builtInGroups.set(item.key, item);
-    for (const child of item.children) {
-      links.set(child.key, child);
-    }
-  }
+  };
+  catalogue(nav);
 
   const taken = new Set<string>();
-  const out: NavItem[] = [];
   /** Groups already emitted, so a stray child can still be appended to the one it ships in. */
   const emitted = new Map<string, NavGroup>();
 
@@ -276,96 +348,114 @@ export function mergeMenu(nav: readonly NavItem[], saved: readonly MenuSetting[]
     hidden: link.locked !== true && setting?.hidden === true,
   });
 
-  const openGroup = (group: NavGroup): NavGroup => {
-    taken.add(group.key);
-    emitted.set(group.key, group);
-    out.push(group);
-    return group;
-  };
-
-  for (const setting of saved) {
-    if (taken.has(setting.key)) {
-      continue;
-    }
-    const builtIn = builtInGroups.get(setting.key);
-    // Narrowed into a value rather than tested inline, so the `grp:` key carries its own
-    // type down to where the group is built.
-    const custom: CustomKey | undefined = isCustomGroup(setting.key) ? setting.key : undefined;
-    const link = links.get(setting.key);
-
-    if (!builtIn && custom === undefined) {
-      // A plain entry, wherever the document put it — or a key naming a screen that is gone.
-      if (link) {
-        taken.add(setting.key);
-        out.push(arrange(link, setting));
+  /** One level of the saved document, in the order it was written. */
+  const build = (settings: readonly MenuSetting[], depth: number): NavItem[] => {
+    const out: NavItem[] = [];
+    for (const setting of settings) {
+      if (taken.has(setting.key)) {
+        continue;
       }
-      continue;
-    }
+      const builtIn = builtInGroups.get(setting.key);
+      // Narrowed into a value rather than tested inline, so the `grp:` key carries its own
+      // type down to where the group is built.
+      const custom: CustomKey | undefined = isCustomGroup(setting.key) ? setting.key : undefined;
 
-    const children: NavLink[] = [];
-    for (const child of setting.children ?? []) {
-      const childLink = links.get(child.key);
-      if (childLink && !taken.has(child.key)) {
-        taken.add(child.key);
-        children.push(arrange(childLink, child));
+      if (!builtIn && custom === undefined) {
+        // A plain entry, wherever the document put it — or a key naming a screen that is gone.
+        const link = links.get(setting.key);
+        if (link) {
+          taken.add(setting.key);
+          out.push(arrange(link, setting));
+        }
+        continue;
       }
-    }
 
-    const label = labelOf(setting);
-    // A group a shop made and never named has no name in either language, so it is dissolved
-    // rather than drawn: its children keep their place in the order, one level up.
-    if (custom !== undefined && !label) {
-      out.push(...children);
+      // Claimed before recursing, so a document naming a group inside itself cannot loop.
       taken.add(setting.key);
-      continue;
-    }
+      const children = build(setting.children ?? [], depth + 1);
+      const label = labelOf(setting);
 
-    openGroup(
-      builtIn
-        ? { ...builtIn, label, hidden: false, children }
+      // Two ways a group does not survive, both of which keep everything that was inside it:
+      // it stands deeper than this surface draws, or it is a group the shop made and never
+      // named, which has no name in either language to draw.
+      if (depth >= maxDepth || (custom !== undefined && !label)) {
+        out.push(...children);
+        continue;
+      }
+
+      const group: NavGroup = builtIn
+        ? {
+            ...builtIn,
+            label,
+            tone: toneOf(setting) ?? builtIn.tone,
+            hidden: setting.hidden === true,
+            children,
+          }
         : {
             kind: 'group',
             key: custom as CustomKey,
             icon: borrowedIcon(children),
             label,
-            hidden: false,
+            tone: toneOf(setting),
+            hidden: setting.hidden === true,
             children,
-          },
-    );
-  }
-
-  // Everything this build has that no part of the document claimed, back where it ships.
-  for (const item of nav) {
-    if (item.kind === 'link') {
-      if (!taken.has(item.key)) {
-        taken.add(item.key);
-        out.push({ ...item, label: undefined, hidden: false });
-      }
-      continue;
+          };
+      emitted.set(group.key, group);
+      out.push(group);
     }
-    const group =
-      emitted.get(item.key) ??
-      openGroup({ ...item, label: undefined, hidden: false, children: [] });
-    for (const child of item.children) {
-      if (taken.has(child.key)) {
+    return out;
+  };
+
+  const out = build(saved, 1);
+
+  /**
+   * Everything this build has that no part of the document claimed, back where it ships —
+   * appended to the group it ships in wherever the shop has since moved that group to, and
+   * to `into` when it ships loose.
+   */
+  const fill = (items: readonly NavItem[], into: NavItem[]): void => {
+    for (const item of items) {
+      if (item.kind === 'link') {
+        if (!taken.has(item.key)) {
+          taken.add(item.key);
+          into.push({ ...item, label: undefined, hidden: false });
+        }
         continue;
       }
-      taken.add(child.key);
-      const arranged = arrange(child, undefined);
-      group.children.push(arranged);
+      const group = emitted.get(item.key);
+      if (group) {
+        fill(item.children, group.children);
+        continue;
+      }
+      if (taken.has(item.key)) {
+        // The document had this group and it did not survive — dissolved for standing deeper
+        // than this surface draws. Its heading is gone, so what it ships with goes where the
+        // heading would have been rather than under a second copy of it.
+        fill(item.children, into);
+        continue;
+      }
+      const opened: NavGroup = { ...item, label: undefined, hidden: false, children: [] };
+      taken.add(item.key);
+      emitted.set(item.key, opened);
+      into.push(opened);
+      fill(item.children, opened.children);
     }
-  }
+  };
+  fill(nav, out);
 
   // Hiding is settled last, because whether a group may be hidden depends on what ended up
   // inside it: a group holding a locked screen is the lock, so it cannot be switched off.
-  const byKey = new Map(saved.map((setting) => [setting.key, setting]));
-  return out.map((item) => {
-    if (item.kind === 'link') {
-      return item;
-    }
-    const holdsLocked = item.locked === true || item.children.some((child) => child.locked);
-    return { ...item, hidden: !holdsLocked && byKey.get(item.key)?.hidden === true };
-  });
+  const settle = (items: readonly NavItem[]): NavItem[] =>
+    items.map((item) =>
+      item.kind === 'link'
+        ? item
+        : {
+            ...item,
+            children: settle(item.children),
+            hidden: item.hidden === true && !holdsLocked(item),
+          },
+    );
+  return settle(out);
 }
 
 /**
@@ -382,7 +472,7 @@ export function visible(items: readonly NavItem[]): NavItem[] {
     if (item.kind === 'link') {
       return [item];
     }
-    const children = item.children.filter((child) => !child.hidden);
+    const children = visible(item.children);
     return children.length ? [{ ...item, children }] : [];
   });
 }
@@ -392,9 +482,16 @@ export function visible(items: readonly NavItem[]): NavItem[] {
  * then drop what it hides. The three steps always run in that order and always all three, so
  * they are spelled out once here rather than at each of the two screens that draw a menu.
  *
- * Both the sidebar and the board start from this, which is what stops them drifting: an owner
- * arranging the menu is arranging both, and neither can offer a screen the other refuses.
+ * The sidebar and the board each pass their own shipped table and their own saved document —
+ * two arrangements, kept apart on purpose, so a shop that switches between them finds each as
+ * it left it. What they share is this pipeline, which is what stops them drifting: neither
+ * can offer a screen the other refuses, because role and locking are decided here for both.
  */
-export function arranged(role: StoreRole | null, saved?: readonly MenuSetting[]): NavItem[] {
-  return visible(mergeMenu(navFor(role), saved));
+export function arranged(
+  role: StoreRole | null,
+  saved?: readonly MenuSetting[],
+  table: readonly NavItem[] = NAV,
+  maxDepth = 2,
+): NavItem[] {
+  return visible(mergeMenu(navFor(role, table), saved, maxDepth));
 }

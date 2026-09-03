@@ -30,6 +30,12 @@ import jakarta.validation.constraints.Size;
  *                   entries the client no longer recognises are dropped and menu items
  *                   missing from it are appended, so an arrangement saved today still shows
  *                   next month's new screen.
+ * @param easyMenu   the same thing again for the easy-mode board, which is arranged
+ *                   separately and kept separately. Two documents rather than one because the
+ *                   two are different shapes for different rooms — a sidebar is a list read at
+ *                   a desk, a board is a surface aimed at across a counter — and a shop that
+ *                   switches between them must find each as it left it. Empty means the board
+ *                   the app ships with.
  * @param hideChrome the sidebar-foot controls this shop has switched off. Empty means all of
  *                   them are shown, which is what a shop that has never been arranged gets.
  * @param easyMode   whether this shop navigates from the board — one screen of big buttons
@@ -44,22 +50,26 @@ import jakarta.validation.constraints.Size;
  */
 public record StoreSettings(
         @Size(max = 64) List<@Valid MenuSetting> menu,
+        @Size(max = 64) List<@Valid MenuSetting> easyMenu,
         Set<ChromeItem> hideChrome,
         boolean easyMode,
         @Valid ReportSettings reports)
 {
     /** What a shop with a null {@code settings} column means: the built-in menu, nothing hidden. */
     public static final StoreSettings EMPTY = new StoreSettings(
-            List.of(), EnumSet.noneOf(ChromeItem.class), false, ReportSettings.DEFAULT);
+            List.of(), List.of(), EnumSet.noneOf(ChromeItem.class), false, ReportSettings.DEFAULT);
 
     /**
      * Null-safe by construction, so nothing downstream — the converter, the client, a future
      * caller — has to ask whether half of a stored document was present. Every shop arranged
-     * before reports existed has no {@code reports} key at all, and reads as sending nothing.
+     * before reports existed has no {@code reports} key at all, and reads as sending nothing;
+     * every one arranged before the board could be, no {@code easyMenu}, and reads as the
+     * board the app ships with.
      */
     public StoreSettings
     {
         menu = menu == null ? List.of() : List.copyOf(menu);
+        easyMenu = easyMenu == null ? List.of() : List.copyOf(easyMenu);
         hideChrome = hideChrome == null ? EnumSet.noneOf(ChromeItem.class) : Set.copyOf(hideChrome);
         reports = reports == null ? ReportSettings.DEFAULT : reports;
     }

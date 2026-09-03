@@ -24,7 +24,7 @@
         (focus)="focused.set(i)"
         (click)="open(tab.key)"
       >
-        {{ locale.t(tab.key) }}
+        {{ heading(tab) }}
       </button>
     }
   </div>
@@ -40,9 +40,14 @@
       role="tabpanel"
       [attr.aria-labelledby]="'eb-tab-' + tabs().indexOf(sheet)"
     >
-      @for (band of sheet.bands; track band.key) {
+      @for (band of sheet.bands; track $index) {
+        <!-- A band an owner never headed draws no heading: the buttons sit straight on the
+             sheet, still in their own column and still carrying their tone. Inventing a word
+             for a heading nobody wrote would be putting one there on their behalf. -->
         <section class="eb__band" [attr.data-tone]="band.tone">
-          <h2 class="eb__bandname">{{ locale.t(band.key) }}</h2>
+          @if (band.key) {
+            <h2 class="eb__bandname">{{ heading(band) }}</h2>
+          }
 
           <ul class="eb__tiles">
             @for (tile of band.tiles; track tile.key) {

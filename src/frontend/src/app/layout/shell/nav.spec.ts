@@ -1,5 +1,5 @@
 import { MenuSetting } from '../../core/store/store.models';
-import { NAV, NavGroup, NavItem, isCustomGroup, mergeMenu, navFor, visible } from './nav';
+import { NAV, NavGroup, NavItem, height, isCustomGroup, mergeMenu, navFor, visible } from './nav';
 
 /** Top-level keys, in order — what most of these assertions are really about. */
 const keys = (items: readonly NavItem[]) => items.map((item) => item.key);
@@ -8,6 +8,13 @@ const groupIn = (items: readonly NavItem[], key: string) =>
   items.find((item): item is NavGroup => item.key === key && item.kind === 'group');
 
 const at = (key: string, extra: Partial<MenuSetting> = {}): MenuSetting => ({ key, ...extra });
+
+/** Whether every row in a menu stands within a surface that draws `max` levels. */
+const fits = (items: readonly NavItem[], depth: number, max: number): boolean =>
+  items.every(
+    (item) =>
+      depth + height(item) <= max && (item.kind === 'link' || fits(item.children, depth + 1, max)),
+  );
 
 /**
  * A shop's own arrangement of the menu, reconciled against the menu this build actually
@@ -226,5 +233,142 @@ describe('visible', () => {
   it('is the identity on a shop that has never arranged anything', () => {
     expect(keys(visible(mergeMenu(NAV, [])))).toEqual(keys(NAV));
     expect(keys(visible(mergeMenu(NAV)))).toEqual(keys(NAV));
+  });
+});
+
+/**
+ * How deep the surface being drawn actually goes: two levels for the sidebar, three for the
+ * board. One number rather than two code paths, so everything above holds at either depth —
+ * and so a document written for one surface cannot draw a heading the other has no room for.
+ */
+describe('mergeMenu depth', () => {
+  it('keeps a group inside a group when the surface has room for it', () => {
+    const merged = mergeMenu(
+      NAV,
+      [
+        at('grp:tab', {
+          label: 'Counter',
+          children: [at('grp:band', { label: 'Takings', children: [at('nav.sale')] })],
+        }),
+      ],
+      3,
+    );
+
+    const band = groupIn(groupIn(merged, 'grp:tab')?.children ?? [], 'grp:band');
+    expect(keys(band?.children ?? [])).toEqual(['nav.sale']);
+  });
+
+  it('dissolves a group standing deeper than the surface draws, keeping what is in it', () => {
+    // The sidebar's own depth. A document written for the board and then read by the sidebar
+    // is exactly this, and it must come back as a menu rather than as a heading it cannot draw.
+    const merged = mergeMenu(NAV, [
+      at('grp:tab', {
+        label: 'Counter',
+        children: [at('grp:band', { label: 'Takings', children: [at('nav.sale')] })],
+      }),
+    ]);
+
+    expect(keys(merged)).not.toContain('grp:band');
+    expect(keys(groupIn(merged, 'grp:tab')?.children ?? [])).toEqual(['nav.sale']);
+  });
+
+  it("carries a band's colour through, and only a colour this build knows", () => {
+    const merged = mergeMenu(
+      NAV,
+      [
+        at('grp:in', { label: 'In', tone: 'in', children: [at('nav.sale')] }),
+        at('grp:odd', { label: 'Odd', tone: 'chartreuse' as never, children: [at('nav.receipt')] }),
+      ],
+      3,
+    );
+
+    expect(groupIn(merged, 'grp:in')?.tone).toBe('in');
+    expect(groupIn(merged, 'grp:odd')?.tone).toBeUndefined();
+  });
+
+  it('does not draw a second copy of a group the document dissolved', () => {
+    // A built-in group buried too deep is dissolved, which leaves its key claimed but no
+    // heading emitted. Putting it back where it ships would be a heading standing over
+    // nothing beside the entries that were in it.
+    const merged = mergeMenu(NAV, [
+      at('nav.settings', {
+        children: [at('nav.newEntry', { children: [at('nav.sale')] })],
+      }),
+    ]);
+
+    expect(keys(merged).filter((key) => key === 'nav.newEntry')).toEqual([]);
+    expect(keys(groupIn(merged, 'nav.settings')?.children ?? [])).toContain('nav.sale');
+    // And nothing that shipped in it is lost on the way.
+    const everywhere = (items: readonly NavItem[]): string[] =>
+      items.flatMap((item) => [
+        item.key,
+        ...(item.kind === 'group' ? everywhere(item.children) : []),
+      ]);
+    expect(everywhere(merged)).toContain('nav.receipt');
+  });
+
+  it('keeps the lock through a second level of nesting', () => {
+    // Menu is the screen that undoes all of this, so a heading holding it cannot be switched
+    // off — however deep the heading was buried before the switch was thrown.
+    const merged = mergeMenu(
+      NAV,
+      [
+        at('grp:tab', {
+          label: 'Counter',
+          hidden: true,
+          children: [
+            at('grp:band', {
+              label: 'Setup',
+              hidden: true,
+              children: [at('nav.settings.menu', { hidden: true })],
+            }),
+          ],
+        }),
+      ],
+      3,
+    );
+
+    const tab = groupIn(merged, 'grp:tab');
+    const band = groupIn(tab?.children ?? [], 'grp:band');
+    expect(tab?.hidden).toBe(false);
+    expect(band?.hidden).toBe(false);
+    expect(band?.children[0].hidden).toBe(false);
+  });
+});
+
+/**
+ * What a move is measured against. A group is never one row being placed — it is everything
+ * under it being placed with it, and getting that wrong is how a board tab ends up inside
+ * another tab with its bands one level past what the board draws, to be dissolved on the way
+ * back in.
+ */
+describe('height', () => {
+  it('measures an entry as the one level it takes', () => {
+    expect(height({ kind: 'link', key: 'nav.ledger', path: 'ledger', icon: 'ledger' })).toBe(1);
+  });
+
+  it('measures a group of entries as two, and a group of those as three', () => {
+    const band: NavGroup = {
+      kind: 'group',
+      key: 'grp:band',
+      icon: 'menu',
+      children: [{ kind: 'link', key: 'nav.sale', path: 'new-entry/sale', icon: 'sale' }],
+    };
+    const tab: NavGroup = { kind: 'group', key: 'grp:tab', icon: 'menu', children: [band] };
+
+    expect(height(band)).toBe(2);
+    expect(height(tab)).toBe(3);
+  });
+
+  it('measures a group with nothing in it yet as two, not one', () => {
+    // It is empty because it was made a moment ago. Measuring the one level it currently
+    // occupies would let it be dropped somewhere with no room for the first entry put in it.
+    expect(height({ kind: 'group', key: 'grp:new', icon: 'menu', children: [] })).toBe(2);
+  });
+
+  it('leaves the shipped sidebar standing within the depth that draws it', () => {
+    // `depth` here is the list a row is sitting in, counted the way `depthOf` counts it: the
+    // top level is 0, so a row there takes `height` levels and no more.
+    expect(fits(mergeMenu(NAV, [], 2), 0, 2)).toBe(true);
   });
 });

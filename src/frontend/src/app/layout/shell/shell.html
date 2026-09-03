@@ -137,7 +137,7 @@
           </button>
           <div class="subnav" [class.expanded]="isGroupOpen(item.key)" [attr.aria-hidden]="!isGroupOpen(item.key)">
             <div class="subnav-inner">
-              @for (child of item.children; track child.key) {
+              @for (child of links(item); track child.key) {
                 @if (blocked(child)) {
                   <span class="nav-item nav-sub nav-item--off" aria-disabled="true" [attr.title]="locale.t('nav.closedHint')">
                     <span class="nav-label">{{ locale.navLabel(child) }}</span>

@@ -1,20 +1,9 @@
 import { TranslationKey } from '../../core/i18n/translations/en';
+import { BoardTone } from '../../core/store/store.models';
 import { NavIcon } from '../../shared/nav-icon/nav-icon';
-import { NavItem, NavLink } from './nav';
+import { CustomKey, NAV, NavGroup, NavItem, NavLink } from './nav';
 
-/**
- * What a band's colour means. Exactly one thing: which way money moves — `in` and `out` are
- * the only tones that say so.
- *
- * `read` is everything else: Reports and Setup opened nothing and closed nothing, so their
- * bands carry the app's own brand accent (see easy-board.css's --chip) rather than a direction.
- * It reads as the app's colour, not a receivable or a payable — the same distinction a button
- * or a link already makes everywhere else. An earlier pass gave Setup a colour that meant
- * nothing beyond "Setup", which is the one thing `read` still must never become: three tabs of
- * coloured headings that each say something different is decoration, and it drowns the one
- * tab where the colour is actually reporting a fact.
- */
-export type BoardTone = 'in' | 'out' | 'read';
+export type { BoardTone };
 
 /** One button on the board: a menu entry, its mark, and the key that opens it. */
 export interface BoardTile extends NavLink {
@@ -29,13 +18,22 @@ export interface BoardTile extends NavLink {
 }
 
 export interface BoardBand {
-  key: TranslationKey;
+  /**
+   * The band's own key, or null for a run of buttons sitting straight on the sheet with no
+   * heading over them — which is what an owner gets by moving an entry onto a tab rather than
+   * into one of its bands. A heading is a thing you write; not having written one is not an
+   * error to be papered over with a made-up word.
+   */
+  key: TranslationKey | CustomKey | null;
+  /** This shop's own name for the band, or undefined to use its translation. */
+  label?: string;
   tone: BoardTone;
   tiles: BoardTile[];
 }
 
 export interface BoardTab {
-  key: TranslationKey;
+  key: TranslationKey | CustomKey;
+  label?: string;
   bands: BoardBand[];
 }
 
@@ -52,20 +50,22 @@ interface TabDef {
 }
 
 /**
- * The board is not a second menu — it is the same menu, cut a different way.
+ * The board as it ships — the same entries as the sidebar, cut a different way.
  *
  * The sidebar is a list, so it is ordered by how often a shop reaches for something. A board
  * is a *surface*, so it is grouped by what you came to do: record something, read something,
- * or set something up. That regrouping is the whole feature. Everything else — which entries
- * exist, what they are called, what is hidden, what a role may reach — still comes from
- * `NAV` and the shop's own arrangement, which is why nothing here repeats a path or a label.
+ * or set something up. That regrouping is what a shop starts from, not what it is stuck
+ * inside: {@link EASY_NAV} turns this table into a menu like any other, and a shop rearranges
+ * it under Settings › Menu exactly as it rearranges the sidebar — its own tabs, its own
+ * bands, its own names.
  *
- * A key naming an entry this build no longer has is simply not found, and an entry no tab
- * claims lands on the "Anything else" tab (see {@link boardFor}) — the same forward-
- * compatibility bargain `ordered()` makes in `nav.ts`, for the same reason: a screen shipped
- * after a shop's arrangement was written must never become unreachable.
+ * Only the shape is written here. Which entries exist, what they are called, what is hidden
+ * and what a role may reach all still come from `NAV` and the shop's arrangement, which is
+ * why nothing below repeats a path, a label or a permission — only a key, and an icon where
+ * a button wants a different mark from the sidebar row (Purchases reads better as a bill in
+ * a list and as a purchase on a button).
  */
-export const BOARD: readonly TabDef[] = [
+const BOARD: readonly TabDef[] = [
   {
     key: 'board.tab.entry',
     bands: [
@@ -163,96 +163,162 @@ const OVERFLOW: TabDef = {
   bands: [{ key: 'board.band.other', tone: 'read', items: [] }],
 };
 
-/** A menu entry with a path, flattened out of its group and carrying what the group decided. */
-type Reachable = NavLink;
-
 /**
- * Every entry the caller can actually open, by key.
+ * Every entry that opens something, by key, carrying down what the groups above it decided.
  *
- * Groups are flattened away — the board has no drawers, so "New Entry" as a heading has
- * nothing to hold. What the group *decided*, though, comes down with its children: `writes`
- * is set on the New Entry group rather than on each of its six screens, and a child that
- * dropped it would come out of a closed shop looking usable. Its mark is not among them —
- * every entry carries its own, so the overflow tab draws a promoted screen correctly.
+ * `writes` is set on the New Entry group rather than on each of its six screens, and
+ * `requires` on the group rather than on each child, so a tile lifted out of that group and
+ * onto a board tab would come out of a closed shop looking usable and out of a viewer's menu
+ * looking reachable. Pushing both down here is what makes a flat surface safe to build from a
+ * nested table. A mark is not among them: every entry carries its own.
  */
-function reachable(menu: readonly NavItem[]): Map<string, Reachable> {
-  const out = new Map<string, Reachable>();
-  for (const item of menu) {
+function flatten(
+  items: readonly NavItem[],
+  inherited: Pick<NavLink, 'requires' | 'writes'> = {},
+): Map<string, NavLink> {
+  const out = new Map<string, NavLink>();
+  for (const item of items) {
+    const carried: Pick<NavLink, 'requires' | 'writes'> = {
+      requires: item.requires ?? inherited.requires,
+      writes: item.writes ?? inherited.writes,
+    };
     if (item.kind === 'link') {
-      out.set(item.key, { ...item });
+      out.set(item.key, { ...item, ...carried });
       continue;
     }
-    for (const child of item.children) {
-      out.set(child.key, {
-        ...child,
-        writes: child.writes ?? item.writes,
-        requires: child.requires ?? item.requires,
-      });
+    for (const [key, link] of flatten(item.children, carried)) {
+      out.set(key, link);
     }
   }
   return out;
 }
 
 /**
- * The board this caller sees: {@link BOARD}'s grouping, filled from the menu they were
- * already given.
+ * The board the app ships with, as a menu: {@link BOARD}'s tabs and bands filled from `NAV`.
  *
- * Pass the finished sidebar menu — `visible(mergeMenu(navFor(role), saved))` — not `NAV`.
- * Everything the sidebar has decided by then holds here too: a viewer has no New Entry tiles,
- * a hidden entry has no button, and a renamed one is renamed on the board as well. Deriving
- * it instead of filtering again is what keeps the two from drifting apart, and it means an
- * owner arranging the menu is arranging both at once without being told there are two.
+ * This is to the board what `NAV` is to the sidebar — the table a shop's own arrangement is
+ * merged against, and the whole of the board for a shop that has never arranged one. Three
+ * levels deep because that is what the board draws: a tab holds bands, a band holds buttons.
  *
- * Bands and tabs that come out empty are dropped: a heading over nothing is worse than no
- * heading, which is the rule `visible()` already follows in the sidebar.
+ * Built here rather than written out because every entry already exists in `NAV`, with its
+ * path, its mark and its permissions; writing them again would be two tables to keep in step.
+ * It is also what keeps a screen from being lost: anything `NAV` has that no band above
+ * claimed is appended to the overflow tab, so a screen shipped after this table was written
+ * still has a button.
+ */
+export const EASY_NAV: NavItem[] = buildEasyNav();
+
+function buildEasyNav(): NavItem[] {
+  const left = flatten(NAV);
+
+  const band = (def: BandDef): NavGroup => ({
+    kind: 'group',
+    key: def.key,
+    // Nothing draws a tab's or a band's mark — the board heads them with words, and the
+    // arranging screen with a name box. It is here because every group carries one.
+    icon: 'menu',
+    tone: def.tone,
+    children: def.items.flatMap<NavItem>(({ key, icon }) => {
+      const link = left.get(key);
+      if (!link) {
+        return [];
+      }
+      left.delete(key);
+      return [{ ...link, icon }];
+    }),
+  });
+
+  const tabs: NavGroup[] = BOARD.map((def): NavGroup => ({
+    kind: 'group',
+    key: def.key,
+    icon: 'menu',
+    children: def.bands.map(band).filter((b) => b.children.length > 0),
+  })).filter((tab) => tab.children.length > 0);
+
+  const rest = [...left.values()];
+  if (rest.length) {
+    tabs.push({
+      kind: 'group',
+      key: OVERFLOW.key,
+      icon: 'menu',
+      children: [{ ...band(OVERFLOW.bands[0]), children: rest }],
+    });
+  }
+  return tabs;
+}
+
+/**
+ * The board this caller sees, drawn from the menu they were already given.
+ *
+ * Pass the finished board menu — `arranged(role, saved.easyMenu, EASY_NAV, 3)` — not
+ * `EASY_NAV`. Everything that pipeline decides holds here: a viewer has no New Entry tiles, a
+ * hidden entry has no button, a renamed one is renamed. This function only changes the shape:
+ * a top-level group is a tab, a group inside it is a band, and a link is a button.
+ *
+ * The two things a menu can be that a board cannot are answered rather than refused. A run of
+ * links sitting straight on a tab becomes one band with no heading, in place, so the order an
+ * owner arranged is the order they get. A link left at the very top level — an owner who
+ * moved one out of every tab — lands on the overflow tab, because a button with nowhere to be
+ * drawn is a screen that has quietly become unreachable.
  */
 export function boardFor(menu: readonly NavItem[]): BoardTab[] {
-  const left = reachable(menu);
   const tabs: BoardTab[] = [];
+  const loose: NavLink[] = [];
 
-  for (const tab of BOARD) {
+  for (const item of menu) {
+    if (item.kind === 'link') {
+      loose.push(item);
+      continue;
+    }
     // Restarted per tab: the digit is printed on the sheet the reader is looking at.
-    let digit = 0;
+    const next = numbering();
     const bands: BoardBand[] = [];
+    /** The run of headingless buttons currently being collected, if any. */
+    let run: BoardBand | null = null;
 
-    for (const band of tab.bands) {
-      const tiles: BoardTile[] = [];
-      for (const { key, icon } of band.items) {
-        const leaf = left.get(key);
-        if (!leaf) {
-          continue;
-        }
-        left.delete(key);
-        digit += 1;
-        tiles.push({ ...leaf, icon, digit: digit <= 9 ? digit : 0 });
+    for (const child of item.children) {
+      if (child.kind === 'link') {
+        run ??= addBand(bands, { key: null, tone: 'read', tiles: [] });
+        run.tiles.push(next(child));
+        continue;
       }
+      run = null;
+      const tiles = child.children.flatMap<BoardTile>((leaf) =>
+        leaf.kind === 'link' ? [next(leaf)] : [],
+      );
       if (tiles.length) {
-        bands.push({ key: band.key, tone: band.tone, tiles });
+        addBand(bands, { key: child.key, label: child.label, tone: child.tone ?? 'read', tiles });
       }
     }
 
     if (bands.length) {
-      tabs.push({ key: tab.key, bands });
+      tabs.push({ key: item.key, label: item.label, bands });
     }
   }
 
-  // Whatever no tab claimed, in the order the shop arranged it — a screen shipped since this
-  // table was written, keeping its own mark.
-  const rest = [...left.values()];
-  if (rest.length) {
+  if (loose.length) {
+    const next = numbering();
     tabs.push({
       key: OVERFLOW.key,
-      bands: [
-        {
-          key: OVERFLOW.bands[0].key,
-          tone: OVERFLOW.bands[0].tone,
-          tiles: rest.map((leaf, i) => ({ ...leaf, digit: i < 9 ? i + 1 : 0 })),
-        },
-      ],
+      bands: [{ key: OVERFLOW.bands[0].key, tone: 'read', tiles: loose.map(next) }],
     });
   }
 
   return tabs;
+}
+
+/** Buttons are numbered 1–9 within a sheet; the rest are opened by hand. */
+function numbering(): (link: NavLink) => BoardTile {
+  let digit = 0;
+  return (link) => {
+    digit += 1;
+    return { ...link, digit: digit <= 9 ? digit : 0 };
+  };
+}
+
+function addBand(bands: BoardBand[], band: BoardBand): BoardBand {
+  bands.push(band);
+  return band;
 }
 
 /**

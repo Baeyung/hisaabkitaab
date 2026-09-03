@@ -241,6 +241,44 @@
   background: var(--kg-tint-out-hover);
 }
 
+/* A band's colour, on the board's rows only. It reports which way money moves, so
+   it wears the answer rather than only naming it: the same --kg-in / --kg-out the
+   board's own bands take, on a control the width of the words in it. Ink for
+   "neither", which is what the board's read bands are — the app's own accent, not
+   a third direction. */
+.tone {
+  flex: none;
+  height: 30px;
+  max-width: 118px;
+  padding-inline: 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--kg-muted);
+  background: transparent;
+  border: 1px solid var(--kg-line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+/* The border takes its colour from the text rather than from a token of its own:
+   there is no in-tinted line variable, and mixing off currentColor keeps the two
+   directions stated once instead of as two near-identical rules. */
+.tone[data-tone='in'],
+.tone[data-tone='out'] {
+  border-color: color-mix(in srgb, currentColor 34%, transparent);
+}
+.tone[data-tone='in'] {
+  color: var(--kg-in);
+}
+.tone[data-tone='out'] {
+  color: var(--kg-out);
+}
+.tone:focus-visible {
+  outline: none;
+  border-color: var(--kg-line-hover);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
 /* The one thing on this page that adds rather than arranges. Dashed, because what
    it makes starts empty and the well below it will be dashed-empty too. */
 .addgroup {
@@ -468,6 +506,9 @@
   }
   .mv {
     width: 34px;
+    height: 32px;
+  }
+  .tone {
     height: 32px;
   }
   .well {

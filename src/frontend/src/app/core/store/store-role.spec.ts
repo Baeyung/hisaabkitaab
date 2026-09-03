@@ -7,7 +7,7 @@ import { editorGuard, managerGuard, ownerGuard } from './store.guard';
 import { StoreService } from './store.service';
 import { AuthStore } from '../auth/auth.store';
 import { Store, StoreRole } from './store.models';
-import { NAV, navFor } from '../../layout/shell/nav';
+import { NAV, NavItem, NavLink, navFor } from '../../layout/shell/nav';
 import { environment } from '../../../environments/environment';
 
 const route = {} as ActivatedRouteSnapshot;
@@ -130,8 +130,12 @@ describe('store roles', () => {
   });
 
   describe('the menu', () => {
-    const paths = (role: StoreRole | null) =>
-      navFor(role).flatMap((item) => (item.kind === 'link' ? [item.path] : item.children.map((c) => c.path)));
+    // Groups may hold groups — the board nests one deeper than the sidebar — so this walks
+    // rather than descending exactly one level.
+    const pathsIn = (items: readonly NavItem[]): string[] =>
+      items.flatMap((item) => (item.kind === 'link' ? [item.path] : pathsIn(item.children)));
+
+    const paths = (role: StoreRole | null) => pathsIn(navFor(role));
 
     it('offers a viewer nothing that writes in the shop', () => {
       const seen = paths('VIEWER');
@@ -167,7 +171,10 @@ describe('store roles', () => {
 
     it('marks what a closed shop refuses, and nothing else', () => {
       const settings = NAV.find((item) => item.key === 'nav.settings');
-      const marked = settings?.kind === 'group' ? settings.children.filter((c) => c.writes) : [];
+      const marked =
+        settings?.kind === 'group'
+          ? settings.children.filter((c): c is NavLink => c.kind === 'link' && c.writes === true)
+          : [];
       expect(marked.map((c) => c.path)).toEqual([
         'settings/items',
         'settings/party',
