@@ -12,9 +12,9 @@ import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 
 /**
  * One expense category's statement: every expense filed under it (parts, bijli,
- * salaries…) with its note and a running total. Reuses the khata's
- * expense-categories endpoint — it already carries each category's rows — and
- * looks the category up by its enum name, the route key.
+ * salaries…) with its note and a running total. Fetches the one head by its enum
+ * name, the route key — the khata's list of heads carries counts and totals only,
+ * so the rows are asked for here and nowhere else.
  */
 @Component({
   selector: 'app-category-detail',
@@ -55,9 +55,7 @@ export class CategoryDetail {
     this.loadError.set(false);
     this.notFound.set(false);
     try {
-      const match = (await this.api.listExpenseCategories()).find((g) => g.category === key) ?? null;
-      this.group.set(match);
-      this.notFound.set(match === null);
+      this.group.set(await this.api.getExpenseCategory(key));
     } catch (err) {
       if ((err as { status?: number }).status === 404) {
         this.notFound.set(true);

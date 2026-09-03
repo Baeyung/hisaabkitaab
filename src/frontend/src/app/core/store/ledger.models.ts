@@ -58,6 +58,11 @@ export interface ExpenseCategoryGroup {
   category: string;
   count: number;
   total: number;
+  /**
+   * Empty on the list of heads, which prints a name, a count and a total and nothing more.
+   * Populated only by the single-head call (…/expense-categories/{category}), so `count` —
+   * not `rows.length` — is how many entries the head actually has.
+   */
   rows: ExpenseCategoryRow[];
 }
 
@@ -78,5 +83,6 @@ export interface CashGroup {
   kind: 'SALE' | 'PURCHASE';
   count: number;
   total: number;
+  /** Empty on the list of heads; populated only by …/cash/{kind}. See {@link ExpenseCategoryGroup.rows}. */
   rows: CashRow[];
 }

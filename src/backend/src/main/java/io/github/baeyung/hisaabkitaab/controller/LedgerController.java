@@ -37,10 +37,30 @@ public class LedgerController
         return ResponseEntity.ok(ledgerQueryService.listExpenseCategories(store.getId()));
     }
 
+    /** One spend head's entries — fetched when the shopkeeper opens the head, not with the list. */
+    @GetMapping("/expense-categories/{category}")
+    public ResponseEntity<ExpenseCategoryGroupResponse> getExpenseCategory(
+            @PathVariable String category,
+            @CurrentStore(StoreRole.VIEWER) Store store
+    )
+    {
+        return ResponseEntity.ok(ledgerQueryService.getExpenseCategory(store.getId(), category));
+    }
+
     @GetMapping("/cash")
     public ResponseEntity<List<CashGroupResponse>> listCash(@CurrentStore(StoreRole.VIEWER) Store store)
     {
         return ResponseEntity.ok(ledgerQueryService.listCash(store.getId()));
+    }
+
+    /** One walk-in cash head's entries — fetched on open, as the expense heads are. */
+    @GetMapping("/cash/{kind}")
+    public ResponseEntity<CashGroupResponse> getCashGroup(
+            @PathVariable String kind,
+            @CurrentStore(StoreRole.VIEWER) Store store
+    )
+    {
+        return ResponseEntity.ok(ledgerQueryService.getCashGroup(store.getId(), kind));
     }
 
     @GetMapping("/{partyId}")

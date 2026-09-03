@@ -22,13 +22,32 @@ export class LedgerService {
     return firstValueFrom(this.http.get<PartyStatement>(`${this.url}/${partyId}`));
   }
 
-  /** Expenses totalled by category — the khata's spend heads. */
+  /**
+   * Expenses totalled by category — the khata's spend heads, with a count and a total
+   * each and no rows. The entries behind a head come from {@link getExpenseCategory}
+   * when it is opened; a shop a few years in has tens of thousands of them, and the
+   * khata screen prints none.
+   */
   listExpenseCategories(): Promise<ExpenseCategoryGroup[]> {
     return firstValueFrom(this.http.get<ExpenseCategoryGroup[]>(`${this.url}/expense-categories`));
   }
 
-  /** Walk-in cash trade — no party — grouped into Sales and Purchases with their grand totals. */
+  /** One spend head with its entries — 404s on a head with nothing in it. */
+  getExpenseCategory(category: string): Promise<ExpenseCategoryGroup> {
+    return firstValueFrom(
+      this.http.get<ExpenseCategoryGroup>(
+        `${this.url}/expense-categories/${encodeURIComponent(category)}`,
+      ),
+    );
+  }
+
+  /** Walk-in cash trade — no party — grouped into Sales and Purchases with their grand totals, no rows. */
   listCash(): Promise<CashGroup[]> {
     return firstValueFrom(this.http.get<CashGroup[]>(`${this.url}/cash`));
+  }
+
+  /** One walk-in cash head with its entries — 404s on a head with nothing in it. */
+  getCashGroup(kind: string): Promise<CashGroup> {
+    return firstValueFrom(this.http.get<CashGroup>(`${this.url}/cash/${encodeURIComponent(kind)}`));
   }
 }

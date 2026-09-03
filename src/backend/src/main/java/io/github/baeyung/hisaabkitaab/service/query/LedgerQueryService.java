@@ -7,10 +7,10 @@ import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
+import io.github.baeyung.hisaabkitaab.exception.ResourceNotFoundException;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
-import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
 import io.github.baeyung.hisaabkitaab.service.PartyService;
 import io.github.baeyung.hisaabkitaab.service.query.support.DocumentTotals;
 import io.github.baeyung.hisaabkitaab.service.query.support.ItemSummary;
@@ -23,9 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -75,25 +73,43 @@ public class LedgerQueryService
      * shopkeeper reads their balances. Every category with at least one expense
      * shows, biggest spend first. Lines with no category (older than the feature)
      * fall under UNCATEGORIZED so nothing is lost.
+     *
+     * <p>Heads only: {@code rows} comes back empty here, and the entries behind one
+     * arrive when the shopkeeper opens it ({@link #getExpenseCategory}). The screen
+     * prints a name, a count and a total per head, and shipping every expense the
+     * shop ever filed to render three columns was several megabytes of JSON and the
+     * slowest call in the app on a shop a few years in.
      */
     public List<ExpenseCategoryGroupResponse> listExpenseCategories(String storeId)
     {
-        // ponytail: scans full expense history each call; add a cached read-model if a shop's expense count ever makes this slow.
-        Map<String, List<TransactionLine>> groups = transactionLineRepository.findExpenseLinesByStore(storeId)
+        return transactionLineRepository.sumExpensesByCategory(storeId)
                 .stream()
-                .collect(Collectors.groupingBy(
-                        line -> line.getExpenseCategory() != null
-                                ? line.getExpenseCategory().getName()
-                                : ExpenseCategoryService.UNCATEGORIZED,
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ));
-
-        return groups.entrySet()
-                .stream()
-                .map(entry -> toCategoryGroup(entry.getKey(), entry.getValue()))
+                .map(row -> new ExpenseCategoryGroupResponse(
+                        row.getCategory(),
+                        row.getCount(),
+                        row.getTotal() != null ? row.getTotal() : 0,
+                        List.of()
+                ))
                 .sorted(Comparator.comparingDouble(ExpenseCategoryGroupResponse::total).reversed())
                 .toList();
+    }
+
+    /**
+     * One spend head with its entries and their running total — the category the
+     * shopkeeper opened. Unknown or empty heads 404 rather than returning a head with
+     * nothing in it: the khata screen only ever links to heads that have entries, so an
+     * empty one means a stale link or a typed URL.
+     */
+    public ExpenseCategoryGroupResponse getExpenseCategory(String storeId, String category)
+    {
+        List<TransactionLine> lines = transactionLineRepository.findExpenseLinesByCategory(storeId, category);
+
+        if (lines.isEmpty())
+        {
+            throw ResourceNotFoundException.forEntity("Expense category", category);
+        }
+
+        return toCategoryGroup(category, lines);
     }
 
     private ExpenseCategoryGroupResponse toCategoryGroup(String category, List<TransactionLine> lines)
@@ -123,25 +139,54 @@ public class LedgerQueryService
     /**
      * Walk-in cash trade — no party, so neither ever posts a PARTY line and neither
      * surfaces among the party balances — grouped into Sales and Purchases, each with
-     * its grand total and chronological rows with a running total. Only a kind with at
-     * least one entry shows.
+     * its grand total. Only a kind with at least one entry shows.
+     *
+     * <p>Heads only, for the same reason as {@link #listExpenseCategories}: the entries
+     * behind a kind arrive when the shopkeeper opens it ({@link #getCashGroup}).
      */
     public List<CashGroupResponse> listCash(String storeId)
     {
-        // ponytail: scans full cash history each call; add a cached read-model if a shop's cash-entry count ever makes this slow.
-        List<CashGroupResponse> groups = new ArrayList<>();
-        addCashGroup(groups, "SALE", transactionLineRepository.findCashSaleLinesByStore(storeId));
-        addCashGroup(groups, "PURCHASE", transactionLineRepository.findCashPurchaseLinesByStore(storeId));
-        return groups;
+        return transactionLineRepository.sumCashByEvent(storeId)
+                .stream()
+                .map(row -> new CashGroupResponse(
+                        row.getEvent().name(),
+                        row.getCount(),
+                        row.getTotal() != null ? row.getTotal() : 0,
+                        List.of()
+                ))
+                // Sales before purchases, as the screen has always listed them.
+                .sorted(Comparator.comparing(CashGroupResponse::kind))
+                .toList();
     }
 
-    private void addCashGroup(List<CashGroupResponse> groups, String kind, List<TransactionLine> lines)
+    /**
+     * One kind of walk-in cash trade with its entries and their running total — the head
+     * the shopkeeper opened. 404s on an unknown or empty kind, as {@link #getExpenseCategory} does.
+     */
+    public CashGroupResponse getCashGroup(String storeId, String kind)
     {
-        if (lines.isEmpty())
+        TransactionEvent event;
+        try
         {
-            return;
+            event = TransactionEvent.valueOf(kind);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw ResourceNotFoundException.forEntity("Cash group", kind);
         }
 
+        List<TransactionLine> lines = transactionLineRepository.findCashLinesByEvent(storeId, event);
+
+        if (lines.isEmpty())
+        {
+            throw ResourceNotFoundException.forEntity("Cash group", kind);
+        }
+
+        return toCashGroup(kind, lines);
+    }
+
+    private CashGroupResponse toCashGroup(String kind, List<TransactionLine> lines)
+    {
         List<CashRowResponse> rows = RunningBalanceFolder.fold(
                 lines,
                 0,
@@ -160,7 +205,7 @@ public class LedgerQueryService
                 }
         );
 
-        groups.add(new CashGroupResponse(kind, rows.size(), rows.getLast().runningTotal(), rows));
+        return new CashGroupResponse(kind, rows.size(), rows.getLast().runningTotal(), rows);
     }
 
     public PartyStatementResponse getStatement(String storeId, String partyId)

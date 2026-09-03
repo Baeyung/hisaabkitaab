@@ -130,7 +130,15 @@ class TransactionLineAggregationTest
         expense("Bijli", 1100.0, TODAY);
         expense("Chai", 50.0, TODAY);
 
-        List<TransactionLine> lines = transactionLineRepository.findExpenseLinesByStore(store.getId());
+        // The khata screen's roll-up: one head, since none of these were filed under a category.
+        var heads = transactionLineRepository.sumExpensesByCategory(store.getId());
+        assertEquals(1, heads.size());
+        assertEquals("UNCATEGORIZED", heads.getFirst().getCategory());
+        assertEquals(3, heads.getFirst().getCount());
+        assertEquals(2050.0, heads.getFirst().getTotal());
+
+        List<TransactionLine> lines = transactionLineRepository
+                .findExpenseLinesByCategory(store.getId(), "UNCATEGORIZED");
         List<Double> values = lines.stream().map(TransactionLine::getValue).toList();
 
         // Only the three EXPENSE cash lines — the SALE's CASH/IN and the RECEIPT's are not.

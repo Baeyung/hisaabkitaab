@@ -1,3 +1,14 @@
+# A khata statement or a spend head runs to thousands of rows, and the shop this is deployed
+# for is a laptop on a home connection behind a tunnel — the upstream is the narrow part, not
+# the CPU. JSON of that shape compresses about fifteen to one, so this is the difference
+# between a page that appears and a page that is waited for.
+server:
+  compression:
+    enabled: true
+    mime-types: application/json
+    # Below this the compression costs more than the bytes it saves.
+    min-response-size: 2KB
+
 spring:
   application:
     name: hisaabkitaab

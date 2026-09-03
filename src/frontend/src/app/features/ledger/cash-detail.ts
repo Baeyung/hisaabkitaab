@@ -79,14 +79,13 @@ export class CashDetail {
     this.loadError.set(false);
     this.notFound.set(false);
     try {
-      const match = (await this.api.listCash()).find((g) => g.kind === key) ?? null;
+      const match = await this.api.getCashGroup(key);
       this.group.set(match);
-      this.notFound.set(match === null);
       // Seed the range from the group's own span, same as the party statement —
       // reads as "everything so far" instead of two blank, collapsed date fields.
       // A URL already naming a range wins: it's a shared link, or a Back landing
       // here, and re-seeding would throw away what it asked for.
-      if (match && !this.route.snapshot.queryParamMap.has('from')) {
+      if (!this.route.snapshot.queryParamMap.has('from')) {
         const rows = match.rows;
         const today = todayIso();
         const last = rows.at(-1)?.date ?? '';

@@ -10,7 +10,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
+import io.github.baeyung.hisaabkitaab.service.query.support.PartyLedgerRow;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
+import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 
 @Repository
 public interface TransactionLineRepository extends JpaRepository<TransactionLine, String>
@@ -41,11 +43,19 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             """)
     double sumCashBefore(@Param("storeId") String storeId, @Param("day") LocalDate day);
 
-    /** Every CASH line from {@code from} to {@code to} inclusive, chronological, with transaction and party fetched for row display. */
+    /**
+     * Every CASH line from {@code from} to {@code to} inclusive, chronological, with transaction,
+     * party and expense category fetched for row display.
+     *
+     * <p>The category comes along because the dashboard reads its window's expenses out of this
+     * same list — an expense is a CASH line whose entry is an EXPENSE — rather than loading every
+     * expense the shop ever filed and throwing all but the window away.
+     */
     @Query("""
             select tl from TransactionLine tl
             join fetch tl.transaction t
             left join fetch t.party
+            left join fetch tl.expenseCategory
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
               and t.store.id = :storeId
               and coalesce(t.eventDate, t.entryDate) between :from and :to
@@ -76,47 +86,82 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
     List<TransactionPartyNetRow> sumPartyNetByTransactionInRange(
             @Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    /** Every EXPENSE cash-out line for the store, chronological — grouped by category into the khata's spend heads. */
+    /**
+     * Every spend head with its entry count and total — the khata screen's category table, which
+     * prints those three figures and nothing else.
+     *
+     * <p>Rolled up in the database rather than folded from the lines: a shop a few years in has
+     * tens of thousands of expenses, and loading them all to count them made this the slowest
+     * call in the app. The rows behind a head are fetched one head at a time, when the shopkeeper
+     * opens it — see {@link #findExpenseLinesByCategory}.
+     *
+     * <p>Lines filed before categories existed carry none, and coalesce puts them under
+     * UNCATEGORIZED — the same key {@link #findExpenseLinesByCategory} takes back. That literal
+     * has to stay equal to {@code ExpenseCategoryService.UNCATEGORIZED}; JPQL cannot name the
+     * constant, so LedgerHeadsApiTest asserts the two agree.
+     */
     @Query("""
-            select tl from TransactionLine tl
-            join fetch tl.transaction t
-            left join fetch tl.expenseCategory
+            select coalesce(ec.name, 'UNCATEGORIZED') as category,
+                   count(tl) as count,
+                   coalesce(sum(tl.value), 0) as total
+            from TransactionLine tl
+            join tl.transaction t
+            left join tl.expenseCategory ec
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
               and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.EXPENSE
               and t.store.id = :storeId
+            group by coalesce(ec.name, 'UNCATEGORIZED')
+            """)
+    List<ExpenseCategoryTotalRow> sumExpensesByCategory(@Param("storeId") String storeId);
+
+    /** One spend head's EXPENSE lines, chronological — the rows behind a category the shopkeeper opened. */
+    @Query("""
+            select tl from TransactionLine tl
+            join fetch tl.transaction t
+            left join fetch tl.expenseCategory ec
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
+              and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.EXPENSE
+              and t.store.id = :storeId
+              and coalesce(ec.name, 'UNCATEGORIZED') = :category
             order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
-    List<TransactionLine> findExpenseLinesByStore(@Param("storeId") String storeId);
+    List<TransactionLine> findExpenseLinesByCategory(@Param("storeId") String storeId, @Param("category") String category);
 
     /**
-     * Every cash line of a SALE with no party — a walk-in sale that never touches a khata,
-     * so it never appears among the party balances.
+     * Walk-in cash trade — entries with no party, which never touch a khata and so never appear
+     * among the party balances — counted and totalled per kind for the khata screen's cash table.
+     *
+     * <p>Rolled up in the database for the same reason as {@link #sumExpensesByCategory}: the
+     * screen prints a count and a total per kind, and loading every walk-in sale the shop ever
+     * rang up to arrive at two numbers is the whole cost of the page. The entries themselves are
+     * fetched one kind at a time — see {@link #findCashLinesByEvent}.
      */
+    @Query("""
+            select t.event as event,
+                   count(tl) as count,
+                   coalesce(sum(tl.value), 0) as total
+            from TransactionLine tl
+            join tl.transaction t
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
+              and t.event in (io.github.baeyung.hisaabkitaab.enums.TransactionEvent.SALE,
+                              io.github.baeyung.hisaabkitaab.enums.TransactionEvent.PURCHASE)
+              and t.party is null
+              and t.store.id = :storeId
+            group by t.event
+            """)
+    List<CashKindTotalRow> sumCashByEvent(@Param("storeId") String storeId);
+
+    /** One kind of walk-in cash trade, chronological — the entries behind a cash head the shopkeeper opened. */
     @Query("""
             select tl from TransactionLine tl
             join fetch tl.transaction t
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
-              and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.SALE
+              and t.event = :event
               and t.party is null
               and t.store.id = :storeId
             order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
-    List<TransactionLine> findCashSaleLinesByStore(@Param("storeId") String storeId);
-
-    /**
-     * Every cash line of a PURCHASE with no party — a walk-in purchase that never touches a
-     * khata, so it never appears among the party balances.
-     */
-    @Query("""
-            select tl from TransactionLine tl
-            join fetch tl.transaction t
-            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
-              and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.PURCHASE
-              and t.party is null
-              and t.store.id = :storeId
-            order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
-            """)
-    List<TransactionLine> findCashPurchaseLinesByStore(@Param("storeId") String storeId);
+    List<TransactionLine> findCashLinesByEvent(@Param("storeId") String storeId, @Param("event") TransactionEvent event);
 
     /** One net balance per party over its full PARTY-line history (positive = they owe the store). */
     @Query("""
@@ -148,19 +193,25 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
     List<TransactionLine> findPartyLedgerLines(@Param("partyId") String partyId, @Param("storeId") String storeId);
 
     /**
-     * Every PARTY line for the store, chronological, with party fetched — the raw
-     * material for receivable aging: FIFO payments against charges to find how long
-     * each party's oldest still-unpaid amount has sat.
+     * Every PARTY line for the store, chronological — the raw material for receivable aging:
+     * FIFO payments against charges to find how long each party's oldest still-unpaid amount
+     * has sat.
+     *
+     * <p>A projection rather than the entities. The walk reads five fields per line and the
+     * whole store's history goes into it, so hydrating a TransactionLine (and its Transaction,
+     * and its Party) per row was most of what the dashboard spent its time doing.
      */
     @Query("""
-            select tl from TransactionLine tl
-            join fetch tl.transaction t
-            join fetch tl.party
+            select new io.github.baeyung.hisaabkitaab.service.query.support.PartyLedgerRow(
+                       tl.party.id, p.name, tl.inOut, tl.value, coalesce(t.eventDate, t.entryDate))
+            from TransactionLine tl
+            join tl.transaction t
+            join tl.party p
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.PARTY
               and t.store.id = :storeId
             order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
-    List<TransactionLine> findPartyLinesByStore(@Param("storeId") String storeId);
+    List<PartyLedgerRow> findPartyLedgerRowsByStore(@Param("storeId") String storeId);
 
     /** One net stock quantity per item over its full STOCK-line history. */
     @Query("""
@@ -305,6 +356,24 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
         String getPartyId();
 
         Double getBalance();
+    }
+
+    interface ExpenseCategoryTotalRow
+    {
+        String getCategory();
+
+        long getCount();
+
+        Double getTotal();
+    }
+
+    interface CashKindTotalRow
+    {
+        TransactionEvent getEvent();
+
+        long getCount();
+
+        Double getTotal();
     }
 
     interface TransactionPartyNetRow

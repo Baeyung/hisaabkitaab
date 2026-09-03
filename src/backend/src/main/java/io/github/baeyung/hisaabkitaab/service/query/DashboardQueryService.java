@@ -7,12 +7,14 @@ import io.github.baeyung.hisaabkitaab.entity.StoreItem;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
+import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import io.github.baeyung.hisaabkitaab.repository.PartyRepository;
 import io.github.baeyung.hisaabkitaab.repository.StoreItemRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.ItemStockRow;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository.PartyBalanceRow;
 import io.github.baeyung.hisaabkitaab.service.ExpenseCategoryService;
+import io.github.baeyung.hisaabkitaab.service.query.support.PartyLedgerRow;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging;
 import io.github.baeyung.hisaabkitaab.service.query.support.ReceivableAging.Movement;
 import lombok.RequiredArgsConstructor;
@@ -60,9 +62,14 @@ public class DashboardQueryService
         double cashPosition = transactionLineRepository.sumCashBefore(storeId, to.plusDays(1));
 
         List<TransactionLine> saleLines = transactionLineRepository.findSaleStockLinesInRange(storeId, from, to);
-        List<TransactionLine> expenseLines = transactionLineRepository.findExpenseLinesByStore(storeId)
-                .stream()
-                .filter(line -> inRange(businessDate(line), from, to))
+
+        // Every cash line in the window, which the window's expenses are a subset of: an expense
+        // is a cash-out whose entry is an EXPENSE. Read off this list rather than fetched on their
+        // own, because the only query that returns a shop's expenses returns all of them — years
+        // of them, to keep the handful that fall in a seven-day window.
+        List<TransactionLine> cashLines = transactionLineRepository.findCashLinesInRange(storeId, from, to);
+        List<TransactionLine> expenseLines = cashLines.stream()
+                .filter(line -> line.getTransaction().getEvent() == TransactionEvent.EXPENSE)
                 .toList();
 
         // ── Daily series: revenue from sale lines, spend from expense lines ──
@@ -93,7 +100,7 @@ public class DashboardQueryService
         // position before the window and fold the daily net (Σ IN − Σ OUT) onto it;
         // the last day's value lands on `cashPosition` by construction.
         Map<LocalDate, Double> cashDeltaByDay = new HashMap<>();
-        for (TransactionLine line : transactionLineRepository.findCashLinesInRange(storeId, from, to))
+        for (TransactionLine line : cashLines)
         {
             double signed = line.getInOut() == InOut.IN ? value(line) : -value(line);
             cashDeltaByDay.merge(businessDate(line), signed, Double::sum);
@@ -278,29 +285,29 @@ public class DashboardQueryService
      */
     public List<StaleParty> staleReceivables(String storeId, LocalDate asOf)
     {
-        Map<String, List<TransactionLine>> byParty = transactionLineRepository.findPartyLinesByStore(storeId)
+        Map<String, List<PartyLedgerRow>> byParty = transactionLineRepository.findPartyLedgerRowsByStore(storeId)
                 .stream()
-                .collect(Collectors.groupingBy(line -> line.getParty().getId(), LinkedHashMap::new, Collectors.toList()));
+                .collect(Collectors.groupingBy(PartyLedgerRow::partyId, LinkedHashMap::new, Collectors.toList()));
 
         List<StaleParty> stale = new ArrayList<>();
-        for (List<TransactionLine> lines : byParty.values())
+        for (List<PartyLedgerRow> lines : byParty.values())
         {
             double net = 0;
             List<Movement> movements = new ArrayList<>(lines.size());
-            for (TransactionLine line : lines)
+            for (PartyLedgerRow line : lines)
             {
-                double v = value(line);
-                boolean in = line.getInOut() == InOut.IN;
+                double v = line.value() != null ? line.value() : 0;
+                boolean in = line.inOut() == InOut.IN;
                 net += in ? v : -v;
-                movements.add(new Movement(businessDate(line).toEpochDay(), in ? v : 0, in ? 0 : v));
+                movements.add(new Movement(line.businessDate().toEpochDay(), in ? v : 0, in ? 0 : v));
             }
             OptionalLong oldest = ReceivableAging.oldestUnpaidEpochDay(movements);
             if (net > 0.005 && oldest.isPresent())
             {
-                Party party = lines.getFirst().getParty();
+                PartyLedgerRow first = lines.getFirst();
                 LocalDate oldestDate = LocalDate.ofEpochDay(oldest.getAsLong());
                 int days = (int) Math.max(0, ChronoUnit.DAYS.between(oldestDate, asOf));
-                stale.add(new StaleParty(party.getId(), party.getName(), net, days));
+                stale.add(new StaleParty(first.partyId(), first.partyName(), net, days));
             }
         }
         stale.sort(Comparator.comparingDouble(StaleParty::amount).reversed());
@@ -311,11 +318,6 @@ public class DashboardQueryService
     {
         Transaction t = line.getTransaction();
         return t.getEventDate() != null ? t.getEventDate() : t.getEntryDate();
-    }
-
-    private boolean inRange(LocalDate day, LocalDate from, LocalDate to)
-    {
-        return day != null && !day.isBefore(from) && !day.isAfter(to);
     }
 
     private double quantity(TransactionLine line)
