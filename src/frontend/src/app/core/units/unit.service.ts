@@ -35,6 +35,12 @@ export class UnitService {
     return (await this.list()).map((u) => u.name);
   }
 
+  /** Adds a unit to this store's list. The backend refuses (409) a name the store already has,
+   *  case-insensitively — the same rule a rename is held to. */
+  create(name: string): Promise<Unit> {
+    return firstValueFrom(this.http.post<Unit>(this.url, { name }));
+  }
+
   /** Renames a unit; the backend refuses (409) a name another unit of this store already has,
    *  case-insensitively. */
   rename(id: string, name: string): Promise<Unit> {

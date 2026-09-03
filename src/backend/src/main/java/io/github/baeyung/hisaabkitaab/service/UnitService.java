@@ -94,27 +94,48 @@ public class UnitService
     }
 
     /**
-     * Renames a unit, refusing a name that already belongs to another unit of this store —
-     * case-insensitively, the same rule {@link #resolveOrCreate} applies when a name is typed
-     * for the first time, so "Meter" and "meter" never end up as two rows either way. The
-     * rename only relabels this row: an item or a past entry recorded under the old name keeps
-     * it, since neither stores a reference to this table, only the text as typed.
+     * Renames a unit, refusing a name that already belongs to another unit of this store
+     * (see {@link #refuseDuplicate}). The rename only relabels this row: an item or a past
+     * entry recorded under the old name keeps it, since neither stores a reference to this
+     * table, only the text as typed.
      */
     public Unit rename(Store store, String id, String name)
     {
         Unit unit = findByIdForStore(id, store.getId());
         String wanted = name.trim();
-
-        repository.findByStoreIdAndNameIgnoreCase(store.getId(), wanted)
-                .filter(existing -> !existing.getId().equals(id))
-                .ifPresent(existing -> {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT,
-                            "A unit named \"" + wanted + "\" already exists.");
-                });
+        refuseDuplicate(store.getId(), wanted, id);
 
         log.info("renaming unit {} \"{}\" -> \"{}\" in store {}", id, unit.getName(), wanted, store.getId());
         unit.setName(wanted);
         return repository.save(unit);
+    }
+
+    /**
+     * Adds a name to this store's list — the deliberate way to define a unit, beside
+     * {@link #resolveOrCreate}'s incidental one. Unlike that method a name the store already
+     * has is refused rather than quietly ignored: the shopkeeper asked for a new unit and is
+     * owed the answer that it is already there.
+     */
+    public Unit create(Store store, String name)
+    {
+        String wanted = name.trim();
+        refuseDuplicate(store.getId(), wanted, null);
+
+        log.info("new unit \"{}\" in store {}, added from Manage Units", wanted, store.getId());
+        return repository.save(Unit.builder().store(store).name(wanted).build());
+    }
+
+    /** One name per store, case-insensitively — the same rule {@link #resolveOrCreate} keeps
+     *  when a name is typed for the first time, so "Meter" and "meter" never become two rows
+     *  down any of the three doors. {@code exceptId} is the row being renamed, if any. */
+    private void refuseDuplicate(String storeId, String wanted, String exceptId)
+    {
+        repository.findByStoreIdAndNameIgnoreCase(storeId, wanted)
+                .filter(existing -> !existing.getId().equals(exceptId))
+                .ifPresent(existing -> {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "A unit named \"" + wanted + "\" already exists.");
+                });
     }
 
     /** Drops a unit from this store's offered list. Nothing else references this row — an

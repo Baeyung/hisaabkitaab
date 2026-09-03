@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { form, FormField, min, required } from '@angular/forms/signals';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -35,10 +35,11 @@ const EMPTY_UNIT_DRAFT: UnitForm = { name: '' };
 /**
  * Store Settings › Units — two collapsible sections sharing one screen.
  *
- * Manage Units lists every name this store offers on an entry screen's unit box, and is the
- * one place to rename or remove one — a typo caught after the fact, or a unit nobody uses any
- * more. Neither action touches what is already recorded: an item, a transaction line and a
- * conversion rate all carry the unit as their own text, not a reference to this list.
+ * Manage Units lists every name this store offers on an entry screen's unit box, and is where
+ * one is added, renamed or removed — a unit the shop uses that nobody has typed yet, a typo
+ * caught after the fact, a unit nobody uses any more. None of it touches what is already
+ * recorded: an item, a transaction line and a conversion rate all carry the unit as their own
+ * text, not a reference to this list.
  *
  * Conversions is the rest of what this screen has always done — the fixed table for reference,
  * and this shop's own taught rates, add-able directly or via a preset chip. The from/to boxes
@@ -67,15 +68,25 @@ export class SettingsUnits {
   protected readonly unitsLoading = signal(true);
   protected readonly unitsLoadError = signal(false);
 
+  /** The empty token at the end of the list, open and waiting for a name. */
+  protected readonly addingUnit = signal(false);
   protected readonly editingUnitId = signal<string | null>(null);
   protected readonly confirmingUnitId = signal<string | null>(null);
   protected readonly unitSaving = signal(false);
   protected readonly unitErrorKey = signal<TranslationKey | null>(null);
 
+  /** Whichever unit box is open — the token being renamed, or the empty one being filled in.
+   *  Only ever one at a time, so one ref covers both. */
+  private readonly unitInput = viewChild<ElementRef<HTMLInputElement>>('unitName');
+
   protected readonly unitDraft = signal<UnitForm>({ ...EMPTY_UNIT_DRAFT });
   protected readonly unitForm = form(this.unitDraft, (p) => {
     required(p.name);
   });
+
+  /** Placeholder tokens while the list loads — uneven on purpose, so the wait looks like the
+   *  field of names it is about to become rather than a progress bar. */
+  protected readonly unitSkeletonWidths = [86, 64, 74, 96, 68, 80, 62, 90];
 
   /** What every entry screen's unit box offers: this store's own list once it loads, falling
    *  back to the built-in defaults for the moment before it does. */
@@ -143,6 +154,8 @@ export class SettingsUnits {
   constructor() {
     void this.loadUnits();
     void this.load();
+    // A token is replaced by the box it opens into, so the keyboard has to follow it there.
+    effect(() => this.unitInput()?.nativeElement.focus());
   }
 
   // ── Manage Units ────────────────────────────────────────────────────
@@ -156,6 +169,40 @@ export class SettingsUnits {
       this.unitsLoadError.set(true);
     } finally {
       this.unitsLoading.set(false);
+    }
+  }
+
+  startAddUnit(): void {
+    this.resetUnitRowState();
+    this.unitDraft.set({ ...EMPTY_UNIT_DRAFT });
+    this.addingUnit.set(true);
+  }
+
+  /**
+   * Adds the typed name to this store's list. The box stays open and empty afterwards: a shop
+   * setting itself up types its trade units one after another, and closing after each would
+   * cost a click a unit.
+   */
+  async addUnit(): Promise<void> {
+    if (this.unitForm().invalid()) {
+      return;
+    }
+    this.unitSaving.set(true);
+    this.unitErrorKey.set(null);
+    try {
+      const saved = await this.unitApi.create(this.unitDraft().name.trim());
+      // Re-sorted rather than appended — the list is alphabetical, and the new name belongs
+      // wherever it falls, not at the end.
+      this.units.update((list) =>
+        [...(list ?? []), saved].sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      this.toast.success(this.locale.t('toast.saved', { label: saved.name }));
+      this.unitDraft.set({ ...EMPTY_UNIT_DRAFT });
+    } catch (err) {
+      const status = (err as { status?: number } | null)?.status;
+      this.unitErrorKey.set(status === 409 ? 'settings.units.manage.duplicate' : 'error.generic');
+    } finally {
+      this.unitSaving.set(false);
     }
   }
 
@@ -214,6 +261,7 @@ export class SettingsUnits {
   }
 
   private resetUnitRowState(): void {
+    this.addingUnit.set(false);
     this.editingUnitId.set(null);
     this.confirmingUnitId.set(null);
     this.unitErrorKey.set(null);

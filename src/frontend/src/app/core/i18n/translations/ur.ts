@@ -417,7 +417,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.units.manage.subtitle':
     'ہر اندراج والی اسکرین کے یونٹ خانے میں پیش کیے جانے والے نام۔ یہاں نام بدلنا یا ہٹانا پہلے سے درج کسی چیز کو تبدیل نہیں کرتا — آئٹم یا پرانا اندراج اپنا یونٹ ویسے ہی رکھتا ہے جیسے لکھا گیا تھا۔',
   'settings.units.manage.col.name': 'نام',
-  'settings.units.manage.empty.body': 'ابھی کوئی یونٹ نہیں۔',
+  'settings.units.manage.add': 'نیا یونٹ',
+  'settings.units.manage.add.placeholder': 'یونٹ کا نام',
   'settings.units.manage.loadError': 'آپ کے یونٹس لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔',
   'settings.units.manage.duplicate': 'اس نام کا یونٹ پہلے سے موجود ہے۔',
   'settings.units.manage.delete.confirm': '"{{name}}" کو اپنی یونٹس کی فہرست سے ہٹا دیں؟',

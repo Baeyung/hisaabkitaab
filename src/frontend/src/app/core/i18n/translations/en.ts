@@ -434,7 +434,8 @@ export const en = {
   'settings.units.manage.subtitle':
     "The names offered on every entry screen's unit box. Renaming or removing one here leaves anything already recorded untouched — an item or a past entry keeps its own unit as typed.",
   'settings.units.manage.col.name': 'Name',
-  'settings.units.manage.empty.body': 'No units yet.',
+  'settings.units.manage.add': 'New unit',
+  'settings.units.manage.add.placeholder': 'Unit name',
   'settings.units.manage.loadError': "Couldn't load your units. Please try again.",
   'settings.units.manage.duplicate': 'A unit with that name already exists.',
   'settings.units.manage.delete.confirm': 'Remove "{{name}}" from your units list?',

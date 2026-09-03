@@ -1,6 +1,6 @@
 /* Store Settings › Units — only what this screen adds on top of settings-table.css: the two
-   collapsible sections, the read-only standard-rates list, the preset chips, and the
-   read-only pair shown in place of two fields while editing a conversion. */
+   collapsible sections, the field of unit tokens, the read-only standard-rates list, the
+   preset chips, and the conversion sentence shown while adding or editing a rate. */
 
 /* .fold--section already carries its own margin-top (styles.css), so the two sections and
    the page header space themselves correctly with no extra rule here. Its body is flush by
@@ -9,6 +9,186 @@
    instead, same as every other Store Settings screen. */
 .fold--section .fold__body {
   padding: 18px;
+}
+
+/* ── Manage units ──────────────────────────────────────────────────────
+   A unit is a name and nothing else — no second column, no order that means anything, so
+   there is nothing for a table to line up. The names sit straight in the fold's body as one
+   wrapping field of tokens, which is also the only thing that fits: a shop with twenty-one
+   units had twenty-one framed rows, each holding one word and a thousand pixels of nothing.
+   Same pill geometry as .chip below, in neutral rather than brand ink — these are facts the
+   shop keeps, not shortcuts it can take. */
+.unitfield {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* The token itself is the flex item, so a <li> wrapper would only add a box to align. */
+.unitfield__item {
+  display: contents;
+}
+.unitfield__err {
+  margin: 10px 0 0;
+}
+
+.unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 13px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: start;
+  color: var(--kg-ink);
+  background: var(--kg-fill-subtle);
+  border: 1px solid var(--kg-line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.unit:hover {
+  background: var(--kg-hover);
+  border-color: var(--kg-line-hover);
+}
+.unit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+/* The whole token is the rename button; the pencil only says so. Faint at rest so twenty of
+   them read as a list of names rather than a wall of controls, and it keeps its space either
+   way — a mark that appeared on hover would reflow every token after it. */
+.unit__pen {
+  flex: none;
+  color: var(--kg-faint);
+  opacity: 0.35;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease;
+}
+.unit:hover .unit__pen,
+.unit:focus-visible .unit__pen {
+  opacity: 1;
+  color: var(--kg-brand);
+}
+
+/* Adding: the same token, dashed, at the end of the field — a name-shaped gap to fill. */
+.unit--new {
+  color: var(--kg-brand);
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--kg-tint-brand-line);
+}
+.unit--new:hover {
+  background: var(--kg-tint-brand);
+  border-color: var(--kg-brand);
+}
+
+/* Open for typing — renaming a token or filling the new one. The token keeps its place in
+   the field and the rest reflow around it, so nothing jumps. */
+.unit--open {
+  gap: 2px;
+  padding: 0 5px;
+  background: var(--kg-card);
+  border-color: var(--kg-brand);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+  cursor: default;
+}
+.unit__input {
+  /* Grows with what is typed where the browser supports it; the width is the fallback. */
+  width: 11ch;
+  field-sizing: content;
+  min-width: 7ch;
+  max-width: 18ch;
+  height: 30px;
+  padding: 0 9px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line-strong);
+  border-radius: 8px;
+}
+.unit__input:focus {
+  outline: none;
+  border-color: var(--kg-brand);
+}
+.unit__input::placeholder {
+  color: var(--kg-placeholder);
+  font-weight: 400;
+}
+.unit__act {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--kg-muted);
+  cursor: pointer;
+}
+.unit__act:hover:not(:disabled) {
+  background: var(--kg-hover);
+  color: var(--kg-ink);
+}
+.unit__act--go:hover:not(:disabled) {
+  color: var(--kg-brand);
+}
+.unit__act--danger:hover:not(:disabled) {
+  color: var(--kg-out);
+}
+.unit__act:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.unit__act:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* Asking before removing one: the token widens into the question rather than pushing a
+   strip in under the list, so the answer stays where the name was. */
+.unit--confirm {
+  gap: 8px;
+  padding: 4px 4px 4px 14px;
+  font-weight: 500;
+  background: var(--kg-tint-out);
+  border-color: var(--kg-tint-out-line);
+  cursor: default;
+}
+.unit__ask {
+  font-size: 13px;
+  color: var(--kg-ink);
+}
+
+.unit__skel {
+  height: 40px;
+  border-radius: 999px;
+}
+
+/* Fingers need more than a pointer does, and the token is the tap target. */
+@media (pointer: coarse) {
+  .unit {
+    min-height: 46px;
+  }
+  .unit__act {
+    width: 38px;
+    height: 38px;
+  }
+  .unit__input {
+    height: 36px;
+  }
 }
 
 .std {

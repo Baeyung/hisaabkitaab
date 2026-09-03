@@ -6,8 +6,9 @@ import { SettingsUnits } from './units';
 import { StoreService } from '../../core/store/store.service';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { UnitConversionService } from '../../core/units/unit-conversion.service';
-import { UnitService } from '../../core/units/unit.service';
+import { Unit, UnitService } from '../../core/units/unit.service';
 import { UnitConversionDraft, UnitConversionRate } from '../../core/units/unit-conversion.models';
+import { ToastService } from '../../shared/toast/toast.service';
 
 /**
  * A rate is keyed by its pair, so correcting the pair — "that 22 was gaz, not metre" — writes
@@ -16,7 +17,13 @@ import { UnitConversionDraft, UnitConversionRate } from '../../core/units/unit-c
  */
 const RATE: UnitConversionRate = { id: 'rate-1', fromUnit: 'metre', toUnit: 'than', factor: 22 };
 
-function setup() {
+/** What the store already has when a test starts — the shape UnitService.list() returns. */
+const UNITS: Unit[] = [
+  { id: 'u-1', name: 'Bori' },
+  { id: 'u-2', name: 'Than' },
+];
+
+function setup(unitApi: Partial<UnitService> = {}) {
   const taught: UnitConversionDraft[] = [];
   const deleted: string[] = [];
   const rates = signal<UnitConversionRate[]>([RATE]);
@@ -43,9 +50,10 @@ function setup() {
       provideHttpClient(),
       provideHttpClientTesting(),
       { provide: UnitConversionService, useValue: fakeConversions },
-      { provide: UnitService, useValue: { list: () => Promise.resolve([]) } },
+      { provide: UnitService, useValue: { list: () => Promise.resolve(UNITS), ...unitApi } },
       { provide: StoreService, useValue: { stores: signal([]), currentId: signal('shop-1') } },
       { provide: LocaleService, useValue: { t: (key: string) => key } },
+      { provide: ToastService, useValue: { success: () => {}, error: () => {} } },
     ],
   });
 
@@ -83,5 +91,46 @@ describe('SettingsUnits editing a rate', () => {
     await page.save();
 
     expect(deleted).toEqual([]);
+  });
+});
+
+/**
+ * The New unit token. The list it lands in is alphabetical and the token stays open for the
+ * next name, so both have to hold after a save — a shop setting itself up types several in a
+ * row and would otherwise find them piling up at the end.
+ */
+describe('SettingsUnits adding a unit', () => {
+  it('files the new name alphabetically and leaves the box ready for the next', async () => {
+    const created: string[] = [];
+    const { page } = setup({
+      create: (name: string) => {
+        created.push(name);
+        return Promise.resolve({ id: 'u-3', name });
+      },
+    });
+    await Promise.resolve();
+
+    page.startAddUnit();
+    page['unitDraft'].set({ name: '  Gaz  ' });
+    await page.addUnit();
+
+    expect(created).toEqual(['Gaz']);
+    expect(page['units']()?.map((u) => u.name)).toEqual(['Bori', 'Gaz', 'Than']);
+    expect(page['addingUnit']()).toBe(true);
+    expect(page['unitDraft']().name).toBe('');
+  });
+
+  it('says so when the shop already has that name, and adds nothing', async () => {
+    const { page } = setup({
+      create: () => Promise.reject({ status: 409 }),
+    });
+    await Promise.resolve();
+
+    page.startAddUnit();
+    page['unitDraft'].set({ name: 'bori' });
+    await page.addUnit();
+
+    expect(page['unitErrorKey']()).toBe('settings.units.manage.duplicate');
+    expect(page['units']()?.map((u) => u.name)).toEqual(['Bori', 'Than']);
   });
 });
