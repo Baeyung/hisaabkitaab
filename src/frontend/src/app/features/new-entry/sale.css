@@ -169,13 +169,26 @@ select.fld__input {
   border: 1px solid var(--kg-line);
   border-radius: 12px;
 }
+/* How many columns a line has is the shop's business now, so the track comes from the
+   component as a custom property on .grid and the heading and every row inherit it. The
+   fallback is the grid the app ships with — item, qty, unit, rate, amount, remove. */
 .grid__head,
 .grid__row {
   display: grid;
-  grid-template-columns:
-    minmax(0, 2fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(70px, 1.1fr) 40px;
+  grid-template-columns: var(
+    --kg-grid-cols,
+    minmax(0, 2fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(70px, 1.1fr) 40px
+  );
   gap: 8px;
   align-items: center;
+}
+/* A column the shop's formula fills in: reads as a figure, not as a box to type in. */
+.grid__derived {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  text-align: end;
+  overflow-wrap: anywhere;
 }
 .grid__head {
   padding: 0 0 4px;
@@ -627,14 +640,15 @@ select.fld__input {
      used to be. The amount gets its own full-width line below qty/unit/rate
      instead of being squeezed into the 40px remove-button track — that's
      what was wrapping "Rs 5,000,000" into two jittering lines. */
+  /* Named areas cannot survive a column count the shop chooses, so the three fixed
+     positions — design, amount, remove — are placed by line and the shop's own columns
+     simply flow into the rows between them. Three to a row on a phone, which is what the
+     old 'qty unit rate' area was; a fourth column wraps onto the next line instead of
+     squeezing all four into the same width. */
   .grid__row {
     /* The remove button is a fixed 40px, not a fraction of the row — a written
        line's design field gives up exactly the button's width, no more. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 40px;
-    grid-template-areas:
-      'design design design remove'
-      'qty unit rate .'
-      'amount amount amount amount';
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 40px;
     gap: 8px;
     padding: 12px 0;
     border: 0;
@@ -646,36 +660,28 @@ select.fld__input {
      leaving a dead 40px gap on the right. */
   .grid__row--waiting {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas:
-      'design design design'
-      'qty unit rate'
-      'amount amount amount';
   }
-  .grid__row > :nth-child(1) {
-    grid-area: design;
+  /* The item box owns the first line, sharing it only with the remove button. */
+  .grid__row > :first-child {
+    grid-row: 1;
+    grid-column: 1 / -2;
   }
-  .grid__row > :nth-child(2) {
-    grid-area: qty;
-  }
-  .grid__row > :nth-child(3) {
-    grid-area: unit;
-  }
-  .grid__row > :nth-child(4) {
-    grid-area: rate;
+  .grid__row--waiting > :first-child {
+    grid-column: 1 / -1;
   }
   .grid__amount {
-    grid-area: amount;
+    grid-column: 1 / -1;
     align-self: center;
     margin-top: 2px;
     font-size: 17px;
   }
   .grid__row > .iconbtn {
-    grid-area: remove;
+    grid-row: 1;
+    grid-column: -2 / -1;
     justify-self: end;
   }
-  /* The waiting row's template has no "remove" area at all — without this the
-     hidden button falls back to auto-placement and opens an extra implicit
-     row underneath, showing up as a blank gap under the blank line. */
+  /* A blank line's row has no button track, and an auto-placed one would open an extra
+     implicit row underneath — a blank gap under the blank line. */
   .grid__row--waiting > .iconbtn {
     display: none;
   }

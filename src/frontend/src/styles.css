@@ -807,6 +807,28 @@ html[dir='rtl'] select.rm-input {
   direction: ltr;
   unicode-bidi: isolate;
 }
+/* A shop's own columns, named. Several of them will not fit a phone on one line the way
+   "63 Gaz × 100" does, so this run is allowed to wrap — the leader dots above it are what
+   made a single unbroken line worth insisting on, and a wrapped run still reads as one
+   calculation because each figure carries its column's name. */
+.bill-line__calc:has(.bill-line__cell) {
+  flex: 0 1 auto;
+  white-space: normal;
+  text-align: end;
+}
+.bill-line__cell {
+  white-space: nowrap;
+}
+.bill-line__cell + .bill-line__cell::before {
+  content: '·';
+  margin: 0 4px;
+  color: var(--kg-faint);
+}
+.bill-line__cellname {
+  margin-inline-end: 3px;
+  color: var(--kg-faint);
+  font-size: 0.85em;
+}
 .bill-total {
   display: flex;
   align-items: baseline;

@@ -1,8 +1,10 @@
 package io.github.baeyung.hisaabkitaab.entity;
 
+import io.github.baeyung.hisaabkitaab.converters.CustomFieldValuesConverter;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TargetKind;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Entity
 @Table(name = "transaction_lines")
@@ -74,4 +77,24 @@ public class TransactionLine
     private String unit;
 
     private Double itemSoldAt;
+
+    /**
+     * What this shop's own entry columns held on this line — {@code {"thans": 3, "gazana":
+     * 21, "rate": 100}} — for a shop that has configured them in Store Settings › Custom
+     * Fields. Null on every line of every shop that has not, and on the cash and party legs
+     * of every entry, which have no columns of their own.
+     *
+     * <p>Carried, never read. {@link #quantity} and {@link #itemSoldAt} stay the only numbers
+     * this side computes with: the entry screen derives them from its own formulas so that
+     * {@code quantity × itemSoldAt} is exactly the line total the shopkeeper agreed to, which
+     * is what keeps {@code DocumentTotals.goods()} agreeing with the screen that wrote it.
+     *
+     * <p>A null is not a missing value, it is the default two columns — the client reads it
+     * back as {@code {quantity, rate}} off the two fields above, because the default field
+     * ids are the client's vocabulary in the same way {@code nav.ledger} is. See
+     * V14__transaction_line_custom_fields.sql.
+     */
+    @Column(columnDefinition = "text")
+    @Convert(converter = CustomFieldValuesConverter.class)
+    private Map<String, BigDecimal> customFields;
 }

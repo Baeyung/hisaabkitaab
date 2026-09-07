@@ -284,7 +284,12 @@ public class EventService
                         line.getItem().getId(),
                         line.getItem().getName(),
                         line.getQuantity(),
-                        line.getItemSoldAt()))
+                        line.getItemSoldAt(),
+                        // Null for a line written before the shop had its own columns, which
+                        // the entry screen reads as its two default ones off the quantity and
+                        // rate beside it. Nothing is filled in here: the default field ids are
+                        // the client's vocabulary, not this side's.
+                        line.getCustomFields()))
                 .toList();
         request.setItems(items);
 

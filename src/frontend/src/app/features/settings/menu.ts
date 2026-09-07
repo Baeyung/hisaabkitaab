@@ -580,6 +580,9 @@ export class SettingsMenu {
       // The same again: Reports owns this, and arranging a menu must not be what silently
       // switches a shop's nightly report and khata reminders back off.
       reports: saved?.reports,
+      // And again: Custom Fields owns this. Reordering a sidebar must not be what resets a
+      // shop's sale and purchase grids back to the built-in columns.
+      customFields: saved?.customFields,
     };
   }
 }

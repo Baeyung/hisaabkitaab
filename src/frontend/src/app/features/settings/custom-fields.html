@@ -1,0 +1,191 @@
+<section class="set">
+  <header class="set__head">
+    <div class="set__titles">
+      <h1 class="set__title">{{ locale.t('nav.settings.customFields') }}</h1>
+      <p class="set__sub">{{ locale.t('settings.customFields.subtitle') }}</p>
+    </div>
+  </header>
+
+  @if (!arranged()) {
+    <p class="cf__note">{{ locale.t('settings.customFields.usingDefault') }}</p>
+  }
+
+  <!-- ── the columns ──────────────────────────────────────────────────── -->
+  <div class="tablewrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th scope="col">{{ locale.t('settings.customFields.col.name') }}</th>
+          <th scope="col">{{ locale.t('settings.customFields.col.formula') }}</th>
+          <th scope="col"><span class="sr-only">{{ locale.t('settings.customFields.col.actions') }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track $index) {
+          <tr class="tbl__row">
+            <td class="tbl__name">
+              <input
+                class="fld__input"
+                type="text"
+                [value]="row.label"
+                (input)="setLabel($index, $any($event.target).value)"
+                [attr.placeholder]="locale.t('settings.customFields.col.name')"
+                [attr.aria-label]="locale.t('settings.customFields.col.name')"
+              />
+            </td>
+            <td>
+              <input
+                class="fld__input num"
+                type="text"
+                inputmode="text"
+                spellcheck="false"
+                [value]="row.formula"
+                (input)="setFormula($index, $any($event.target).value)"
+                [attr.placeholder]="locale.t('settings.customFields.typedIn')"
+                [attr.aria-label]="
+                  locale.t('settings.customFields.formulaFor', { name: row.label || '—' })
+                "
+              />
+            </td>
+            <td>
+              <div class="rowicons">
+                <button
+                  type="button"
+                  class="iconbtn"
+                  (click)="move($index, -1)"
+                  [disabled]="$first"
+                  [attr.aria-label]="locale.t('settings.customFields.moveUp')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="M6 15l6-6 6 6" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="iconbtn"
+                  (click)="move($index, 1)"
+                  [disabled]="$last"
+                  [attr.aria-label]="locale.t('settings.customFields.moveDown')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="iconbtn iconbtn--danger"
+                  (click)="removeColumn($index)"
+                  [attr.aria-label]="locale.t('common.delete') + ' — ' + (row.label || '')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M5 12h14" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cf__addrow">
+    <button type="button" class="btn btn--ghost btn--sm" (click)="addColumn()">
+      {{ locale.t('settings.customFields.add') }}
+    </button>
+  </div>
+
+  <!-- ── how the line adds up ─────────────────────────────────────────── -->
+  <div class="cf__formulas">
+    <div class="efld">
+      <label class="efld__lbl" for="cf-total">{{ locale.t('settings.customFields.total') }}</label>
+      <p class="cf__hint">{{ locale.t('settings.customFields.total.hint') }}</p>
+      <input
+        id="cf-total"
+        class="fld__input num"
+        type="text"
+        spellcheck="false"
+        [value]="totalFormula()"
+        (input)="totalFormula.set($any($event.target).value)"
+      />
+      <div class="cf__chips">
+        @for (chip of chips(); track chip.id) {
+          <button type="button" class="cf__chip" (click)="insert('total', chip.id)">
+            {{ chip.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="efld">
+      <label class="efld__lbl" for="cf-shelf">{{ locale.t('settings.customFields.shelf') }}</label>
+      <p class="cf__hint">{{ locale.t('settings.customFields.shelf.hint') }}</p>
+      <input
+        id="cf-shelf"
+        class="fld__input num"
+        type="text"
+        spellcheck="false"
+        [value]="shelfFormula()"
+        (input)="shelfFormula.set($any($event.target).value)"
+      />
+      <div class="cf__chips">
+        @for (chip of chips(); track chip.id) {
+          <button type="button" class="cf__chip" (click)="insert('shelf', chip.id)">
+            {{ chip.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="efld">
+      <label class="efld__lbl" for="cf-rate">{{ locale.t('settings.customFields.rateField') }}</label>
+      <p class="cf__hint">{{ locale.t('settings.customFields.rateField.hint') }}</p>
+      <select
+        id="cf-rate"
+        class="fld__input"
+        [value]="rateField()"
+        (change)="rateField.set($any($event.target).value)"
+      >
+        <option value="">{{ locale.t('settings.customFields.rateField.none') }}</option>
+        @for (row of rateChoices(); track row.id) {
+          <option [value]="row.id">{{ row.label || row.id }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- ── the unit box ─────────────────────────────────────────────────── -->
+  <div class="cf__unit">
+    <label class="sw sw--wide" [class.sw--locked]="!canShowUnit()">
+      <input
+        class="sw__box"
+        type="checkbox"
+        [checked]="showUnit() && canShowUnit()"
+        [disabled]="!canShowUnit()"
+        (change)="showUnit.set($any($event.target).checked)"
+      />
+      <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
+      <span class="sw__text">{{ locale.t('settings.customFields.showUnit') }}</span>
+    </label>
+    <p class="cf__hint">
+      {{
+        canShowUnit()
+          ? locale.t('settings.customFields.showUnit.hint')
+          : locale.t('settings.customFields.showUnit.unavailable')
+      }}
+    </p>
+  </div>
+
+  @if (attempted() && problem(); as bad) {
+    <p role="alert" class="alert">{{ locale.t(bad.key, bad.params) }}</p>
+  }
+
+  <div class="edit__foot">
+    <button type="button" class="btn btn--ghost" (click)="reset()">
+      {{ locale.t('settings.customFields.reset') }}
+    </button>
+    <button type="button" class="btn btn--primary" (click)="save()" [disabled]="saving()">
+      {{ locale.t('settings.customFields.save') }}
+    </button>
+  </div>
+</section>

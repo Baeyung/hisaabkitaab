@@ -126,6 +126,7 @@ export const en = {
   'nav.settings.units': 'Units',
   'nav.settings.menu': 'Menu',
   'nav.settings.reports': 'Reports',
+  'nav.settings.customFields': 'Custom Fields',
   // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
   // same two things `stores.suspendedSettled` says on the picker, in one line.
   'nav.closedHint': 'This shop is closed — your plan no longer covers it. Nothing has been lost.',
@@ -1158,6 +1159,47 @@ export const en = {
   'settings.reports.save': 'Save reports',
   'settings.reports.saving': 'Saving…',
   'settings.reports.saved': 'Reports saved',
+
+  // ── Store Settings › Custom Fields ────────────────────────────────────────
+  // What a shop asks for on each line of a sale or a purchase. Absent means the grid the
+  // app ships with, which is what every shop has until an owner opens this screen.
+  'settings.customFields.subtitle':
+    'What you are asked for on each line of a sale or a purchase.',
+  'settings.customFields.usingDefault':
+    'This shop is using the columns the app comes with — item, quantity, unit, rate. Change them below and every sale and purchase is written that way.',
+  'settings.customFields.col.name': 'Column',
+  'settings.customFields.col.formula': 'Worked out as',
+  'settings.customFields.col.actions': 'Actions',
+  'settings.customFields.typedIn': 'Typed in',
+  'settings.customFields.formulaFor': 'How {{name}} is worked out',
+  'settings.customFields.add': 'Add a column',
+  'settings.customFields.moveUp': 'Move left',
+  'settings.customFields.moveDown': 'Move right',
+  'settings.customFields.total': 'Line total',
+  'settings.customFields.total.hint':
+    'What the line comes to. Tap a column below to add it, or type: thans * gazana * rate',
+  'settings.customFields.shelf': 'Quantity off the shelf',
+  'settings.customFields.shelf.hint':
+    'How much stock the line moves, in the item’s own unit. This is what stock, inventory and profit are counted from.',
+  'settings.customFields.rateField': 'Rate column',
+  'settings.customFields.rateField.hint':
+    'The item’s saved price prefills here, and this is the column the unit conversion rescales.',
+  'settings.customFields.rateField.none': 'None',
+  'settings.customFields.showUnit': 'Ask for a unit on each line',
+  'settings.customFields.showUnit.hint':
+    'Switch this off and the unit box goes, and with it the conversion slip — every quantity is taken to be in the item’s own unit.',
+  'settings.customFields.showUnit.unavailable':
+    'The unit box needs the shelf quantity to be one column, and a separate rate column beside it.',
+  'settings.customFields.reset': 'Back to the standard columns',
+  'settings.customFields.save': 'Save columns',
+  'settings.customFields.saved': 'Columns saved',
+  'settings.customFields.error.noColumns': 'A line needs at least one column.',
+  'settings.customFields.error.unnamed': 'Every column needs a name.',
+  'settings.customFields.error.duplicate': 'Two columns are both called “{{name}}”.',
+  'settings.customFields.error.cycle':
+    '“{{name}}” is worked out from itself, so it can never be worked out.',
+  'settings.customFields.error.unknownField': '{{where}} names “{{at}}”, which is not a column.',
+  'settings.customFields.error.badFormula': '{{where}} cannot be read. Use only + − × ÷ and ( ).',
   'settings.reports.daily.title': 'Daily report',
   'settings.reports.daily.help':
     'Every evening, the whole day on one PDF — cashbook, bills, purchases, every khata and what is left in stock — sent to you on WhatsApp.',

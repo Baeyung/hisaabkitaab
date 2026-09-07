@@ -125,6 +125,7 @@ export const ur: Record<TranslationKey, string> = {
   'nav.settings.units': 'یونٹس',
   'nav.settings.menu': 'مینو',
   'nav.settings.reports': 'رپورٹس',
+  'nav.settings.customFields': 'اپنے کالم',
   'nav.closedHint': 'یہ دکان بند ہے — آپ کا پلان اب اسے نہیں سنبھالتا۔ کچھ ضائع نہیں ہوا۔',
 
   // ── بورڈ (آسان موڈ) ────────────────────────────────────────────────
@@ -1120,6 +1121,46 @@ export const ur: Record<TranslationKey, string> = {
   'settings.reports.save': 'رپورٹس محفوظ کریں',
   'settings.reports.saving': 'محفوظ ہو رہا ہے…',
   'settings.reports.saved': 'رپورٹس محفوظ ہو گئیں',
+
+  // ── Store Settings › Custom Fields ────────────────────────────────────────
+  'settings.customFields.subtitle': 'فروخت یا خرید کی ہر لائن پر آپ سے کیا پوچھا جائے۔',
+  'settings.customFields.usingDefault':
+    'یہ دکان ایپ کے اپنے کالم استعمال کر رہی ہے — آئٹم، مقدار، یونٹ، ریٹ۔ نیچے تبدیل کریں اور ہر فروخت و خرید اسی طرح لکھی جائے گی۔',
+  'settings.customFields.col.name': 'کالم',
+  'settings.customFields.col.formula': 'حساب کیسے ہو',
+  'settings.customFields.col.actions': 'اعمال',
+  'settings.customFields.typedIn': 'خود لکھیں',
+  'settings.customFields.formulaFor': '{{name}} کا حساب کیسے ہو',
+  'settings.customFields.add': 'کالم شامل کریں',
+  'settings.customFields.moveUp': 'بائیں لے جائیں',
+  'settings.customFields.moveDown': 'دائیں لے جائیں',
+  'settings.customFields.total': 'لائن کی رقم',
+  'settings.customFields.total.hint':
+    'لائن کی کل رقم۔ نیچے کسی کالم پر دبائیں، یا لکھیں: thans * gazana * rate',
+  'settings.customFields.shelf': 'اسٹاک سے نکلنے والی مقدار',
+  'settings.customFields.shelf.hint':
+    'لائن سے کتنا مال حرکت کرتا ہے، آئٹم کے اپنے یونٹ میں۔ اسٹاک، انوینٹری اور منافع اسی سے گنے جاتے ہیں۔',
+  'settings.customFields.rateField': 'ریٹ والا کالم',
+  'settings.customFields.rateField.hint':
+    'آئٹم کی محفوظ قیمت یہاں بھری جاتی ہے، اور یونٹ کی تبدیلی اسی کالم کو ایڈجسٹ کرتی ہے۔',
+  'settings.customFields.rateField.none': 'کوئی نہیں',
+  'settings.customFields.showUnit': 'ہر لائن پر یونٹ پوچھیں',
+  'settings.customFields.showUnit.hint':
+    'اسے بند کریں تو یونٹ کا خانہ اور اس کے ساتھ تبدیلی کی پرچی بھی ختم — ہر مقدار آئٹم کے اپنے یونٹ میں سمجھی جائے گی۔',
+  'settings.customFields.showUnit.unavailable':
+    'یونٹ کے خانے کے لیے ضروری ہے کہ اسٹاک کی مقدار ایک ہی کالم ہو، اور اس کے ساتھ الگ ریٹ کالم ہو۔',
+  'settings.customFields.reset': 'عام کالموں پر واپس',
+  'settings.customFields.save': 'کالم محفوظ کریں',
+  'settings.customFields.saved': 'کالم محفوظ ہو گئے',
+  'settings.customFields.error.noColumns': 'لائن کے لیے کم از کم ایک کالم چاہیے۔',
+  'settings.customFields.error.unnamed': 'ہر کالم کا نام ضروری ہے۔',
+  'settings.customFields.error.duplicate': 'دو کالموں کا نام ایک ہی ہے: «{{name}}»۔',
+  'settings.customFields.error.cycle':
+    '«{{name}}» کا حساب خود اسی سے نکلتا ہے، اس لیے یہ کبھی حل نہیں ہو سکتا۔',
+  'settings.customFields.error.unknownField':
+    '{{where}} میں «{{at}}» لکھا ہے، جو کوئی کالم نہیں۔',
+  'settings.customFields.error.badFormula':
+    '{{where}} پڑھا نہیں جا سکا۔ صرف + − × ÷ اور ( ) استعمال کریں۔',
   'settings.reports.daily.title': 'روزانہ رپورٹ',
   'settings.reports.daily.help':
     'ہر شام، پورے دن کا حساب ایک PDF میں — روزنامچہ، بل، خرید، ہر کھاتہ اور موجودہ اسٹاک — واٹس ایپ پر۔',

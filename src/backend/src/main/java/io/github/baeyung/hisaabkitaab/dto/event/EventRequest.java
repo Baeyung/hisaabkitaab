@@ -2,6 +2,7 @@ package io.github.baeyung.hisaabkitaab.dto.event;
 
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -48,5 +50,16 @@ public class EventRequest
         private String name;
         private BigDecimal quantity;
         private Double itemSoldAt;
+        /**
+         * The shop's own entry columns for this line, when it has configured any — see
+         * {@code TransactionLine.customFields}. Null (and absent on the way back out) for
+         * every shop that has not, which the entry screen reads as its two default columns.
+         *
+         * <p>Capped at a size the grid could plausibly show. The cap is here rather than in
+         * the converter because this is the boundary; key length is capped there, because a
+         * map's keys are not reachable from bean validation.
+         */
+        @Size(max = 32)
+        private Map<String, BigDecimal> customFields;
     }
 }

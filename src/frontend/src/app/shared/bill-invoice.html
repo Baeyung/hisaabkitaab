@@ -30,7 +30,17 @@
             <span class="bill-line__name">{{ line.itemName || '—' }}</span>
             <span class="bill-line__leader" aria-hidden="true"></span>
             <span class="bill-line__calc num">
-              @if (line.quantity != null) {
+              @if (cells(line); as cols) {
+                <!-- The shop's own columns, named, as this line recorded them. Named rather
+                     than joined with × because a shop's formula is not always a product. -->
+                @for (col of cols; track $index) {
+                  <span class="bill-line__cell">
+                    <span class="bill-line__cellname">{{ col.label }}</span>
+                    {{ locale.formatNumber(col.value) }}
+                  </span>
+                }
+                =
+              } @else if (line.quantity != null) {
                 {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
               }
               {{ locale.money(line.amount) }}

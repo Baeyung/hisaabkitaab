@@ -230,7 +230,10 @@ public class ProcessingService
                             row.item().getId(),
                             row.item().getName(),
                             orZero(row.line().getQuantity()),
-                            orZero(row.line().getPricePerUnit()).doubleValue()))
+                            orZero(row.line().getPricePerUnit()).doubleValue(),
+                            // A processing batch is entered on its own screen, not on the
+                            // arranged sale/purchase grid, so it has no custom columns.
+                            null))
                     .toList());
 
             eventService.publishEvent(purchase, store);
