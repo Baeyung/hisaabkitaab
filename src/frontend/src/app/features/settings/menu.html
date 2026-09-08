@@ -6,7 +6,24 @@
         {{ locale.t(easy ? 'settings.menu.subtitleEasy' : 'settings.menu.subtitle') }}
       </p>
     </div>
+
+    @if (otherStores().length > 0 && !copyOpen()) {
+      <div class="custom__actions">
+        <button type="button" class="btn btn--ghost" (click)="copyOpen.set(true)">
+          {{ locale.t('settings.copy.button') }}
+        </button>
+      </div>
+    }
   </header>
+
+  @if (copyOpen()) {
+    <app-copy-to-stores
+      [hint]="easy ? 'settings.menu.copy.hintEasy' : 'settings.menu.copy.hint'"
+      [arrangement]="true"
+      [copyTo]="copyArrangement"
+      (closed)="copyOpen.set(false)"
+    />
+  }
 
   <form class="set__card" (submit)="$event.preventDefault(); save()">
     <!-- ── the menu itself ───────────────────────────────────────── -->

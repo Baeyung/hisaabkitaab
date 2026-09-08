@@ -1,0 +1,39 @@
+<div
+  class="copy"
+  #panel
+  tabindex="-1"
+  role="group"
+  [attr.aria-label]="locale.t('settings.copy.button')"
+>
+  <p class="copy__hint">{{ locale.t(hint()) }}</p>
+  <ul class="copy__list">
+    @for (store of targets(); track store.id) {
+      <li class="copy__item">
+        <label class="copy__opt">
+          <input type="checkbox" [checked]="picked().has(store.id)" (change)="toggle(store.id)" />
+          {{ store.name }}
+        </label>
+      </li>
+    }
+  </ul>
+  @if (failed(); as r) {
+    <p class="fld__err" role="alert">
+      {{ locale.t('settings.copy.result', { ok: r.ok.toString(), total: r.total.toString() }) }}
+    </p>
+  }
+  <div class="edit__foot">
+    <div class="rowicons">
+      <button type="button" class="btn btn--ghost btn--sm" (click)="closed.emit()">
+        {{ locale.t('common.cancel') }}
+      </button>
+      <button
+        type="button"
+        class="btn btn--primary btn--sm"
+        (click)="copy()"
+        [disabled]="copying() || picked().size === 0"
+      >
+        {{ locale.t('settings.copy.confirm') }}
+      </button>
+    </div>
+  </div>
+</div>

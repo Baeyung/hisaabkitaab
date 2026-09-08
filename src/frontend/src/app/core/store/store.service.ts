@@ -87,10 +87,10 @@ export class StoreService {
   }
 
   /**
-   * Same shape as {@link api}, for a store other than the current one — the one caller so
-   * far is copying a setting (unit conversions) from this store into another the user also
-   * has a hand in. No membership check here: the backend's `@CurrentStore` on the receiving
-   * end refuses anything the caller doesn't actually have `id` for, same as every other call.
+   * Same shape as {@link api}, for a store other than the current one — the callers are the
+   * copies that push this shop's lists and arrangement into another the user also has a hand
+   * in. No membership check here: the backend's `@CurrentStore` on the receiving end refuses
+   * anything the caller doesn't actually have `id` for, same as every other call.
    */
   apiFor(id: string, path: string): string {
     return `${this.url}/${id}/${path}`;
@@ -135,6 +135,43 @@ export class StoreService {
     const store = await firstValueFrom(this.http.put<Store>(this.api('settings'), settings));
     this._stores.update((s) => (s ?? []).map((x) => (x.id === store.id ? store : x)));
     return store;
+  }
+
+  /**
+   * Push one part of this shop's arrangement into other shops the user owns — a shop with
+   * five branches arranges its menu, or its sale grid, once rather than five times.
+   *
+   * Each target's own document is read back first and `patch` applied to it, never the copy
+   * cached here: `PUT /settings` replaces the whole document, so writing a stale one would
+   * quietly reset the target's nightly report or the menu somebody arranged this morning in
+   * another tab. `patch` therefore says only what travels, and everything it does not name
+   * stays exactly as that shop had it.
+   *
+   * Best-effort per store, like every other copy: one failing does not stop the others, and
+   * the ids that failed come back so the caller can say which need a retry. The response
+   * replaces the cached store, so the picker's next open sees what was just written.
+   */
+  async copySettingsTo(
+    ids: readonly string[],
+    patch: (target: StoreSettings) => StoreSettings,
+  ): Promise<string[]> {
+    const failed: string[] = [];
+
+    await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const target = await firstValueFrom(this.http.get<Store>(`${this.url}/${id}`));
+          const saved = await firstValueFrom(
+            this.http.put<Store>(this.apiFor(id, 'settings'), patch(target.settings)),
+          );
+          this._stores.update((s) => (s ?? []).map((x) => (x.id === saved.id ? saved : x)));
+        } catch {
+          failed.push(id);
+        }
+      }),
+    );
+
+    return failed;
   }
 
   /**

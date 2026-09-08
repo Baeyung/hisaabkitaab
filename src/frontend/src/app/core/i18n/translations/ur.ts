@@ -374,6 +374,10 @@ export const ur: Record<TranslationKey, string> = {
   'settings.menu.save': 'مینو محفوظ کریں',
   'settings.menu.saving': 'محفوظ ہو رہا ہے…',
   'settings.menu.saved': 'مینو محفوظ ہو گیا',
+  'settings.menu.copy.hint':
+    'پہلے یہ مینو یہاں محفوظ ہوتا ہے، پھر منتخب دکانوں کو بالکل یہی مینو مل جاتا ہے — وہی ترتیب، وہی گروپ، وہی نام، وہی چھپی ہوئی چیزیں، اور سائیڈ بار کے نیچے وہی کنٹرول۔ اُن کا بورڈ، اُن کی رپورٹیں اور اُن کے بِل کے کالم ویسے کے ویسے رہتے ہیں، اور کوئی دکان سائیڈ بار سے بورڈ پر (یا اُلٹ) نہیں بدلتی۔',
+  'settings.menu.copy.hintEasy':
+    'پہلے یہ بورڈ یہاں محفوظ ہوتا ہے، پھر منتخب دکانوں کو بالکل یہی بورڈ مل جاتا ہے — وہی ٹیب، وہی بینڈ اور رنگ، وہی نام اور وہی چھپے ہوئے بٹن۔ اُن کا سائیڈ بار مینو، اُن کی رپورٹیں اور اُن کے بِل کے کالم ویسے کے ویسے رہتے ہیں، اور کوئی دکان سائیڈ بار سے بورڈ پر (یا اُلٹ) نہیں بدلتی۔',
   'settings.items.subtitle': 'وہ کپڑا جو آپ رکھتے اور بیچتے ہیں۔',
   'settings.items.add': 'آئٹم شامل کریں',
   'settings.items.col.name': 'آئٹم',
@@ -407,11 +411,12 @@ export const ur: Record<TranslationKey, string> = {
   'settings.items.opening.qtyPh': 'مقدار',
   'settings.items.opening.save': 'محفوظ کریں',
   'settings.items.opening.cancel': 'منسوخ',
-  'settings.items.copy.button': 'دوسری دکانوں میں کاپی کریں',
+  'settings.copy.button': 'دوسری دکانوں میں کاپی کریں',
+  'settings.copy.confirm': 'کاپی کریں',
+  'settings.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
+
   'settings.items.copy.hint':
     'اوپر دی گئی ہر آئٹم آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے اسی نام کی آئٹم موجود ہے تو اسے چھوڑ دیا جائے گا، اس لیے دوبارہ کاپی کرنے سے کچھ اضافی نہیں بنے گا۔ شیلف پر موجود اسٹاک ساتھ نہیں جاتا، صرف کیٹلاگ کی تفصیلات جاتی ہیں۔',
-  'settings.items.copy.confirm': 'کاپی کریں',
-  'settings.items.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
 
   'settings.units.subtitle': 'اس دکان کے یونٹس اور ان کی ایک دوسرے میں تبدیلی، دونوں یہاں سے منظم کریں۔',
   'settings.units.manage.section': 'یونٹس کا انتظام',
@@ -440,11 +445,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.units.empty.body': 'ابھی کچھ نہیں سکھایا گیا۔ نیچے ایک شامل کریں، یا کسی اندراج پر پہلی بار استعمال کرتے وقت پرچی کا جواب دیں۔',
   'settings.units.loadError': 'آپ کی تبدیلیاں لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
   'settings.units.delete.confirm': '{{from}} → {{to}} تبدیلی ہٹا دیں؟',
-  'settings.units.copy.button': 'دوسری دکانوں میں کاپی کریں',
   'settings.units.copy.hint':
     'اوپر دی گئی ہر شرح آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے وہی جوڑا موجود ہے تو اسے بدل دے گی، باقی سب کچھ ویسا ہی رہے گا۔',
-  'settings.units.copy.confirm': 'کاپی کریں',
-  'settings.units.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
 
   'settings.party.subtitle': 'وہ گاہک اور بیوپاری جن کے ساتھ آپ کا کھاتہ ہے۔',
   'settings.party.add': 'پارٹی شامل کریں',
@@ -477,11 +479,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.party.opening.youOwe': 'آپ کے ذمے ان کا',
   'settings.party.opening.save': 'محفوظ کریں',
   'settings.party.opening.cancel': 'منسوخ',
-  'settings.party.copy.button': 'دوسری دکانوں میں کاپی کریں',
   'settings.party.copy.hint':
     'اوپر دی گئی ہر پارٹی آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے اسی نام کی پارٹی موجود ہے تو اسے چھوڑ دیا جائے گا، اس لیے دوبارہ کاپی کرنے سے کچھ اضافی نہیں بنے گا۔',
-  'settings.party.copy.confirm': 'کاپی کریں',
-  'settings.party.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
 
   'sale.newEntry': 'نئی انٹری',
   'sale.billDate': 'تاریخ',
@@ -1182,6 +1181,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.customFields.save': 'کالم محفوظ کریں',
   'settings.customFields.saving': 'محفوظ ہو رہا ہے…',
   'settings.customFields.saved': 'کالم محفوظ ہو گئے',
+  'settings.customFields.copy.hint':
+    'پہلے یہ کالم یہاں محفوظ ہوتے ہیں، پھر منتخب دکانوں کو بِل کی بالکل یہی لائن مل جاتی ہے — وہی کالم، وہی فارمولے، وہی یونٹ کا خانہ۔ اُن کے پرانے کالم اِس سے بدل جاتے ہیں؛ اگر یہ دکان عام کالموں پر ہے تو وہ دکانیں بھی عام کالموں پر آ جائیں گی۔ پہلے سے لکھے ہوئے بِل جوں کے توں رہتے ہیں۔',
   'settings.customFields.error.noColumns': 'لائن کے لیے کم از کم ایک کالم چاہیے۔',
   'settings.customFields.error.unnamed': 'ہر کالم کا نام ضروری ہے۔',
   'settings.customFields.error.duplicate': 'دو کالموں کا نام ایک ہی ہے: «{{name}}»۔',

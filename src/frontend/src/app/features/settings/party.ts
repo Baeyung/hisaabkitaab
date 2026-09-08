@@ -10,6 +10,7 @@ import { toDigits } from '../../shared/digits-only';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { PhoneField } from '../../shared/phone-field/phone-field';
 import { ToastService } from '../../shared/toast/toast.service';
+import { CopyToStores, copyTargets } from './copy-to-stores';
 
 /** Form-facing shape: contact/address are non-null strings for the inputs (blank → null on send). */
 interface PartyForm {
@@ -34,7 +35,7 @@ const EMPTY_FORM: PartyForm = { name: '', contact: '', address: '', openingAmoun
  */
 @Component({
   selector: 'app-party',
-  imports: [FormField, NgTemplateOutlet, PhoneField, RowWindowDirective],
+  imports: [FormField, NgTemplateOutlet, PhoneField, RowWindowDirective, CopyToStores],
   templateUrl: './party.html',
   styleUrl: './party.css',
 })
@@ -54,28 +55,10 @@ export class SettingsParty {
   protected readonly confirmingId = signal<string | null>(null);
   protected readonly openingId = signal<string | null>(null);
 
-  /**
-   * Other stores worth offering as a copy target: not this one, not read-only for this user
-   * here (a viewer elsewhere couldn't write parties anyway), and not closed — the backend's
-   * `@CurrentStore(EDITOR)` on the receiving end would refuse both regardless, this is only
-   * about not offering what would fail.
-   */
-  protected readonly otherStores = computed(
-    () =>
-      this.stores
-        .stores()
-        ?.filter(
-          (s) =>
-            s.id !== this.stores.currentId() &&
-            !s.suspended &&
-            (s.role === 'OWNER' || s.role === 'EDITOR'),
-        ) ?? [],
-  );
+  /** The other shops this list could be handed to — see {@link copyTargets}. */
+  protected readonly otherStores = computed(() => copyTargets(this.stores));
 
   protected readonly copyOpen = signal(false);
-  protected readonly copyTargets = signal<ReadonlySet<string>>(new Set());
-  protected readonly copying = signal(false);
-  protected readonly copyResult = signal<{ ok: number; total: number } | null>(null);
 
   /** Client-side, over whatever page has loaded — a shop's party list is at most a few hundred. */
   protected readonly query = signal('');
@@ -257,47 +240,16 @@ export class SettingsParty {
     }
   }
 
-  startCopy(): void {
+  protected startCopy(): void {
     this.resetRowState();
-    this.copyResult.set(null);
-    this.copyTargets.set(new Set());
     this.copyOpen.set(true);
   }
 
-  cancelCopy(): void {
-    this.copyOpen.set(false);
-  }
-
-  toggleCopyTarget(id: string): void {
-    this.copyTargets.update((set) => {
-      const next = new Set(set);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }
-
-  async copy(): Promise<void> {
-    const ids = [...this.copyTargets()];
-    if (ids.length === 0) {
-      return;
-    }
-    this.copying.set(true);
-    this.copyResult.set(null);
-    const failed = await this.api.copyTo(ids);
-    this.copying.set(false);
-    this.copyResult.set({ ok: ids.length - failed.length, total: ids.length });
-    // Only clear the picker on a clean sweep — a partial failure stays open with its
-    // targets still checked, so retrying is one click rather than re-picking every store.
-    if (failed.length === 0) {
-      this.copyOpen.set(false);
-    } else {
-      this.copyTargets.set(new Set(failed));
-    }
-  }
+  /**
+   * What copying means here, handed to the panel as a value — so it is an arrow, and
+   * carries its own `this`.
+   */
+  protected readonly copyList = (ids: string[]) => this.api.copyTo(ids);
 
   private resetRowState(): void {
     this.adding.set(false);

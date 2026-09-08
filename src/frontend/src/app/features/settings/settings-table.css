@@ -15,6 +15,14 @@
   padding: var(--kg-page-pad);
 }
 
+/* The header's own buttons — copy, add — kept off the title so a long shop name wraps
+   under them rather than shoving them off the row. */
+.custom__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
 .set__head {
   display: flex;
   align-items: flex-start;

@@ -4,7 +4,24 @@
       <h1 class="set__title">{{ locale.t('nav.settings.customFields') }}</h1>
       <p class="set__sub">{{ locale.t('settings.customFields.subtitle') }}</p>
     </div>
+
+    @if (otherStores().length > 0 && !copyOpen()) {
+      <div class="custom__actions">
+        <button type="button" class="btn btn--ghost" (click)="copyOpen.set(true)">
+          {{ locale.t('settings.copy.button') }}
+        </button>
+      </div>
+    }
   </header>
+
+  @if (copyOpen()) {
+    <app-copy-to-stores
+      hint="settings.customFields.copy.hint"
+      [arrangement]="true"
+      [copyTo]="copyArrangement"
+      (closed)="copyOpen.set(false)"
+    />
+  }
 
   <!-- ── the line, as the shop will fill it in ───────────────────────────
        Live off the boxes below, so a column added, renamed or worked out differently shows

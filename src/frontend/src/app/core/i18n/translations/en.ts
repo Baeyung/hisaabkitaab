@@ -393,6 +393,10 @@ export const en = {
   'settings.menu.save': 'Save menu',
   'settings.menu.saving': 'Saving…',
   'settings.menu.saved': 'Menu saved',
+  'settings.menu.copy.hint':
+    'Saves this menu here first, then gives the stores you pick the same one — the same order, the same groups, the same names, the same entries left out, and the same controls at the foot of the sidebar. Their board, their reports and their sale columns are left alone, and none of them is switched between the sidebar and the board.',
+  'settings.menu.copy.hintEasy':
+    'Saves this board here first, then gives the stores you pick the same one — the same tabs, the same bands and colours, the same names and the same buttons left out. Their sidebar menu, their reports and their sale columns are left alone, and none of them is switched between the sidebar and the board.',
   'settings.items.subtitle': 'The cloth you stock and sell.',
   'settings.items.add': 'Add item',
   'settings.items.col.name': 'Item',
@@ -424,11 +428,14 @@ export const en = {
   'settings.items.opening.qtyPh': 'Quantity',
   'settings.items.opening.save': 'Save',
   'settings.items.opening.cancel': 'Cancel',
-  'settings.items.copy.button': 'Copy to other stores',
+  // Said the same way on every screen that copies, since it is the same panel; only the
+  // hint below differs, because only what travels differs.
+  'settings.copy.button': 'Copy to other stores',
+  'settings.copy.confirm': 'Copy',
+  'settings.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
+
   'settings.items.copy.hint':
     "Copies every item above into the stores you pick — an item they already have (matched by name) is left alone, so copying twice adds nothing extra. Stock on the shelf doesn't come along, only the catalog details.",
-  'settings.items.copy.confirm': 'Copy',
-  'settings.items.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
   'settings.units.subtitle': 'Manage the units this shop uses, and how they convert into one another.',
   'settings.units.manage.section': 'Manage units',
@@ -459,11 +466,8 @@ export const en = {
     'Nothing taught yet. Add one below, or answer the conversion slip the first time you use it on an entry.',
   'settings.units.loadError': "Couldn't load your conversions. Please try again.",
   'settings.units.delete.confirm': 'Remove the {{from}} → {{to}} conversion?',
-  'settings.units.copy.button': 'Copy to other stores',
   'settings.units.copy.hint':
     "Copies every rate above into the stores you pick — it overwrites a rate they already have for the same pair, and leaves everything else in them alone.",
-  'settings.units.copy.confirm': 'Copy',
-  'settings.units.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
   'settings.party.subtitle': 'The customers and suppliers you keep an account with.',
   'settings.party.add': 'Add party',
@@ -496,11 +500,8 @@ export const en = {
   'settings.party.opening.youOwe': 'You owe them',
   'settings.party.opening.save': 'Save',
   'settings.party.opening.cancel': 'Cancel',
-  'settings.party.copy.button': 'Copy to other stores',
   'settings.party.copy.hint':
     "Copies every party above into the stores you pick — a party they already have (matched by name) is left alone, so copying twice adds nothing extra.",
-  'settings.party.copy.confirm': 'Copy',
-  'settings.party.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
   'sale.newEntry': 'New entry',
   'sale.billDate': 'Date',
@@ -1227,6 +1228,8 @@ export const en = {
   'settings.customFields.save': 'Save columns',
   'settings.customFields.saving': 'Saving…',
   'settings.customFields.saved': 'Columns saved',
+  'settings.customFields.copy.hint':
+    'Saves these columns here first, then gives the stores you pick the same sale and purchase line — the same columns, the same formulas, the same unit box. It replaces whatever they were using, so a store with columns of its own loses them; if this store is on the standard columns, copying puts them back to standard. Nothing already written on a bill changes.',
   'settings.customFields.error.noColumns': 'A line needs at least one column.',
   'settings.customFields.error.unnamed': 'Every column needs a name.',
   'settings.customFields.error.duplicate': 'Two columns are both called “{{name}}”.',

@@ -14,6 +14,7 @@ import {
   resolveValues,
 } from '../../core/store/custom-field.models';
 import { FormulaError, evaluate, findCycles, parseFormula } from '../../core/store/formula';
+import { CopyToStores, copyTargets } from './copy-to-stores';
 
 /** A column as this screen holds it while it is being edited. */
 interface Draft {
@@ -72,6 +73,7 @@ type PreviewCell =
  */
 @Component({
   selector: 'app-settings-custom-fields',
+  imports: [CopyToStores],
   templateUrl: './custom-fields.html',
   styleUrls: ['./settings-table.css', './settings-switch.css', './custom-fields.css'],
 })
@@ -92,6 +94,10 @@ export class SettingsCustomFields {
 
   /** Whether this shop is running its own columns at all, or the ones the app ships with. */
   protected readonly arranged = signal(false);
+
+  /** The other shops this grid could be given to, and whether they are being asked. */
+  protected readonly otherStores = computed(() => copyTargets(this.stores, true));
+  protected readonly copyOpen = signal(false);
 
   constructor() {
     this.load();
@@ -389,10 +395,11 @@ export class SettingsCustomFields {
     this.attempted.set(false);
   }
 
-  async save(): Promise<void> {
+  /** Answers whether the arrangement went in, which is what {@link copyArrangement} waits on. */
+  async save(): Promise<boolean> {
     this.attempted.set(true);
     if (this.problem()) {
-      return;
+      return false;
     }
     this.saving.set(true);
     try {
@@ -406,12 +413,39 @@ export class SettingsCustomFields {
       this.arranged.set(true);
       this.rows.update((rows) => rows.map((r) => ({ ...r, fixed: true })));
       this.toast.success(this.locale.t('settings.customFields.saved'));
+      return true;
     } catch {
       this.toast.error(this.locale.t('error.generic'));
+      return false;
     } finally {
       this.saving.set(false);
     }
   }
+
+  /**
+   * Give the same grid to the shop's other branches: saved here first, then written into each
+   * of them, so what is copied is exactly what this shop is now running rather than a
+   * half-finished screen. A save that will not go through — a formula that does not parse, a
+   * shelf quantity that is not one — stops the copy too, and reports the same problem Save
+   * would have shown.
+   *
+   * The grid replaces whatever the target had, the built-in one included: "make my other
+   * branches look like this" is the whole request, and a shop still on the shipped columns
+   * copying them is a reset, deliberately asked for.
+   *
+   * An arrow rather than a method — it is handed to the panel as a value, so it has to carry
+   * its own `this`.
+   */
+  protected readonly copyArrangement = async (ids: string[]): Promise<string[]> => {
+    if (!(await this.save())) {
+      return ids;
+    }
+    const arrangement = this.toSettings();
+    return this.stores.copySettingsTo(ids, (target) => ({
+      ...target,
+      customFields: arrangement,
+    }));
+  };
 
   private toSettings(): CustomFieldsSettings {
     const fields: CustomField[] = this.rows().map((r) => ({
