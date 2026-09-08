@@ -174,7 +174,10 @@ export function evaluationOrder(
 
 function tokenize(source: string, known: readonly string[]): (Token | { kind: 'paren'; p: '(' | ')' })[] {
   const out: (Token | { kind: 'paren'; p: '(' | ')' })[] = [];
-  let rest = source.trim();
+  // × ÷ − are what a shopkeeper writes for multiply, divide and minus, and what this app's
+  // own error message and hints print. They mean the ASCII three and nothing else, so they
+  // are folded in here rather than doubling every operator case below.
+  let rest = source.trim().replace(/×/g, '*').replace(/÷/g, '/').replace(/[−–—]/g, '-');
 
   while (rest.length > 0) {
     const char = rest[0];

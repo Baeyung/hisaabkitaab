@@ -10,8 +10,10 @@ import {
   DEFAULT_CUSTOM_FIELDS,
   DEFAULT_QTY_FIELD,
   DEFAULT_RATE_FIELD,
+  compileArrangement,
+  resolveValues,
 } from '../../core/store/custom-field.models';
-import { FormulaError, findCycles, parseFormula } from '../../core/store/formula';
+import { FormulaError, evaluate, findCycles, parseFormula } from '../../core/store/formula';
 
 /** A column as this screen holds it while it is being edited. */
 interface Draft {
@@ -28,6 +30,11 @@ interface Problem {
   key: TranslationKey;
   params?: Record<string, string>;
 }
+
+/** One cell of the previewed line: a column of the shop's, or the unit box beside it. */
+type PreviewCell =
+  | { kind: 'field'; id: string; label: string; typed: boolean }
+  | { kind: 'unit' };
 
 /**
  * Store Settings › Custom Fields — what a shop asks for on each line of a sale or a purchase.
@@ -57,6 +64,11 @@ interface Problem {
  * gives no unambiguous pair to scale. Switching the unit box off is the whole point for a
  * shop that finds the conversion slip a hassle; it takes the slip, the factor and the rate
  * rescaling with it.
+ *
+ * <p>None of the above is legible as a set of boxes, which is why the screen opens with one
+ * row of the entry grid drawn from whatever is currently typed, with real inputs in it — see
+ * {@link preview}. Columns, a total formula and a shelf formula only mean something once you
+ * can see the line they make and put a figure through it.
  */
 @Component({
   selector: 'app-settings-custom-fields',
@@ -213,7 +225,76 @@ export class SettingsCustomFields {
     return null;
   });
 
-  protected readonly canSave = computed(() => !this.problem() && !this.saving());
+  // ── the line, as it will be ───────────────────────────────────────────
+
+  /**
+   * Figures put into the preview by hand. Only what has actually been typed lives here — a
+   * column that has never been touched falls back to {@link sampleValue}, so adding, renaming
+   * or removing a column needs no bookkeeping in this signal at all.
+   */
+  private readonly sample = signal<Record<string, number>>({});
+
+  /** What the preview shows in a column's box: whatever was typed into it, or a stand-in. */
+  protected sampleValue(id: string): number {
+    return this.sample()[id] ?? (id === this.rateField() ? 100 : 2);
+  }
+
+  protected setSample(id: string, raw: string): void {
+    const n = Number(raw);
+    this.sample.update((s) => ({ ...s, [id]: Number.isFinite(n) ? n : 0 }));
+  }
+
+  /**
+   * One line of the entry grid as this arrangement would draw it, worked out from the sample
+   * figures — the answer to "what does any of this look like on a bill", which the boxes below
+   * cannot give on their own.
+   *
+   * Null while the arrangement cannot be compiled, which is exactly when there is no honest
+   * line to draw. {@link compileArrangement} answers that by falling back to the built-in grid
+   * rather than throwing, so the check is whether it handed back the arrangement it was given:
+   * anything else means it could not read this one.
+   */
+  protected readonly preview = computed(() => {
+    const settings = this.toSettings();
+    if (settings.fields.some((f) => !f.id)) {
+      return null;
+    }
+    const arrangement = compileArrangement(settings);
+    if (arrangement.settings !== settings) {
+      return null;
+    }
+
+    const typed: Record<string, number | null> = {};
+    for (const field of arrangement.typed) {
+      typed[field.id] = this.sampleValue(field.id);
+    }
+    const values = resolveValues(arrangement, typed);
+
+    // The unit box sits immediately after the column it measures, the same as on the grid
+    // itself — see `GoodsEntry.cells`.
+    const withUnit = settings.showUnit && arrangement.convertible;
+    const cells = settings.fields.flatMap<PreviewCell>((field) => {
+      const cell: PreviewCell = {
+        kind: 'field',
+        id: field.id,
+        label: field.label || field.id,
+        typed: !field.formula?.trim(),
+      };
+      return withUnit && field.id === arrangement.shelfField ? [cell, { kind: 'unit' }] : [cell];
+    });
+
+    return {
+      cells,
+      values,
+      amount: evaluate(arrangement.total, values),
+      shelf: evaluate(arrangement.shelfQty, values),
+      // The item box, one track per cell, then the amount — the sale grid's track minus the
+      // remove button, which the preview has nothing to remove. The item is narrower than the
+      // 2fr it gets there: here it holds a sample name rather than a searchable catalogue box,
+      // and the columns being configured are what this line is for looking at.
+      track: `minmax(0, 1.5fr) ${cells.map(() => 'minmax(0, 0.9fr)').join(' ')} minmax(70px, 1.1fr)`,
+    };
+  });
 
   private tryParse(source: string, ids: readonly string[]) {
     try {
@@ -269,9 +350,18 @@ export class SettingsCustomFields {
     });
   }
 
-  /** Put a column's name into a formula box — so nobody has to know or type an id. */
+  /**
+   * Put a column's name into a formula box — so nobody has to know or type an id.
+   *
+   * A box that already ends in an operator or an open bracket is waiting for a name, so the
+   * name is all it gets; anything else is a finished expression, and the only thing a shop
+   * ever wants next to one of those is another factor.
+   */
   protected insert(target: 'total' | 'shelf' | number, id: string): void {
-    const add = (current: string) => (current.trim() ? `${current.trim()} * ${id}` : id);
+    const add = (current: string) => {
+      const at = current.trim();
+      return !at || /[+\-*/(]$/.test(at) ? `${at}${at ? ' ' : ''}${id}` : `${at} * ${id}`;
+    };
     if (target === 'total') {
       this.totalFormula.update(add);
     } else if (target === 'shelf') {

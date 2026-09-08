@@ -1123,23 +1123,52 @@ export const ur: Record<TranslationKey, string> = {
   'settings.reports.saved': 'رپورٹس محفوظ ہو گئیں',
 
   // ── Store Settings › Custom Fields ────────────────────────────────────────
-  'settings.customFields.subtitle': 'فروخت یا خرید کی ہر لائن پر آپ سے کیا پوچھا جائے۔',
+  'settings.customFields.subtitle':
+    'ہر فروخت یا خرید کی لائن میں کیا پوچھا جائے، اور رقم کیسے بنے۔',
   'settings.customFields.usingDefault':
-    'یہ دکان ایپ کے اپنے کالم استعمال کر رہی ہے — آئٹم، مقدار، یونٹ، ریٹ۔ نیچے تبدیل کریں اور ہر فروخت و خرید اسی طرح لکھی جائے گی۔',
+    'یہ دکان ابھی ایپ کے اپنے کالم استعمال کر رہی ہے۔ یہاں تبدیل کریں اور آگے سے ہر فروخت و خرید اسی طرح لکھی جائے گی — پہلے سے محفوظ بل جس شکل میں لکھے گئے، اسی شکل میں رہیں گے۔',
+
+  'settings.customFields.preview': 'آپ کی لائن',
+  'settings.customFields.preview.hint':
+    'فروخت کی ایک قطار، بالکل ویسے جیسے یہ دکان اسے بھرے گی۔ محفوظ کرنے سے پہلے اپنے ہندسے ڈال کر حساب جانچ لیں۔',
+  'settings.customFields.preview.item': 'سوتی لان',
+  'settings.customFields.preview.unit': 'گز',
+  'settings.customFields.preview.tryIn': '{{name}} میں کوئی ہندسہ آزمائیں',
+  'settings.customFields.preview.shelf': 'اسٹاک سے {{qty}} نکلتی ہے، آئٹم کے اپنے یونٹ میں۔',
+  'settings.customFields.preview.blank':
+    'جب ہر کالم کا نام ہو گا اور ہر فارمولا پڑھا جا سکے گا، آپ کی لائن یہاں آ جائے گی۔',
+
+  'settings.customFields.section.columns': 'کالم',
+  'settings.customFields.section.columns.desc':
+    'آئٹم اور رقم کے درمیان لائن میں کیا پوچھا جائے۔ یہاں کی ترتیب ہی لائن کی ترتیب ہے۔',
+  'settings.customFields.section.columns.note':
+    'جس کالم میں خود لکھنا ہو، اس کا «حساب کیسے ہو» خالی چھوڑ دیں۔ بھر دیں تو ایپ خود اس کالم کا حساب کرے گی — اپنے دوسرے کالموں کے نام لکھیں اور + − × ÷ اور قوسین سے جوڑیں۔',
+  'settings.customFields.section.amount': 'رقم',
+  'settings.customFields.section.amount.desc':
+    'لائن کی کل رقم۔ یہی ہندسہ بل، روزنامچہ اور گاہک کے کھاتے تک جاتا ہے۔',
+  'settings.customFields.section.amount.note':
+    'یہاں کوئی بھی کالم لکھا جا سکتا ہے، وہ بھی جس کا حساب ایپ خود کرتی ہے۔',
+  'settings.customFields.section.shelf': 'اسٹاک اور یونٹ',
+  'settings.customFields.section.shelf.desc':
+    'لائن سے کتنا مال حرکت کرتا ہے، اور کیا لائن آئٹم کے اپنے یونٹ کے علاوہ کسی اور یونٹ میں لکھی جا سکتی ہے۔',
+  'settings.customFields.section.shelf.note':
+    'اسٹاک، انوینٹری اور منافع سب اسی مقدار سے گنے جاتے ہیں۔ یہ غلط ہو تو بل ٹھیک لگتا رہے گا اور اسٹاک بگڑتا رہے گا۔',
+
   'settings.customFields.col.name': 'کالم',
+  'settings.customFields.col.namePh': 'آپ اسے کیا کہتے ہیں',
   'settings.customFields.col.formula': 'حساب کیسے ہو',
   'settings.customFields.col.actions': 'اعمال',
   'settings.customFields.typedIn': 'خود لکھیں',
   'settings.customFields.formulaFor': '{{name}} کا حساب کیسے ہو',
   'settings.customFields.add': 'کالم شامل کریں',
-  'settings.customFields.moveUp': 'بائیں لے جائیں',
-  'settings.customFields.moveDown': 'دائیں لے جائیں',
+  'settings.customFields.moveUp': 'اوپر لے جائیں',
+  'settings.customFields.moveDown': 'نیچے لے جائیں',
+  'settings.customFields.insert': 'کوئی کالم لگائیں:',
   'settings.customFields.total': 'لائن کی رقم',
-  'settings.customFields.total.hint':
-    'لائن کی کل رقم۔ نیچے کسی کالم پر دبائیں، یا لکھیں: thans * gazana * rate',
+  'settings.customFields.total.hint': 'مثلاً: thans × gazana × rate',
   'settings.customFields.shelf': 'اسٹاک سے نکلنے والی مقدار',
   'settings.customFields.shelf.hint':
-    'لائن سے کتنا مال حرکت کرتا ہے، آئٹم کے اپنے یونٹ میں۔ اسٹاک، انوینٹری اور منافع اسی سے گنے جاتے ہیں۔',
+    'آئٹم کے اپنے یونٹ میں — جس میں اس کا اسٹاک گنا جاتا ہے۔ مثلاً: thans × gazana',
   'settings.customFields.rateField': 'ریٹ والا کالم',
   'settings.customFields.rateField.hint':
     'آئٹم کی محفوظ قیمت یہاں بھری جاتی ہے، اور یونٹ کی تبدیلی اسی کالم کو ایڈجسٹ کرتی ہے۔',
@@ -1151,6 +1180,7 @@ export const ur: Record<TranslationKey, string> = {
     'یونٹ کے خانے کے لیے ضروری ہے کہ اسٹاک کی مقدار ایک ہی کالم ہو، اور اس کے ساتھ الگ ریٹ کالم ہو۔',
   'settings.customFields.reset': 'عام کالموں پر واپس',
   'settings.customFields.save': 'کالم محفوظ کریں',
+  'settings.customFields.saving': 'محفوظ ہو رہا ہے…',
   'settings.customFields.saved': 'کالم محفوظ ہو گئے',
   'settings.customFields.error.noColumns': 'لائن کے لیے کم از کم ایک کالم چاہیے۔',
   'settings.customFields.error.unnamed': 'ہر کالم کا نام ضروری ہے۔',
@@ -1160,7 +1190,7 @@ export const ur: Record<TranslationKey, string> = {
   'settings.customFields.error.unknownField':
     '{{where}} میں «{{at}}» لکھا ہے، جو کوئی کالم نہیں۔',
   'settings.customFields.error.badFormula':
-    '{{where}} پڑھا نہیں جا سکا۔ صرف + − × ÷ اور ( ) استعمال کریں۔',
+    '{{where}} پڑھا نہیں جا سکا۔ صرف + − × ÷ ( ) اور اپنے کالموں کے نام استعمال کریں۔',
   'settings.reports.daily.title': 'روزانہ رپورٹ',
   'settings.reports.daily.help':
     'ہر شام، پورے دن کا حساب ایک PDF میں — روزنامچہ، بل، خرید، ہر کھاتہ اور موجودہ اسٹاک — واٹس ایپ پر۔',

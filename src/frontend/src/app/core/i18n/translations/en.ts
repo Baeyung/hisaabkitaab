@@ -1164,26 +1164,59 @@ export const en = {
   // What a shop asks for on each line of a sale or a purchase. Absent means the grid the
   // app ships with, which is what every shop has until an owner opens this screen.
   'settings.customFields.subtitle':
-    'What you are asked for on each line of a sale or a purchase.',
+    'What each line of a sale or a purchase asks for, and how it adds up.',
   'settings.customFields.usingDefault':
-    'This shop is using the columns the app comes with — item, quantity, unit, rate. Change them below and every sale and purchase is written that way.',
+    'This shop is still on the columns the app comes with. Change them here and every sale and purchase from now on is written that way — bills already saved keep the shape they were written in.',
+
+  // The preview: one row of the sale grid, worked out from whatever is in the boxes below.
+  'settings.customFields.preview': 'Your line',
+  'settings.customFields.preview.hint':
+    'One row of a sale, exactly as this shop will fill it in. Put your own figures in the boxes to check the arithmetic before you save.',
+  // A sample item and unit, so the preview reads as a line off a real bill rather than as a
+  // diagram. Cloth, because a cloth shop is who asks for columns of their own.
+  'settings.customFields.preview.item': 'Cotton lawn',
+  'settings.customFields.preview.unit': 'gaz',
+  'settings.customFields.preview.tryIn': 'Try a figure in {{name}}',
+  'settings.customFields.preview.shelf': 'Takes {{qty}} off the shelf, in the item’s own unit.',
+  'settings.customFields.preview.blank':
+    'Your line appears here once every column has a name and every formula can be read.',
+
+  'settings.customFields.section.columns': 'Columns',
+  'settings.customFields.section.columns.desc':
+    'What the line asks for, between the item and the amount. The order here is the order on the line.',
+  'settings.customFields.section.columns.note':
+    'Leave “worked out as” empty for a column someone types into. Fill it in and the app works the column out — name your other columns and join them with + − × ÷ and brackets.',
+  'settings.customFields.section.amount': 'The amount',
+  'settings.customFields.section.amount.desc':
+    'What the line comes to. This is the figure that reaches the bill, the cashbook and the customer’s khata.',
+  'settings.customFields.section.amount.note':
+    'Any column can be named here, including one the app works out for you.',
+  'settings.customFields.section.shelf': 'Stock and units',
+  'settings.customFields.section.shelf.desc':
+    'How much stock a line moves, and whether a line may be written in a unit other than the item’s own.',
+  'settings.customFields.section.shelf.note':
+    'Stock, inventory and profit are all counted from the shelf quantity. Get it wrong and the shelf drifts while every bill still looks right.',
+
   'settings.customFields.col.name': 'Column',
+  'settings.customFields.col.namePh': 'What you call it',
   'settings.customFields.col.formula': 'Worked out as',
   'settings.customFields.col.actions': 'Actions',
   'settings.customFields.typedIn': 'Typed in',
   'settings.customFields.formulaFor': 'How {{name}} is worked out',
   'settings.customFields.add': 'Add a column',
-  'settings.customFields.moveUp': 'Move left',
-  'settings.customFields.moveDown': 'Move right',
+  'settings.customFields.moveUp': 'Move up',
+  'settings.customFields.moveDown': 'Move down',
+  // Puts a column's name in the formula box beside it — distinct from "Add a column", which
+  // makes one. Same verb throughout: you add a column to the line, you use one in a formula.
+  'settings.customFields.insert': 'Use a column:',
   'settings.customFields.total': 'Line total',
-  'settings.customFields.total.hint':
-    'What the line comes to. Tap a column below to add it, or type: thans * gazana * rate',
+  'settings.customFields.total.hint': 'For example: thans × gazana × rate',
   'settings.customFields.shelf': 'Quantity off the shelf',
   'settings.customFields.shelf.hint':
-    'How much stock the line moves, in the item’s own unit. This is what stock, inventory and profit are counted from.',
+    'In the item’s own unit — the unit its stock is counted in. For example: thans × gazana',
   'settings.customFields.rateField': 'Rate column',
   'settings.customFields.rateField.hint':
-    'The item’s saved price prefills here, and this is the column the unit conversion rescales.',
+    'The item’s saved price prefills here, and this is the column a unit conversion rescales.',
   'settings.customFields.rateField.none': 'None',
   'settings.customFields.showUnit': 'Ask for a unit on each line',
   'settings.customFields.showUnit.hint':
@@ -1192,6 +1225,7 @@ export const en = {
     'The unit box needs the shelf quantity to be one column, and a separate rate column beside it.',
   'settings.customFields.reset': 'Back to the standard columns',
   'settings.customFields.save': 'Save columns',
+  'settings.customFields.saving': 'Saving…',
   'settings.customFields.saved': 'Columns saved',
   'settings.customFields.error.noColumns': 'A line needs at least one column.',
   'settings.customFields.error.unnamed': 'Every column needs a name.',
@@ -1199,7 +1233,8 @@ export const en = {
   'settings.customFields.error.cycle':
     '“{{name}}” is worked out from itself, so it can never be worked out.',
   'settings.customFields.error.unknownField': '{{where}} names “{{at}}”, which is not a column.',
-  'settings.customFields.error.badFormula': '{{where}} cannot be read. Use only + − × ÷ and ( ).',
+  'settings.customFields.error.badFormula':
+    '{{where}} cannot be read. Use only + − × ÷ ( ) and the names of your columns.',
   'settings.reports.daily.title': 'Daily report',
   'settings.reports.daily.help':
     'Every evening, the whole day on one PDF — cashbook, bills, purchases, every khata and what is left in stock — sent to you on WhatsApp.',

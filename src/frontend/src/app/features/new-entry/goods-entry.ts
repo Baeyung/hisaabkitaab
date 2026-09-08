@@ -236,16 +236,6 @@ export class GoodsEntry {
     () => this.arrangement().settings.showUnit && this.arrangement().convertible,
   );
 
-  /**
-   * The grid's column track, since how many there are is now the shop's business: the item
-   * box, one track per column, the amount, and the remove button. Set as a custom property on
-   * the grid so the heading row and every line share it.
-   */
-  protected readonly gridColumns = computed(() => {
-    const tracks = this.cells().map(() => 'minmax(0, 0.9fr)');
-    return `minmax(0, 2fr) ${tracks.join(' ')} minmax(70px, 1.1fr) 40px`;
-  });
-
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
 

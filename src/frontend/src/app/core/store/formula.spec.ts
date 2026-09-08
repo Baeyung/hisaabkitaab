@@ -58,6 +58,13 @@ describe('parseFormula', () => {
   it('refuses an empty formula', () => {
     expect(errorKey('   ')).toBe('empty');
   });
+
+  // The hints and the "cannot be read" message both print × ÷ −, and a phone keyboard offers
+  // them: what the screen tells a shopkeeper to type has to be what the parser reads.
+  it('reads × ÷ − as the operators the screen prints', () => {
+    expect(errorKey('thans × gazana ÷ rate − 1')).toBeNull();
+    expect(evaluate(parse('thans × gazana'), { thans: 4, gazana: 16 })).toBe(64);
+  });
 });
 
 describe('evaluate', () => {
