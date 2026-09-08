@@ -22,6 +22,8 @@ interface Draft {
   id: string;
   label: string;
   formula: string;
+  /** Whether the printed bill foots this column — see {@link CustomField.showTotal}. */
+  showTotal: boolean;
   /** Set once the column has been saved at least once, so its id is no longer up for grabs. */
   fixed: boolean;
 }
@@ -112,6 +114,7 @@ export class SettingsCustomFields {
         id: f.id,
         label: f.label || this.builtInLabel(f.id),
         formula: f.formula ?? '',
+        showTotal: !!f.showTotal,
         fixed: true,
       })),
     );
@@ -336,8 +339,15 @@ export class SettingsCustomFields {
     this.rows.update((rows) => rows.map((r, i) => (i === index ? { ...r, formula } : r)));
   }
 
+  protected setShowTotal(index: number, showTotal: boolean): void {
+    this.rows.update((rows) => rows.map((r, i) => (i === index ? { ...r, showTotal } : r)));
+  }
+
   protected addColumn(): void {
-    this.rows.update((rows) => [...rows, { id: '', label: '', formula: '', fixed: false }]);
+    this.rows.update((rows) => [
+      ...rows,
+      { id: '', label: '', formula: '', showTotal: false, fixed: false },
+    ]);
   }
 
   protected removeColumn(index: number): void {
@@ -385,6 +395,7 @@ export class SettingsCustomFields {
         id: f.id,
         label: this.builtInLabel(f.id),
         formula: '',
+        showTotal: false,
         fixed: true,
       })),
     );
@@ -452,6 +463,7 @@ export class SettingsCustomFields {
       id: r.id,
       label: r.label.trim(),
       formula: r.formula.trim() || undefined,
+      showTotal: r.showTotal || undefined,
     }));
     return {
       fields,

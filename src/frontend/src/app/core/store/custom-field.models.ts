@@ -16,6 +16,8 @@ export interface CustomField {
   label: string;
   /** How it is worked out, or absent for a column the shopkeeper types into. */
   formula?: string;
+  /** Whether the printed bill adds this column up across its lines — 15 thans on a 10 + 5 bill. */
+  showTotal?: boolean;
 }
 
 /**

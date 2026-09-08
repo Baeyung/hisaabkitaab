@@ -52,6 +52,13 @@
       </div>
     }
     <div class="rm-foot">
+      <!-- The shop's own columns, footed — 10 thans on one line and 5 on another read as 15. -->
+      @for (t of printTotals(); track t.label) {
+        <span>
+          {{ locale.t('bill.detail.totalOf', { name: t.label }) }}
+          <strong class="num">{{ locale.formatNumber(t.value) }}</strong>
+        </span>
+      }
       <span>
         {{ locale.t('bill.detail.goodsTotal') }}
         <strong class="num">{{ locale.money(total()) }}</strong>

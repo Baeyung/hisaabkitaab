@@ -241,6 +241,9 @@
 .cf__tbl .cf__col--name {
   width: 32%;
 }
+.cf__tbl .cf__col--total {
+  width: 120px;
+}
 .cf__tbl .cf__col--acts {
   /* Three 34px buttons, two 6px gaps and the cell's own padding — the row's controls never
      become the reason the table starts scrolling sideways. */

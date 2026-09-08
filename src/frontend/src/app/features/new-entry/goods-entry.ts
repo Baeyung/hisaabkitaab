@@ -358,6 +358,23 @@ export class GoodsEntry {
     }),
   );
 
+  /**
+   * The columns this shop has asked to see footed, added up down the bill being written — the
+   * same figures {@link footedTotals} puts on a saved bill, off the line cells rather than off
+   * stored values because nothing here has been stored yet.
+   */
+  protected readonly printTotals = computed(() => {
+    const lines = this.printLines();
+    if (lines.length === 0) {
+      return [];
+    }
+    return this.columns().flatMap((f, i) =>
+      f.showTotal
+        ? [{ label: this.columnLabel(f), value: lines.reduce((sum, l) => sum + l.cells[i], 0) }]
+        : [],
+    );
+  });
+
   protected readonly abs = Math.abs;
 
   /** Print the current entry as a bill (letterhead + items + totals). */

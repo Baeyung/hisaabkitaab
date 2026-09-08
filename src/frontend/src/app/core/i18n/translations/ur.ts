@@ -997,6 +997,7 @@ export const ur: Record<TranslationKey, string> = {
   'bill.detail.col.amount': 'رقم',
   'bill.detail.heading': '(تفصیل)',
   'bill.detail.goodsTotal': 'کل رقم',
+  'bill.detail.totalOf': 'کل {{name}}',
   'bill.detail.cashReceived': 'نقد وصول',
   'bill.detail.outstanding': 'کھاتے میں',
   'bill.detail.discount': 'رعایت',
@@ -1157,6 +1158,10 @@ export const ur: Record<TranslationKey, string> = {
   'settings.customFields.col.namePh': 'آپ اسے کیا کہتے ہیں',
   'settings.customFields.col.formula': 'حساب کیسے ہو',
   'settings.customFields.col.actions': 'اعمال',
+  'settings.customFields.col.showTotal': 'بل پر کل',
+  'settings.customFields.showTotalFor': 'بل پر {{name}} کا کل دکھائیں',
+  'settings.customFields.showTotal.hint':
+    'جس کالم پر یہ آن ہو، بل کے نیچے اس کا کل دکھایا جاتا ہے — ایک لائن پر 10 تھان اور دوسری پر 5 ہوں تو کل 15۔',
   'settings.customFields.typedIn': 'خود لکھیں',
   'settings.customFields.formulaFor': '{{name}} کا حساب کیسے ہو',
   'settings.customFields.add': 'کالم شامل کریں',

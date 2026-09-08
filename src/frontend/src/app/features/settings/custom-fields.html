@@ -97,6 +97,7 @@
         </h2>
         <p class="sec__desc">{{ locale.t('settings.customFields.section.columns.desc') }}</p>
         <p class="sec__note">{{ locale.t('settings.customFields.section.columns.note') }}</p>
+        <p class="sec__note">{{ locale.t('settings.customFields.showTotal.hint') }}</p>
       </div>
 
       <div class="sec__fields sec__fields--wide">
@@ -108,6 +109,9 @@
                   {{ locale.t('settings.customFields.col.name') }}
                 </th>
                 <th scope="col">{{ locale.t('settings.customFields.col.formula') }}</th>
+                <th scope="col" class="cf__col--total">
+                  {{ locale.t('settings.customFields.col.showTotal') }}
+                </th>
                 <th scope="col" class="cf__col--acts">
                   <span class="sr-only">{{ locale.t('settings.customFields.col.actions') }}</span>
                 </th>
@@ -141,6 +145,20 @@
                         locale.t('settings.customFields.formulaFor', { name: row.label || '—' })
                       "
                     />
+                  </td>
+                  <td [attr.data-label]="locale.t('settings.customFields.col.showTotal')">
+                    <label class="sw">
+                      <input
+                        class="sw__box"
+                        type="checkbox"
+                        [checked]="row.showTotal"
+                        (change)="setShowTotal($index, $any($event.target).checked)"
+                      />
+                      <span class="sw__track" aria-hidden="true"><span class="sw__knob"></span></span>
+                      <span class="sr-only">{{
+                        locale.t('settings.customFields.showTotalFor', { name: row.label || '—' })
+                      }}</span>
+                    </label>
                   </td>
                   <td class="actions">
                     <div class="rowicons">

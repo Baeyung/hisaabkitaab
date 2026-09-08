@@ -1035,6 +1035,8 @@ export const en = {
   'bill.detail.col.amount': 'Amount',
   'bill.detail.heading': '(Details)',
   'bill.detail.goodsTotal': 'Total',
+  // One of the shop's own columns, added up down the bill — "Total Thans 15".
+  'bill.detail.totalOf': 'Total {{name}}',
   'bill.detail.cashReceived': 'Cash received',
   'bill.detail.outstanding': 'On khata',
   'bill.detail.discount': 'Discount',
@@ -1202,6 +1204,10 @@ export const en = {
   'settings.customFields.col.namePh': 'What you call it',
   'settings.customFields.col.formula': 'Worked out as',
   'settings.customFields.col.actions': 'Actions',
+  'settings.customFields.col.showTotal': 'Total on bill',
+  'settings.customFields.showTotalFor': 'Show a total of {{name}} on the bill',
+  'settings.customFields.showTotal.hint':
+    'A column set to total on the bill is added up down the printed bill — 10 thans on one line and 5 on another foot as 15.',
   'settings.customFields.typedIn': 'Typed in',
   'settings.customFields.formulaFor': 'How {{name}} is worked out',
   'settings.customFields.add': 'Add a column',

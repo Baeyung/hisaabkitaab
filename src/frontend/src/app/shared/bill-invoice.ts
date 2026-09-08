@@ -6,6 +6,7 @@ import { BalanceDirection } from '../core/store/balance.models';
 import { directionClass, directionKey, invertDirection, invertInOut } from './balance.util';
 import { Perspective } from './print-details.service';
 import { StoreService } from '../core/store/store.service';
+import { CustomField } from '../core/store/custom-field.models';
 
 /**
  * The wording of one goods document. Keys are passed in as literals rather than
@@ -116,4 +117,34 @@ export class BillInvoice {
       value,
     }));
   }
+
+  /**
+   * The columns this shop has asked to see footed, added up across the bill's lines — ten
+   * thans on one line and five on another footing fifteen.
+   *
+   * Off the shop's current arrangement rather than off the lines, because the request is
+   * "show me my thans": a column dropped from the grid is no longer footed even on the bills
+   * that recorded it. Lines written before the column existed simply have nothing to add, and
+   * a column no line carries is left off rather than footed as a zero.
+   */
+  protected totals(): { label: string; value: number }[] {
+    return footedTotals(this.stores.current()?.settings?.customFields?.fields ?? [], this.bill().lines);
+  }
+}
+
+/** See {@link BillInvoice.totals} — pulled out so it can be checked without a fixture. */
+export function footedTotals(
+  fields: readonly CustomField[],
+  lines: readonly BillLine[],
+): { label: string; value: number }[] {
+  return fields
+    .filter((f) => f.showTotal)
+    .flatMap((f) => {
+      const values = lines
+        .map((l) => l.customFields?.[f.id])
+        .filter((v): v is number => v != null);
+      return values.length
+        ? [{ label: f.label || f.id, value: values.reduce((sum, v) => sum + v, 0) }]
+        : [];
+    });
 }

@@ -48,6 +48,14 @@
           </div>
         }
       </div>
+      <!-- The shop's own columns, footed — quantities, above the money total they came to. -->
+      @for (t of totals(); track t.label) {
+        <div class="bill-line bill-line--foot">
+          <span class="bill-line__name">{{ locale.t('bill.detail.totalOf', { name: t.label }) }}</span>
+          <span class="bill-line__leader" aria-hidden="true"></span>
+          <span class="bill-line__calc num">{{ locale.formatNumber(t.value) }}</span>
+        </div>
+      }
       <div class="bill-total">
         <span class="bill-total__label">{{ locale.t(labels().goodsTotal) }}</span>
         <span class="bill-line__leader" aria-hidden="true"></span>

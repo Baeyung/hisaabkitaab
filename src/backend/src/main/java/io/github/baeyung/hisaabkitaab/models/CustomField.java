@@ -21,10 +21,14 @@ import jakarta.validation.constraints.Size;
  *                into. Opaque here — an expression over other columns' {@code id}s, parsed
  *                and checked for cycles by the settings screen that wrote it, in the same
  *                way the menu keys are the client's to reconcile.
+ * @param showTotal whether the printed bill adds this column up across its lines — a bill of
+ *                10 thans and 5 thans footing "Total Thans 15". Presentation only, and false
+ *                for every arrangement saved before it existed.
  */
 public record CustomField(
         @NotBlank @Size(max = 64) String id,
         @Size(max = 24) String label,
-        @Size(max = 200) String formula)
+        @Size(max = 200) String formula,
+        boolean showTotal)
 {
 }
