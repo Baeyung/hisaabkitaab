@@ -58,7 +58,12 @@
       </span>
       <span>
         {{ locale.t(config().labels.cash) }}
-        <strong class="num" [class.amt--in]="config().drawerFlow === 'in'" [class.amt--out]="config().drawerFlow === 'out'">{{ locale.money(effectiveCash()) }}</strong>
+        <strong
+          class="num"
+          [class.amt--in]="config().drawerFlow === 'in'"
+          [class.amt--out]="config().drawerFlow === 'out'"
+          >{{ locale.money(effectiveCash()) }}</strong
+        >
       </span>
       @if (discountAmount() > 0) {
         <span>
@@ -92,11 +97,7 @@
   <!-- Enter belongs to the line grid (it opens the next line), so saving takes the chord.
        It is bound on the whole form, not the grid: a shopkeeper who has just typed the cash
        received should be able to post the bill without reaching back for the button. -->
-  <div
-    class="sale__form"
-    (keydown.control.enter)="save()"
-    (keydown.meta.enter)="save()"
-  >
+  <div class="sale__form" (keydown.control.enter)="save()" (keydown.meta.enter)="save()">
     <header class="sale__head">
       <div>
         <p class="sale__eyebrow">{{ locale.t(config().labels.newEntry) }}</p>
@@ -149,132 +150,134 @@
     </div>
 
     <!-- line-item grid -->
-    <div
-      class="grid"
-      role="group"
-      [attr.aria-label]="locale.t(config().labels.lines)"
-    >
-      <div class="grid__head" aria-hidden="true">
-        <span>{{ locale.t(config().labels.colDesign) }}</span>
-        @for (cell of cells(); track $index) {
-          @if (cell.kind === 'unit') {
-            <span>{{ locale.t(config().labels.colUnit) }}</span>
-          } @else {
-            <span class="num">{{ columnLabel(cell.field) }}</span>
-          }
-        }
-        <span class="num grid__head-amount">{{ locale.t(config().labels.colAmount) }}</span>
-      </div>
-
-      @for (line of lines(); track line.key) {
-        <!-- The foot line: ruled, not yet written on. It counts for nothing until it is. -->
-        <div
-          class="grid__row"
-          [class.grid__row--waiting]="!written(line)"
-          (keydown)="onLineKey($event, line.key)"
-        >
-          <app-combobox
-            #designField
-            [small]="true"
-            [options]="itemNames()"
-            [value]="line.design"
-            (valueChange)="setDesign(line.key, $event)"
-            [placeholder]="locale.t(config().labels.colDesignPh)"
-            [ariaLabel]="locale.t(config().labels.colDesign)"
-          />
-          @for (cell of cells(); track $index) {
-            @if (cell.kind === 'unit') {
+    <div class="grid" role="group" [attr.aria-label]="locale.t(config().labels.lines)">
+      <div class="grid__lines">
+        @for (line of lines(); track line.key) {
+          <!-- The foot line: ruled, not yet written on. It counts for nothing until it is. -->
+          <div
+            class="grid__row"
+            [class.grid__row--waiting]="!written(line)"
+            (keydown)="onLineKey($event, line.key)"
+          >
+            <div class="cell cell--design">
+              <span class="cell__label">{{ locale.t(config().labels.colDesign) }}</span>
               <app-combobox
+                #designField
                 [small]="true"
-                [options]="unitOptions()"
-                [value]="line.unit"
-                (valueChange)="setUnit(line.key, $event)"
-                (focusout)="askUnit(line.key)"
-                [placeholder]="lineUnit(line.design)"
-                [ariaLabel]="locale.t(config().labels.colUnit)"
+                [options]="itemNames()"
+                [value]="line.design"
+                (valueChange)="setDesign(line.key, $event)"
+                [placeholder]="locale.t(config().labels.colDesignPh)"
+                [ariaLabel]="locale.t(config().labels.colDesign)"
               />
-            } @else if (isTyped(cell.field)) {
-              <input
-                class="fld__input fld__input--sm num"
-                type="number"
-                inputmode="decimal"
-                min="0"
-                step="any"
-                [value]="line.values[cell.field.id]"
-                (input)="setValue(line.key, cell.field.id, $any($event.target).value)"
-                [attr.placeholder]="columnLabel(cell.field)"
-                [attr.aria-label]="columnLabel(cell.field)"
-              />
-            } @else {
-              <!-- A column the shop's own formula fills in: shown, never typed into. -->
-              <output class="grid__derived num" [attr.aria-label]="columnLabel(cell.field)">
+            </div>
+            @for (cell of cells(); track $index) {
+              @if (cell.kind === 'unit') {
+                <div class="cell">
+                  <span class="cell__label">{{ locale.t(config().labels.colUnit) }}</span>
+                  <app-combobox
+                    [small]="true"
+                    [options]="unitOptions()"
+                    [value]="line.unit"
+                    (valueChange)="setUnit(line.key, $event)"
+                    (focusout)="askUnit(line.key)"
+                    [placeholder]="lineUnit(line.design)"
+                    [ariaLabel]="locale.t(config().labels.colUnit)"
+                  />
+                </div>
+              } @else if (isTyped(cell.field)) {
+                <div class="cell">
+                  <span class="cell__label">{{ columnLabel(cell.field) }}</span>
+                  <input
+                    class="fld__input fld__input--sm num"
+                    type="number"
+                    inputmode="decimal"
+                    min="0"
+                    step="any"
+                    [value]="line.values[cell.field.id]"
+                    (input)="setValue(line.key, cell.field.id, $any($event.target).value)"
+                    [attr.aria-label]="columnLabel(cell.field)"
+                  />
+                </div>
+              } @else {
+                <!-- A column the shop's own formula fills in: shown, never typed into. -->
+                <div class="cell">
+                  <span class="cell__label">{{ columnLabel(cell.field) }}</span>
+                  <output class="grid__derived num" [attr.aria-label]="columnLabel(cell.field)">
+                    @if (written(line)) {
+                      {{ locale.formatNumber(lineValues(line)[cell.field.id] ?? 0) }}
+                    } @else {
+                      <span class="grid__amount-rule" aria-hidden="true">—</span>
+                    }
+                  </output>
+                </div>
+              }
+            }
+            <div class="cell cell--amount">
+              <span class="cell__label">{{ locale.t(config().labels.colAmount) }}</span>
+              <!-- A rule, not "Rs 0": nothing has been written on this line, so it owes nothing. -->
+              <span class="grid__amount num">
                 @if (written(line)) {
-                  {{ locale.formatNumber(lineValues(line)[cell.field.id] ?? 0) }}
+                  {{ locale.money(lineAmount(line)) }}
                 } @else {
                   <span class="grid__amount-rule" aria-hidden="true">—</span>
                 }
-              </output>
-            }
-          }
-          <!-- A rule, not "Rs 0": nothing has been written on this line, so it owes nothing. -->
-          <span class="grid__amount num">
-            @if (written(line)) {
-              {{ locale.money(lineAmount(line)) }}
-            } @else {
-              <span class="grid__amount-rule" aria-hidden="true">—</span>
-            }
-          </span>
-          <button
-            type="button"
-            class="iconbtn iconbtn--danger"
-            (click)="removeLine(line.key)"
-            [disabled]="!written(line)"
-            [attr.aria-label]="locale.t(config().labels.lineRemove)"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              aria-hidden="true"
-            >
-              <path d="M5 12h14" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- what this line will actually take off the shelf, once it has been converted —
-             plus the price per stock unit, the other side of the rate box above -->
-        @if (showUnit() && line.factor) {
-          <div class="grid__conv">
-            <app-unit-note
-              [qty]="enteredShelfQty(line)"
-              [unit]="line.unit"
-              [stockUnit]="lineUnit(line.design)"
-              [factor]="line.factor"
-              [direction]="stockFlow()"
-              (editRate)="askUnit(line.key, true)"
-            />
-            <label class="conv-price">
-              <span class="conv-price__label">
-                {{ locale.t('units.note.pricePer', { unit: lineUnit(line.design) }) }}
               </span>
-              <input
-                class="conv-price__input"
-                type="number"
-                inputmode="decimal"
-                min="0"
-                step="any"
-                [value]="pricePerUnit(line)"
-                (input)="setPricePerUnit(line.key, $any($event.target).value)"
-                [attr.aria-label]="locale.t('units.note.pricePer', { unit: lineUnit(line.design) })"
-              />
-            </label>
+            </div>
+            <button
+              type="button"
+              class="iconbtn iconbtn--danger"
+              (click)="removeLine(line.key)"
+              [disabled]="!written(line)"
+              [attr.aria-label]="locale.t(config().labels.lineRemove)"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14" />
+              </svg>
+            </button>
           </div>
+
+          <!-- what this line will actually take off the shelf, once it has been converted —
+             plus the price per stock unit, the other side of the rate box above -->
+          @if (showUnit() && line.factor) {
+            <div class="grid__conv">
+              <app-unit-note
+                [qty]="enteredShelfQty(line)"
+                [unit]="line.unit"
+                [stockUnit]="lineUnit(line.design)"
+                [factor]="line.factor"
+                [direction]="stockFlow()"
+                (editRate)="askUnit(line.key, true)"
+              />
+              <label class="conv-price">
+                <span class="conv-price__label">
+                  {{ locale.t('units.note.pricePer', { unit: lineUnit(line.design) }) }}
+                </span>
+                <input
+                  class="conv-price__input"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="any"
+                  [value]="pricePerUnit(line)"
+                  (input)="setPricePerUnit(line.key, $any($event.target).value)"
+                  [attr.aria-label]="
+                    locale.t('units.note.pricePer', { unit: lineUnit(line.design) })
+                  "
+                />
+              </label>
+            </div>
+          }
         }
-      }
+      </div>
 
       <div class="grid__foot">
         <button type="button" class="linkbtn" (click)="addLine()">
@@ -343,7 +346,6 @@
         [attr.placeholder]="locale.t(config().labels.descriptionPh)"
       />
     </div>
-
 
     <div class="sale__actions">
       @if (editId()) {

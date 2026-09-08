@@ -103,7 +103,9 @@
   background: var(--kg-card);
   border: 1px solid var(--kg-line-strong);
   border-radius: 10px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .fld__input--sm {
   height: 40px;
@@ -169,69 +171,54 @@ select.fld__input {
   border: 1px solid var(--kg-line);
   border-radius: 12px;
 }
-/* How many columns a line has is the shop's business now, so the line cannot be a fixed
-   track list any more: a shop with eight columns would get eight slivers. Every box states
-   the width it needs to stay readable instead, and the line wraps onto a second row once
-   they no longer fit across the form. The heading carries the same widths in the same
-   order, so it wraps at exactly the same points and each label stays over its own box. */
-.grid__head,
+.grid__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* How many columns a line has is the shop's business now, so no track list can be written
+   ahead of time. Each box carries its own name instead of borrowing one from a heading
+   overhead, which frees the line to wrap: a shop with ten columns gets a taller line, never
+   a sideways scroll. Boxes keep a floor of ~110px and share what is left of the row. */
 .grid__row {
   position: relative;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  /* The remove button's lane, held open on the heading too so the two stay in step. The
-     button is taken out of the flow and parked in it: a wrapping line must never leave it
-     stranded on a line of its own. */
-  padding-inline-end: 48px;
-}
-.grid__head > *,
-.grid__row > * {
-  /* A figure box asks for 100px and takes no more than 240 — so the one column left over
-     on a wrapped line stays a box you'd recognise instead of stretching across the form. */
-  flex: 1 1 100px;
-  min-width: 0;
-  max-width: 240px;
-}
-/* The widths only line up if every box measures the same way. The app is content-box, so
-   an input would carry its 13px of padding on top of its share and a heading span would
-   not — and the heading would wrap a column earlier than the line it labels. */
-.grid__head > *,
-.grid__row > *,
-.grid__row .fld__input {
-  box-sizing: border-box;
-}
-/* The item box is the one that holds a name rather than a figure, so it gets the width. */
-.grid__head > :first-child,
-.grid__row > :first-child {
-  flex: 3 1 190px;
-  max-width: 420px;
-}
-/* The amount takes whatever the line has left over. It is right-aligned text rather than a
-   box, so the slack shows as space in front of it and the figure stays under its heading. */
-.grid__head-amount,
-.grid__amount {
-  flex: 1.4 1 118px;
-  max-width: none;
+  gap: 8px 10px;
+  /* Boxes hang from the top of their wrapped line, so every label on that line reads off one
+     edge whatever sits under it — a typed box, a figure the formula filled in, or nothing. */
+  align-items: start;
+  /* The remove control's lane, held open whatever the wrap does. In the flow it would be one
+     more box to wrap, and a full line would push it onto a line of its own. */
+  padding-inline-end: 44px;
 }
 .grid__row > .iconbtn {
   position: absolute;
   inset-inline-end: 0;
-  top: 0;
+  /* aligned to the boxes, not to the labels above them */
+  top: 17px;
 }
-/* A column the shop's formula fills in: reads as a figure, not as a box to type in. */
-.grid__derived {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--kg-ink);
-  text-align: end;
-  overflow-wrap: anywhere;
+/* A ceiling as well as a floor: without one, the last wrapped line stretches its one or two
+   boxes across the whole card and the columns stop reading as columns. */
+.cell {
+  flex: 1 1 88px;
+  max-width: 200px;
+  min-width: 0;
 }
-.grid__head {
-  padding-block: 0 4px;
-  /* A shop names its own columns, so a label can be longer than its box: let it take a
-     second line rather than run over the label beside it. */
+/* The item box is the one a shopkeeper reads the line by, so it gets the widest floor and
+   twice the share of the slack. */
+.cell--design {
+  flex: 2 1 160px;
+  max-width: 340px;
+}
+/* A column names itself over its own box. Read left-to-right in English and right-to-left in
+   Urdu — the label follows the language, not the figures underneath it, which stay ledger-
+   right in both. A shop names its own columns, so a long label takes a second line rather
+   than running over the box beside it. */
+.cell__label {
+  display: block;
+  margin-bottom: 3px;
+  text-align: start;
   overflow-wrap: anywhere;
   font-size: 11px;
   font-weight: 700;
@@ -239,11 +226,26 @@ select.fld__input {
   text-transform: uppercase;
   color: var(--kg-faint);
 }
-/* Align the Amount heading with its right-aligned values below. */
-.grid__head-amount {
+/* A track holds its width only if the box in it measures the same way. The app is
+   content-box, so an input would otherwise carry its 13px of padding on top of its share. */
+.cell > *,
+.cell .fld__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+/* Figures sit the way they do in a ledger: right-aligned down the page. */
+.grid__row .fld__input--sm.num {
   text-align: end;
 }
+/* A column the shop's formula fills in, and the amount that closes the line: figures, not
+   boxes to type in — but they stand as tall as a box so the line stays level. */
+.grid__derived,
 .grid__amount {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  min-height: 40px;
   font-size: 14px;
   font-weight: 600;
   color: var(--kg-ink);
@@ -438,7 +440,9 @@ select.fld__input {
   color: var(--kg-on-brand);
   background: var(--kg-brand-solid);
   box-shadow: var(--kg-shadow-brand);
-  transition: filter 0.15s ease, transform 0.05s ease;
+  transition:
+    filter 0.15s ease,
+    transform 0.05s ease;
 }
 .btn--primary:hover:not(:disabled) {
   filter: brightness(1.07);
@@ -673,38 +677,21 @@ select.fld__input {
   .sale__head-right {
     width: 100%;
   }
-  .grid__head {
-    display: none;
-  }
-  /* Each row is a flat strip, not a box inside the box: a hairline underneath
-     reads as one list rather than the "card in a card in a card" the grid
-     used to be. */
-  /* On a phone the item box takes the top line to itself, beside the remove button in its
-     lane, and the shop's own columns wrap into the lines under it, however many it has. */
+  /* A phone is too narrow to keep a shop's columns on one ruled line. Each line becomes a
+     flat strip instead — the item on its own top line, the shop's columns filling as many
+     lines under it as they need, the amount closing it. A hairline underneath reads as one
+     list rather than a card inside a card. */
   .grid__row {
     padding-block: 12px;
-    border: 0;
-    border-radius: 0;
     border-bottom: 1px solid var(--kg-line);
   }
-  .grid__row > :first-child {
-    flex: 1 1 100%;
-    max-width: none;
+  /* The item box and the amount each get a line to themselves — squeezing "Rs 5,000,000" in
+     beside a column is what was wrapping it into two jittering lines. */
+  .cell--design,
+  .cell--amount {
+    flex-basis: 100%;
   }
-  /* A blank line has no remove button to make room for, so the row runs edge to edge
-     instead of holding open a lane nothing is parked in. */
-  .grid__row--waiting {
-    padding-inline-end: 0;
-  }
-  .grid__row--waiting > .iconbtn {
-    display: none;
-  }
-  /* The amount gets the closing line to itself rather than being squeezed in beside a
-     column — that is what was wrapping "Rs 5,000,000" into two jittering lines. */
   .grid__amount {
-    flex: 1 1 100%;
-    margin-top: 2px;
     font-size: 17px;
   }
 }
-
