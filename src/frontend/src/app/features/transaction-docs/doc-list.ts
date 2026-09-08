@@ -12,7 +12,7 @@ import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { KhataAmount } from '../../shared/khata-amount';
 import { PrintHeader } from '../../shared/print-header';
 import { PrintItemsSummary } from '../../shared/print-items-summary';
-import { BillInvoice } from '../../shared/bill-invoice';
+import { BillInvoice, groupLines } from '../../shared/bill-invoice';
 import { Select } from '../../shared/select/select';
 import { DateField } from '../../shared/date-field/date-field';
 import { LedgerService } from '../../core/store/ledger.service';
@@ -53,6 +53,8 @@ import { ToastService } from '../../shared/toast/toast.service';
   templateUrl: './doc-list.html',
 })
 export class DocList {
+  /** An attached document's lines, gathered under the item they are for — see {@link groupLines}. */
+  protected readonly groupLines = groupLines;
   readonly config = input.required<DocConfig>();
 
   protected readonly directionKey = directionKey;

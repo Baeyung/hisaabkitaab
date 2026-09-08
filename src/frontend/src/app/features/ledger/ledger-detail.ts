@@ -35,6 +35,7 @@ import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { Select } from '../../shared/select/select';
 import { DateField } from '../../shared/date-field/date-field';
 import { AmountLegend } from '../../shared/amount-legend';
+import { groupLines } from '../../shared/bill-invoice';
 
 /** Zero balance for a range with no rows in it. */
 const SETTLED: Balance = { amount: 0, direction: 'SETTLED' };
@@ -58,6 +59,8 @@ const SETTLED: Balance = { amount: 0, direction: 'SETTLED' };
   templateUrl: './ledger-detail.html',
 })
 export class LedgerDetail {
+  /** An attached document's lines, gathered under the item they are for — see {@link groupLines}. */
+  protected readonly groupLines = groupLines;
   readonly partyId = input.required<string>();
 
   protected readonly locale = inject(LocaleService);

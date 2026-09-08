@@ -29,25 +29,50 @@
               <th scope="col" class="end">{{ locale.t('bill.detail.col.amount') }}</th>
             </tr>
           </thead>
-          <tbody>
-            @for (line of printLines(); track line.key) {
-              <tr>
-                <td class="rm-cell-head">
-                  <span class="rm-tbl__name">{{ line.name }}</span>
-                  @if (line.unit) {
-                    <span class="rm-tbl__meta">{{ line.unit }}</span>
-                  }
-                </td>
-                @for (cell of line.cells; track $index) {
-                  @let col = columns()[$index];
-                  <td class="end num" [attr.data-label]="columnLabel(col)">
-                    {{ isMoneyColumn(col) ? locale.money(cell) : locale.formatNumber(cell) }}
+          <!-- One body per item: the name written once, and every line it was written on
+               running underneath it. See printGroups. -->
+          @for (group of printGroups(); track group.key) {
+            <tbody class="rm-group">
+              @for (line of group.lines; track line.key) {
+                <tr>
+                  <td class="rm-cell-head">
+                    @if ($first) {
+                      <span class="rm-tbl__name">{{ line.name }}</span>
+                    }
+                    <!-- Per line, not per item: a roll sold by the metre off a shelf counted
+                         in gaz sits in the same block as the rest of the design. -->
+                    @if (line.unit) {
+                      <span class="rm-tbl__meta">{{ line.unit }}</span>
+                    }
                   </td>
-                }
-                <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(line.amount) }}</td>
-              </tr>
-            }
-          </tbody>
+                  @for (cell of line.cells; track $index) {
+                    @let col = columns()[$index];
+                    <td class="end num" [attr.data-label]="columnLabel(col)">
+                      {{ isMoneyColumn(col) ? locale.money(cell) : locale.formatNumber(cell) }}
+                    </td>
+                  }
+                  <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(line.amount) }}</td>
+                </tr>
+              }
+              <!-- What the item came to in the shop's own columns, each under its own. -->
+              @if (group.totals.length) {
+                <tr class="rm-row--groupfoot">
+                  <td class="rm-cell-head">
+                    {{ locale.t('bill.detail.totalOf', { name: group.lines[0].name }) }}
+                  </td>
+                  @for (total of group.totals; track $index) {
+                    <td
+                      class="end num"
+                      [attr.data-label]="total == null ? null : columnLabel(columns()[$index])"
+                    >
+                      {{ total == null ? '' : locale.formatNumber(total) }}
+                    </td>
+                  }
+                  <td></td>
+                </tr>
+              }
+            </tbody>
+          }
         </table>
       </div>
     }

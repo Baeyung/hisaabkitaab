@@ -159,16 +159,22 @@
                   <td colspan="8">
                     <p class="bill-subrow__heading">{{ locale.t('bill.detail.heading') }}</p>
                     <div class="bill-lines">
-                      @for (line of detail.lines; track $index) {
-                        <div class="bill-line">
-                          <span class="bill-line__name">{{ line.itemName || '—' }}</span>
-                          <span class="bill-line__leader" aria-hidden="true"></span>
-                          <span class="bill-line__calc num">
-                            @if (line.quantity != null) {
-                              {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
-                            }
-                            {{ locale.money(line.amount) }}
-                          </span>
+                      <!-- The name written once per item, with every line it was written on
+                           underneath it. See groupLines. -->
+                      @for (group of groupLines(detail.lines); track $index) {
+                        <div class="bill-group">
+                          @for (line of group.lines; track $index) {
+                            <div class="bill-line" [class.bill-line--under]="!$first">
+                              <span class="bill-line__name">{{ $first ? group.name : '' }}</span>
+                              <span class="bill-line__leader" aria-hidden="true"></span>
+                              <span class="bill-line__calc num">
+                                @if (line.quantity != null) {
+                                  {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
+                                }
+                                {{ locale.money(line.amount) }}
+                              </span>
+                            </div>
+                          }
                         </div>
                       }
                     </div>

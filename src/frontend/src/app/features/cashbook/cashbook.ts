@@ -23,6 +23,7 @@ import { KhataAmount } from '../../shared/khata-amount';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { deleteErrorKey } from '../../core/store/delete-error';
 import { AmountLegend } from '../../shared/amount-legend';
+import { groupLines } from '../../shared/bill-invoice';
 
 /**
  * The cashbook (روزنامچہ) day view: opening balance, the day's cash in/out
@@ -44,6 +45,8 @@ import { AmountLegend } from '../../shared/amount-legend';
   templateUrl: './cashbook.html',
 })
 export class Cashbook {
+  /** An attached document's lines, gathered under the item they are for — see {@link groupLines}. */
+  protected readonly groupLines = groupLines;
   protected readonly directionKey = directionKey;
   protected readonly directionClass = directionClass;
 

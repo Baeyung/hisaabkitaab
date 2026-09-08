@@ -25,26 +25,47 @@
             {{ locale.t('bill.detail.col.amount') }}</span
           >
         </div>
-        @for (line of b.lines; track $index) {
-          <div class="bill-line">
-            <span class="bill-line__name">{{ line.itemName || '—' }}</span>
-            <span class="bill-line__leader" aria-hidden="true"></span>
-            <span class="bill-line__calc num">
-              @if (cells(line); as cols) {
-                <!-- The shop's own columns, named, as this line recorded them. Named rather
-                     than joined with × because a shop's formula is not always a product. -->
-                @for (col of cols; track $index) {
+        <!-- One block per item: the name written once, and every line it was written on
+             running underneath it. See BillInvoice.groups. -->
+        @for (group of groups(); track $index) {
+          <div class="bill-group">
+            @for (line of group.lines; track $index) {
+              <div class="bill-line" [class.bill-line--under]="!$first">
+                <span class="bill-line__name">{{ $first ? group.name : '' }}</span>
+                <span class="bill-line__leader" aria-hidden="true"></span>
+                <span class="bill-line__calc num">
+                  @if (cells(line); as cols) {
+                    <!-- The shop's own columns, named, as this line recorded them. Named rather
+                         than joined with × because a shop's formula is not always a product. -->
+                    @for (col of cols; track $index) {
+                      <span class="bill-line__cell">
+                        <span class="bill-line__cellname">{{ col.label }}</span>
+                        {{ locale.formatNumber(col.value) }}
+                      </span>
+                    }
+                    =
+                  } @else if (line.quantity != null) {
+                    {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
+                  }
+                  {{ locale.money(line.amount) }}
+                </span>
+              </div>
+            }
+            <!-- What the item came to in the shop's own columns, closing its block. -->
+            @for (t of group.totals; track t.label) {
+              <div class="bill-line bill-line--groupfoot">
+                <span class="bill-line__name"></span>
+                <span class="bill-line__leader" aria-hidden="true"></span>
+                <span class="bill-line__calc num">
                   <span class="bill-line__cell">
-                    <span class="bill-line__cellname">{{ col.label }}</span>
-                    {{ locale.formatNumber(col.value) }}
+                    <span class="bill-line__cellname">{{
+                      locale.t('bill.detail.totalOf', { name: t.label })
+                    }}</span>
+                    {{ locale.formatNumber(t.value) }}
                   </span>
-                }
-                =
-              } @else if (line.quantity != null) {
-                {{ locale.formatNumber(line.quantity) }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
-              }
-              {{ locale.money(line.amount) }}
-            </span>
+                </span>
+              </div>
+            }
           </div>
         }
       </div>

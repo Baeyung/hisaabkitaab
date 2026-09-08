@@ -66,6 +66,15 @@ interface Line {
   factorFor: string | null;
 }
 
+/** One line of the bill as it prints: the figures the grid holds, flattened per column. */
+interface PrintLine {
+  key: number;
+  name: string;
+  unit: string;
+  cells: number[];
+  amount: number;
+}
+
 /** One cell of the grid between the item box and the amount. */
 type GridCell = { kind: 'field'; field: CustomField } | { kind: 'unit' };
 
@@ -344,7 +353,7 @@ export class GoodsEntry {
    * across a counter, and a bill that says 43.74 Gaz because that is how the shop counts its
    * shelf is a bill they cannot check against what is in their hands.
    */
-  protected readonly printLines = computed(() =>
+  protected readonly printLines = computed<PrintLine[]>(() =>
     this.validLines().map((l) => {
       const values = this.lineValues(l);
       return {
@@ -373,6 +382,40 @@ export class GoodsEntry {
         ? [{ label: this.columnLabel(f), value: lines.reduce((sum, l) => sum + l.cells[i], 0) }]
         : [],
     );
+  });
+
+  /**
+   * {@link printLines} gathered under the item they are for, in the order the items were
+   * first typed — the same block a saved bill prints, off the grid being written. Keyed on
+   * the name as typed, folded for case, because nothing on this screen has been matched to
+   * an item id yet.
+   *
+   * A group's footed figures sit under the columns they foot — one entry per grid column,
+   * null where the shop hasn't asked for that column to be footed — and only where the item
+   * took more than one line, since a foot under a single line would restate it.
+   */
+  protected readonly printGroups = computed(() => {
+    const columns = this.columns();
+    const byName = new Map<string, PrintLine[]>();
+    for (const line of this.printLines()) {
+      const key = line.name.toLowerCase();
+      const found = byName.get(key);
+      if (found) {
+        found.push(line);
+      } else {
+        byName.set(key, [line]);
+      }
+    }
+    return [...byName.values()].map((lines) => ({
+      key: lines[0].key,
+      lines,
+      totals:
+        lines.length > 1 && columns.some((f) => f.showTotal)
+          ? columns.map((f, i) =>
+              f.showTotal ? lines.reduce((sum, l) => sum + l.cells[i], 0) : null,
+            )
+          : [],
+    }));
   });
 
   protected readonly abs = Math.abs;

@@ -681,6 +681,21 @@ html[dir='rtl'] select.rm-input {
 .rm-tbl tbody tr:last-child td {
   border-bottom: 0;
 }
+/* One item's rows on a bill, gathered into their own body: ruled off from the next item
+   rather than from each other, so the block reads as one design written on several lines.
+   See goods-entry.html's printGroups. */
+.rm-tbl tbody.rm-group td {
+  border-bottom: 0;
+}
+.rm-tbl tbody.rm-group:not(:last-of-type) tr:last-child td {
+  border-bottom: 1px solid var(--kg-line);
+}
+/* The item's footed columns, closing its block — a count of what is already above it, so it
+   sits tight under the last line and lighter than it. */
+.rm-tbl tr.rm-row--groupfoot td {
+  padding-top: 0;
+  color: var(--kg-muted);
+}
 .rm-tbl .end {
   text-align: end;
 }
@@ -829,6 +844,33 @@ html[dir='rtl'] select.rm-input {
   color: var(--kg-faint);
   font-size: 0.85em;
 }
+/* One item's block. A bill that records the same design three times over — because the
+   columns differed, not because the design did — writes the name once and runs the rest
+   underneath it, indented, the way it would be written by hand on a pad. Inherits the
+   stack's own gap so grouping doesn't change the spacing between lines. */
+.bill-group {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+}
+.bill-line--under,
+.bill-line--groupfoot {
+  padding-inline-start: 16px;
+}
+/* A line carrying on the item above it, marked the way the khata itself marks one: the name
+   written once, and a ditto standing in for it underneath. Decoration on an empty span —
+   what the line is for is already written across the row. */
+.bill-line--under .bill-line__name::before,
+.rm-tbl tbody.rm-group tr + tr:not(.rm-row--groupfoot) .rm-cell-head::before {
+  content: '\201D';
+  color: var(--kg-faint);
+}
+/* The item's own footed column, closing its block: lighter than the lines, because it is a
+   count of what is already written above it rather than another thing that was sold. */
+.bill-line--groupfoot {
+  color: var(--kg-muted);
+}
+
 /* A footed column, between the lines and the money total. Sits on .bill-total's margin so
    the three read as one stack, and lighter than it because it is a count, not the amount. */
 .bill-line--foot {
@@ -1363,10 +1405,16 @@ html[dir='rtl'] select.rm-input {
     padding-inline: 4px;
   }
   .bill-line,
-  .bill-total {
+  .bill-total,
+  /* An item's lines carry its name only on the first of them, so a page break inside the
+     block would leave the rest of them nameless overleaf. */
+  .bill-group {
     break-inside: avoid;
   }
   .rm-tbl tr,
+  /* An item's rows carry its name only on the first of them, so a break inside the body
+     would leave the rest of them nameless overleaf. */
+  .rm-tbl tbody.rm-group,
   .rm-stat,
   /* Dashboard widgets: keep a chart or a list with the heading that names it. */
   .dw-kpi,

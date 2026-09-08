@@ -119,6 +119,19 @@ export class BillInvoice {
   }
 
   /**
+   * The bill's lines gathered under the item they are for, in the order the items first
+   * appear. Three lines of design A — written apart because their columns differed, not
+   * because the design did — read under the name once instead of spelling it out three
+   * times. Nothing is dropped or added up: this only moves rows next to each other.
+   *
+   * Keyed on the item where the line has one and on the name where it hasn't, the same way
+   * {@link sumItems} keys its rollup, so two free-text lines typed alike still gather.
+   */
+  protected groups(): BillGroup[] {
+    return groupLines(this.bill().lines, this.stores.current()?.settings?.customFields?.fields ?? []);
+  }
+
+  /**
    * The columns this shop has asked to see footed, added up across the bill's lines — ten
    * thans on one line and five on another footing fifteen.
    *
@@ -147,4 +160,38 @@ export function footedTotals(
         ? [{ label: f.label || f.id, value: values.reduce((sum, v) => sum + v, 0) }]
         : [];
     });
+}
+
+/** One item's worth of a bill — see {@link BillInvoice.groups}. */
+export interface BillGroup {
+  name: string;
+  lines: BillLine[];
+  /**
+   * The group's own footed columns: ten thans on one of its lines and five on another read
+   * as fifteen against the item. Empty where the item took a single line, since a foot there
+   * would only restate the figure directly above it.
+   */
+  totals: { label: string; value: number }[];
+}
+
+/** See {@link BillInvoice.groups} — pulled out so it can be checked without a fixture. */
+export function groupLines(
+  lines: readonly BillLine[],
+  fields: readonly CustomField[] = [],
+): BillGroup[] {
+  const byItem = new Map<string, BillLine[]>();
+  for (const line of lines) {
+    const key = line.itemId ?? line.itemName ?? '';
+    const found = byItem.get(key);
+    if (found) {
+      found.push(line);
+    } else {
+      byItem.set(key, [line]);
+    }
+  }
+  return [...byItem.values()].map((group) => ({
+    name: group[0].itemName || '\u2014',
+    lines: group,
+    totals: group.length > 1 ? footedTotals(fields, group) : [],
+  }));
 }
