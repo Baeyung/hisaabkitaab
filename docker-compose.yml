@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:18.4
     container_name: hisaabkitaab-postgres
+    profiles: [infra, be, core]
     restart: unless-stopped
     environment:
       POSTGRES_USER: hkadmin
@@ -21,6 +22,7 @@ services:
   renderer:
     build: ./src/renderer
     container_name: hisaabkitaab-renderer
+    profiles: [infra, be, core]
     restart: unless-stopped
     # Deliberately no depends_on frontend, though the scheduled reports do open it by service
     # name (see REPORTS_PAGE_BASE_URL below): frontend already depends on backend, and backend
@@ -33,6 +35,7 @@ services:
   backend:
     build: ./src/backend
     container_name: hisaabkitaab-backend
+    profiles: [be, core]
     restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hisaabkitaab
@@ -72,6 +75,7 @@ services:
   frontend:
     build: ./src/frontend
     container_name: hisaabkitaab-frontend
+    profiles: [core]
     restart: unless-stopped
     depends_on:
       - backend
@@ -81,6 +85,7 @@ services:
   admin:
     build: ./src/admin
     container_name: hisaabkitaab-admin
+    profiles: [core]
     restart: unless-stopped
     depends_on:
       - backend

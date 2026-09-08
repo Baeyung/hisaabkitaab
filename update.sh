@@ -10,4 +10,4 @@ echo ---------------------------------------------
 echo        2/2 Updating and building services
 echo ---------------------------------------------
 
-docker compose up -d --build
+docker compose --profile core up -d --build
