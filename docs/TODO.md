@@ -49,3 +49,4 @@
 - [ ] profit analysis on the reports given everything is honored (cost price, sale price, discount, item soldAt, etc all tje vars should be respected)
 - [x] custom fields enhancements, UI/UX, and more, sale/purchase as well, maybe later add it for other screens
 - [ ] same item grouping etc in bill
+- [ ] menu enhancement, more logical grouping
