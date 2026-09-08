@@ -126,6 +126,7 @@ export const en = {
   'nav.settings.units': 'Units',
   'nav.settings.menu': 'Menu',
   'nav.settings.reports': 'Reports',
+  'nav.settings.customFields': 'Custom Fields',
   // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
   // same two things `stores.suspendedSettled` says on the picker, in one line.
   'nav.closedHint': 'This shop is closed — your plan no longer covers it. Nothing has been lost.',
@@ -392,6 +393,10 @@ export const en = {
   'settings.menu.save': 'Save menu',
   'settings.menu.saving': 'Saving…',
   'settings.menu.saved': 'Menu saved',
+  'settings.menu.copy.hint':
+    'Saves this menu here first, then gives the stores you pick the same one — the same order, the same groups, the same names, the same entries left out, and the same controls at the foot of the sidebar. Their board, their reports and their sale columns are left alone, and none of them is switched between the sidebar and the board.',
+  'settings.menu.copy.hintEasy':
+    'Saves this board here first, then gives the stores you pick the same one — the same tabs, the same bands and colours, the same names and the same buttons left out. Their sidebar menu, their reports and their sale columns are left alone, and none of them is switched between the sidebar and the board.',
   'settings.items.subtitle': 'The cloth you stock and sell.',
   'settings.items.add': 'Add item',
   'settings.items.col.name': 'Item',
@@ -423,11 +428,14 @@ export const en = {
   'settings.items.opening.qtyPh': 'Quantity',
   'settings.items.opening.save': 'Save',
   'settings.items.opening.cancel': 'Cancel',
-  'settings.items.copy.button': 'Copy to other stores',
+  // Said the same way on every screen that copies, since it is the same panel; only the
+  // hint below differs, because only what travels differs.
+  'settings.copy.button': 'Copy to other stores',
+  'settings.copy.confirm': 'Copy',
+  'settings.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
+
   'settings.items.copy.hint':
     "Copies every item above into the stores you pick — an item they already have (matched by name) is left alone, so copying twice adds nothing extra. Stock on the shelf doesn't come along, only the catalog details.",
-  'settings.items.copy.confirm': 'Copy',
-  'settings.items.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
   'settings.units.subtitle': 'Manage the units this shop uses, and how they convert into one another.',
   'settings.units.manage.section': 'Manage units',
@@ -458,11 +466,8 @@ export const en = {
     'Nothing taught yet. Add one below, or answer the conversion slip the first time you use it on an entry.',
   'settings.units.loadError': "Couldn't load your conversions. Please try again.",
   'settings.units.delete.confirm': 'Remove the {{from}} → {{to}} conversion?',
-  'settings.units.copy.button': 'Copy to other stores',
   'settings.units.copy.hint':
     "Copies every rate above into the stores you pick — it overwrites a rate they already have for the same pair, and leaves everything else in them alone.",
-  'settings.units.copy.confirm': 'Copy',
-  'settings.units.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
   'settings.party.subtitle': 'The customers and suppliers you keep an account with.',
   'settings.party.add': 'Add party',
@@ -495,11 +500,8 @@ export const en = {
   'settings.party.opening.youOwe': 'You owe them',
   'settings.party.opening.save': 'Save',
   'settings.party.opening.cancel': 'Cancel',
-  'settings.party.copy.button': 'Copy to other stores',
   'settings.party.copy.hint':
     "Copies every party above into the stores you pick — a party they already have (matched by name) is left alone, so copying twice adds nothing extra.",
-  'settings.party.copy.confirm': 'Copy',
-  'settings.party.copy.result': 'Copied to {{ok}} of {{total}} store(s).',
 
   'sale.newEntry': 'New entry',
   'sale.billDate': 'Date',
@@ -1158,6 +1160,84 @@ export const en = {
   'settings.reports.save': 'Save reports',
   'settings.reports.saving': 'Saving…',
   'settings.reports.saved': 'Reports saved',
+
+  // ── Store Settings › Custom Fields ────────────────────────────────────────
+  // What a shop asks for on each line of a sale or a purchase. Absent means the grid the
+  // app ships with, which is what every shop has until an owner opens this screen.
+  'settings.customFields.subtitle':
+    'What each line of a sale or a purchase asks for, and how it adds up.',
+  'settings.customFields.usingDefault':
+    'This shop is still on the columns the app comes with. Change them here and every sale and purchase from now on is written that way — bills already saved keep the shape they were written in.',
+
+  // The preview: one row of the sale grid, worked out from whatever is in the boxes below.
+  'settings.customFields.preview': 'Your line',
+  'settings.customFields.preview.hint':
+    'One row of a sale, exactly as this shop will fill it in. Put your own figures in the boxes to check the arithmetic before you save.',
+  // A sample item and unit, so the preview reads as a line off a real bill rather than as a
+  // diagram. Cloth, because a cloth shop is who asks for columns of their own.
+  'settings.customFields.preview.item': 'Cotton lawn',
+  'settings.customFields.preview.unit': 'gaz',
+  'settings.customFields.preview.tryIn': 'Try a figure in {{name}}',
+  'settings.customFields.preview.shelf': 'Takes {{qty}} off the shelf, in the item’s own unit.',
+  'settings.customFields.preview.blank':
+    'Your line appears here once every column has a name and every formula can be read.',
+
+  'settings.customFields.section.columns': 'Columns',
+  'settings.customFields.section.columns.desc':
+    'What the line asks for, between the item and the amount. The order here is the order on the line.',
+  'settings.customFields.section.columns.note':
+    'Leave “worked out as” empty for a column someone types into. Fill it in and the app works the column out — name your other columns and join them with + − × ÷ and brackets.',
+  'settings.customFields.section.amount': 'The amount',
+  'settings.customFields.section.amount.desc':
+    'What the line comes to. This is the figure that reaches the bill, the cashbook and the customer’s khata.',
+  'settings.customFields.section.amount.note':
+    'Any column can be named here, including one the app works out for you.',
+  'settings.customFields.section.shelf': 'Stock and units',
+  'settings.customFields.section.shelf.desc':
+    'How much stock a line moves, and whether a line may be written in a unit other than the item’s own.',
+  'settings.customFields.section.shelf.note':
+    'Stock, inventory and profit are all counted from the shelf quantity. Get it wrong and the shelf drifts while every bill still looks right.',
+
+  'settings.customFields.col.name': 'Column',
+  'settings.customFields.col.namePh': 'What you call it',
+  'settings.customFields.col.formula': 'Worked out as',
+  'settings.customFields.col.actions': 'Actions',
+  'settings.customFields.typedIn': 'Typed in',
+  'settings.customFields.formulaFor': 'How {{name}} is worked out',
+  'settings.customFields.add': 'Add a column',
+  'settings.customFields.moveUp': 'Move up',
+  'settings.customFields.moveDown': 'Move down',
+  // Puts a column's name in the formula box beside it — distinct from "Add a column", which
+  // makes one. Same verb throughout: you add a column to the line, you use one in a formula.
+  'settings.customFields.insert': 'Use a column:',
+  'settings.customFields.total': 'Line total',
+  'settings.customFields.total.hint': 'For example: thans × gazana × rate',
+  'settings.customFields.shelf': 'Quantity off the shelf',
+  'settings.customFields.shelf.hint':
+    'In the item’s own unit — the unit its stock is counted in. For example: thans × gazana',
+  'settings.customFields.rateField': 'Rate column',
+  'settings.customFields.rateField.hint':
+    'The item’s saved price prefills here, and this is the column a unit conversion rescales.',
+  'settings.customFields.rateField.none': 'None',
+  'settings.customFields.showUnit': 'Ask for a unit on each line',
+  'settings.customFields.showUnit.hint':
+    'Switch this off and the unit box goes, and with it the conversion slip — every quantity is taken to be in the item’s own unit.',
+  'settings.customFields.showUnit.unavailable':
+    'The unit box needs the shelf quantity to be one column, and a separate rate column beside it.',
+  'settings.customFields.reset': 'Back to the standard columns',
+  'settings.customFields.save': 'Save columns',
+  'settings.customFields.saving': 'Saving…',
+  'settings.customFields.saved': 'Columns saved',
+  'settings.customFields.copy.hint':
+    'Saves these columns here first, then gives the stores you pick the same sale and purchase line — the same columns, the same formulas, the same unit box. It replaces whatever they were using, so a store with columns of its own loses them; if this store is on the standard columns, copying puts them back to standard. Nothing already written on a bill changes.',
+  'settings.customFields.error.noColumns': 'A line needs at least one column.',
+  'settings.customFields.error.unnamed': 'Every column needs a name.',
+  'settings.customFields.error.duplicate': 'Two columns are both called “{{name}}”.',
+  'settings.customFields.error.cycle':
+    '“{{name}}” is worked out from itself, so it can never be worked out.',
+  'settings.customFields.error.unknownField': '{{where}} names “{{at}}”, which is not a column.',
+  'settings.customFields.error.badFormula':
+    '{{where}} cannot be read. Use only + − × ÷ ( ) and the names of your columns.',
   'settings.reports.daily.title': 'Daily report',
   'settings.reports.daily.help':
     'Every evening, the whole day on one PDF — cashbook, bills, purchases, every khata and what is left in stock — sent to you on WhatsApp.',

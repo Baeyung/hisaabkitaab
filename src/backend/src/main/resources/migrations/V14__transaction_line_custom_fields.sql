@@ -1,0 +1,26 @@
+--
+-- Name: transaction_lines.custom_fields; Type: COLUMN; Schema: public; Owner: -
+--
+-- What a shop's own entry columns held on this line. A shop that has configured custom
+-- fields (Store Settings › Custom Fields) writes its own boxes here — {"thans": 3,
+-- "gazana": 21, "rate": 100} — alongside the quantity and rate every line already carries.
+--
+-- One JSON document in one text column, mapped by CustomFieldValuesConverter, for the same
+-- reasons stores.settings is (see V8__store_settings.sql): the keys are the client's, the
+-- backend cannot say what "gazana" means, and a shop adding a column must not need a
+-- migration. It is carried through, never read: quantity and item_sold_at remain the only
+-- numbers this side computes with, and the entry screen derives them so that
+-- quantity × item_sold_at is exactly the line total the shopkeeper agreed to.
+--
+-- NULL is not backfilled and never will be. Every line written before this column existed —
+-- and every line of a shop that never opens the page — reads as the default two columns,
+-- {quantity, rate}, taken from the quantity and item_sold_at already on the row. That
+-- fallback lives in the client, which owns the default field ids the same way it owns
+-- 'nav.ledger'; the alternative was an UPDATE across the whole of history to write values
+-- that are already sitting in the next two columns.
+--
+-- Only STOCK lines ever carry one. The cash and party legs of an entry have no columns of
+-- their own to fill.
+--
+
+ALTER TABLE public.transaction_lines ADD COLUMN custom_fields text;

@@ -34,6 +34,17 @@ export interface BillLine {
   unit: string | null;
   rate: number;
   amount: number;
+  /**
+   * The shop's own entry columns as this line recorded them, or absent for a line written
+   * before it had any — which reads as the two default ids off `quantity` and `rate` (see
+   * `storedValues`).
+   *
+   * A saved bill shows the columns it stored, not the ones the shop is arranged with today.
+   * Remove a column in settings and a bill from before still reads `3 × 21 × 100 = 6300`
+   * rather than `3 × 100 = 6300`, which is a bill whose own arithmetic is visibly wrong — and
+   * the printed copy in the customer's hand still says the first thing.
+   */
+  customFields?: Record<string, number> | null;
 }
 
 export interface BillDetail {

@@ -47,3 +47,4 @@
 - [ ] address to be shown in ledger?
 - [ ] numbers being cut off in pdfs, and screen, due to large amounts, need to look into that!
 - [ ] profit analysis on the reports given everything is honored (cost price, sale price, discount, item soldAt, etc all tje vars should be respected)
+- [x] custom fields enhancements, UI/UX, and more, sale/purchase as well, maybe later add it for other screens

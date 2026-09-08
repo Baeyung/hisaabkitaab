@@ -28,6 +28,7 @@ import {
 } from '../../layout/shell/nav';
 import { EASY_NAV } from '../../layout/shell/board';
 import { ToastService } from '../../shared/toast/toast.service';
+import { CopyToStores, copyTargets } from './copy-to-stores';
 
 /**
  * What a band of the board may be coloured for. Three, and deliberately only three: the
@@ -105,7 +106,7 @@ const CHROME: ReadonlyArray<{ item: ChromeItem; label: TranslationKey }> = [
  */
 @Component({
   selector: 'app-settings-menu',
-  imports: [CdkDropList, CdkDrag, CdkDragHandle, NgTemplateOutlet],
+  imports: [CdkDropList, CdkDrag, CdkDragHandle, NgTemplateOutlet, CopyToStores],
   templateUrl: './menu.html',
   // The page frame, buttons and fields, shared with Manage Users rather than copied again;
   // the switch, shared with General, which is the other screen that turns things on.
@@ -146,6 +147,10 @@ export class SettingsMenu {
   protected readonly hideChrome = signal<ReadonlySet<ChromeItem>>(
     new Set(this.saved()?.hideChrome ?? []),
   );
+
+  /** The other shops this arrangement could be handed to, and whether they are being asked. */
+  protected readonly otherStores = computed(() => copyTargets(this.stores, true));
+  protected readonly copyOpen = signal(false);
 
   /** Every row on the screen, at whatever depth it sits. */
   private readonly rows = computed(() => walk(this.items()));
@@ -527,23 +532,54 @@ export class SettingsMenu {
     this.attempted.set(false);
   }
 
-  async save(): Promise<void> {
+  /** Answers whether the arrangement went in, which is what {@link copyArrangement} waits on. */
+  async save(): Promise<boolean> {
     this.attempted.set(true);
     if (this.unnamed().length) {
       // Saving now would look like it worked and lose the grouping on the way back in.
       document.getElementById(`row-${this.unnamed()[0].key}`)?.focus();
-      return;
+      return false;
     }
     this.saving.set(true);
     try {
       await this.stores.updateSettings(this.toSettings());
       this.toast.success(this.locale.t('settings.menu.saved'));
+      return true;
     } catch {
       this.toast.error(this.locale.t('error.generic'));
+      return false;
     } finally {
       this.saving.set(false);
     }
   }
+
+  /**
+   * Hand the same arrangement to the shop's other branches: saved here first, then written
+   * into each of them, so what travels is what this shop is now running rather than a
+   * half-finished screen. A save that will not go through — an unnamed group — stops the copy
+   * too, on the same reasoning and with the same message.
+   *
+   * Only the document this screen edits travels, into the same slot on the other side: a
+   * board arranged here lands as the other shop's board and leaves its sidebar alone, and
+   * neither one switches the other shop between them — `easyMode` is General's, and a branch
+   * that works from the sidebar goes on doing so with a board waiting for the day it doesn't.
+   * The foot controls go along because they are arranged on this screen and nowhere else;
+   * reports and the sale grid are other screens' and stay as the target had them.
+   *
+   * An arrow rather than a method — it is passed to the panel as a value, so it has to carry
+   * its own `this`.
+   */
+  protected readonly copyArrangement = async (ids: string[]): Promise<string[]> => {
+    if (!(await this.save())) {
+      return ids;
+    }
+    const arranged = this.toSettings();
+    return this.stores.copySettingsTo(ids, (target) => ({
+      ...target,
+      ...(this.easy ? { easyMenu: arranged.easyMenu } : { menu: arranged.menu }),
+      hideChrome: arranged.hideChrome,
+    }));
+  };
 
   /**
    * The arrangement as it goes to the server: every entry, in order, in the group it is in,
@@ -580,6 +616,9 @@ export class SettingsMenu {
       // The same again: Reports owns this, and arranging a menu must not be what silently
       // switches a shop's nightly report and khata reminders back off.
       reports: saved?.reports,
+      // And again: Custom Fields owns this. Reordering a sidebar must not be what resets a
+      // shop's sale and purchase grids back to the built-in columns.
+      customFields: saved?.customFields,
     };
   }
 }

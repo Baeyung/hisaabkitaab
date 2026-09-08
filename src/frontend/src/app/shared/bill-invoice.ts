@@ -1,10 +1,11 @@
 import { Component, inject, input } from '@angular/core';
 import { LocaleService } from '../core/i18n/locale.service';
 import { TranslationKey } from '../core/i18n/translations/en';
-import { BillDetail, DocKind } from '../core/store/bill.models';
+import { BillDetail, BillLine, DocKind } from '../core/store/bill.models';
 import { BalanceDirection } from '../core/store/balance.models';
 import { directionClass, directionKey, invertDirection, invertInOut } from './balance.util';
 import { Perspective } from './print-details.service';
+import { StoreService } from '../core/store/store.service';
 
 /**
  * The wording of one goods document. Keys are passed in as literals rather than
@@ -64,6 +65,7 @@ export class BillInvoice {
   readonly perspective = input<Perspective>('store');
 
   protected readonly locale = inject(LocaleService);
+  private readonly stores = inject(StoreService);
 
   private sided(direction: BalanceDirection): BalanceDirection {
     return this.perspective() === 'party' ? invertDirection(direction) : direction;
@@ -81,5 +83,37 @@ export class BillInvoice {
   protected cashClass(): string {
     const inOut = this.kind() === 'bills' ? 'IN' : 'OUT';
     return (this.perspective() === 'party' ? invertInOut(inOut) : inOut) === 'IN' ? 'amt--in' : 'amt--out';
+  }
+
+  /**
+   * The shop's own columns as this line recorded them, or null for a line that has none —
+   * which is every line of every shop running the grid the app ships with, and every line
+   * written before this existed. Null is what keeps the familiar `63 Gaz × 100 = 6300`
+   * rendering below exactly as it has always been.
+   *
+   * Read off the line, not off the shop's current arrangement: a bill shows what it was
+   * written with. Take a column away in settings and a bill from before it went still reads
+   * `3 · 21 · 100 = 6300` rather than dropping a figure and leaving arithmetic that no longer
+   * works — the customer is holding the printed copy of the first one.
+   *
+   * Only the *names* come from the arrangement, because they are all it has to offer: a
+   * column that has since been removed has no label left anywhere, and shows its own id.
+   * ponytail: labels are not stored per line; storing them would put the shop's whole
+   * vocabulary on every row to survive a rename that nobody has asked to survive yet.
+   */
+  protected cells(line: BillLine): { label: string; value: number }[] | null {
+    const stored = line.customFields;
+    if (!stored || Object.keys(stored).length === 0) {
+      return null;
+    }
+    const labels = new Map(
+      (this.stores.current()?.settings?.customFields?.fields ?? []).map((f) => [f.id, f.label]),
+    );
+    // Insertion order is the order the columns were in when the line was written — a JSON
+    // object keeps it, on both sides of the wire.
+    return Object.entries(stored).map(([id, value]) => ({
+      label: labels.get(id) || id,
+      value,
+    }));
   }
 }

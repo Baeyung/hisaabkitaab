@@ -199,6 +199,16 @@ export const NAV: NavItem[] = [
         icon: 'reports',
         requires: 'OWNER',
       },
+      // What the shop asks for on each line of a sale or a purchase. Owner-only: it changes
+      // the shape of every bill everyone in the shop writes, which is not an editor's call.
+      // No `writes` — arranging columns records no business, so a closed shop keeps it.
+      {
+        kind: 'link',
+        key: 'nav.settings.customFields',
+        path: 'settings/custom-fields',
+        icon: 'items',
+        requires: 'OWNER',
+      },
     ],
   },
 ];

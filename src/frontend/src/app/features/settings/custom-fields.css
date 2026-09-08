@@ -1,0 +1,367 @@
+/* Store Settings › Custom Fields.
+
+   settings-table.css draws the page frame, the column table, the buttons, the inputs and
+   the alert; settings-switch.css draws the toggle. This file adds two things: the label-rail
+   section grammar this screen shares with General, Menu and Reports, and the one thing only
+   this screen has — the line preview.
+
+   ponytail: the .sec / .set__foot rail below is a fourth copy; General, Menu and Reports each
+   carry their own and reports.css already asks for the extraction. Copied again rather than
+   extracted because the three have since drifted — Menu breaks at 860px on @media where the
+   others break at 760px on @container, and General's .fld/.btn are a size larger than the
+   ones in settings-table.css — so pulling them together is a change to three working screens
+   that no test would catch the regression of. Worth doing on its own, not inside a redesign. */
+
+.set__titles {
+  min-width: 0;
+}
+
+.set__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── sections: intro rail (start) + controls (end) ───────────────────── */
+.sec {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 10px 48px;
+  padding: 28px 0;
+  border-top: 1px solid var(--kg-line);
+}
+.sec__eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.sec__desc {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--kg-muted);
+  max-width: 32ch;
+}
+/* The thing about a section that has to be known before it is used rather than found out
+   from a wrong bill. Set apart from the description so it reads as a caveat, same as on
+   General, Menu and Reports. */
+.sec__note {
+  margin: 10px 0 0;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--kg-line-strong);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-faint);
+  max-width: 34ch;
+}
+.sec__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 520px;
+}
+/* The column table carries its own measure — it is a table of controls, not a form field, and
+   520px would stack its two boxes and three buttons on top of each other. Wider than the form
+   fields beside it, but only by enough: let it fill the column and the row's buttons end up
+   marooned 300px away from the box they belong to. */
+.sec__fields--wide {
+  max-width: 680px;
+}
+
+/* ── fields ─────────────────────────────────────────────────────────────
+   settings-table.css owns .fld__input; the caption and hint around it are this screen's,
+   written to the same sizes General and Reports use. */
+.fld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fld__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-muted);
+}
+/* Margin comes from .fld's own gap — a <p>'s default would put a 16px trench between the box
+   and the sentence explaining it, and drift the chips below out of the field altogether. */
+.fld__hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--kg-faint);
+  max-width: 52ch;
+}
+/* A formula is arithmetic, and reads as arithmetic: figures and column names lined up in
+   tabular figures rather than in prose spacing. */
+.fld__input--formula {
+  font-variant-numeric: tabular-nums;
+}
+/* The preview's boxes sit in a grid row, not a form column: same box, one notch shorter, and
+   free to be as narrow as its track. Matches the sale grid's own line inputs. */
+.fld__input--sm {
+  height: 40px;
+  min-width: 0;
+}
+
+/* ── the line, as the shop will fill it in ──────────────────────────────
+   The hero of this screen, and the answer to the question it otherwise leaves unanswered:
+   what does any of this look like on a bill? The same grid as the sale screen, one row of
+   it, live off whatever is typed below — so a formula that is wrong is wrong here, on a
+   line, in rupees, and not three screens later on a customer's bill.
+
+   The boxes are real: putting your own figures in is how a shopkeeper checks the arithmetic
+   without leaving the page. */
+/* Cream, the ramp's strip tone, holding the white ledger card — the warm paper this app is
+   made of. A brand-tinted wash was tried instead and reads cool and clinical against the
+   surrounding desk, which is the wrong note for the one panel on the page that is meant to
+   look like a bill. */
+.line {
+  margin-bottom: 8px;
+  padding: 16px 18px 18px;
+  background: var(--kg-cream);
+  border: 1px solid var(--kg-line);
+  border-radius: 14px;
+}
+.line__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+.line__hint {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-muted);
+  max-width: 64ch;
+}
+.line__grid {
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--kg-card);
+  border: 1px solid var(--kg-line);
+  border-radius: 12px;
+}
+/* One track per cell, handed down from the component the same way the sale grid's is: how
+   many columns a line has is the shop's business, not this stylesheet's. */
+.line__head,
+.line__row {
+  display: grid;
+  grid-template-columns: var(--cf-line-cols, minmax(0, 2fr) minmax(70px, 1.1fr));
+  gap: 8px;
+  align-items: center;
+}
+.line__head {
+  padding: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+.line__end {
+  text-align: end;
+}
+/* The item and the unit are fixed on this screen — there is no catalogue to pick from here,
+   and nothing about them is being configured. They read as a sample, not as a control. */
+.line__item,
+.line__unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  overflow-wrap: anywhere;
+}
+.line__unit {
+  font-weight: 500;
+  color: var(--kg-faint);
+}
+/* A column this shop's own formula fills in: a figure, never a box. Exactly what it will be
+   on the sale screen — the end padding keeps it off the box that follows it, which would
+   otherwise read as the figure's own. */
+.line__derived {
+  padding-inline-end: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: end;
+  color: var(--kg-ink);
+  overflow-wrap: anywhere;
+}
+.line__amt {
+  font-size: 14px;
+  font-weight: 700;
+  text-align: end;
+  color: var(--kg-ink);
+  overflow-wrap: anywhere;
+}
+/* What the line does to the shelf, said in words under it — the other half of what a line
+   is for, and the one part of it that never appears on the bill. */
+.line__shelf {
+  margin: 10px 2px 0;
+  font-size: 12.5px;
+  color: var(--kg-muted);
+}
+.line__shelf strong {
+  font-weight: 700;
+  color: var(--kg-ink);
+}
+/* Nothing to show yet, because a formula below cannot be read. An invitation, not a scolding:
+   the alert at the foot is where the telling-off lives, and only after a save is attempted. */
+.line__blank {
+  margin: 14px 0 0;
+  padding: 22px 16px;
+  font-size: 13px;
+  color: var(--kg-faint);
+  text-align: center;
+  background: var(--kg-card);
+  border: 1px dashed var(--kg-line-strong);
+  border-radius: 12px;
+}
+/* Said once, under the preview it explains, and only while it is still true. */
+.line__default {
+  margin: 10px 0 0;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--kg-line-strong);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-faint);
+  max-width: 64ch;
+}
+
+/* ── the column table ───────────────────────────────────────────────────
+   Tighter than a list screen's rows: every cell holds a control, so the shared 12px block
+   padding would stack two 44px boxes into a 68px row and turn six columns into a scroll. */
+.cf__tbl td {
+  padding: 8px 12px;
+}
+.cf__tbl thead th {
+  padding: 10px 12px;
+}
+.cf__tbl .cf__col--name {
+  width: 32%;
+}
+.cf__tbl .cf__col--acts {
+  /* Three 34px buttons, two 6px gaps and the cell's own padding — the row's controls never
+     become the reason the table starts scrolling sideways. */
+  width: 140px;
+}
+
+/* Adding a column: dashed, because what it makes starts empty — the same invitation the Menu
+   screen's "new group" gives. */
+.cf__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  align-self: flex-start;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-muted);
+  background: transparent;
+  border: 1px dashed var(--kg-line-strong);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.cf__add:hover {
+  color: var(--kg-ink);
+  border-color: var(--kg-line-hover);
+}
+.cf__add:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── column names, ready to drop into a formula ──────────────────────────
+   Press a column's name to put it in the box. Nobody has to know that a column has a name of
+   its own underneath the one they gave it, let alone type one. */
+.cf__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.cf__chips__lbl {
+  margin-inline-end: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kg-faint);
+}
+.cf__chip {
+  padding: 5px 11px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kg-brand);
+  background: var(--kg-tint-brand);
+  border: 1px solid var(--kg-tint-brand-line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.cf__chip:hover {
+  filter: brightness(1.05);
+}
+.cf__chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* ── footer ─────────────────────────────────────────────────────────────
+   Aligned under the controls, not under the rail — the same 288px indent General, Menu and
+   Reports use, so the save button lands on one line across the whole settings area. */
+.set__foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 26px;
+  border-top: 1px solid var(--kg-line);
+  padding-inline-start: 288px;
+}
+.set__alert {
+  margin: 22px 0 0;
+  padding: 10px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kg-out);
+  background: var(--kg-tint-out-hover);
+  border: 1px solid var(--kg-tint-out-line);
+  border-radius: 11px;
+  /* Indented and measured like the fields it is about, not stretched across the page. */
+  max-width: 520px;
+  margin-inline-start: 288px;
+}
+
+/* ── narrow ─────────────────────────────────────────────────────────────
+   The rail folds above its controls and the footer loses the indent that was aligning it
+   under them. The preview keeps its shape as long as it can and then scrolls sideways: a
+   line with six columns is a line with six columns, and squashing it would misrepresent
+   exactly the thing it is there to show. */
+@container (max-width: 760px) {
+  .sec {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 22px 0;
+  }
+  .sec__desc,
+  .sec__note {
+    max-width: none;
+  }
+  .set__foot,
+  .set__alert {
+    padding-inline-start: 0;
+    margin-inline-start: 0;
+  }
+  .set__alert {
+    max-width: none;
+  }
+  .line__grid {
+    overflow-x: auto;
+  }
+  .line__head,
+  .line__row {
+    min-width: 520px;
+  }
+}

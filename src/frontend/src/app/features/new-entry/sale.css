@@ -169,16 +169,70 @@ select.fld__input {
   border: 1px solid var(--kg-line);
   border-radius: 12px;
 }
+/* How many columns a line has is the shop's business now, so the line cannot be a fixed
+   track list any more: a shop with eight columns would get eight slivers. Every box states
+   the width it needs to stay readable instead, and the line wraps onto a second row once
+   they no longer fit across the form. The heading carries the same widths in the same
+   order, so it wraps at exactly the same points and each label stays over its own box. */
 .grid__head,
 .grid__row {
-  display: grid;
-  grid-template-columns:
-    minmax(0, 2fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(70px, 1.1fr) 40px;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  /* The remove button's lane, held open on the heading too so the two stay in step. The
+     button is taken out of the flow and parked in it: a wrapping line must never leave it
+     stranded on a line of its own. */
+  padding-inline-end: 48px;
+}
+.grid__head > *,
+.grid__row > * {
+  /* A figure box asks for 100px and takes no more than 240 — so the one column left over
+     on a wrapped line stays a box you'd recognise instead of stretching across the form. */
+  flex: 1 1 100px;
+  min-width: 0;
+  max-width: 240px;
+}
+/* The widths only line up if every box measures the same way. The app is content-box, so
+   an input would carry its 13px of padding on top of its share and a heading span would
+   not — and the heading would wrap a column earlier than the line it labels. */
+.grid__head > *,
+.grid__row > *,
+.grid__row .fld__input {
+  box-sizing: border-box;
+}
+/* The item box is the one that holds a name rather than a figure, so it gets the width. */
+.grid__head > :first-child,
+.grid__row > :first-child {
+  flex: 3 1 190px;
+  max-width: 420px;
+}
+/* The amount takes whatever the line has left over. It is right-aligned text rather than a
+   box, so the slack shows as space in front of it and the figure stays under its heading. */
+.grid__head-amount,
+.grid__amount {
+  flex: 1.4 1 118px;
+  max-width: none;
+}
+.grid__row > .iconbtn {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 0;
+}
+/* A column the shop's formula fills in: reads as a figure, not as a box to type in. */
+.grid__derived {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kg-ink);
+  text-align: end;
+  overflow-wrap: anywhere;
 }
 .grid__head {
-  padding: 0 0 4px;
+  padding-block: 0 4px;
+  /* A shop names its own columns, so a label can be longer than its box: let it take a
+     second line rather than run over the label beside it. */
+  overflow-wrap: anywhere;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -624,60 +678,33 @@ select.fld__input {
   }
   /* Each row is a flat strip, not a box inside the box: a hairline underneath
      reads as one list rather than the "card in a card in a card" the grid
-     used to be. The amount gets its own full-width line below qty/unit/rate
-     instead of being squeezed into the 40px remove-button track — that's
-     what was wrapping "Rs 5,000,000" into two jittering lines. */
+     used to be. */
+  /* On a phone the item box takes the top line to itself, beside the remove button in its
+     lane, and the shop's own columns wrap into the lines under it, however many it has. */
   .grid__row {
-    /* The remove button is a fixed 40px, not a fraction of the row — a written
-       line's design field gives up exactly the button's width, no more. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 40px;
-    grid-template-areas:
-      'design design design remove'
-      'qty unit rate .'
-      'amount amount amount amount';
-    gap: 8px;
-    padding: 12px 0;
+    padding-block: 12px;
     border: 0;
     border-radius: 0;
     border-bottom: 1px solid var(--kg-line);
   }
-  /* A blank line has no remove button to make room for, so nothing is
-     reserved for it — the design field runs edge to edge instead of
-     leaving a dead 40px gap on the right. */
+  .grid__row > :first-child {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  /* A blank line has no remove button to make room for, so the row runs edge to edge
+     instead of holding open a lane nothing is parked in. */
   .grid__row--waiting {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas:
-      'design design design'
-      'qty unit rate'
-      'amount amount amount';
+    padding-inline-end: 0;
   }
-  .grid__row > :nth-child(1) {
-    grid-area: design;
-  }
-  .grid__row > :nth-child(2) {
-    grid-area: qty;
-  }
-  .grid__row > :nth-child(3) {
-    grid-area: unit;
-  }
-  .grid__row > :nth-child(4) {
-    grid-area: rate;
-  }
-  .grid__amount {
-    grid-area: amount;
-    align-self: center;
-    margin-top: 2px;
-    font-size: 17px;
-  }
-  .grid__row > .iconbtn {
-    grid-area: remove;
-    justify-self: end;
-  }
-  /* The waiting row's template has no "remove" area at all — without this the
-     hidden button falls back to auto-placement and opens an extra implicit
-     row underneath, showing up as a blank gap under the blank line. */
   .grid__row--waiting > .iconbtn {
     display: none;
+  }
+  /* The amount gets the closing line to itself rather than being squeezed in beside a
+     column — that is what was wrapping "Rs 5,000,000" into two jittering lines. */
+  .grid__amount {
+    flex: 1 1 100%;
+    margin-top: 2px;
+    font-size: 17px;
   }
 }
 

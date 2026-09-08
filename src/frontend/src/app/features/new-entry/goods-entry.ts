@@ -33,13 +33,27 @@ import { UnitService } from '../../core/units/unit.service';
 import { ConversionSlipService } from '../../shared/conversion-slip/conversion-slip.service';
 import { UnitNote } from '../../shared/conversion-slip/unit-note';
 import { UNIT_SUGGESTIONS, convertQty, round2, sameUnit } from '../../core/units/units';
+import {
+  CompiledArrangement,
+  CustomField,
+  DEFAULT_QTY_FIELD,
+  compileArrangement,
+  resolveValues,
+  storedValues,
+} from '../../core/store/custom-field.models';
+import { evaluate } from '../../core/store/formula';
 
 /** One line of cloth on the bill. `key` is a stable id for @for tracking. */
 interface Line {
   key: number;
   design: string;
-  qty: number | null;
-  rate: number | null;
+  /**
+   * What has been typed into the line's columns, keyed by field id. A shop running the grid
+   * the app ships with has `qty` and `rate` in here and nothing else; one that has arranged
+   * its own has whatever it named them. Computed columns are worked out from these on the fly
+   * and never stored on the line — there is one place a number can come from.
+   */
+  values: Record<string, number | null>;
   /**
    * The unit this line is being sold or bought in. Prefills from the item's own unit, which is
    * what it stays at on all but the odd line — a shop that stocks by the gaz and sells a roll
@@ -51,6 +65,9 @@ interface Line {
   /** The pair that rate was agreed for, so retyping the design re-asks. See processing.ts. */
   factorFor: string | null;
 }
+
+/** One cell of the grid between the item box and the amount. */
+type GridCell = { kind: 'field'; field: CustomField } | { kind: 'unit' };
 
 /** How a converted pair is keyed on a line — folded, so case never looks like a new pair. */
 function pairKey(from: string, to: string): string {
@@ -179,6 +196,46 @@ export class GoodsEntry {
    */
   protected readonly unitOptions = signal<readonly string[]>(UNIT_SUGGESTIONS);
 
+  /**
+   * The columns this shop writes a bill in, with its formulas already parsed. A shop that has
+   * never opened Store Settings › Custom Fields gets {@link DEFAULT_CUSTOM_FIELDS}, which is
+   * the grid the app ships with written out as an arrangement — so this screen has one code
+   * path, not a custom one beside a normal one.
+   */
+  protected readonly arrangement = computed<CompiledArrangement>(() =>
+    compileArrangement(this.storeSvc.current()?.settings?.customFields),
+  );
+
+  /** The shop's columns, in grid order. */
+  protected readonly columns = computed(() => this.arrangement().settings.fields);
+
+  /**
+   * The grid's cells between the item box and the amount: the shop's columns, with the unit
+   * box sitting immediately after the column it measures.
+   *
+   * Beside the quantity rather than at the end, because that is what it is a unit *of* — and
+   * because on the grid the app ships with that is item · qty · unit · rate, exactly where a
+   * shop that has been using this screen for a year expects to find it.
+   */
+  protected readonly cells = computed<GridCell[]>(() => {
+    const shelfField = this.arrangement().shelfField;
+    const unit = this.showUnit();
+    return this.columns().flatMap<GridCell>((field) =>
+      unit && field.id === shelfField
+        ? [{ kind: 'field', field }, { kind: 'unit' }]
+        : [{ kind: 'field', field }],
+    );
+  });
+
+  /**
+   * Whether the unit box is on the grid, and with it the whole conversion apparatus: the slip,
+   * the factor, the rate rescaling and the note under a converted line. A shop that finds
+   * conversion a hassle switches it off and none of that code runs.
+   */
+  protected readonly showUnit = computed(
+    () => this.arrangement().settings.showUnit && this.arrangement().convertible,
+  );
+
   /** Set from the `:entryId` route param — non-null means "edit this entry", not "add new". */
   protected readonly editId = signal<string | null>(null);
 
@@ -233,13 +290,23 @@ export class GoodsEntry {
     this.config().drawerFlow === 'in' ? 'out' : 'in',
   );
 
-  /** Lines with a name and a positive qty × rate — the only ones that count/send. */
+  /**
+   * Lines with a name, something to charge for, and something to take off the shelf — the
+   * only ones that count or send.
+   *
+   * Both figures are required, not just the money: the rate stored against a line is its
+   * total divided by the quantity it moves, so a line worth something that moves nothing has
+   * no rate to record. On the grid the app ships with this is exactly the old test — a
+   * positive `qty × rate` with a positive `qty` is a positive qty and a positive rate.
+   */
   private readonly validLines = computed(() =>
-    this.lines().filter((l) => l.design.trim() && (l.qty ?? 0) > 0 && (l.rate ?? 0) > 0),
+    this.lines().filter(
+      (l) => l.design.trim() && this.lineAmount(l) > 0 && this.enteredShelfQty(l) > 0,
+    ),
   );
 
   protected readonly total = computed(() =>
-    this.validLines().reduce((sum, l) => sum + (l.qty as number) * (l.rate as number), 0),
+    this.validLines().reduce((sum, l) => sum + this.lineAmount(l), 0),
   );
 
   /** What's actually owed once the discount is knocked off — the figure cash is weighed
@@ -278,13 +345,17 @@ export class GoodsEntry {
    * shelf is a bill they cannot check against what is in their hands.
    */
   protected readonly printLines = computed(() =>
-    this.validLines().map((l) => ({
-      name: l.design.trim(),
-      qty: l.qty as number,
-      unit: l.unit.trim() || this.lineUnit(l.design),
-      rate: l.rate as number,
-      amount: (l.qty as number) * (l.rate as number),
-    })),
+    this.validLines().map((l) => {
+      const values = this.lineValues(l);
+      return {
+        key: l.key,
+        name: l.design.trim(),
+        unit: this.showUnit() ? l.unit.trim() || this.lineUnit(l.design) : '',
+        /** One cell per column, in grid order — the bill prints the columns it was written in. */
+        cells: this.columns().map((f) => values[f.id] ?? 0),
+        amount: this.lineAmount(l),
+      };
+    }),
   );
 
   protected readonly abs = Math.abs;
@@ -372,12 +443,13 @@ export class GoodsEntry {
       this.cashTouched.set(true);
       this.discount.set(e.discountAmount ?? null);
       // A saved line is already in its item's unit — that is the only way a quantity is ever
-      // stored — so it reopens in that unit with nothing to convert.
+      // stored — so it reopens in that unit with nothing to convert. Its columns come back
+      // as it recorded them; a line that has none is one of the two the app has always had,
+      // read off the quantity and rate beside it.
       const lines = e.items.map<Line>((item) => ({
         key: this.keySeq++,
         design: item.name,
-        qty: item.quantity,
-        rate: item.itemSoldAt,
+        values: storedValues(item.customFields, item.quantity, item.itemSoldAt),
         unit: this.lineUnit(item.name),
         factor: null,
         factorFor: null,
@@ -407,7 +479,7 @@ export class GoodsEntry {
    * nobody has written on yet.
    */
   protected written(l: Line): boolean {
-    return !!l.design.trim() || l.qty != null || l.rate != null;
+    return !!l.design.trim() || Object.values(l.values).some((v) => v != null);
   }
 
   /** Keeps one ruled-but-unwritten line at the foot of the grid. See {@link ruleLines}. */
@@ -470,12 +542,18 @@ export class GoodsEntry {
 
   setDesign(key: number, value: string): void {
     // On a match, prefill the rate and the unit from the catalog (only where still blank).
+    // Which column the catalogue's price lands in is the shop's to say; an arrangement that
+    // names none simply gets no prefill, which is coherent, just less helpful.
     const match = this.matchItem(value);
     const prefill = match?.[this.config().ratePrefill];
+    const rateField = this.arrangement().settings.rateField;
     this.patchLine(key, (l) => ({
       ...l,
       design: value,
-      rate: l.rate == null && prefill != null ? prefill : l.rate,
+      values:
+        rateField && l.values[rateField] == null && prefill != null
+          ? { ...l.values, [rateField]: prefill }
+          : l.values,
       unit: l.unit || (match?.unit?.trim() ?? ''),
     }));
   }
@@ -490,10 +568,26 @@ export class GoodsEntry {
    *  factor once it's been converted. This is the figure a unit change has to preserve: the
    *  goods are worth the same per gaz whether the line is written in gaz or in than. */
   private baseRate(l: Line): number | null {
-    if (l.rate == null) {
+    const rate = this.rateValue(l);
+    if (rate == null) {
       return null;
     }
-    return l.factor ? l.rate / l.factor : l.rate;
+    return l.factor ? rate / l.factor : rate;
+  }
+
+  /** The line's rate column, or null when this arrangement names none to rescale. */
+  private rateValue(l: Line): number | null {
+    const rateField = this.arrangement().settings.rateField;
+    return rateField ? (l.values[rateField] ?? null) : null;
+  }
+
+  /** A line with its rate column set, leaving it alone when the arrangement names none. */
+  private withRate(l: Line, rate: number | null): Line {
+    const rateField = this.arrangement().settings.rateField;
+    if (!rateField || rate == null) {
+      return l;
+    }
+    return { ...l, values: { ...l.values, [rateField]: rate } };
   }
 
   /**
@@ -510,6 +604,12 @@ export class GoodsEntry {
    * pair that was applied silently, since revisiting the rate is the point of the click.
    */
   async askUnit(key: number, force = false): Promise<void> {
+    // The shop has switched the unit box off, so there is no unit to be in but the shelf's
+    // and nothing to convert. Nothing below this line runs for such a shop.
+    if (!this.showUnit()) {
+      return;
+    }
+
     const line = this.lines().find((l) => l.key === key);
     if (!line) {
       return;
@@ -520,10 +620,9 @@ export class GoodsEntry {
     const base = this.baseRate(line);
     if (!stock || !entered || sameUnit(entered, stock)) {
       this.patchLine(key, (l) => ({
-        ...l,
+        ...this.withRate(l, base == null ? null : round2(base)),
         factor: null,
         factorFor: null,
-        rate: base == null ? l.rate : round2(base),
       }));
       return;
     }
@@ -540,15 +639,14 @@ export class GoodsEntry {
         itemName: line.design.trim(),
         from: entered,
         to: stock,
-        qty: line.qty,
+        qty: this.enteredShelfQty(line),
       });
       if (answer === null) {
         this.patchLine(key, (l) => ({
-          ...l,
+          ...this.withRate(l, base == null ? null : round2(base)),
           unit: stock,
           factor: null,
           factorFor: null,
-          rate: base == null ? l.rate : round2(base),
         }));
         return;
       }
@@ -556,39 +654,36 @@ export class GoodsEntry {
     }
 
     this.patchLine(key, (l) => ({
-      ...l,
+      ...this.withRate(l, base == null ? null : round2(base * factor)),
       factor,
       factorFor: pairKey(entered, stock),
-      rate: base == null ? l.rate : round2(base * factor),
     }));
   }
 
-  /** The price/stockUnit box under a converted line — the other side of {@link setRate}. Typing
+  /** The price/stockUnit box under a converted line — the other side of the rate box. Typing
    *  here rescales the rate the same way typing the rate rescales this, so whichever one the
    *  shopkeeper actually knows is the one they can type. */
   setPricePerUnit(key: number, value: string): void {
     const price = this.toNum(value);
-    this.patchLine(key, (l) => ({
-      ...l,
-      rate: price == null ? null : l.factor ? round2(price * l.factor) : price,
-    }));
+    this.patchLine(key, (l) =>
+      this.withRate(l, price == null ? null : l.factor ? round2(price * l.factor) : price),
+    );
   }
 
   /** What {@link setPricePerUnit} reads back — null until there's both a rate and a factor to
    *  divide it by, i.e. exactly when the note under the line is showing. */
   protected pricePerUnit(l: Line): number | null {
-    if (!l.factor || l.rate == null) {
+    const rate = this.rateValue(l);
+    if (!l.factor || rate == null) {
       return null;
     }
-    return round2(l.rate / l.factor);
+    return round2(rate / l.factor);
   }
 
-  setQty(key: number, value: string): void {
-    this.patchLine(key, (l) => ({ ...l, qty: this.toNum(value) }));
-  }
-
-  setRate(key: number, value: string): void {
-    this.patchLine(key, (l) => ({ ...l, rate: this.toNum(value) }));
+  /** Type into one of the shop's columns. The only way a value gets onto a line. */
+  setValue(key: number, field: string, value: string): void {
+    const n = this.toNum(value);
+    this.patchLine(key, (l) => ({ ...l, values: { ...l.values, [field]: n } }));
   }
 
   setCash(value: string): void {
@@ -600,8 +695,53 @@ export class GoodsEntry {
     this.discount.set(this.toNum(value));
   }
 
+  /**
+   * Every column on a line, typed and worked-out alike. The computed ones are derived here
+   * rather than stored, so there is exactly one place a number can have come from.
+   */
+  protected lineValues(l: Line): Record<string, number | null> {
+    return resolveValues(this.arrangement(), l.values);
+  }
+
+  /** What the line is worth, by this shop's own formula. `qty × rate` on the built-in grid. */
   lineAmount(l: Line): number {
-    return (l.qty ?? 0) * (l.rate ?? 0);
+    return evaluate(this.arrangement().total, this.lineValues(l));
+  }
+
+  /**
+   * How much stock the line moves, in the unit it was written in — before any conversion. The
+   * shelf's own figure is {@link shelf}, which is this converted.
+   */
+  protected enteredShelfQty(l: Line): number {
+    return evaluate(this.arrangement().shelfQty, this.lineValues(l));
+  }
+
+  /**
+   * What to call a column. The two the app ships with are named by the dictionary, so they
+   * follow the language the way every other heading on the screen does — and a sale's "Rate"
+   * is a purchase's "Rate" in the shop's own words. A column a shop added is called whatever
+   * the shop called it, one string in either language, exactly like a renamed menu entry.
+   */
+  protected columnLabel(field: CustomField): string {
+    if (!this.arrangement().isDefault) {
+      return field.label;
+    }
+    const labels = this.config().labels;
+    return this.locale.t(field.id === DEFAULT_QTY_FIELD ? labels.colQty : labels.colRate);
+  }
+
+  /** Whether a column is one the shopkeeper types into, or one the shop's formula fills in. */
+  protected isTyped(field: CustomField): boolean {
+    return !field.formula?.trim();
+  }
+
+  /**
+   * Whether a column holds a price, so the printed bill puts a currency on it. The rate column
+   * is the one that does — on the built-in grid that is `rate`, which has always printed as
+   * money. A count of thans is not money and reads wrong with "Rs" in front of it.
+   */
+  protected isMoneyColumn(field: CustomField): boolean {
+    return field.id === this.arrangement().settings.rateField;
   }
 
   /** The catalog unit for a design (e.g. "Gaz", "Meter") — the unit its stock is counted in,
@@ -613,9 +753,16 @@ export class GoodsEntry {
 
   /** What a line moves on the shelf: the quantity and unit stock will actually record. */
   private shelf(l: Line): { qty: number; unit: string } {
-    return l.factor
-      ? { qty: convertQty(l.qty ?? 0, l.factor), unit: this.lineUnit(l.design) }
-      : { qty: l.qty ?? 0, unit: l.unit.trim() || this.lineUnit(l.design) };
+    const entered = this.enteredShelfQty(l);
+    if (l.factor) {
+      return { qty: convertQty(entered, l.factor), unit: this.lineUnit(l.design) };
+    }
+    return {
+      qty: entered,
+      unit: this.showUnit()
+        ? l.unit.trim() || this.lineUnit(l.design)
+        : this.lineUnit(l.design),
+    };
   }
 
   // ── save ───────────────────────────────────────────────────────────────
@@ -671,14 +818,18 @@ export class GoodsEntry {
       // customer just agreed to. `billAmount` above is the entered figures, untouched — the
       // bill is in the unit it was sold in, and only the stock moves in another.
       items: this.validLines().map((l) => {
-        const qty = l.qty as number;
-        const rate = l.rate as number;
+        const amount = this.lineAmount(l);
         const shelfQty = this.shelf(l).qty;
         return {
           itemId: this.matchItem(l.design)?.id ?? null,
           name: l.design.trim(),
           quantity: shelfQty,
-          itemSoldAt: l.factor && shelfQty > 0 ? (qty * rate) / shelfQty : rate,
+          // The rate is always backed out of the line's own amount rather than read off a
+          // column: the shelf figure is rounded to two places, and a rate that did not come
+          // from this division would multiply back a few paisa off the bill the customer just
+          // agreed to. On the built-in grid this is (qty × rate) ÷ qty — the rate as typed.
+          itemSoldAt: shelfQty > 0 ? amount / shelfQty : 0,
+          customFields: this.storedFields(l, shelfQty),
         };
       }),
     };
@@ -713,6 +864,43 @@ export class GoodsEntry {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /**
+   * The line's columns as they should be recorded against it — or null for a shop running the
+   * grid the app ships with, which posts exactly what it has always posted and gains no new
+   * field on the wire.
+   *
+   * A converted line is written down as though it had been entered in the shelf's own unit:
+   * the shelf column multiplied by the factor, the rate column divided by it. The total is
+   * untouched by that pair of moves, and the line now reopens to exactly the quantity that was
+   * stored — which is the same bargain the built-in grid has always made, where "5 than"
+   * comes back as "105 gaz". {@link CompiledArrangement.convertible} is what guarantees there
+   * is exactly one column to scale and one to unscale; without it there is no unit box.
+   */
+  private storedFields(l: Line, shelfQty: number): Record<string, number> | null {
+    const arrangement = this.arrangement();
+    if (arrangement.isDefault) {
+      return null;
+    }
+
+    const values = this.lineValues(l);
+    const out: Record<string, number> = {};
+    for (const field of arrangement.settings.fields) {
+      const v = values[field.id];
+      if (v != null && Number.isFinite(v)) {
+        out[field.id] = v;
+      }
+    }
+
+    if (l.factor && arrangement.shelfField && arrangement.settings.rateField) {
+      out[arrangement.shelfField] = shelfQty;
+      const rate = out[arrangement.settings.rateField];
+      if (rate != null) {
+        out[arrangement.settings.rateField] = round2(rate / l.factor);
+      }
+    }
+    return out;
   }
 
   /** Leave edit mode without saving — back to wherever the edit was launched from. */
@@ -800,8 +988,7 @@ export class GoodsEntry {
     return {
       key: this.keySeq++,
       design: '',
-      qty: null,
-      rate: null,
+      values: {},
       unit: '',
       factor: null,
       factorFor: null,

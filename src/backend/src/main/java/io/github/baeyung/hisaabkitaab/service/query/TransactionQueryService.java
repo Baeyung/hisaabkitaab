@@ -169,7 +169,8 @@ public class TransactionQueryService
                 line.getQuantity(),
                 unit,
                 rate,
-                quantity * rate
+                quantity * rate,
+                line.getCustomFields()
         );
     }
 

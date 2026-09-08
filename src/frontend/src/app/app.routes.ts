@@ -297,6 +297,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/settings/menu').then((m) => m.SettingsMenu),
       },
       {
+        // What the shop asks for on every sale and purchase line. ownerGuard for the same
+        // reason as the menu, and a stronger one: it changes the shape of every bill anyone
+        // in the shop writes. No plan gate — it records nothing itself.
+        path: 'settings/custom-fields',
+        canActivate: [ownerGuard],
+        loadComponent: () =>
+          import('./features/settings/custom-fields').then((m) => m.SettingsCustomFields),
+      },
+      {
         // The shop's scheduled sends. ownerGuard like the menu, and for a stronger reason:
         // these put messages on customers' phones and are metered against the owner's plan.
         // No plan gate on the route — a shop whose plan stopped covering reports must still

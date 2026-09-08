@@ -1,3 +1,5 @@
+import type { CustomFieldsSettings } from './custom-field.models';
+
 /**
  * What a user may do in one shop. `OWNER` is the shop's creator; the other two are
  * granted from Store Settings › Manage Users. Mirrors the backend `StoreRole` — the
@@ -107,6 +109,17 @@ export interface StoreSettings {
    * field for it. Absent reads as off, which is the sidebar those shops already had.
    */
   easyMode?: boolean;
+  /**
+   * How this shop has arranged the columns of its sale and purchase grids. Absent — which is
+   * every shop that has never opened that screen — means the grid the app ships with; see
+   * {@link DEFAULT_CUSTOM_FIELDS}, which is that grid written out as one of these so there is
+   * only ever one code path.
+   *
+   * Unlike the arrangements above, absent is left absent rather than read as an empty one:
+   * "no columns at all" and "the built-in columns" are different things, and only the second
+   * is a grid anybody can write a bill on.
+   */
+  customFields?: CustomFieldsSettings;
 }
 
 /**

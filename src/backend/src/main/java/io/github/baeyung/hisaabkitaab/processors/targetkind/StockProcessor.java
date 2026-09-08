@@ -61,6 +61,11 @@ public class StockProcessor implements KindProcessor
                     transactionLine.setItem(item);
                     transactionLine.setQuantity(requestItem.getQuantity());
                     transactionLine.setItemSoldAt(requestItem.getItemSoldAt());
+                    // Carried through untouched — the shop's own entry columns, which mean
+                    // nothing on this side. The two numbers above are what stock and every
+                    // total are folded from, and the entry screen has already derived them
+                    // from these so that quantity × itemSoldAt is the line total it showed.
+                    transactionLine.setCustomFields(requestItem.getCustomFields());
                     return transactionLine;
                 })
                 .toList();

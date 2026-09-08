@@ -47,17 +47,24 @@ import jakarta.validation.constraints.Size;
  * @param reports    when this shop's daily report and monthly khata reminders go out, and who
  *                   the reminders chase. Both off until an owner turns them on; see
  *                   {@link ReportSettings}.
+ * @param customFields how this shop has arranged the columns of its sale and purchase grids,
+ *                   or null for the grid the app ships with — which is what every shop that
+ *                   has never opened that screen has, and the reason this feature is
+ *                   invisible to all of them. Unlike the fields above this one is left null
+ *                   rather than defaulted: "not arranged" is a meaningful state here, not an
+ *                   empty arrangement. See {@link CustomFieldsSettings}.
  */
 public record StoreSettings(
         @Size(max = 64) List<@Valid MenuSetting> menu,
         @Size(max = 64) List<@Valid MenuSetting> easyMenu,
         Set<ChromeItem> hideChrome,
         boolean easyMode,
-        @Valid ReportSettings reports)
+        @Valid ReportSettings reports,
+        @Valid CustomFieldsSettings customFields)
 {
     /** What a shop with a null {@code settings} column means: the built-in menu, nothing hidden. */
     public static final StoreSettings EMPTY = new StoreSettings(
-            List.of(), List.of(), EnumSet.noneOf(ChromeItem.class), false, ReportSettings.DEFAULT);
+            List.of(), List.of(), EnumSet.noneOf(ChromeItem.class), false, ReportSettings.DEFAULT, null);
 
     /**
      * Null-safe by construction, so nothing downstream — the converter, the client, a future

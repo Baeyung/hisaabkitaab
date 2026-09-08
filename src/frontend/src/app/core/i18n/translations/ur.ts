@@ -125,6 +125,7 @@ export const ur: Record<TranslationKey, string> = {
   'nav.settings.units': 'یونٹس',
   'nav.settings.menu': 'مینو',
   'nav.settings.reports': 'رپورٹس',
+  'nav.settings.customFields': 'اپنے کالم',
   'nav.closedHint': 'یہ دکان بند ہے — آپ کا پلان اب اسے نہیں سنبھالتا۔ کچھ ضائع نہیں ہوا۔',
 
   // ── بورڈ (آسان موڈ) ────────────────────────────────────────────────
@@ -373,6 +374,10 @@ export const ur: Record<TranslationKey, string> = {
   'settings.menu.save': 'مینو محفوظ کریں',
   'settings.menu.saving': 'محفوظ ہو رہا ہے…',
   'settings.menu.saved': 'مینو محفوظ ہو گیا',
+  'settings.menu.copy.hint':
+    'پہلے یہ مینو یہاں محفوظ ہوتا ہے، پھر منتخب دکانوں کو بالکل یہی مینو مل جاتا ہے — وہی ترتیب، وہی گروپ، وہی نام، وہی چھپی ہوئی چیزیں، اور سائیڈ بار کے نیچے وہی کنٹرول۔ اُن کا بورڈ، اُن کی رپورٹیں اور اُن کے بِل کے کالم ویسے کے ویسے رہتے ہیں، اور کوئی دکان سائیڈ بار سے بورڈ پر (یا اُلٹ) نہیں بدلتی۔',
+  'settings.menu.copy.hintEasy':
+    'پہلے یہ بورڈ یہاں محفوظ ہوتا ہے، پھر منتخب دکانوں کو بالکل یہی بورڈ مل جاتا ہے — وہی ٹیب، وہی بینڈ اور رنگ، وہی نام اور وہی چھپے ہوئے بٹن۔ اُن کا سائیڈ بار مینو، اُن کی رپورٹیں اور اُن کے بِل کے کالم ویسے کے ویسے رہتے ہیں، اور کوئی دکان سائیڈ بار سے بورڈ پر (یا اُلٹ) نہیں بدلتی۔',
   'settings.items.subtitle': 'وہ کپڑا جو آپ رکھتے اور بیچتے ہیں۔',
   'settings.items.add': 'آئٹم شامل کریں',
   'settings.items.col.name': 'آئٹم',
@@ -406,11 +411,12 @@ export const ur: Record<TranslationKey, string> = {
   'settings.items.opening.qtyPh': 'مقدار',
   'settings.items.opening.save': 'محفوظ کریں',
   'settings.items.opening.cancel': 'منسوخ',
-  'settings.items.copy.button': 'دوسری دکانوں میں کاپی کریں',
+  'settings.copy.button': 'دوسری دکانوں میں کاپی کریں',
+  'settings.copy.confirm': 'کاپی کریں',
+  'settings.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
+
   'settings.items.copy.hint':
     'اوپر دی گئی ہر آئٹم آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے اسی نام کی آئٹم موجود ہے تو اسے چھوڑ دیا جائے گا، اس لیے دوبارہ کاپی کرنے سے کچھ اضافی نہیں بنے گا۔ شیلف پر موجود اسٹاک ساتھ نہیں جاتا، صرف کیٹلاگ کی تفصیلات جاتی ہیں۔',
-  'settings.items.copy.confirm': 'کاپی کریں',
-  'settings.items.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
 
   'settings.units.subtitle': 'اس دکان کے یونٹس اور ان کی ایک دوسرے میں تبدیلی، دونوں یہاں سے منظم کریں۔',
   'settings.units.manage.section': 'یونٹس کا انتظام',
@@ -439,11 +445,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.units.empty.body': 'ابھی کچھ نہیں سکھایا گیا۔ نیچے ایک شامل کریں، یا کسی اندراج پر پہلی بار استعمال کرتے وقت پرچی کا جواب دیں۔',
   'settings.units.loadError': 'آپ کی تبدیلیاں لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
   'settings.units.delete.confirm': '{{from}} → {{to}} تبدیلی ہٹا دیں؟',
-  'settings.units.copy.button': 'دوسری دکانوں میں کاپی کریں',
   'settings.units.copy.hint':
     'اوپر دی گئی ہر شرح آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے وہی جوڑا موجود ہے تو اسے بدل دے گی، باقی سب کچھ ویسا ہی رہے گا۔',
-  'settings.units.copy.confirm': 'کاپی کریں',
-  'settings.units.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
 
   'settings.party.subtitle': 'وہ گاہک اور بیوپاری جن کے ساتھ آپ کا کھاتہ ہے۔',
   'settings.party.add': 'پارٹی شامل کریں',
@@ -476,11 +479,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.party.opening.youOwe': 'آپ کے ذمے ان کا',
   'settings.party.opening.save': 'محفوظ کریں',
   'settings.party.opening.cancel': 'منسوخ',
-  'settings.party.copy.button': 'دوسری دکانوں میں کاپی کریں',
   'settings.party.copy.hint':
     'اوپر دی گئی ہر پارٹی آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے اسی نام کی پارٹی موجود ہے تو اسے چھوڑ دیا جائے گا، اس لیے دوبارہ کاپی کرنے سے کچھ اضافی نہیں بنے گا۔',
-  'settings.party.copy.confirm': 'کاپی کریں',
-  'settings.party.copy.result': '{{total}} میں سے {{ok}} دکانوں میں کاپی ہو گئی۔',
 
   'sale.newEntry': 'نئی انٹری',
   'sale.billDate': 'تاریخ',
@@ -1120,6 +1120,78 @@ export const ur: Record<TranslationKey, string> = {
   'settings.reports.save': 'رپورٹس محفوظ کریں',
   'settings.reports.saving': 'محفوظ ہو رہا ہے…',
   'settings.reports.saved': 'رپورٹس محفوظ ہو گئیں',
+
+  // ── Store Settings › Custom Fields ────────────────────────────────────────
+  'settings.customFields.subtitle':
+    'ہر فروخت یا خرید کی لائن میں کیا پوچھا جائے، اور رقم کیسے بنے۔',
+  'settings.customFields.usingDefault':
+    'یہ دکان ابھی ایپ کے اپنے کالم استعمال کر رہی ہے۔ یہاں تبدیل کریں اور آگے سے ہر فروخت و خرید اسی طرح لکھی جائے گی — پہلے سے محفوظ بل جس شکل میں لکھے گئے، اسی شکل میں رہیں گے۔',
+
+  'settings.customFields.preview': 'آپ کی لائن',
+  'settings.customFields.preview.hint':
+    'فروخت کی ایک قطار، بالکل ویسے جیسے یہ دکان اسے بھرے گی۔ محفوظ کرنے سے پہلے اپنے ہندسے ڈال کر حساب جانچ لیں۔',
+  'settings.customFields.preview.item': 'سوتی لان',
+  'settings.customFields.preview.unit': 'گز',
+  'settings.customFields.preview.tryIn': '{{name}} میں کوئی ہندسہ آزمائیں',
+  'settings.customFields.preview.shelf': 'اسٹاک سے {{qty}} نکلتی ہے، آئٹم کے اپنے یونٹ میں۔',
+  'settings.customFields.preview.blank':
+    'جب ہر کالم کا نام ہو گا اور ہر فارمولا پڑھا جا سکے گا، آپ کی لائن یہاں آ جائے گی۔',
+
+  'settings.customFields.section.columns': 'کالم',
+  'settings.customFields.section.columns.desc':
+    'آئٹم اور رقم کے درمیان لائن میں کیا پوچھا جائے۔ یہاں کی ترتیب ہی لائن کی ترتیب ہے۔',
+  'settings.customFields.section.columns.note':
+    'جس کالم میں خود لکھنا ہو، اس کا «حساب کیسے ہو» خالی چھوڑ دیں۔ بھر دیں تو ایپ خود اس کالم کا حساب کرے گی — اپنے دوسرے کالموں کے نام لکھیں اور + − × ÷ اور قوسین سے جوڑیں۔',
+  'settings.customFields.section.amount': 'رقم',
+  'settings.customFields.section.amount.desc':
+    'لائن کی کل رقم۔ یہی ہندسہ بل، روزنامچہ اور گاہک کے کھاتے تک جاتا ہے۔',
+  'settings.customFields.section.amount.note':
+    'یہاں کوئی بھی کالم لکھا جا سکتا ہے، وہ بھی جس کا حساب ایپ خود کرتی ہے۔',
+  'settings.customFields.section.shelf': 'اسٹاک اور یونٹ',
+  'settings.customFields.section.shelf.desc':
+    'لائن سے کتنا مال حرکت کرتا ہے، اور کیا لائن آئٹم کے اپنے یونٹ کے علاوہ کسی اور یونٹ میں لکھی جا سکتی ہے۔',
+  'settings.customFields.section.shelf.note':
+    'اسٹاک، انوینٹری اور منافع سب اسی مقدار سے گنے جاتے ہیں۔ یہ غلط ہو تو بل ٹھیک لگتا رہے گا اور اسٹاک بگڑتا رہے گا۔',
+
+  'settings.customFields.col.name': 'کالم',
+  'settings.customFields.col.namePh': 'آپ اسے کیا کہتے ہیں',
+  'settings.customFields.col.formula': 'حساب کیسے ہو',
+  'settings.customFields.col.actions': 'اعمال',
+  'settings.customFields.typedIn': 'خود لکھیں',
+  'settings.customFields.formulaFor': '{{name}} کا حساب کیسے ہو',
+  'settings.customFields.add': 'کالم شامل کریں',
+  'settings.customFields.moveUp': 'اوپر لے جائیں',
+  'settings.customFields.moveDown': 'نیچے لے جائیں',
+  'settings.customFields.insert': 'کوئی کالم لگائیں:',
+  'settings.customFields.total': 'لائن کی رقم',
+  'settings.customFields.total.hint': 'مثلاً: thans × gazana × rate',
+  'settings.customFields.shelf': 'اسٹاک سے نکلنے والی مقدار',
+  'settings.customFields.shelf.hint':
+    'آئٹم کے اپنے یونٹ میں — جس میں اس کا اسٹاک گنا جاتا ہے۔ مثلاً: thans × gazana',
+  'settings.customFields.rateField': 'ریٹ والا کالم',
+  'settings.customFields.rateField.hint':
+    'آئٹم کی محفوظ قیمت یہاں بھری جاتی ہے، اور یونٹ کی تبدیلی اسی کالم کو ایڈجسٹ کرتی ہے۔',
+  'settings.customFields.rateField.none': 'کوئی نہیں',
+  'settings.customFields.showUnit': 'ہر لائن پر یونٹ پوچھیں',
+  'settings.customFields.showUnit.hint':
+    'اسے بند کریں تو یونٹ کا خانہ اور اس کے ساتھ تبدیلی کی پرچی بھی ختم — ہر مقدار آئٹم کے اپنے یونٹ میں سمجھی جائے گی۔',
+  'settings.customFields.showUnit.unavailable':
+    'یونٹ کے خانے کے لیے ضروری ہے کہ اسٹاک کی مقدار ایک ہی کالم ہو، اور اس کے ساتھ الگ ریٹ کالم ہو۔',
+  'settings.customFields.reset': 'عام کالموں پر واپس',
+  'settings.customFields.save': 'کالم محفوظ کریں',
+  'settings.customFields.saving': 'محفوظ ہو رہا ہے…',
+  'settings.customFields.saved': 'کالم محفوظ ہو گئے',
+  'settings.customFields.copy.hint':
+    'پہلے یہ کالم یہاں محفوظ ہوتے ہیں، پھر منتخب دکانوں کو بِل کی بالکل یہی لائن مل جاتی ہے — وہی کالم، وہی فارمولے، وہی یونٹ کا خانہ۔ اُن کے پرانے کالم اِس سے بدل جاتے ہیں؛ اگر یہ دکان عام کالموں پر ہے تو وہ دکانیں بھی عام کالموں پر آ جائیں گی۔ پہلے سے لکھے ہوئے بِل جوں کے توں رہتے ہیں۔',
+  'settings.customFields.error.noColumns': 'لائن کے لیے کم از کم ایک کالم چاہیے۔',
+  'settings.customFields.error.unnamed': 'ہر کالم کا نام ضروری ہے۔',
+  'settings.customFields.error.duplicate': 'دو کالموں کا نام ایک ہی ہے: «{{name}}»۔',
+  'settings.customFields.error.cycle':
+    '«{{name}}» کا حساب خود اسی سے نکلتا ہے، اس لیے یہ کبھی حل نہیں ہو سکتا۔',
+  'settings.customFields.error.unknownField':
+    '{{where}} میں «{{at}}» لکھا ہے، جو کوئی کالم نہیں۔',
+  'settings.customFields.error.badFormula':
+    '{{where}} پڑھا نہیں جا سکا۔ صرف + − × ÷ ( ) اور اپنے کالموں کے نام استعمال کریں۔',
   'settings.reports.daily.title': 'روزانہ رپورٹ',
   'settings.reports.daily.help':
     'ہر شام، پورے دن کا حساب ایک PDF میں — روزنامچہ، بل، خرید، ہر کھاتہ اور موجودہ اسٹاک — واٹس ایپ پر۔',

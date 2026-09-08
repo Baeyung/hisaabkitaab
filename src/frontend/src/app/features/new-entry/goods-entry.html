@@ -23,13 +23,14 @@
           <thead>
             <tr>
               <th scope="col">{{ locale.t('bill.detail.col.item') }}</th>
-              <th scope="col" class="end">{{ locale.t('bill.detail.col.qty') }}</th>
-              <th scope="col" class="end">{{ locale.t('bill.detail.col.rate') }}</th>
+              @for (col of columns(); track col.id) {
+                <th scope="col" class="end">{{ columnLabel(col) }}</th>
+              }
               <th scope="col" class="end">{{ locale.t('bill.detail.col.amount') }}</th>
             </tr>
           </thead>
           <tbody>
-            @for (line of printLines(); track $index) {
+            @for (line of printLines(); track line.key) {
               <tr>
                 <td class="rm-cell-head">
                   <span class="rm-tbl__name">{{ line.name }}</span>
@@ -37,12 +38,12 @@
                     <span class="rm-tbl__meta">{{ line.unit }}</span>
                   }
                 </td>
-                <td class="end num" [attr.data-label]="locale.t('bill.detail.col.qty')">
-                  {{ locale.formatNumber(line.qty) }}
-                </td>
-                <td class="end num" [attr.data-label]="locale.t('bill.detail.col.rate')">
-                  {{ locale.money(line.rate) }}
-                </td>
+                @for (cell of line.cells; track $index) {
+                  @let col = columns()[$index];
+                  <td class="end num" [attr.data-label]="columnLabel(col)">
+                    {{ isMoneyColumn(col) ? locale.money(cell) : locale.formatNumber(cell) }}
+                  </td>
+                }
                 <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(line.amount) }}</td>
               </tr>
             }
@@ -148,14 +149,21 @@
     </div>
 
     <!-- line-item grid -->
-    <div class="grid" role="group" [attr.aria-label]="locale.t(config().labels.lines)">
+    <div
+      class="grid"
+      role="group"
+      [attr.aria-label]="locale.t(config().labels.lines)"
+    >
       <div class="grid__head" aria-hidden="true">
         <span>{{ locale.t(config().labels.colDesign) }}</span>
-        <span class="num">{{ locale.t(config().labels.colQty) }}</span>
-        <span>{{ locale.t(config().labels.colUnit) }}</span>
-        <span class="num">{{ locale.t(config().labels.colRate) }}</span>
+        @for (cell of cells(); track $index) {
+          @if (cell.kind === 'unit') {
+            <span>{{ locale.t(config().labels.colUnit) }}</span>
+          } @else {
+            <span class="num">{{ columnLabel(cell.field) }}</span>
+          }
+        }
         <span class="num grid__head-amount">{{ locale.t(config().labels.colAmount) }}</span>
-        <span></span>
       </div>
 
       @for (line of lines(); track line.key) {
@@ -174,35 +182,40 @@
             [placeholder]="locale.t(config().labels.colDesignPh)"
             [ariaLabel]="locale.t(config().labels.colDesign)"
           />
-          <input
-            class="fld__input fld__input--sm num"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            [value]="line.qty"
-            (input)="setQty(line.key, $any($event.target).value)"
-            [attr.placeholder]="locale.t(config().labels.colQty)"
-            [attr.aria-label]="locale.t(config().labels.colQty)"
-          />
-          <app-combobox
-            [small]="true"
-            [options]="unitOptions()"
-            [value]="line.unit"
-            (valueChange)="setUnit(line.key, $event)"
-            (focusout)="askUnit(line.key)"
-            [placeholder]="lineUnit(line.design)"
-            [ariaLabel]="locale.t(config().labels.colUnit)"
-          />
-          <input
-            class="fld__input fld__input--sm num"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            [value]="line.rate"
-            (input)="setRate(line.key, $any($event.target).value)"
-            [attr.placeholder]="locale.t(config().labels.colRate)"
-            [attr.aria-label]="locale.t(config().labels.colRate)"
-          />
+          @for (cell of cells(); track $index) {
+            @if (cell.kind === 'unit') {
+              <app-combobox
+                [small]="true"
+                [options]="unitOptions()"
+                [value]="line.unit"
+                (valueChange)="setUnit(line.key, $event)"
+                (focusout)="askUnit(line.key)"
+                [placeholder]="lineUnit(line.design)"
+                [ariaLabel]="locale.t(config().labels.colUnit)"
+              />
+            } @else if (isTyped(cell.field)) {
+              <input
+                class="fld__input fld__input--sm num"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="any"
+                [value]="line.values[cell.field.id]"
+                (input)="setValue(line.key, cell.field.id, $any($event.target).value)"
+                [attr.placeholder]="columnLabel(cell.field)"
+                [attr.aria-label]="columnLabel(cell.field)"
+              />
+            } @else {
+              <!-- A column the shop's own formula fills in: shown, never typed into. -->
+              <output class="grid__derived num" [attr.aria-label]="columnLabel(cell.field)">
+                @if (written(line)) {
+                  {{ locale.formatNumber(lineValues(line)[cell.field.id] ?? 0) }}
+                } @else {
+                  <span class="grid__amount-rule" aria-hidden="true">—</span>
+                }
+              </output>
+            }
+          }
           <!-- A rule, not "Rs 0": nothing has been written on this line, so it owes nothing. -->
           <span class="grid__amount num">
             @if (written(line)) {
@@ -234,10 +247,10 @@
 
         <!-- what this line will actually take off the shelf, once it has been converted —
              plus the price per stock unit, the other side of the rate box above -->
-        @if (line.factor) {
+        @if (showUnit() && line.factor) {
           <div class="grid__conv">
             <app-unit-note
-              [qty]="line.qty"
+              [qty]="enteredShelfQty(line)"
               [unit]="line.unit"
               [stockUnit]="lineUnit(line.design)"
               [factor]="line.factor"

@@ -72,4 +72,15 @@ export interface EventItem {
   name: string;
   quantity: number;
   itemSoldAt: number;
+  /**
+   * What this shop's own entry columns held on the line, when it has arranged any — see
+   * `CustomFieldsSettings`. Absent for a shop running the built-in grid, and for every line
+   * written before the column existed, which reads back as the two default ids taken from
+   * `quantity` and `itemSoldAt` (see `storedValues`).
+   *
+   * Carried, not computed from: `quantity` and `itemSoldAt` above stay the numbers stock and
+   * every total are folded from, and the entry screen derives them so their product is
+   * exactly the line total the grid showed.
+   */
+  customFields?: Record<string, number> | null;
 }
