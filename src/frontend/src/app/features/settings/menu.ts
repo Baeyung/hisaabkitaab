@@ -6,11 +6,8 @@ import {
   inject,
   Injector,
   signal,
-  viewChild,
 } from '@angular/core';
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
-import { NgTemplateOutlet } from '@angular/common';
-import { anchorPopup } from '../../shared/anchor-popup';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
 import { StoreService } from '../../core/store/store.service';
@@ -18,17 +15,34 @@ import { BoardTone, ChromeItem, MenuSetting, StoreSettings } from '../../core/st
 import {
   NAV,
   NavGroup,
+  NavIcon,
   NavItem,
   NavLink,
   customKey,
-  height,
-  holdsLocked,
   isCustomGroup,
   mergeMenu,
 } from '../../layout/shell/nav';
 import { EASY_NAV } from '../../layout/shell/board';
+import { NavIconMark } from '../../shared/nav-icon/nav-icon';
 import { ToastService } from '../../shared/toast/toast.service';
 import { CopyToStores, copyTargets } from './copy-to-stores';
+
+/**
+ * One row of the arranging list: a menu entry and how far in it sits, the top level being 1.
+ *
+ * The screen holds the menu flat rather than as the tree it saves, because every gesture on
+ * it is "this row, one step" — a step down the list, or a step in or out of a group — and on
+ * a tree each of those is a splice in one array and an insert in another, found by walking.
+ * Flat, they are all the same edit: move a run of rows, then change its depth. The tree is
+ * rebuilt once, on the way out (see {@link nest}).
+ *
+ * A group's `children` is always empty here. What is inside it is the run of rows below it
+ * standing deeper, which is exactly what the eye reads off the screen.
+ */
+interface Row {
+  item: NavItem;
+  depth: number;
+}
 
 /**
  * What a band of the board may be coloured for. Three, and deliberately only three: the
@@ -53,6 +67,13 @@ const CHROME: ReadonlyArray<{ item: ChromeItem; label: TranslationKey }> = [
  * is grouped with what, what each entry is called, what is left out of it, and which of the
  * foot's controls are on.
  *
+ * ## The list is the menu
+ *
+ * A row is drawn as the menu row it becomes — its mark, its name, and the indent and rail
+ * that say what it is inside of. There is no separate preview beside it, because a preview
+ * beside it would be a second drawing of the one thing on the screen, and the shopkeeper's
+ * job would become comparing them. What you drag is what you get.
+ *
  * ## Which menu
  *
  * A shop has two arrangements and this screen edits the one it is currently navigating by:
@@ -76,37 +97,34 @@ const CHROME: ReadonlyArray<{ item: ChromeItem; label: TranslationKey }> = [
  * they are for the role filtering this sits beside; anyone treating a hidden menu entry as a
  * lock has misread it, which is what the note at the top of the page says.
  *
- * ## Grouping
+ * ## Moving
  *
- * The built-in groups are a starting point, not a shape a shop is stuck inside. Any entry can
- * be moved out of its group, onto the top level, or into a group the shop made for itself —
- * a "Counter" holding Sale and Bill Management is exactly the arrangement the shipped menu
- * cannot express, and it is the one a shopkeeper asks for first. A group only ever holds
- * plain entries: one level of nesting is what the sidebar draws, so it is all this offers.
+ * One list, so one gesture. A row is dragged anywhere in the menu — past its group, into
+ * another, out to the top — and where it lands decides what it is inside of: it takes the
+ * deepest place the row above it offers. That is the whole rule, and it is the rule a
+ * shopkeeper reads straight off the screen, since the row above is right there.
  *
- * Two jobs, two controls, and they do not overlap. Dragging and the up/down arrows reorder a
- * row **within the list it is already in**; the move button beside them is how a row changes
- * list, and it asks where to go rather than guessing — top level, any group by name, or a new
- * group made on the spot.
+ * It leaves exactly one thing unsayable, which is why the two step buttons exist: below a
+ * group, "inside it" and "after it" are the same place in a list, so a row can never be
+ * *dropped* at the top level once there is a group above it. `⟨` takes a row out of its
+ * group and `⟩` puts it into the one before it, and they are offered only where they are
+ * legal — most rows show one or neither.
  *
- * Dragging between lists is deliberately not offered. The sub-lists are nested inside the
- * top-level `cdkDropList`, and `CdkDropList` provides `CDK_DROP_LIST_GROUP: undefined` to its
- * own subtree, so a nested list can never join the enclosing `cdkDropListGroup` — cross-list
- * drag simply does not arrive, whatever the markup says. Wiring the two together by hand with
- * `cdkDropListConnectedTo` gets an entry *into* a group, but not back out: the top-level list
- * geometrically contains every well, so `_canReceive` claims the pointer the moment it enters
- * one and the row pops out of the group it is being sorted inside. A gesture that works one
- * way is worse than a button that works both, so the button is the only way a row changes
- * list, and it is also the only way that works from a keyboard.
+ * The nested drop lists this screen used to draw could not do any of it: `CdkDropList`
+ * provides `CDK_DROP_LIST_GROUP: undefined` to its own subtree, so a nested list never joins
+ * the enclosing `cdkDropListGroup` and a cross-list drag simply never arrives. Connecting
+ * them by hand got a row *into* a group and not back out, because the outer list
+ * geometrically contains every inner one and `_canReceive` claims the pointer first. Flat,
+ * there is one list and nothing to connect.
  *
  * The whole menu is edited from {@link NAV}, not from what this owner currently sees, because
- * the arrangement is for the whole shop: a viewer's menu has no New Entry group, and the owner
+ * the arrangement is for the whole shop: a viewer's menu has no Entry group, and the owner
  * still has to be able to order it. That NAV and `navFor('OWNER')` are the same list is not
  * an accident to lean on — OWNER is the top rank, so nothing is filtered from it.
  */
 @Component({
   selector: 'app-settings-menu',
-  imports: [CdkDropList, CdkDrag, CdkDragHandle, NgTemplateOutlet, CopyToStores],
+  imports: [CdkDropList, CdkDrag, CdkDragHandle, NavIconMark, CopyToStores],
   templateUrl: './menu.html',
   // The page frame, buttons and fields, shared with Manage Users rather than copied again;
   // the switch, shared with General, which is the other screen that turns things on.
@@ -117,6 +135,7 @@ export class SettingsMenu {
   protected readonly stores = inject(StoreService);
   private readonly toast = inject(ToastService);
   private readonly injector = inject(Injector);
+  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
 
   protected readonly chromeControls = CHROME;
   protected readonly tones = TONES;
@@ -141,22 +160,28 @@ export class SettingsMenu {
    * The whole menu, hidden entries included — this is the one screen that has to show what it
    * is hiding, or there would be no way to bring anything back.
    */
-  protected readonly items = signal<NavItem[]>(
-    mergeMenu(this.table, this.document(), this.maxDepth),
+  protected readonly rows = signal<Row[]>(
+    flatten(mergeMenu(this.table, this.document(), this.maxDepth)),
   );
   protected readonly hideChrome = signal<ReadonlySet<ChromeItem>>(
     new Set(this.saved()?.hideChrome ?? []),
   );
 
+  /**
+   * What just moved and where it ended up, for the live region under the list. A move made
+   * from the keyboard scrolls nothing and flashes nothing a screen reader reads, so the one
+   * thing that changed is said in words.
+   */
+  protected readonly announced = signal('');
+
   /** The other shops this arrangement could be handed to, and whether they are being asked. */
   protected readonly otherStores = computed(() => copyTargets(this.stores, true));
   protected readonly copyOpen = signal(false);
 
-  /** Every row on the screen, at whatever depth it sits. */
-  private readonly rows = computed(() => walk(this.items()));
-
   /** How many entries are currently arranged out, for the line under the heading. */
-  protected readonly hiddenCount = computed(() => this.rows().filter((item) => item.hidden).length);
+  protected readonly hiddenCount = computed(
+    () => this.rows().filter((row) => row.item.hidden).length,
+  );
 
   /**
    * Groups the shop made and has not named. A blank name is the one thing this screen will not
@@ -164,7 +189,7 @@ export class SettingsMenu {
    * throw the grouping away rather than keep it.
    */
   protected readonly unnamed = computed(() =>
-    this.rows().filter((item) => this.isBlankGroup(item)),
+    this.rows().filter((row) => this.isBlankGroup(row.item)),
   );
 
   private saved(): StoreSettings | undefined {
@@ -190,9 +215,16 @@ export class SettingsMenu {
    * A group holding a screen that may not be hidden cannot be hidden either — otherwise
    * dragging Menu into a group of your own and switching that group off would be the way
    * around the lock. Mirrors the same rule in `mergeMenu`, which is where it actually binds.
+   *
+   * Read off the rows below rather than off `children`, which is empty while the menu is
+   * flat: what a group holds here is the run standing deeper than it.
    */
-  protected locksMenu(item: NavItem): boolean {
-    return holdsLocked(item);
+  protected locksMenu(index: number): boolean {
+    const rows = this.rows();
+    if (rows[index].item.locked === true) {
+      return true;
+    }
+    return rows.slice(index, blockEnd(rows, index)).some((row) => row.item.locked === true);
   }
 
   /** What to call a row: the shop's name, the built-in one, or — for a new group — neither yet. */
@@ -207,11 +239,25 @@ export class SettingsMenu {
       : this.locale.t(item.key as TranslationKey);
   }
 
-  /** Every group on the screen with the depth it sits at, in the order the menu draws them. */
-  private readonly allGroups = computed(() => groupsOf(this.items(), 1));
+  /**
+   * The mark a row draws. A group the shop made has none of its own, so it borrows the one
+   * belonging to the first thing inside it — the same borrowing the sidebar does, done here
+   * against the rows below rather than against `children`, so the mark follows what is
+   * dragged in and out while the arrangement is still being made.
+   */
+  protected icon(index: number): NavIcon {
+    const rows = this.rows();
+    const row = rows[index];
+    if (!this.isCustom(row.item)) {
+      return row.item.icon;
+    }
+    return rows[index + 1]?.depth === row.depth + 1 ? rows[index + 1].item.icon : 'menu';
+  }
 
-  protected group(key: string): NavGroup | undefined {
-    return this.allGroups().find((found) => found.group.key === key)?.group;
+  /** A group with nothing under it yet, which is what you have the moment you make one. */
+  protected isEmptyGroup(index: number): boolean {
+    const rows = this.rows();
+    return rows[index].item.kind === 'group' && blockEnd(rows, index) === index + 1;
   }
 
   /**
@@ -219,209 +265,203 @@ export class SettingsMenu {
    * is not coloured, and the sidebar has no colours at all — the tone reports which way money
    * moves through a band of buttons, and there are no bands anywhere else.
    */
-  protected showsTone(item: NavItem, depth: number): boolean {
-    return this.easy && item.kind === 'group' && depth === 2;
+  protected showsTone(row: Row): boolean {
+    return this.easy && row.item.kind === 'group' && row.depth === 2;
+  }
+
+  /** A band's colour, or the app's own accent — which is what "neither direction" is here. */
+  protected toneOf(row: Row): BoardTone {
+    return (row.item.kind === 'group' ? row.item.tone : undefined) ?? 'read';
   }
 
   // ── moving ──────────────────────────────────────────────────────────
 
   /**
-   * What a drop list carries: the group it holds, or null for the top level. Every list on
-   * the screen is typed the same — a drop can go from any of them to any other, and the
-   * handler below is where they all meet.
+   * A drop. The CDK moved one row; what actually moves is that row and everything under it,
+   * so the landing place is read as "which row is now above it" rather than as an index —
+   * an index into a list missing one row is not an index into a list missing a whole group.
    */
-  protected drop(event: CdkDragDrop<NavGroup | null>): void {
-    this.move(
-      event.previousContainer.data?.key ?? null,
-      event.previousIndex,
-      event.container.data?.key ?? null,
-      event.currentIndex,
-    );
-  }
-
-  protected nudge(group: NavGroup | null, index: number, delta: -1 | 1): void {
-    const rows = group ? group.children : this.items();
-    const to = index + delta;
-    if (to < 0 || to >= rows.length) {
+  protected drop(event: CdkDragDrop<unknown>): void {
+    const rows = this.rows();
+    const seen = rows.filter((_, i) => i !== event.previousIndex);
+    const above = event.currentIndex > 0 ? seen[event.currentIndex - 1] : null;
+    const end = blockEnd(rows, event.previousIndex);
+    // Dropping a group into its own children: the row above is one of the rows being moved,
+    // so there is nowhere for it to land that is not inside itself.
+    if (above && rows.indexOf(above) >= event.previousIndex && rows.indexOf(above) < end) {
       return;
     }
-    this.move(group?.key ?? null, index, group?.key ?? null, to);
+    this.place(event.previousIndex, above);
   }
 
-  // ── moving between lists ────────────────────────────────────────────
-
   /**
-   * The row whose destinations are on screen: what is moving, the list it is in now, and
-   * where it sits in that list. One at a time, and held here rather than per row, so there is
-   * a single popup to place and a single thing to close.
+   * One step down the list, or one step up it. The keyboard's reordering — `cdkDrag` has none
+   * of its own — and it moves the row past whatever is next rather than past its siblings, so
+   * the same two keys walk a row the whole length of the menu and through every group on the
+   * way.
    */
-  protected readonly moving = signal<{
-    item: NavItem;
-    from: NavGroup | null;
-    index: number;
-  } | null>(null);
+  protected nudge(index: number, delta: -1 | 1): void {
+    const rows = this.rows();
+    if (delta === 1) {
+      const end = blockEnd(rows, index);
+      if (end >= rows.length) {
+        return;
+      }
+      this.place(index, rows[end]);
+    } else {
+      if (index === 0) {
+        return;
+      }
+      this.place(index, index >= 2 ? rows[index - 2] : null);
+    }
+  }
+
+  /** Whether a row can leave the group it is in: it has to be in one. */
+  protected canOutdent(index: number): boolean {
+    return this.rows()[index].depth > 1;
+  }
 
   /**
-   * Where this row may go, by name. A destination has to have room under it for the row *and
-   * everything the row brings with it* — which is what {@link height} measures, and why it is
-   * not simply "one level for an entry, two for a group". A board tab is three levels tall on
-   * its own: the tab, its bands, and their buttons. Offering it another tab to move into would
-   * be offering to bury its bands one level past what the board draws, and they would be
-   * dissolved on the way back in — the tab gone from the strip and its six screens tipped out
-   * into one uncoloured heap.
+   * Whether a row can go into the group before it. There has to *be* one — the nearest row
+   * above standing at this row's own depth has to be a group — and what the row is carrying
+   * has to fit under it.
+   */
+  protected canIndent(index: number): boolean {
+    const rows = this.rows();
+    const depth = rows[index].depth;
+    for (let i = index - 1; i >= 0; i--) {
+      if (rows[i].depth < depth) {
+        return false;
+      }
+      if (rows[i].depth === depth) {
+        return rows[i].item.kind === 'group' && depth + heightAt(rows, index) <= this.maxDepth;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Out of the group, and out to just past it: a row that steps out of a heading belongs
+   * after what that heading holds, not wedged into the middle of it where it would cut the
+   * group in two.
+   */
+  protected outdent(index: number): void {
+    const rows = this.rows();
+    const depth = rows[index].depth;
+    if (depth <= 1) {
+      return;
+    }
+    let after = blockEnd(rows, index);
+    while (after < rows.length && rows[after].depth >= depth) {
+      after++;
+    }
+    this.place(index, rows[after - 1] ?? null, depth - 1);
+  }
+
+  /** Into the group before it, where it already stands — only its depth changes. */
+  protected indent(index: number): void {
+    if (!this.canIndent(index)) {
+      return;
+    }
+    const rows = this.rows();
+    this.place(index, index > 0 ? rows[index - 1] : null, rows[index].depth + 1);
+  }
+
+  /**
+   * Take one row — and everything standing under it — out of where it is and put it after
+   * `above`. The single edit every move on this screen is written in, so the rules about what
+   * may sit where are stated once.
    *
-   * The same measure keeps the sidebar one level deep, so neither is spelled out twice.
+   * The depth it lands at is the deepest the place allows: after a group heading that means
+   * inside it, and after a plain entry it means beside that entry. `wanted` is how the two
+   * step buttons ask for something shallower, which is the one thing a landing place cannot
+   * say for itself — below a heading, "inside it" and "after it" are the same place in a list.
    */
-  protected destinationsFor(item: NavItem): NavGroup[] {
-    const room = height(item);
-    return this.allGroups()
-      .filter((found) => found.group.key !== item.key && found.depth + room <= this.maxDepth)
-      .map((found) => found.group);
-  }
-
-  /**
-   * Whether "a new group" is among this row's destinations. The new group lands at the top
-   * level with the row inside it, so the row needs one level more than it would standing
-   * there itself — which a board tab does not have.
-   */
-  protected canNestInNew(item: NavItem): boolean {
-    return 1 + height(item) <= this.maxDepth;
-  }
-
-  protected readonly destinations = computed(() => {
-    const m = this.moving();
-    return m ? this.destinationsFor(m.item) : [];
-  });
-
-  /**
-   * Whether a row is offered the move button at all. A row inside a group always is — the top
-   * level is somewhere it can go. A row already at the top level is only offered it if some
-   * group will take it, which is how a sidebar group ends up with no button: one level of
-   * nesting leaves it nowhere else to be.
-   */
-  protected canMove(item: NavItem, from: NavGroup | null): boolean {
-    return from !== null || this.destinationsFor(item).length > 0 || this.canNestInNew(item);
-  }
-
-  /** Viewport coords of the fixed popup, kept against the button that opened it. */
-  protected readonly movePop = signal({ top: 0, left: 0 });
-  private readonly movePopEl = viewChild<ElementRef<HTMLElement>>('movePopEl');
-  private moveTrigger: HTMLElement | null = null;
-
-  protected openMove(item: NavItem, from: NavGroup | null, index: number, event: Event): void {
-    this.moveTrigger = event.currentTarget as HTMLElement;
-    this.moving.set({ item, from, index });
-    // Anchored twice: once off the bare button, since the popup is not in the DOM to be
-    // measured yet, and again once it is — which is the placement that actually lands.
-    this.movePop.set(anchorPopup(this.moveTrigger.getBoundingClientRect(), null));
-    afterNextRender(
-      () => {
-        const pop = this.movePopEl()?.nativeElement;
-        if (pop && this.moveTrigger) {
-          this.movePop.set(anchorPopup(this.moveTrigger.getBoundingClientRect(), pop));
-        }
-        pop?.querySelector<HTMLElement>('button:not(:disabled)')?.focus();
-      },
-      { injector: this.injector },
-    );
-  }
-
-  /** Focus goes back to the button that opened it — a popup that closes must hand focus back. */
-  protected closeMove(): void {
-    if (!this.moving()) {
-      return;
-    }
-    this.moving.set(null);
-    this.moveTrigger?.focus();
-    this.moveTrigger = null;
-  }
-
-  /**
-   * Into a group, a row lands at the end of it — the well is short, so it is in plain sight
-   * either way. Out to the top level it lands immediately below the group it left, not at the
-   * foot of the whole menu, which is somewhere the eye is not and probably off the screen.
-   */
-  protected moveTo(toKey: string | null): void {
-    const from = this.moving();
-    if (!from) {
-      return;
-    }
-    const to =
-      toKey === null
-        ? this.topIndexOf(from.from?.key) + 1
-        : (this.group(toKey)?.children.length ?? 0);
-    this.move(from.from?.key ?? null, from.index, toKey, to);
-    this.closeMove();
-  }
-
-  /**
-   * A group made for this move, named on the spot. The group lands at the foot of the menu
-   * with the row already inside it, and the caret goes to its name box — an unnamed group is
-   * the one thing that stops a save, so asking for the name immediately is the whole point.
-   */
-  protected moveToNewGroup(): void {
-    const from = this.moving();
-    if (!from) {
-      return;
-    }
-    if (!this.canNestInNew(from.item)) {
-      return;
-    }
-    const key = customKey();
-    this.items.update((items) => [
-      ...items,
-      { kind: 'group', key, icon: 'menu', label: '', hidden: false, children: [] },
-    ]);
-    this.move(from.from?.key ?? null, from.index, key, 0);
-    this.moving.set(null);
-    this.moveTrigger = null;
-    this.focusRow(key);
-  }
-
-  /**
-   * Where the row's old group sits at the top level — the group itself, or the tab holding it.
-   * Coming out to the top level lands just below that, which is somewhere the eye already is;
-   * the foot of the whole menu is probably off the screen.
-   */
-  private topIndexOf(key: string | undefined): number {
-    return key ? this.items().findIndex((item) => depthOf([item], key) > 0) : -1;
-  }
-
-  /**
-   * Take one row out of where it is and put it where it is going. The single edit every move
-   * on this screen is written in — dragging, the arrows, and dissolving a group all end up
-   * here, so the rules about what may sit where are stated once.
-   */
-  private move(
-    fromKey: string | null,
-    fromIndex: number,
-    toKey: string | null,
-    toIndex: number,
-  ): void {
-    this.items.update((items) => {
-      // Every group gets a fresh children array, so nothing downstream is holding the array
-      // this is about to splice.
-      const next = clone(items);
-      const from = listIn(next, fromKey);
-      const to = listIn(next, toKey);
-      const row = from?.[fromIndex];
-      if (!from || !to || !row) {
-        return items;
+  private place(index: number, above: Row | null, wanted?: number): void {
+    this.rows.update((rows) => {
+      const end = blockEnd(rows, index);
+      const block = rows.slice(index, end);
+      const rest = [...rows.slice(0, index), ...rows.slice(end)];
+      let at = above ? rest.indexOf(above) + 1 : 0;
+      if (at < 0) {
+        return rows;
       }
-      // The two things no move may produce, stated once here rather than trusted to the
-      // controls that offer the move: a row — or anything it is carrying — standing deeper
-      // than the surface draws, and a group dropped inside itself. A drag can ask for either;
-      // a button asks for neither.
-      if (depthOf(next, toKey) + height(row) > this.maxDepth) {
-        return items;
+
+      const prev = rest[at - 1];
+      const room = prev ? (prev.item.kind === 'group' ? prev.depth + 1 : prev.depth) : 1;
+      // A group is not one row being placed, it is everything under it being placed too, so
+      // what has to fit is the whole block's height and not the one row.
+      const depth = Math.max(
+        1,
+        Math.min(room, this.maxDepth - heightAt(rows, index) + 1, wanted ?? this.maxDepth),
+      );
+      // Landing shallower than where the pointer stopped means closing the groups it stopped
+      // inside, so it lands past what they hold rather than splitting them.
+      while (at < rest.length && rest[at].depth > depth) {
+        at++;
       }
-      if (row.kind === 'group' && toKey !== null && listIn([row], toKey)) {
-        return items;
-      }
-      from.splice(fromIndex, 1);
-      to.splice(Math.min(toIndex, to.length), 0, row);
+
+      const shift = depth - block[0].depth;
+      rest.splice(at, 0, ...block.map((row) => ({ ...row, depth: row.depth + shift })));
+      const next = normalize(rest, this.maxDepth);
+      this.announce(next, at);
       return next;
     });
+  }
+
+  /** Where a row ended up, in words, for the live region — and for anyone not watching it. */
+  private announce(rows: readonly Row[], index: number): void {
+    const row = rows[index];
+    let parent = this.locale.t('settings.menu.atTop');
+    for (let i = index - 1; i >= 0; i--) {
+      if (rows[i].depth < row.depth) {
+        parent = this.name(rows[i].item);
+        break;
+      }
+    }
+    const siblings = rows.filter(
+      (other, i) => other.depth === row.depth && parentOf(rows, i) === parentOf(rows, index),
+    );
+    this.announced.set(
+      this.locale.t('settings.menu.at', {
+        item: this.name(row.item),
+        n: (siblings.indexOf(row) + 1).toString(),
+        m: siblings.length.toString(),
+        where: parent,
+      }),
+    );
+  }
+
+  /**
+   * The arrow keys on a row's grip. `cdkDrag` has no keyboard mode, so without these the
+   * screen would have a gesture and no other way through it. Up and down walk the list; the
+   * other two are the step buttons under the fingers already on the row, mirrored under Urdu
+   * because they mean "out" and "in", not "left" and "right".
+   */
+  protected key(index: number, event: KeyboardEvent): void {
+    const rtl = this.locale.dir() === 'rtl';
+    const actions: Record<string, () => void> = {
+      ArrowUp: () => this.nudge(index, -1),
+      ArrowDown: () => this.nudge(index, 1),
+      ArrowLeft: () => (rtl ? this.indent(index) : this.outdent(index)),
+      ArrowRight: () => (rtl ? this.outdent(index) : this.indent(index)),
+    };
+    const action = actions[event.key];
+    if (!action) {
+      return;
+    }
+    event.preventDefault();
+    const key = this.rows()[index].item.key;
+    action();
+    // The row moved out from under the focus ring; the grip on it has to keep it, or a
+    // second press would move whatever slid into its place.
+    afterNextRender(
+      () =>
+        this.host.nativeElement
+          .querySelector<HTMLElement>(`[data-grip="${cssEscape(key)}"]`)
+          ?.focus({ preventScroll: false }),
+      { injector: this.injector },
+    );
   }
 
   // ── groups the shop makes ───────────────────────────────────────────
@@ -432,9 +472,12 @@ export class SettingsMenu {
    */
   protected addGroup(): void {
     const key = customKey();
-    this.items.update((items) => [
-      ...items,
-      { kind: 'group', key, icon: 'menu', label: '', hidden: false, children: [] },
+    this.rows.update((rows) => [
+      ...rows,
+      {
+        item: { kind: 'group', key, icon: 'menu', label: '', hidden: false, children: [] },
+        depth: 1,
+      },
     ]);
     this.focusRow(key);
   }
@@ -449,17 +492,18 @@ export class SettingsMenu {
   /**
    * Take the group away and leave its entries behind, in its place. Nothing is lost, so
    * nothing is confirmed — a group is a heading, and this removes the heading.
+   *
+   * What was inside it is stepped up a level here rather than left for `normalize` to settle.
+   * `normalize` only ever brings a row *up to* what the row above allows, and the row above
+   * a removed heading is usually the last entry of the group before it — so left alone, the
+   * entries would not come out into the open, they would quietly join the previous group.
    */
-  protected removeGroup(group: NavGroup): void {
-    const strip = (items: readonly NavItem[]): NavItem[] =>
-      items.flatMap<NavItem>((item) =>
-        item.key === group.key
-          ? group.children
-          : item.kind === 'group'
-            ? [{ ...item, children: strip(item.children) }]
-            : [item],
-      );
-    this.items.update(strip);
+  protected removeGroup(index: number): void {
+    this.rows.update((rows) => {
+      const end = blockEnd(rows, index);
+      const freed = rows.slice(index + 1, end).map((row) => ({ ...row, depth: row.depth - 1 }));
+      return normalize([...rows.slice(0, index), ...freed, ...rows.slice(end)], this.maxDepth);
+    });
   }
 
   // ── naming and hiding ───────────────────────────────────────────────
@@ -469,12 +513,12 @@ export class SettingsMenu {
    * is bound one-way to this value, so normalising here would rewrite what someone is in the
    * middle of typing — a leading space would vanish from under the caret.
    */
-  protected rename(key: string, event: Event): void {
-    this.patch(key, { label: (event.target as HTMLInputElement).value });
+  protected rename(index: number, event: Event): void {
+    this.patch(index, { label: (event.target as HTMLInputElement).value });
   }
 
-  protected setShown(key: string, event: Event): void {
-    this.patch(key, { hidden: !(event.target as HTMLInputElement).checked });
+  protected toggleShown(index: number): void {
+    this.patch(index, { hidden: !this.rows()[index].item.hidden });
   }
 
   protected setChrome(item: ChromeItem, event: Event): void {
@@ -491,45 +535,26 @@ export class SettingsMenu {
   }
 
   /**
-   * Replace one row's arranged fields, at the top level or inside a group, leaving the rest
-   * of the menu untouched. A patch object rather than a mapping function so the spread keeps
-   * each row's own type — a top-level row is a link or a group, a child is always a link.
+   * Replace one row's arranged fields. A patch object rather than a mapping function so the
+   * spread keeps the row's own type — a row is a link or a group, and only a group carries a
+   * colour.
    */
-  private patch(key: string, change: Pick<Partial<NavLink>, 'label' | 'hidden'>): void {
-    const apply = (items: readonly NavItem[]): NavItem[] =>
-      items.map((item) =>
-        item.key === key
-          ? { ...item, ...change }
-          : item.kind === 'group'
-            ? { ...item, children: apply(item.children) }
-            : item,
-      );
-    this.items.update(apply);
+  private patch(index: number, change: Pick<Partial<NavGroup>, 'label' | 'hidden' | 'tone'>): void {
+    this.rows.update((rows) =>
+      rows.map((row, i) => (i === index ? { ...row, item: { ...row.item, ...change } } : row)),
+    );
   }
 
-  /**
-   * A band's colour. Its own walk rather than a third field on {@link patch} because only a
-   * group carries one — spreading it onto an entry would put a field on a row that has no
-   * use for it, and it would be saved.
-   */
-  protected setTone(key: string, event: Event): void {
-    const tone = (event.target as HTMLSelectElement).value as BoardTone;
-    const apply = (items: readonly NavItem[]): NavItem[] =>
-      items.map((item) =>
-        item.kind !== 'group'
-          ? item
-          : item.key === key
-            ? { ...item, tone }
-            : { ...item, children: apply(item.children) },
-      );
-    this.items.update(apply);
+  protected setTone(index: number, event: Event): void {
+    this.patch(index, { tone: (event.target as HTMLSelectElement).value as BoardTone });
   }
 
   /** Back to the menu the app ships with. Local until saved, like every other edit here. */
   protected reset(): void {
-    this.items.set(mergeMenu(this.table, [], this.maxDepth));
+    this.rows.set(flatten(mergeMenu(this.table, [], this.maxDepth)));
     this.hideChrome.set(new Set());
     this.attempted.set(false);
+    this.announced.set('');
   }
 
   /** Answers whether the arrangement went in, which is what {@link copyArrangement} waits on. */
@@ -537,7 +562,7 @@ export class SettingsMenu {
     this.attempted.set(true);
     if (this.unnamed().length) {
       // Saving now would look like it worked and lose the grouping on the way back in.
-      document.getElementById(`row-${this.unnamed()[0].key}`)?.focus();
+      document.getElementById(`row-${this.unnamed()[0].item.key}`)?.focus();
       return false;
     }
     this.saving.set(true);
@@ -601,7 +626,7 @@ export class SettingsMenu {
       children: item.kind === 'group' ? item.children.map(row) : undefined,
     });
 
-    const arrangement = this.items().map(row);
+    const arrangement = nest(this.rows()).map(row);
     const saved = this.saved();
     return {
       // One of the two is what this screen just edited; the other is carried through exactly
@@ -623,51 +648,91 @@ export class SettingsMenu {
   }
 }
 
-// ── walking the tree ──────────────────────────────────────────────────
+// ── flat and back ─────────────────────────────────────────────────────
 //
-// Three small recursions, each used by name where the reason for walking is stated. The two
-// lookups a move needs — which array a group holds, and how deep it sits — are not a fourth
-// and a fifth: they are `groupsOf` read two ways, since it has already found every group and
-// noted its depth on the way past.
+// The tree is what the server stores and what the sidebar draws; flat is what this screen
+// edits. The two conversions below are the only places either shape is assumed, and the
+// invariant they meet in the middle is `normalize`'s: the first row stands at 1, and no row
+// stands deeper than the row above it allows.
 
-/** Every row, at every depth, in the order the screen draws them. */
-function walk(items: readonly NavItem[]): NavItem[] {
-  return items.flatMap<NavItem>((item) =>
-    item.kind === 'group' ? [item, ...walk(item.children)] : [item],
+/** The tree as rows, in the order the screen draws them. */
+function flatten(items: readonly NavItem[], depth = 1): Row[] {
+  return items.flatMap<Row>((item) =>
+    item.kind === 'group'
+      ? [{ item: { ...item, children: [] }, depth }, ...flatten(item.children, depth + 1)]
+      : [{ item, depth }],
   );
 }
 
-/** Every group with the depth it sits at, the top level counting as 1. */
-function groupsOf(
-  items: readonly NavItem[],
-  depth: number,
-): Array<{ group: NavGroup; depth: number }> {
-  return items.flatMap((item) =>
-    item.kind === 'group' ? [{ group: item, depth }, ...groupsOf(item.children, depth + 1)] : [],
-  );
-}
-
-/** A copy nothing else is holding, so a splice below cannot reach the menu on screen. */
-function clone(items: readonly NavItem[]): NavItem[] {
-  return items.map((item) =>
-    item.kind === 'group' ? { ...item, children: clone(item.children) } : item,
-  );
-}
-
-function found(items: readonly NavItem[], key: string) {
-  return groupsOf(items, 1).find((entry) => entry.group.key === key);
+/** The rows as a tree again: a group takes the run below it that stands deeper. */
+function nest(rows: readonly Row[]): NavItem[] {
+  const build = (depth: number, from: number): { items: NavItem[]; next: number } => {
+    const items: NavItem[] = [];
+    let i = from;
+    while (i < rows.length && rows[i].depth >= depth) {
+      const { item } = rows[i];
+      if (item.kind !== 'group') {
+        items.push(item);
+        i++;
+        continue;
+      }
+      const inside = build(depth + 1, i + 1);
+      items.push({ ...item, children: inside.items });
+      i = inside.next;
+    }
+    return { items, next: i };
+  };
+  return build(1, 0).items;
 }
 
 /**
- * The array a key's group holds, or the whole menu for the top level. The array itself and
- * not a copy of it — a move splices this — which is why the caller passes the tree it is
- * about to edit rather than the one on screen.
+ * The rows with every depth made legal: nothing deeper than the row above it offers, nothing
+ * past the depth the surface draws, nothing shallower than the top level. Run after every
+ * edit, so no other function has to prove it left the list arrangeable — pulling a heading
+ * out from over a run is the case that needs it, since what it held has to come up a level.
  */
-function listIn(items: NavItem[], key: string | null): NavItem[] | undefined {
-  return key === null ? items : found(items, key)?.group.children;
+function normalize(rows: readonly Row[], maxDepth: number): Row[] {
+  let room = 1;
+  return rows.map((row) => {
+    const depth = Math.min(Math.max(row.depth, 1), room);
+    room = row.item.kind === 'group' ? Math.min(depth + 1, maxDepth) : depth;
+    return depth === row.depth ? row : { ...row, depth };
+  });
 }
 
-/** How deep a group sits, the top level being 0 — and 0 again for a key that is not there. */
-function depthOf(items: readonly NavItem[], key: string | null): number {
-  return key === null ? 0 : (found(items, key)?.depth ?? 0);
+/** One past the last row standing under this one — the end of what it carries when it moves. */
+function blockEnd(rows: readonly Row[], index: number): number {
+  let end = index + 1;
+  while (end < rows.length && rows[end].depth > rows[index].depth) {
+    end++;
+  }
+  return end;
+}
+
+/**
+ * How many levels a row takes up where it lands: 1 for an entry, and for a group one more
+ * than the deepest thing under it. An empty group still counts as 2 — it is empty because it
+ * was made a moment ago, and a heading that can never hold anything is worse than one that
+ * was never offered. Mirrors `height` in nav.ts, read off the rows instead of the tree.
+ */
+function heightAt(rows: readonly Row[], index: number): number {
+  const end = blockEnd(rows, index);
+  const deepest = Math.max(...rows.slice(index, end).map((row) => row.depth));
+  const own = deepest - rows[index].depth + 1;
+  return rows[index].item.kind === 'group' ? Math.max(own, 2) : own;
+}
+
+/** Which group a row is in, as the index of its heading, or -1 for the top level. */
+function parentOf(rows: readonly Row[], index: number): number {
+  for (let i = index - 1; i >= 0; i--) {
+    if (rows[i].depth < rows[index].depth) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/** `grp:` keys carry a colon, which a bare attribute selector would read as a pseudo-class. */
+function cssEscape(key: string): string {
+  return key.replace(/["\\]/g, '\\$&');
 }

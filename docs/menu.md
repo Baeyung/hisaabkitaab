@@ -24,13 +24,23 @@ sidebar (a group of entries) and 3 for the board (a tab of bands of buttons). A 
 deeper than that is dissolved the same way an unnamed one is, its children kept one level up —
 which is also what happens if a board document is ever read by the sidebar.
 
-Two controls, two jobs. Dragging a row, and the up/down arrows beside it, reorder it inside the
-list it is already in. The move button next to those is how a row changes list: it lists every
-destination by name — the top level, each group, or a new group made on the spot — rather than
-guessing one, so any entry reaches any group in a single move. Dragging between the two levels
-is not offered: `CdkDropList` hides the enclosing `cdkDropListGroup` from lists nested inside
-it, so the CDK never delivers such a drag, and hand-wiring it only works one way (see the class
-comment on `SettingsMenu`).
+One list, one gesture. The arranging screen holds the menu **flat** — a row and the depth it
+stands at — so a row is dragged anywhere in the menu and lands inside whatever heading it was
+dropped under, taking the deepest place the row above it offers. That is the whole rule, and it
+is the one a shopkeeper reads off the screen, since the row above is right there.
+
+It leaves exactly one thing unsayable, which is what the two step buttons on a row are for:
+below a heading, "inside it" and "after it" are the same place in a list, so a row can never be
+*dropped* at the top level once there is a group above it. `⟨` takes a row out of its group and
+lands it past what that group holds; `⟩` puts it into the group before it. Both are offered only
+where they are legal, so most rows show one of them or neither, and both are on the arrow keys
+of the row's grip — `cdkDrag` has no keyboard mode, so that grip is the keyboard path too.
+
+Nested drop lists could not do any of this, which is why the screen is flat: `CdkDropList`
+provides `CDK_DROP_LIST_GROUP: undefined` to its own subtree, so a nested list never joins the
+enclosing `cdkDropListGroup` and a cross-list drag never arrives. Connecting them by hand got a
+row *into* a group and not back out, because the outer list geometrically contains every inner
+one and `_canReceive` claims the pointer first.
 
 ## The board
 
@@ -67,6 +77,10 @@ behind it is one click nearer.
 
 Legend: **E** editor or above, **O** owner only, no mark = everyone. † = records something, so it is greyed with a
 reason while the shop is closed by its plan, rather than dropped. 🔒 = cannot be hidden.
+
+The arranging screen draws each row as the menu row it becomes — its mark, its name, and the
+indent and rail that say what it is inside of — so there is no separate preview beside it to
+keep in sync.
 
 | Item | Path | Role |
 |---|---|---|

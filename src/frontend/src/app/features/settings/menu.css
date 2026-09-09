@@ -1,7 +1,7 @@
 /* Store Settings › Menu. The page frame, buttons and fields come from
    settings-table.css (see styleUrls); this file is the arranging list itself.
    Everything is written with logical properties — the whole screen mirrors under
-   Urdu, including which way the sub-items indent. */
+   Urdu, including which way a row indents to say what it is inside of. */
 
 .set__titles {
   min-width: 0;
@@ -66,101 +66,143 @@
 }
 
 /* ── the arranging list ─────────────────────────────────────────────
-   One row per menu entry, groups carrying their own nested list. */
+   One flat list, one row per menu entry, at whatever depth it stands. The list
+   is the menu: a row carries the mark the sidebar will draw beside it, and what
+   it is inside of is the indent and the rail rather than a nested box — which is
+   also what lets a drag cross between the levels at all. */
 .rows {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* ── the well ───────────────────────────────────────────────────────
-   What "inside" looks like. The whole of this screen is now about what is
-   grouped with what, so membership has to be visible rather than inferred from
-   an indent: the group's entries sit in a recess — tonally the inverse of the
-   raised cards around them — held by a rail on the inline-start side. The rail
-   is the group's spine, so it mirrors under Urdu along with everything else. */
-.well {
-  margin: 2px 9px 9px;
-  padding-block: 6px;
-  padding-inline: 0 7px;
-  border-inline-start: 2px solid var(--kg-line-strong);
-  border-radius: 0 10px 10px 0;
-  background: var(--kg-fill-subtle);
-}
-.rows--sub {
-  gap: 5px;
-  padding-inline-start: 9px;
-}
-/* The empty group's only row, so the words are the drop target rather than a
-   caption under one. */
-.well__empty {
-  padding: 9px 10px;
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: var(--kg-faint);
-}
-/* The list you are about to drop into, while a drag is in flight. The one place
-   on this page that raises its voice — and it is answering an action, which is
-   the only thing motion and colour are for here. */
-.rows--sub.cdk-drop-list-receiving,
-.rows--sub.cdk-drop-list-dragging {
-  border-radius: 8px;
-  box-shadow: 0 0 0 2px var(--kg-focus);
-}
-
 .row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
   background: var(--kg-card);
   border: 1px solid var(--kg-line);
-  border-radius: 12px;
+  border-radius: 11px;
 }
-/* Arranged out of the sidebar. A tint and a dashed edge rather than a blanket
+
+/* Inside something. Not a box within a box — the entries of a group are drawn the
+   way the sidebar itself draws them: stepped in, sitting on the page rather than
+   on a card of their own, under one continuous rail. The rail is the group's
+   spine, so it runs through the gaps between rows instead of restarting at each
+   one, and it mirrors under Urdu with everything else. */
+.row[data-depth='2'],
+.row[data-depth='3'] {
+  background: transparent;
+  border-color: transparent;
+}
+.row[data-depth='2']::before,
+.row[data-depth='3']::before {
+  content: '';
+  position: absolute;
+  inset-block: -3px -3px;
+  inset-inline-start: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--kg-line-hover);
+}
+.row[data-depth='2'] {
+  margin-inline-start: 22px;
+}
+/* The board's third level. A lighter spine, because by here the step in is already
+   carrying the fact and two rails of equal weight would argue about which is the
+   group. */
+.row[data-depth='3'] {
+  margin-inline-start: 44px;
+}
+.row[data-depth='3']::before {
+  background: var(--kg-line-strong);
+}
+/* A row being pointed at gets its card back, so what the pointer is on is never in
+   doubt in a column of twenty-odd. */
+.row[data-depth='2']:hover,
+.row[data-depth='3']:hover,
+.row[data-depth='2']:focus-within,
+.row[data-depth='3']:focus-within {
+  background: var(--kg-card);
+  border-color: var(--kg-line);
+}
+
+/* A heading, at any depth. It keeps its card where its entries give theirs up, so a
+   group reads as a lid over a list rather than as one more row in a stack. */
+.row--group {
+  border-color: var(--kg-line-strong);
+}
+.row--group[data-depth='2'],
+.row--group[data-depth='3'] {
+  background: var(--kg-card);
+  border-color: var(--kg-line);
+}
+.row--group .row__name {
+  font-weight: 700;
+}
+
+/* Arranged out of the menu. A tint and a dashed edge rather than a blanket
    opacity: the row's own controls are how it comes back, so they have to stay as
-   readable as every other row's. */
-.row--off {
+   readable as every other row's. Written to beat the depth rules above, which give
+   an entry inside a group no edge at all — a hidden row has to be legible as
+   hidden wherever it is standing. */
+.row.row--off {
   background: var(--kg-fill-subtle);
+  border-color: var(--kg-line);
   border-style: dashed;
 }
+.row--off .row__mark,
 .row--off .row__name,
 .row--off .row__name::placeholder {
   color: var(--kg-faint);
 }
-/* A group and its well are one block: the row is the lid, so the two share an
-   edge rather than sitting apart like two entries would. */
-.row--group > .row__main {
-  padding-bottom: 5px;
-}
 
-/* Asking to be named. Only ever a group the shop just made, and only after a save
-   was attempted — a box that turns red while you are still reaching for it is
-   scolding, not helping. */
-.row__name--wanted {
-  border-color: var(--kg-tint-out-line);
-  background: var(--kg-tint-out-hover);
-}
-
-.row__main {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 9px;
-}
-
-/* Drag handle. `touch-action: none` is what makes dragging work on a phone —
-   without it the browser claims the gesture for scrolling. */
+/* Drag with a pointer, arrow keys without one. `touch-action: none` is what makes
+   dragging work on a phone — without it the browser claims the gesture for
+   scrolling. */
 .row__grip {
   flex: none;
   display: inline-flex;
   align-items: center;
-  padding: 6px 2px;
+  justify-content: center;
+  width: 22px;
+  height: 30px;
+  padding: 0;
   color: var(--kg-faint);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
   cursor: grab;
   touch-action: none;
 }
+.row__grip:hover {
+  color: var(--kg-ink);
+}
 .row__grip:active {
   cursor: grabbing;
+}
+.row__grip:focus-visible {
+  outline: none;
+  color: var(--kg-ink);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+
+/* The mark the menu will draw beside this row. Present at every depth, unlike the
+   sidebar, which drops it on a sub-item: here it is what tells you at a glance
+   which entry a row is, when half of them have been renamed to the shop's own
+   words. */
+.row__mark {
+  flex: none;
+  display: inline-flex;
+  color: var(--kg-muted);
+}
+.row--group .row__mark {
+  color: var(--kg-brand);
 }
 
 /* The name box. Borderless until touched so a column of them reads as a list of
@@ -169,8 +211,8 @@
 .row__name {
   flex: 1;
   min-width: 0;
-  height: 36px;
-  padding-inline: 9px;
+  height: 32px;
+  padding-inline: 8px;
   font: inherit;
   font-size: 14px;
   font-weight: 600;
@@ -193,9 +235,17 @@
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
 
-/* The keyboard path for reordering. cdkDrag has no keyboard mode of its own, so
-   these are not a nicety — they are the only way through this screen without a
-   pointer, and they stay on screen at every width. */
+/* Asking to be named. Only ever a group the shop just made, and only after a save
+   was attempted — a box that turns red while you are still reaching for it is
+   scolding, not helping. */
+.row__name--wanted {
+  border-color: var(--kg-tint-out-line);
+  background: var(--kg-tint-out-hover);
+}
+
+/* The controls that are not the drag. Quiet at rest and only fully inked on the
+   row being worked on, because there are up to four of them on twenty-odd rows
+   and a wall of buttons is what made this screen hard to read. */
 .row__moves {
   flex: none;
   display: flex;
@@ -208,15 +258,21 @@
   width: 30px;
   height: 30px;
   padding: 0;
-  color: var(--kg-muted);
+  color: var(--kg-faint);
   background: transparent;
-  border: 1px solid var(--kg-line);
+  border: 1px solid transparent;
   border-radius: 8px;
   cursor: pointer;
+}
+.row:hover .mv,
+.row:focus-within .mv {
+  color: var(--kg-muted);
+  border-color: var(--kg-line);
 }
 .mv:hover:not(:disabled) {
   color: var(--kg-ink);
   border-color: var(--kg-line-hover);
+  background: var(--kg-card);
 }
 .mv:disabled {
   opacity: 0.4;
@@ -224,14 +280,36 @@
 }
 .mv:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--kg-focus);
-}
-/* The row whose destinations are open. Held lit while its popup stands, so the
-   list on screen is visibly attached to the row it will move. */
-.mv--on {
   color: var(--kg-ink);
   border-color: var(--kg-line-hover);
-  background: var(--kg-fill-subtle);
+  box-shadow: 0 0 0 3px var(--kg-focus);
+}
+/* The two step buttons wait for the row to be pointed at. They are the same two
+   glyphs on twenty-odd rows and every row can take one, so drawn always they are a
+   column of repeated marks reporting nothing — and the thing this screen most
+   needed was less to look at. Focus counts as pointing, so the keyboard path is
+   unchanged, and a touch screen has no pointing at all, which is the media query
+   below. */
+.mv--step {
+  opacity: 0;
+}
+.row:hover .mv--step,
+.row:focus-within .mv--step {
+  opacity: 1;
+}
+@media (hover: none) {
+  .mv--step {
+    opacity: 1;
+  }
+}
+
+/* The eye is the one control that reports a state rather than performing a move,
+   so it stays legible on a row nobody is pointing at. */
+.mv--eye {
+  color: var(--kg-muted);
+}
+.row--off .mv--eye {
+  color: var(--kg-faint);
 }
 /* Removing a group takes nothing away — the entries in it stay, one level up — so
    this is a quiet control that warms on approach rather than a red one. */
@@ -279,8 +357,34 @@
   box-shadow: 0 0 0 3px var(--kg-focus);
 }
 
+/* The empty group's own row, standing at the depth its entries will stand at, so
+   the words are where the first one will land rather than a caption above it. */
+.slot {
+  margin-inline-start: 22px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--kg-faint);
+  border: 1px dashed var(--kg-line-strong);
+  border-radius: 0 10px 10px 0;
+  border-inline-start: 2px solid var(--kg-line-hover);
+}
+.slot[data-depth='3'] {
+  margin-inline-start: 44px;
+}
+
+/* Where the last move put things. Read aloud, and worth reading: a move made from
+   the keyboard scrolls nothing and lights nothing up. */
+.rows__said {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--kg-faint);
+}
+
 /* The one thing on this page that adds rather than arranges. Dashed, because what
-   it makes starts empty and the well below it will be dashed-empty too. */
+   it makes starts empty and the slot below it will be dashed-empty too. */
 .addgroup {
   display: inline-flex;
   align-items: center;
@@ -331,112 +435,6 @@
   }
 }
 
-/* ── where a row can go ─────────────────────────────────────────────
-   The same popup the filter selects use (see shared/select), so the one place
-   this screen opens something over the page speaks the app's existing language
-   rather than inventing a second one. Fixed, and anchored in script, because the
-   settings card clips its overflow. */
-.scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-}
-.dest {
-  position: fixed;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  width: max-content;
-  min-width: 200px;
-  max-width: min(90vw, 32ch);
-  /* A shop with a dozen groups still gets a popup that fits on the screen. */
-  max-height: min(70vh, 400px);
-  overflow-y: auto;
-  padding: 4px;
-  background: var(--kg-card);
-  border: 1px solid var(--kg-line-strong);
-  border-radius: 10px;
-  box-shadow: var(--kg-shadow-pop);
-}
-/* Names what is moving. The destinations below are bare names, so without this the
-   list would be a set of groups with no clue which row picked it. */
-.dest__head {
-  margin: 0;
-  padding: 7px 10px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--kg-faint);
-  border-bottom: 1px solid var(--kg-line);
-}
-.dest__opt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 2px;
-  padding: 9px 10px;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--kg-ink);
-  text-align: start;
-  background: transparent;
-  border: 0;
-  border-radius: 7px;
-  cursor: pointer;
-}
-.dest__opt:hover:not(:disabled),
-.dest__opt:focus-visible {
-  outline: none;
-  background: var(--kg-surface);
-}
-.dest__opt:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--kg-focus);
-}
-/* The list it is in already. Not an error and not disabled-looking dead weight —
-   it is the answer to "where is this now", so it stays legible and simply has
-   nowhere to take you. */
-.dest__opt--here {
-  cursor: default;
-  color: var(--kg-muted);
-}
-.dest__tick {
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: transparent;
-}
-.dest__opt--here .dest__tick {
-  background: var(--kg-brand);
-}
-.dest__here {
-  margin-inline-start: auto;
-  padding-inline-start: 10px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--kg-faint);
-  white-space: nowrap;
-}
-/* The only row that adds rather than sorts, so it is set below the rule the way
-   "New group" sits below the list on the page itself. */
-.dest__opt--new {
-  margin-top: 4px;
-  padding-top: 10px;
-  color: var(--kg-muted);
-  border-top: 1px solid var(--kg-line);
-  border-radius: 0 0 7px 7px;
-}
-.dest__opt--new:hover,
-.dest__opt--new:focus-visible {
-  color: var(--kg-ink);
-}
-.dest__plus {
-  flex: none;
-  margin-inline-start: -1px;
-}
-
 /* ── footer ─────────────────────────────────────────────────────── */
 .set__foot {
   display: flex;
@@ -460,7 +458,7 @@
   font-weight: 500;
 }
 .set__alert {
-  margin: 14px 0 0;
+  margin: 4px 0 0;
   padding: 10px 13px;
   font-size: 13px;
   font-weight: 500;
@@ -472,8 +470,8 @@
 
 /* ── narrow ─────────────────────────────────────────────────────────
    The intro rail stacks above its controls, and the row keeps its shape: the
-   name box shrinks but the arrows and the switch never wrap away, since they
-   are the only ways to do anything on this screen. */
+   name box shrinks but the grip, the step buttons and the eye never wrap away,
+   since they are the only ways to do anything on this screen. */
 @media (max-width: 860px) {
   .sec {
     grid-template-columns: minmax(0, 1fr);
@@ -490,43 +488,32 @@
 }
 
 @media (max-width: 520px) {
-  .row__main {
-    flex-wrap: wrap;
-    gap: 6px;
+  /* Half the indent, because a phone has none to spare — the rail is still what
+     says "inside", and it is still there. */
+  .row[data-depth='2'],
+  .slot {
+    margin-inline-start: 12px;
   }
-  .row__name {
-    flex-basis: 100%;
-    order: -1;
+  .row[data-depth='3'],
+  .slot[data-depth='3'] {
+    margin-inline-start: 24px;
   }
-  /* Four moves and a switch will not sit on one phone line beside a name box, so
-     the name takes its own line above and the controls keep theirs. None of them
-     wrap away: they are the only ways to do anything on this screen. */
-  .row__moves {
-    flex: 1;
+  .row {
+    gap: 4px;
+    padding-inline: 6px;
   }
+  /* Thumb-sized, and always inked: there is no hover on a phone to reveal them. */
   .mv {
     width: 34px;
-    height: 32px;
+    height: 34px;
+    color: var(--kg-muted);
+    border-color: var(--kg-line);
+  }
+  .row__mark {
+    display: none;
   }
   .tone {
-    height: 32px;
-  }
-  .well {
-    margin-inline: 5px;
-  }
-  .sw__text {
-    /* Clipped, not removed: it stays the checkbox's accessible name, so a screen
-       reader still hears "Show in menu" where the eye reads the switch alone. */
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .sw--wide .sw__text {
-    position: static;
-    width: auto;
-    height: auto;
-    clip-path: none;
+    height: 34px;
+    max-width: 92px;
   }
 }
