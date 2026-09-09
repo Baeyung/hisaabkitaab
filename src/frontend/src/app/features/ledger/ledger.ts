@@ -39,6 +39,10 @@ type Section = 'parties' | 'categories' | 'cash';
   ],
   templateUrl: './ledger.html',
   styles: `
+    /* Match the name combobox's 44px so the two search boxes sit level. */
+    .rm-field--addr .rm-input {
+      height: 44px;
+    }
     .rm-sections {
       margin: 0 0 20px;
       padding: 0;
@@ -67,12 +71,20 @@ export class Ledger {
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
 
-  /** `q` is the name/contact search, `dir` the way the baqaya points ('' = every khata),
+  /** `q` is the name/contact search, `addr` the address search, `dir` the way the baqaya
+   *  points ('' = every khata),
    *  `pOpen`/`cOpen`/`kOpen` whether the parties/categories/cash sections are expanded —
    *  in the URL so Back and a copied link land on the sections the user left open. All
    *  three default shut: a khata with hundreds of parties would otherwise force a scroll
    *  past all of them just to reach the expenses/cash blocks below. */
-  protected readonly filters = urlFilters({ q: '', dir: '', pOpen: '', cOpen: '', kOpen: '' });
+  protected readonly filters = urlFilters({
+    q: '',
+    addr: '',
+    dir: '',
+    pOpen: '',
+    cOpen: '',
+    kOpen: '',
+  });
 
   protected readonly partiesOpen = computed(() => this.filters.pOpen() === '1');
   protected readonly categoriesOpen = computed(() => this.filters.cOpen() === '1');
@@ -100,33 +112,36 @@ export class Ledger {
   ]);
 
   /**
-   * Narrowed by direction only. The search suggestions come off this rather than
-   * off every party, so a name the direction filter has already excluded is never
-   * offered as a match that then shows nothing.
+   * Narrowed by direction and address — everything except the name box. Its
+   * suggestions come off this rather than off every party, so a name the other
+   * filters have already excluded is never offered as a match that then shows
+   * nothing.
    */
-  private readonly byDirection = computed(() => {
+  private readonly byOtherFilters = computed(() => {
     const dir = this.filters.dir();
+    const addr = this.filters.addr().trim().toLowerCase();
     const all = this.parties() ?? [];
-    return dir ? all.filter((p) => p.balance.direction === dir) : all;
+    return all.filter(
+      (p) =>
+        (!dir || p.balance.direction === dir) &&
+        (!addr || (p.address ?? '').toLowerCase().includes(addr)),
+    );
   });
 
   /**
-   * The search box's dropdown. Deduped: two parties can be on the books under one
+   * The name box's dropdown. Deduped: two parties can be on the books under one
    * name, and the listbox tracks its options by their text.
    */
   protected readonly nameOptions = computed(() => [
-    ...new Set(this.byDirection().map((p) => p.name)),
+    ...new Set(this.byOtherFilters().map((p) => p.name)),
   ]);
 
   protected readonly filtered = computed(() => {
     const q = this.filters.q().trim().toLowerCase();
-    const rows = this.byDirection();
+    const rows = this.byOtherFilters();
     return q
       ? rows.filter(
-          (p) =>
-            p.name.toLowerCase().includes(q) ||
-            (p.contact ?? '').toLowerCase().includes(q) ||
-            (p.address ?? '').toLowerCase().includes(q),
+          (p) => p.name.toLowerCase().includes(q) || (p.contact ?? '').toLowerCase().includes(q),
         )
       : rows;
   });
@@ -142,13 +157,18 @@ export class Ledger {
   protected readonly partyTotals = computed(() => {
     const rows = this.filtered();
     const sum = (dir: BalanceDirection) =>
-      rows.reduce((total, p) => (p.balance.direction === dir ? total + p.balance.amount : total), 0);
+      rows.reduce(
+        (total, p) => (p.balance.direction === dir ? total + p.balance.amount : total),
+        0,
+      );
     return { receivable: sum('THEY_OWE_YOU'), payable: sum('YOU_OWE_THEM') };
   });
 
   /** "Nothing matched" reads differently when it was the search that emptied the table. */
   protected readonly emptyKey = computed<TranslationKey>(() =>
-    this.filters.q().trim() ? 'ledger.search.none' : 'ledger.filter.none',
+    this.filters.q().trim() || this.filters.addr().trim()
+      ? 'ledger.search.none'
+      : 'ledger.filter.none',
   );
 
   protected readonly directionKey = directionKey;
@@ -219,7 +239,11 @@ export class Ledger {
   protected readonly canConfirmSections = computed(() => {
     const has = this.hasSection();
     const pick = this.printSections();
-    return (has.parties && pick.parties) || (has.categories && pick.categories) || (has.cash && pick.cash);
+    return (
+      (has.parties && pick.parties) ||
+      (has.categories && pick.categories) ||
+      (has.cash && pick.cash)
+    );
   });
 
   private readonly sectionDlg = viewChild.required<ElementRef<HTMLDialogElement>>('sectionDlg');
