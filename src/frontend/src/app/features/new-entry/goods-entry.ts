@@ -544,7 +544,12 @@ export class GoodsEntry {
 
   /** Keeps one ruled-but-unwritten line at the foot of the grid. See {@link ruleLines}. */
   private rule(lines: Line[], editing: number | null = null): Line[] {
-    return ruleLines(lines, (l) => this.written(l), () => this.blankLine(), editing);
+    return ruleLines(
+      lines,
+      (l) => this.written(l),
+      () => this.blankLine(),
+      editing,
+    );
   }
 
   /**
@@ -819,9 +824,7 @@ export class GoodsEntry {
     }
     return {
       qty: entered,
-      unit: this.showUnit()
-        ? l.unit.trim() || this.lineUnit(l.design)
-        : this.lineUnit(l.design),
+      unit: this.showUnit() ? l.unit.trim() || this.lineUnit(l.design) : this.lineUnit(l.design),
     };
   }
 
@@ -879,10 +882,15 @@ export class GoodsEntry {
       // bill is in the unit it was sold in, and only the stock moves in another.
       items: this.validLines().map((l) => {
         const amount = this.lineAmount(l);
-        const shelfQty = this.shelf(l).qty;
+        const shelf = this.shelf(l);
+        const shelfQty = shelf.qty;
         return {
           itemId: this.matchItem(l.design)?.id ?? null,
           name: l.design.trim(),
+          // The unit the quantity below is in, which is the unit a name typed here for the
+          // first time gets created in. Blank when the shop has switched the unit box off —
+          // the backend then falls back to whichever unit the shop marked default.
+          unit: shelf.unit,
           quantity: shelfQty,
           // The rate is always backed out of the line's own amount rather than read off a
           // column: the shelf figure is rounded to two places, and a rate that did not come
@@ -1003,7 +1011,12 @@ export class GoodsEntry {
    *  An outstanding bill leans the same way as the cash does — a sale's unpaid
    *  balance is money owed *to* you (tone 'in', like the drawer filling), a
    *  purchase's is money you owe *out*. Overpaying flips it. */
-  protected balanceView(): { tone: 'in' | 'out'; party: string; direction: string; amount: string } | null {
+  protected balanceView(): {
+    tone: 'in' | 'out';
+    party: string;
+    direction: string;
+    amount: string;
+  } | null {
     // A cash party has no khata to put a shortfall on — the discount box above is the
     // only adjustment a walk-in bill gets; anything past that has nowhere to land.
     if (this.cashParty()) {
@@ -1019,8 +1032,18 @@ export class GoodsEntry {
     const name = this.partyName().trim();
     const party = this.cashParty() || !name ? this.locale.t(labels.partyCash) : name;
     return b > 0
-      ? { tone: flow, party, direction: this.locale.t(labels.effectOutstanding), amount: this.locale.money(b) }
-      : { tone: opposite, party, direction: this.locale.t(labels.effectOverpaid), amount: this.locale.money(-b) };
+      ? {
+          tone: flow,
+          party,
+          direction: this.locale.t(labels.effectOutstanding),
+          amount: this.locale.money(b),
+        }
+      : {
+          tone: opposite,
+          party,
+          direction: this.locale.t(labels.effectOverpaid),
+          amount: this.locale.money(-b),
+        };
   }
 
   // ── helpers ─────────────────────────────────────────────────────────────
@@ -1041,7 +1064,12 @@ export class GoodsEntry {
 
   /** Every edit to a line goes through here, so every edit re-rules the grid. */
   private patchLine(key: number, fn: (l: Line) => Line): void {
-    this.lines.update((ls) => this.rule(ls.map((l) => (l.key === key ? fn(l) : l)), key));
+    this.lines.update((ls) =>
+      this.rule(
+        ls.map((l) => (l.key === key ? fn(l) : l)),
+        key,
+      ),
+    );
   }
 
   private blankLine(): Line {

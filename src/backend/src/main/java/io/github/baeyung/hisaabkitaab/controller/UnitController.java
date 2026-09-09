@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +53,15 @@ public class UnitController
             @Valid @RequestBody UnitNameRequest request, @CurrentStore(StoreRole.EDITOR) Store store)
     {
         return ResponseEntity.ok(UnitResponse.of(unitService.rename(store, id, request.name())));
+    }
+
+    /** Mark this unit the shop's default — what an item first named on an entry is created in
+     *  when the entry carries no unit, which is every entry once the unit box is switched off. */
+    @PutMapping("/{id}/default")
+    public ResponseEntity<UnitResponse> setDefault(@PathVariable String id,
+            @CurrentStore(StoreRole.EDITOR) Store store)
+    {
+        return ResponseEntity.ok(UnitResponse.of(unitService.setDefault(store, id)));
     }
 
     @DeleteMapping("/{id}")

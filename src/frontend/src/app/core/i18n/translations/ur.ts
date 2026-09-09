@@ -379,6 +379,10 @@ export const ur: Record<TranslationKey, string> = {
   'settings.menu.copy.hintEasy':
     'پہلے یہ بورڈ یہاں محفوظ ہوتا ہے، پھر منتخب دکانوں کو بالکل یہی بورڈ مل جاتا ہے — وہی ٹیب، وہی بینڈ اور رنگ، وہی نام اور وہی چھپے ہوئے بٹن۔ اُن کا سائیڈ بار مینو، اُن کی رپورٹیں اور اُن کے بِل کے کالم ویسے کے ویسے رہتے ہیں، اور کوئی دکان سائیڈ بار سے بورڈ پر (یا اُلٹ) نہیں بدلتی۔',
   'settings.items.subtitle': 'وہ کپڑا جو آپ رکھتے اور بیچتے ہیں۔',
+  'settings.items.repriceSale': 'خریداری فروخت کی قیمت بھی بدل دے',
+  'settings.items.repriceSale.hint':
+    'خریداری ہمیشہ آئٹم کی لاگت قیمت کو اوسط (پہلے سے موجود مال اور نئے آنے والے مال کا وزنی اوسط) پر لے آتی ہے۔ یہ آن ہو تو فروخت کی قیمت بھی اسی منافع کے تناسب سے ساتھ چلتی ہے — 10% مہنگا خریدیں تو 10% مہنگا بیچیں۔ آف ہو تو فروخت کی قیمت وہیں رہتی ہے جہاں آپ نے رکھی تھی۔',
+  'settings.items.repriceSale.saved': 'محفوظ ہو گیا۔',
   'settings.items.add': 'آئٹم شامل کریں',
   'settings.items.col.name': 'آئٹم',
   'settings.items.col.unit': 'یونٹ',
@@ -418,10 +422,16 @@ export const ur: Record<TranslationKey, string> = {
   'settings.items.copy.hint':
     'اوپر دی گئی ہر آئٹم آپ کی چنی ہوئی دکانوں میں کاپی ہو جائے گی — اگر وہاں پہلے سے اسی نام کی آئٹم موجود ہے تو اسے چھوڑ دیا جائے گا، اس لیے دوبارہ کاپی کرنے سے کچھ اضافی نہیں بنے گا۔ شیلف پر موجود اسٹاک ساتھ نہیں جاتا، صرف کیٹلاگ کی تفصیلات جاتی ہیں۔',
 
-  'settings.units.subtitle': 'اس دکان کے یونٹس اور ان کی ایک دوسرے میں تبدیلی، دونوں یہاں سے منظم کریں۔',
+  'settings.units.subtitle':
+    'اس دکان کے یونٹس اور ان کی ایک دوسرے میں تبدیلی، دونوں یہاں سے منظم کریں۔',
   'settings.units.manage.section': 'یونٹس کا انتظام',
   'settings.units.manage.subtitle':
     'ہر اندراج والی اسکرین کے یونٹ خانے میں پیش کیے جانے والے نام۔ یہاں نام بدلنا یا ہٹانا پہلے سے درج کسی چیز کو تبدیل نہیں کرتا — آئٹم یا پرانا اندراج اپنا یونٹ ویسے ہی رکھتا ہے جیسے لکھا گیا تھا۔',
+  'settings.units.manage.default.hint':
+    'ستارہ آپ کے طے شدہ یونٹ کو ظاہر کرتا ہے — جب کوئی آئٹم فروخت یا خریداری پر بغیر یونٹ کے لکھا جائے تو وہ اسی یونٹ میں بنتا ہے۔ یونٹ کھول کر اسے مقرر کریں۔',
+  'settings.units.manage.default.set': '"{{name}}" کو طے شدہ یونٹ بنائیں',
+  'settings.units.manage.default.badge': 'طے شدہ یونٹ',
+  'settings.units.manage.default.saved': 'نئے آئٹم اب {{name}} میں بنیں گے۔',
   'settings.units.manage.col.name': 'نام',
   'settings.units.manage.add': 'نیا یونٹ',
   'settings.units.manage.add.placeholder': 'یونٹ کا نام',
@@ -430,7 +440,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.units.manage.delete.confirm': '"{{name}}" کو اپنی یونٹس کی فہرست سے ہٹا دیں؟',
   'settings.units.conversions.section': 'تبدیلیاں',
   'settings.units.standard.title': 'معیاری تبدیلیاں',
-  'settings.units.standard.subtitle': 'پہلے سے موجود — ہر دکان میں یکساں، ان کے لیے کچھ شامل کرنے کی ضرورت نہیں۔',
+  'settings.units.standard.subtitle':
+    'پہلے سے موجود — ہر دکان میں یکساں، ان کے لیے کچھ شامل کرنے کی ضرورت نہیں۔',
   'settings.units.custom.subtitle':
     'آپ کے سپلائرز کے استعمال کردہ یونٹس — تھان، بوری، رول — صرف یہ دکان بتا سکتی ہے کہ ان کی قیمت کیا ہے۔ جو نام فہرست میں نہیں وہ لکھیں، محفوظ کرتے ہی بن جائے گا۔',
   'settings.units.add': 'تبدیلی شامل کریں',
@@ -442,7 +453,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.units.col.actions': 'اعمال',
   'settings.units.save': 'محفوظ کریں',
   'settings.units.sameUnit': 'دو مختلف یونٹ منتخب کریں — ایک یونٹ پہلے ہی خود میں تبدیل ہوتا ہے۔',
-  'settings.units.empty.body': 'ابھی کچھ نہیں سکھایا گیا۔ نیچے ایک شامل کریں، یا کسی اندراج پر پہلی بار استعمال کرتے وقت پرچی کا جواب دیں۔',
+  'settings.units.empty.body':
+    'ابھی کچھ نہیں سکھایا گیا۔ نیچے ایک شامل کریں، یا کسی اندراج پر پہلی بار استعمال کرتے وقت پرچی کا جواب دیں۔',
   'settings.units.loadError': 'آپ کی تبدیلیاں لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
   'settings.units.delete.confirm': '{{from}} → {{to}} تبدیلی ہٹا دیں؟',
   'settings.units.copy.hint':
@@ -935,6 +947,7 @@ export const ur: Record<TranslationKey, string> = {
   'inventory.search.none': 'تلاش سے کوئی آئٹم نہیں ملا۔',
   'inventory.col.item': 'آئٹم',
   'inventory.col.stock': 'موجود مقدار',
+  'inventory.col.cost': 'لاگت قیمت',
   'inventory.col.sale': 'فروخت قیمت',
   'inventory.service': 'سروس',
   'inventory.empty.title': 'ابھی کوئی آئٹم نہیں',
@@ -1086,7 +1099,8 @@ export const ur: Record<TranslationKey, string> = {
   'settings.users.account.name': 'آپ کا نام',
   'settings.users.account.contact': 'آپ کا موبائل نمبر',
   'settings.users.account.email': 'آپ کا ای میل',
-  'settings.users.account.emailLocked': 'یہ نہیں بدل سکتا — آپ کا اکاؤنٹ اسی ای میل سے تصدیق ہوا ہے۔',
+  'settings.users.account.emailLocked':
+    'یہ نہیں بدل سکتا — آپ کا اکاؤنٹ اسی ای میل سے تصدیق ہوا ہے۔',
   'settings.users.account.save': 'تبدیلیاں محفوظ کریں',
   'settings.users.account.saved': 'محفوظ ہو گیا',
   'settings.users.account.duplicate': 'یہ موبائل نمبر پہلے ہی کسی اور اکاؤنٹ کا ہے۔',
@@ -1193,8 +1207,7 @@ export const ur: Record<TranslationKey, string> = {
   'settings.customFields.error.duplicate': 'دو کالموں کا نام ایک ہی ہے: «{{name}}»۔',
   'settings.customFields.error.cycle':
     '«{{name}}» کا حساب خود اسی سے نکلتا ہے، اس لیے یہ کبھی حل نہیں ہو سکتا۔',
-  'settings.customFields.error.unknownField':
-    '{{where}} میں «{{at}}» لکھا ہے، جو کوئی کالم نہیں۔',
+  'settings.customFields.error.unknownField': '{{where}} میں «{{at}}» لکھا ہے، جو کوئی کالم نہیں۔',
   'settings.customFields.error.badFormula':
     '{{where}} پڑھا نہیں جا سکا۔ صرف + − × ÷ ( ) اور اپنے کالموں کے نام استعمال کریں۔',
   'settings.reports.daily.title': 'روزانہ رپورٹ',

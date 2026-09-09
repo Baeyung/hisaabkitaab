@@ -48,6 +48,15 @@ public class EventRequest
     public static class Item {
         private String itemId;
         private String name;
+        /**
+         * The unit this line was written in — carried only so that an item first named here
+         * is created in it rather than in a guess. Nothing else reads it: {@code quantity} has
+         * already been converted to the item's own shelf unit by the entry screen, which is
+         * the only unit stock is ever counted in. Blank where the shop has switched the unit
+         * box off, and then the store's default unit stands in.
+         */
+        @Size(max = 64)
+        private String unit;
         private BigDecimal quantity;
         private Double itemSoldAt;
         /**

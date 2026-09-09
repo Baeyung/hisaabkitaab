@@ -306,3 +306,15 @@
     flex-direction: column;
   }
 }
+
+/* The default unit — the one an item first named on an entry is created in when the entry
+   named none. A filled star on the resting token rather than a word beside it: twenty tokens
+   read as a field of names, and one of them carrying a label would read as a different kind
+   of thing. The same star is the button that sets it, inside the token once it is open. */
+.unit__star {
+  flex: none;
+  color: var(--kg-brand);
+}
+.unit__act--star {
+  color: var(--kg-brand);
+}

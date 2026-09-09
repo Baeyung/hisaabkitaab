@@ -307,7 +307,7 @@ export const en = {
   'settings.general.easy.help': 'How everyone working here moves around the app.',
   'settings.general.easy.label': 'Easy mode',
   'settings.general.easy.note':
-    "Easy mode swaps the sidebar for the board: one page of big buttons, grouped by what you came to do. Every screen stays exactly where it was, and Setup on the board is the way back to this page.",
+    'Easy mode swaps the sidebar for the board: one page of big buttons, grouped by what you came to do. Every screen stays exactly where it was, and Setup on the board is the way back to this page.',
   'settings.general.section.drawer': 'Opening drawer balance',
   'settings.general.drawer.help':
     "The cash in your drawer when you started — your cashbook's opening balance. Editing this updates it; it won't add a new entry each time.",
@@ -398,6 +398,10 @@ export const en = {
   'settings.menu.copy.hintEasy':
     'Saves this board here first, then gives the stores you pick the same one — the same tabs, the same bands and colours, the same names and the same buttons left out. Their sidebar menu, their reports and their sale columns are left alone, and none of them is switched between the sidebar and the board.',
   'settings.items.subtitle': 'The cloth you stock and sell.',
+  'settings.items.repriceSale': 'Let a purchase update the selling price too',
+  'settings.items.repriceSale.hint':
+    "A purchase always moves an item's cost price to the weighted average of what was on the shelf and what just arrived. With this on, the selling price moves with it at the margin the item already had — buy 10% dearer, sell 10% dearer. Off, the selling price stays exactly where you set it.",
+  'settings.items.repriceSale.saved': 'Saved.',
   'settings.items.add': 'Add item',
   'settings.items.col.name': 'Item',
   'settings.items.col.unit': 'Unit',
@@ -437,10 +441,16 @@ export const en = {
   'settings.items.copy.hint':
     "Copies every item above into the stores you pick — an item they already have (matched by name) is left alone, so copying twice adds nothing extra. Stock on the shelf doesn't come along, only the catalog details.",
 
-  'settings.units.subtitle': 'Manage the units this shop uses, and how they convert into one another.',
+  'settings.units.subtitle':
+    'Manage the units this shop uses, and how they convert into one another.',
   'settings.units.manage.section': 'Manage units',
   'settings.units.manage.subtitle':
     "The names offered on every entry screen's unit box. Renaming or removing one here leaves anything already recorded untouched — an item or a past entry keeps its own unit as typed.",
+  'settings.units.manage.default.hint':
+    'The star marks your default unit — what an item gets created in when it is typed on a sale or purchase without a unit. Open a unit to set it.',
+  'settings.units.manage.default.set': 'Make "{{name}}" the default unit',
+  'settings.units.manage.default.badge': 'Default unit',
+  'settings.units.manage.default.saved': 'New items will be created in {{name}}.',
   'settings.units.manage.col.name': 'Name',
   'settings.units.manage.add': 'New unit',
   'settings.units.manage.add.placeholder': 'Unit name',
@@ -467,7 +477,7 @@ export const en = {
   'settings.units.loadError': "Couldn't load your conversions. Please try again.",
   'settings.units.delete.confirm': 'Remove the {{from}} → {{to}} conversion?',
   'settings.units.copy.hint':
-    "Copies every rate above into the stores you pick — it overwrites a rate they already have for the same pair, and leaves everything else in them alone.",
+    'Copies every rate above into the stores you pick — it overwrites a rate they already have for the same pair, and leaves everything else in them alone.',
 
   'settings.party.subtitle': 'The customers and suppliers you keep an account with.',
   'settings.party.add': 'Add party',
@@ -501,7 +511,7 @@ export const en = {
   'settings.party.opening.save': 'Save',
   'settings.party.opening.cancel': 'Cancel',
   'settings.party.copy.hint':
-    "Copies every party above into the stores you pick — a party they already have (matched by name) is left alone, so copying twice adds nothing extra.",
+    'Copies every party above into the stores you pick — a party they already have (matched by name) is left alone, so copying twice adds nothing extra.',
 
   'sale.newEntry': 'New entry',
   'sale.billDate': 'Date',
@@ -796,8 +806,7 @@ export const en = {
   'common.printDetails.with': 'With details',
   'common.printDetails.without': 'Without details',
   'common.perspective.title': 'Whose view?',
-  'common.perspective.confirm':
-    'Print/send this from your shop’s view, or from the party’s view?',
+  'common.perspective.confirm': 'Print/send this from your shop’s view, or from the party’s view?',
   'common.perspective.mine': 'My view',
   'common.perspective.theirs': "Party's view",
   'cashbook.subtitle': 'Every rupee in and out of the galla, day by day.',
@@ -919,6 +928,7 @@ export const en = {
   'inventory.search.none': 'No items match your search.',
   'inventory.col.item': 'Item',
   'inventory.col.stock': 'On hand',
+  'inventory.col.cost': 'Cost price',
   'inventory.col.sale': 'Sale price',
   'inventory.service': 'Service',
   'inventory.empty.title': 'No items yet',

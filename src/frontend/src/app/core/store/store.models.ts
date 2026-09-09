@@ -120,6 +120,14 @@ export interface StoreSettings {
    * is a grid anybody can write a bill on.
    */
   customFields?: CustomFieldsSettings;
+  /**
+   * Whether a purchase that moves an item's weighted-average cost should carry its selling
+   * rate along at the margin the item already had — buy dearer, sell dearer, without retyping
+   * the price list. Absent (every shop that has not asked for it) reads as off: a selling rate
+   * is a promise made across a counter, and moving one nobody asked to move is worse than
+   * leaving it stale. Set on Store Settings › Items.
+   */
+  purchaseUpdatesSalePrice?: boolean;
 }
 
 /**

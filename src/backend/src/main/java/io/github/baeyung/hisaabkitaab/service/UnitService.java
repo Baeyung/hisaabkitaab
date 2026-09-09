@@ -70,6 +70,42 @@ public class UnitService
                 });
     }
 
+    /**
+     * Marks one unit as the shop's default, clearing whichever held it before — the shelf unit
+     * an item is created in when an entry names none, which is every entry in a shop that has
+     * switched the per-line unit box off. Passing the unit that is already default is a no-op,
+     * not a way to unset it: a shop that has answered the question keeps an answer.
+     */
+    public Unit setDefault(Store store, String id)
+    {
+        Unit wanted = findByIdForStore(id, store.getId());
+
+        repository.findByStoreIdAndDefaultUnitTrue(store.getId()).stream()
+                .filter(existing -> !existing.getId().equals(id))
+                .forEach(existing -> {
+                    existing.setDefaultUnit(false);
+                    repository.save(existing);
+                });
+
+        log.info("default unit of store {} is now \"{}\" ({})", store.getId(), wanted.getName(), id);
+        wanted.setDefaultUnit(true);
+        return repository.save(wanted);
+    }
+
+    /**
+     * The name of this store's default unit, or null if it has never marked one. Read by
+     * {@code StoreItemServiceImpl#resolveOrCreate} for an item first named on an entry that
+     * carried no unit of its own.
+     */
+    @Transactional(readOnly = true)
+    public String defaultName(String storeId)
+    {
+        return repository.findByStoreIdAndDefaultUnitTrue(storeId).stream()
+                .findFirst()
+                .map(Unit::getName)
+                .orElse(null);
+    }
+
     /** Removes every unit of a store — used when the store itself is deleted. */
     public void deleteByStore(String storeId)
     {

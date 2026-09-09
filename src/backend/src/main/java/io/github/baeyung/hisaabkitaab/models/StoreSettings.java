@@ -47,6 +47,12 @@ import jakarta.validation.constraints.Size;
  * @param reports    when this shop's daily report and monthly khata reminders go out, and who
  *                   the reminders chase. Both off until an owner turns them on; see
  *                   {@link ReportSettings}.
+ * @param purchaseUpdatesSalePrice whether a purchase that moves an item's weighted-average
+ *                   cost should carry its selling rate along at the margin the item already
+ *                   had — buy dearer, sell dearer, without retyping the price list. Off for
+ *                   every shop that has not asked for it, because a selling rate is a promise
+ *                   made across a counter and moving one nobody asked to move is worse than
+ *                   leaving it stale. Set on Store Settings › Items.
  * @param customFields how this shop has arranged the columns of its sale and purchase grids,
  *                   or null for the grid the app ships with — which is what every shop that
  *                   has never opened that screen has, and the reason this feature is
@@ -60,11 +66,13 @@ public record StoreSettings(
         Set<ChromeItem> hideChrome,
         boolean easyMode,
         @Valid ReportSettings reports,
+        boolean purchaseUpdatesSalePrice,
         @Valid CustomFieldsSettings customFields)
 {
     /** What a shop with a null {@code settings} column means: the built-in menu, nothing hidden. */
     public static final StoreSettings EMPTY = new StoreSettings(
-            List.of(), List.of(), EnumSet.noneOf(ChromeItem.class), false, ReportSettings.DEFAULT, null);
+            List.of(), List.of(), EnumSet.noneOf(ChromeItem.class), false, ReportSettings.DEFAULT,
+            false, null);
 
     /**
      * Null-safe by construction, so nothing downstream — the converter, the client, a future

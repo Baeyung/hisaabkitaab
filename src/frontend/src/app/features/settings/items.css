@@ -373,7 +373,9 @@ th.num {
   background: var(--kg-card);
   border: 1px solid var(--kg-line-strong);
   border-radius: 10px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 /* only the opening-stock input left; it is capped by .opening__amt */
 .fld__input--sm {
@@ -422,7 +424,9 @@ th.num {
   color: var(--kg-on-brand);
   background: var(--kg-brand-solid);
   box-shadow: var(--kg-shadow-brand);
-  transition: filter 0.15s ease, transform 0.05s ease;
+  transition:
+    filter 0.15s ease,
+    transform 0.05s ease;
 }
 .btn--primary:hover:not(:disabled) {
   filter: brightness(1.07);
@@ -496,7 +500,12 @@ th.num {
 /* ── loading skeleton ──────────────────────────────────────────────── */
 .skel {
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--kg-line) 25%, var(--kg-fill-subtle) 37%, var(--kg-line) 63%);
+  background: linear-gradient(
+    90deg,
+    var(--kg-line) 25%,
+    var(--kg-fill-subtle) 37%,
+    var(--kg-line) 63%
+  );
   background-size: 400% 100%;
 }
 .skel--row {
@@ -682,4 +691,20 @@ th.num {
   .tbl__rowmsg td {
     padding: 0 12px 6px;
   }
+}
+
+/* The one shop-wide rule on this screen: whether a purchase drags the selling rate along
+   with the cost it just moved. Sat above the catalogue rather than beside a row, because it
+   is about every row. */
+.rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.rule__hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kg-muted);
 }

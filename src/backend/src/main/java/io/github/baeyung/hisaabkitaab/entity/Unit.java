@@ -46,4 +46,12 @@ public class Unit
 
     @Column(nullable = false, length = 64)
     private String name;
+
+    /**
+     * The unit this shop counts in when an entry names none — which is every entry once the
+     * shop switches the per-line unit box off. At most one per store; see
+     * {@code UnitService#setDefault}.
+     */
+    @Column(name = "is_default", nullable = false)
+    private boolean defaultUnit;
 }

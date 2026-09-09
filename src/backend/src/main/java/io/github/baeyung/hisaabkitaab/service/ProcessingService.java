@@ -229,6 +229,9 @@ public class ProcessingService
                     .map(row -> new EventRequest.Item(
                             row.item().getId(),
                             row.item().getName(),
+                            // Every row here already resolved to a catalogue item above, so
+                            // there is no item left for a unit to name into existence.
+                            null,
                             orZero(row.line().getQuantity()),
                             orZero(row.line().getPricePerUnit()).doubleValue(),
                             // A processing batch is entered on its own screen, not on the
@@ -344,41 +347,15 @@ public class ProcessingService
     }
 
     /**
-     * Fold the batch into the output item's price list.
-     *
-     * <p>Cost is a weighted average over what was already on the shelf, so a cheap batch on
-     * top of an expensive one lands between the two rather than erasing the older figure.
-     * With nothing on hand — a brand-new item, or one sold down to exactly nothing — there is
-     * nothing to weight against and the batch simply sets the price. A <em>negative</em>
-     * balance still averages: it means the books say goods left that never arrived, and
-     * silently ignoring that would hide it. Only the case where the two sides cancel out
-     * exactly is refused, because that divides by zero.
-     *
-     * <p>Sale price then moves with cost at the margin the item already carried, so a shop
-     * that sells this at cost + 20% keeps selling it at cost + 20% without retyping the
-     * price. An item with no margin to read — no sale price, or no cost price to measure one
-     * against — is left alone rather than given an invented one.
+     * Fold the batch into the output item's price list — the weighted average over what was
+     * already on the shelf, shared with the purchase screen; see
+     * {@link StoreItemService#reprice}. A batch always carries the sale price with it: the
+     * output was priced by this batch and nothing else, so a margin left behind would be a
+     * margin against a cost that no longer exists.
      */
     private void reprice(StoreItem item, BigDecimal stockBefore, BigDecimal quantity, BigDecimal unitCost)
     {
-        BigDecimal oldCost = item.getCostPrice();
-        BigDecimal oldSale = item.getSalePrice();
-        BigDecimal combined = stockBefore.add(quantity);
-
-        BigDecimal newCost = oldCost == null || stockBefore.signum() == 0 || combined.signum() == 0
-                ? unitCost
-                : stockBefore.multiply(oldCost)
-                        .add(quantity.multiply(unitCost))
-                        .divide(combined, COST_SCALE, RoundingMode.HALF_UP);
-
-        item.setCostPrice(newCost);
-
-        if (oldSale != null && oldCost != null && oldCost.signum() > 0)
-        {
-            item.setSalePrice(newCost.multiply(oldSale).divide(oldCost, COST_SCALE, RoundingMode.HALF_UP));
-        }
-
-        storeItemRepository.save(item);
+        storeItemService.reprice(item, stockBefore, quantity, unitCost, true);
     }
 
     // ── reading a batch back ──────────────────────────────────────────────────

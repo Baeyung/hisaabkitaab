@@ -30,12 +30,7 @@ export interface EventRequest {
  * their bilingual labels still resolve — see {@link expenseCategoryLabel}.
  */
 export type ExpenseCategory =
-  | 'PARTS'
-  | 'ELECTRICITY'
-  | 'GENERAL'
-  | 'MISC'
-  | 'SALARIES'
-  | 'UNCATEGORIZED';
+  'PARTS' | 'ELECTRICITY' | 'GENERAL' | 'MISC' | 'SALARIES' | 'UNCATEGORIZED';
 
 /** The i18n key for each seed category's label (typed so `locale.t` accepts it). */
 export const EXPENSE_CATEGORY_LABEL: Record<ExpenseCategory, TranslationKey> = {
@@ -51,13 +46,8 @@ export const EXPENSE_CATEGORY_LABEL: Record<ExpenseCategory, TranslationKey> = {
  * A category's display label: seed heads (PARTS, ELECTRICITY…) get their bilingual
  * translation; anything a shopkeeper typed shows raw. Pass `locale.t`.
  */
-export function expenseCategoryLabel(
-  name: string,
-  t: (key: TranslationKey) => string,
-): string {
-  return name in EXPENSE_CATEGORY_LABEL
-    ? t(EXPENSE_CATEGORY_LABEL[name as ExpenseCategory])
-    : name;
+export function expenseCategoryLabel(name: string, t: (key: TranslationKey) => string): string {
+  return name in EXPENSE_CATEGORY_LABEL ? t(EXPENSE_CATEGORY_LABEL[name as ExpenseCategory]) : name;
 }
 
 /** A party on the event — `partyId` null when the typed name is new. */
@@ -70,6 +60,13 @@ export interface EventParty {
 export interface EventItem {
   itemId: string | null;
   name: string;
+  /**
+   * The unit the line was written in — carried only so a name typed here for the first time
+   * becomes a catalogue item in that unit rather than in a guess. Nothing else reads it:
+   * `quantity` has already been converted to the item's own shelf unit. Blank where the shop
+   * has switched the unit box off, and the store's default unit stands in on the backend.
+   */
+  unit: string;
   quantity: number;
   itemSoldAt: number;
   /**

@@ -125,7 +125,9 @@ export class SettingsUnits {
   }));
 
   /** A unit converts to itself at 1 — there is nothing to store, and the backend refuses it. */
-  protected readonly sameUnitPicked = computed(() => sameUnit(this.draft().fromUnit, this.draft().toUnit));
+  protected readonly sameUnitPicked = computed(() =>
+    sameUnit(this.draft().fromUnit, this.draft().toUnit),
+  );
 
   protected readonly canSave = computed(() => !this.rateForm().invalid() && !this.sameUnitPicked());
 
@@ -219,6 +221,34 @@ export class SettingsUnits {
     }
   }
 
+  /**
+   * Marks one unit the shop's default — the unit an item named for the first time on a sale or
+   * a purchase is created in when the line carried none, which is every line in a shop that
+   * has switched the per-line unit box off. Exactly one at a time, so the old holder is
+   * cleared here as well as on the backend rather than re-fetching the whole list.
+   */
+  async markDefault(unit: Unit): Promise<void> {
+    if (unit.defaultUnit) {
+      return;
+    }
+    this.unitSaving.set(true);
+    this.unitErrorKey.set(null);
+    try {
+      const saved = await this.unitApi.setDefault(unit.id);
+      this.units.update((list) =>
+        (list ?? []).map((u) => (u.id === saved.id ? saved : { ...u, defaultUnit: false })),
+      );
+      this.toast.success(
+        this.locale.t('settings.units.manage.default.saved', { name: saved.name }),
+      );
+      this.resetUnitRowState();
+    } catch {
+      this.unitErrorKey.set('error.generic');
+    } finally {
+      this.unitSaving.set(false);
+    }
+  }
+
   askDeleteUnit(id: string): void {
     this.resetUnitRowState();
     this.confirmingUnitId.set(id);
@@ -266,7 +296,9 @@ export class SettingsUnits {
 
   startAdd(preset?: { from: string; to: string }): void {
     this.resetRateRowState();
-    this.draft.set(preset ? { fromUnit: preset.from, toUnit: preset.to, factor: null } : { ...EMPTY_DRAFT });
+    this.draft.set(
+      preset ? { fromUnit: preset.from, toUnit: preset.to, factor: null } : { ...EMPTY_DRAFT },
+    );
     this.adding.set(true);
   }
 
@@ -338,7 +370,9 @@ export class SettingsUnits {
       this.confirmingRateId.set(null);
       const label = rate ? this.displayRate(rate) : null;
       this.toast.success(
-        this.locale.t('toast.deleted', { label: label ? `${label.fromUnit} → ${label.toUnit}` : '' }),
+        this.locale.t('toast.deleted', {
+          label: label ? `${label.fromUnit} → ${label.toUnit}` : '',
+        }),
       );
     } else {
       this.toast.error(this.locale.t('error.generic'));
@@ -354,7 +388,11 @@ export class SettingsUnits {
 
   /** The row as the shop reads it — see {@link readableRate} for why this can differ from
    *  the alphabetically-sorted pair the backend actually stores. */
-  protected displayRate(rate: UnitConversionRate): { fromUnit: string; toUnit: string; factor: string } {
+  protected displayRate(rate: UnitConversionRate): {
+    fromUnit: string;
+    toUnit: string;
+    factor: string;
+  } {
     const r = readableRate(rate);
     return { fromUnit: r.fromUnit, toUnit: r.toUnit, factor: formatFactor(r.factor) };
   }

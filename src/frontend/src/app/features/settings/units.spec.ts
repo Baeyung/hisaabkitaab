@@ -19,8 +19,8 @@ const RATE: UnitConversionRate = { id: 'rate-1', fromUnit: 'metre', toUnit: 'tha
 
 /** What the store already has when a test starts — the shape UnitService.list() returns. */
 const UNITS: Unit[] = [
-  { id: 'u-1', name: 'Bori' },
-  { id: 'u-2', name: 'Than' },
+  { id: 'u-1', name: 'Bori', defaultUnit: true },
+  { id: 'u-2', name: 'Than', defaultUnit: false },
 ];
 
 function setup(unitApi: Partial<UnitService> = {}) {
@@ -105,7 +105,7 @@ describe('SettingsUnits adding a unit', () => {
     const { page } = setup({
       create: (name: string) => {
         created.push(name);
-        return Promise.resolve({ id: 'u-3', name });
+        return Promise.resolve({ id: 'u-3', name, defaultUnit: false });
       },
     });
     await Promise.resolve();

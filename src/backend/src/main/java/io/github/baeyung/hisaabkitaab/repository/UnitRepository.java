@@ -17,5 +17,9 @@ public interface UnitRepository extends JpaRepository<Unit, String>
 
     boolean existsByStoreId(String storeId);
 
+    /** The store's default unit, if it has marked one. A list rather than an Optional so a
+     *  document that somehow carries two is cleared rather than blowing up on read. */
+    List<Unit> findByStoreIdAndDefaultUnitTrue(String storeId);
+
     void deleteByStoreId(String storeId);
 }

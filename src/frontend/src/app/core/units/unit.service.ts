@@ -7,6 +7,11 @@ import { StoreService } from '../store/store.service';
 export interface Unit {
   id: string;
   name: string;
+  /**
+   * The unit this shop counts in when an entry names none — which is every entry once the
+   * per-line unit box is switched off in Custom Fields. At most one per store.
+   */
+  defaultUnit: boolean;
 }
 
 /**
@@ -45,6 +50,12 @@ export class UnitService {
    *  case-insensitively. */
   rename(id: string, name: string): Promise<Unit> {
     return firstValueFrom(this.http.patch<Unit>(`${this.url}/${id}`, { name }));
+  }
+
+  /** Marks this unit the shop's default, clearing whichever held it before. Returns the
+   *  updated row; the caller has to clear the flag on the others in its own copy of the list. */
+  setDefault(id: string): Promise<Unit> {
+    return firstValueFrom(this.http.put<Unit>(`${this.url}/${id}/default`, {}));
   }
 
   /** Drops a unit from this store's list. Anything already recorded under its name — an item,

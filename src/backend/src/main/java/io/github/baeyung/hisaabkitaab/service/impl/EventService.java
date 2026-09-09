@@ -283,6 +283,10 @@ public class EventService
                 .map(line -> new EventRequest.Item(
                         line.getItem().getId(),
                         line.getItem().getName(),
+                        // Null, not the item's unit: this rebuilds the entry for the edit
+                        // screen, where the unit box is a live conversion the shopkeeper is
+                        // about to redo. The field only ever names an item into existence.
+                        null,
                         line.getQuantity(),
                         line.getItemSoldAt(),
                         // Null for a line written before the shop had its own columns, which

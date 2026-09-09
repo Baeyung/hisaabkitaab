@@ -47,7 +47,7 @@ const EMPTY_FORM: ItemForm = {
   selector: 'app-items',
   imports: [FormField, NgTemplateOutlet, UnitNote, RowWindowDirective, CopyToStores],
   templateUrl: './items.html',
-  styleUrl: './items.css',
+  styleUrls: ['./items.css', './settings-switch.css'],
 })
 export class SettingsItems {
   protected readonly locale = inject(LocaleService);
@@ -62,6 +62,17 @@ export class SettingsItems {
   protected readonly items = signal<StoreItem[] | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
+
+  /**
+   * Whether a purchase carries the selling rate along at the item's existing margin when it
+   * moves the weighted-average cost. Off for every shop that has not asked for it; see
+   * `StoreSettings.purchaseUpdatesSalePrice`. Read straight off the cached store rather than
+   * held in a local form — it is one switch, saved the moment it is flipped.
+   */
+  protected readonly purchaseUpdatesSalePrice = computed(
+    () => this.stores.current()?.settings?.purchaseUpdatesSalePrice ?? false,
+  );
+  protected readonly ruleSaving = signal(false);
 
   protected readonly editingId = signal<string | null>(null);
   protected readonly adding = signal(false);
@@ -158,6 +169,25 @@ export class SettingsItems {
     }
   }
 
+  /** Flip the purchase-repricing rule. Written straight through: PUT /settings replaces the
+   *  whole document, so the current one is spread rather than patched. Owner-only on the
+   *  backend, which is why the switch is only drawn for one. */
+  async setPurchaseUpdatesSalePrice(on: boolean): Promise<void> {
+    const settings = this.stores.current()?.settings;
+    if (!settings) {
+      return;
+    }
+    this.ruleSaving.set(true);
+    try {
+      await this.stores.updateSettings({ ...settings, purchaseUpdatesSalePrice: on });
+      this.toast.success(this.locale.t('settings.items.repriceSale.saved'));
+    } catch {
+      this.toast.error(this.locale.t('error.generic'));
+    } finally {
+      this.ruleSaving.set(false);
+    }
+  }
+
   startAdd(): void {
     this.resetRowState();
     this.draft.set({ ...EMPTY_FORM });
@@ -205,7 +235,9 @@ export class SettingsItems {
       } else {
         this.items.update((list) => [withOpening, ...(list ?? [])]);
       }
-      this.toast.success(this.locale.t(editId ? 'toast.updated' : 'toast.saved', { label: saved.name }));
+      this.toast.success(
+        this.locale.t(editId ? 'toast.updated' : 'toast.saved', { label: saved.name }),
+      );
       this.resetRowState();
       // The unit just typed on this row may be new to the store — refresh so it shows up
       // in the datalist without waiting for a page reload.
