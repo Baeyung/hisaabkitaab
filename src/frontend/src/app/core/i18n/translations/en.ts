@@ -103,7 +103,7 @@ export const en = {
   'nav.dashboard': 'Dashboard',
   'nav.cashbook': 'Cashbook',
   'nav.ledger': 'Ledger',
-  'nav.newEntry': 'New Entry',
+  'nav.newEntry': 'Entry',
   'nav.sale': 'Sale',
   'nav.receipt': 'Receipt',
   'nav.purchase': 'Purchase',
@@ -114,18 +114,21 @@ export const en = {
   'nav.expense': 'Expense',
   'nav.payment': 'Payment',
   'nav.inventory': 'Inventory',
-  'nav.billManagement': 'Bill Management',
+  'nav.reports': 'Reports',
+  'nav.stock': 'Stock',
+  'nav.catalogue': 'Catalogue',
+  'nav.billManagement': 'Sales',
   // The list of purchases made, as against 'nav.purchase', the screen that records one —
   // the same split the two processed-goods entries above make.
   'nav.purchases': 'Purchases',
-  'nav.settings': 'Store Settings',
+  'nav.settings': 'Shop',
   'nav.settings.general': 'General',
   'nav.settings.users': 'Manage Users',
   'nav.settings.items': 'Items',
   'nav.settings.party': 'Parties',
   'nav.settings.units': 'Units',
   'nav.settings.menu': 'Menu',
-  'nav.settings.reports': 'Reports',
+  'nav.settings.reports': 'Automatic reports',
   'nav.settings.customFields': 'Custom Fields',
   // The tooltip on a greyed menu item. Says what happened and that nothing is lost — the
   // same two things `stores.suspendedSettled` says on the picker, in one line.

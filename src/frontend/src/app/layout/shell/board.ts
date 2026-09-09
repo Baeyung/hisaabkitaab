@@ -135,6 +135,7 @@ const BOARD: readonly TabDef[] = [
         items: [
           { key: 'nav.settings.general', icon: 'settings' },
           { key: 'nav.settings.menu', icon: 'menu' },
+          { key: 'nav.settings.reports', icon: 'reports' },
         ],
       },
       {
@@ -151,6 +152,7 @@ const BOARD: readonly TabDef[] = [
         items: [
           { key: 'nav.settings.items', icon: 'items' },
           { key: 'nav.settings.units', icon: 'units' },
+          { key: 'nav.settings.customFields', icon: 'items' },
         ],
       },
     ],

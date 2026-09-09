@@ -2,7 +2,13 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { ActivatedRouteSnapshot, provideRouter, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  provideRouter,
+  Router,
+  RouterStateSnapshot,
+  UrlTree,
+} from '@angular/router';
 import { editorGuard, managerGuard, ownerGuard } from './store.guard';
 import { StoreService } from './store.service';
 import { AuthStore } from '../auth/auth.store';
@@ -170,10 +176,12 @@ describe('store roles', () => {
     });
 
     it('marks what a closed shop refuses, and nothing else', () => {
-      const settings = NAV.find((item) => item.key === 'nav.settings');
+      // Catalogue, not Shop: what a closed shop refuses is the three screens that record
+      // something, and those sit under the heading the menu split them out into.
+      const catalogue = NAV.find((item) => item.key === 'nav.catalogue');
       const marked =
-        settings?.kind === 'group'
-          ? settings.children.filter((c): c is NavLink => c.kind === 'link' && c.writes === true)
+        catalogue?.kind === 'group'
+          ? catalogue.children.filter((c): c is NavLink => c.kind === 'link' && c.writes === true)
           : [];
       expect(marked.map((c) => c.path)).toEqual([
         'settings/items',
@@ -186,9 +194,9 @@ describe('store roles', () => {
     });
 
     it('drops a group once every child is above the role', () => {
-      expect(navFor('VIEWER').some((item) => item.kind === 'group' && item.key === 'nav.newEntry')).toBe(
-        false,
-      );
+      expect(
+        navFor('VIEWER').some((item) => item.kind === 'group' && item.key === 'nav.newEntry'),
+      ).toBe(false);
     });
   });
 });

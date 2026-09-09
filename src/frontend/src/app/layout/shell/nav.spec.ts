@@ -9,6 +9,10 @@ const groupIn = (items: readonly NavItem[], key: string) =>
 
 const at = (key: string, extra: Partial<MenuSetting> = {}): MenuSetting => ({ key, ...extra });
 
+/** Every entry that opens something, groups flattened away — what may never be lost. */
+const leaves = (items: readonly NavItem[]): string[] =>
+  items.flatMap((item) => (item.kind === 'link' ? [item.key] : leaves(item.children)));
+
 /** Whether every row in a menu stands within a surface that draws `max` levels. */
 const fits = (items: readonly NavItem[], depth: number, max: number): boolean =>
   items.every(
@@ -34,10 +38,61 @@ describe('mergeMenu', () => {
     // to turn up — at the end, where it can be seen and moved.
     const merged = mergeMenu(NAV, [at('nav.ledger'), at('nav.cashbook')]);
 
-    expect(keys(merged).length).toBe(NAV.length);
+    // Counted on the screens rather than on the top row, because those two were lifted out
+    // of the group they ship in: the shop's placement wins, and the heading they left keeps
+    // whatever it still holds.
+    expect(leaves(merged).sort()).toEqual(leaves(NAV).sort());
     for (const item of NAV) {
       expect(keys(merged)).toContain(item.key);
     }
+  });
+
+  it('leaves a shop that had already arranged its menu exactly as it left it', () => {
+    // The regroup — Entry, Reports, Stock, Shop, Catalogue — is for shops that never touched
+    // the menu. One that did has every key below written into its document already, so the
+    // three headings added with the regroup have nothing to claim, are built empty, and are
+    // dropped by `visible` before the sidebar sees them. This is why the Settings group kept
+    // its `nav.settings` key through being renamed: a key this build did not recognise would
+    // take the placement of all eight screens under it down with it.
+    const before: MenuSetting[] = [
+      at('nav.dashboard'),
+      at('nav.cashbook'),
+      at('nav.ledger'),
+      at('nav.inventory'),
+      at('nav.processedGoods'),
+      at('nav.billManagement'),
+      at('nav.purchases'),
+      at('nav.newEntry', {
+        children: [
+          at('nav.sale'),
+          at('nav.receipt'),
+          at('nav.purchase'),
+          at('nav.processing'),
+          at('nav.expense'),
+          at('nav.payment'),
+        ],
+      }),
+      at('nav.settings', {
+        children: [
+          at('nav.settings.general'),
+          at('nav.settings.users'),
+          at('nav.settings.items'),
+          at('nav.settings.party'),
+          at('nav.settings.units'),
+          at('nav.settings.menu'),
+          at('nav.settings.reports'),
+          at('nav.settings.customFields'),
+        ],
+      }),
+    ];
+
+    const shown = visible(mergeMenu(NAV, before));
+
+    expect(keys(shown)).toEqual(before.map((item) => item.key));
+    expect(groupIn(shown, 'nav.settings')?.children.map((child) => child.key)).toEqual(
+      before[8].children?.map((child) => child.key),
+    );
+    expect(leaves(shown).sort()).toEqual(leaves(NAV).sort());
   });
 
   it('drops keys for screens that no longer exist', () => {
@@ -51,7 +106,7 @@ describe('mergeMenu', () => {
     const merged = mergeMenu(NAV, [at('nav.ledger'), at('nav.ledger')]);
 
     expect(keys(merged).filter((key) => key === 'nav.ledger').length).toBe(1);
-    expect(keys(merged).length).toBe(NAV.length);
+    expect(leaves(merged).sort()).toEqual(leaves(NAV).sort());
   });
 
   it('marks hidden items rather than removing them, so they can be brought back', () => {
@@ -188,8 +243,8 @@ describe('visible', () => {
   it('leaves out what the shop hid', () => {
     const shown = visible(mergeMenu(NAV, [at('nav.inventory', { hidden: true })]));
 
-    expect(keys(shown)).not.toContain('nav.inventory');
-    expect(keys(shown).length).toBe(NAV.length - 1);
+    expect(leaves(shown)).not.toContain('nav.inventory');
+    expect(leaves(shown).length).toBe(leaves(NAV).length - 1);
   });
 
   it('drops a group whose children are all hidden', () => {

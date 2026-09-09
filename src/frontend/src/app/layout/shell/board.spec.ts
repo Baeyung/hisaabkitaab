@@ -49,13 +49,11 @@ describe('boardFor', () => {
     expect(new Set(leaves(EASY_NAV)).size).toBe(leaves(EASY_NAV).length);
   });
 
-  it('files a screen no shipped band claims onto the overflow tab', () => {
-    // Reports is on the menu and on no band above, so this is the live case, not a contrived
-    // one: a screen added without touching the board table still has a button.
-    const more = board().find((tab) => tab.key === 'board.tab.more');
-
-    expect(more).toBeDefined();
-    expect(keys([more!])).toContain('nav.settings.reports');
+  it('claims every shipped screen on a tab someone named', () => {
+    // The overflow tab is the safety net, not a place to leave things: a screen reaching it
+    // is one the board table was never told about, and it turns up under "More" wearing no
+    // heading that says what it is. Adding a screen to `NAV` and not to `BOARD` fails here.
+    expect(tabKeys(board())).not.toContain('board.tab.more');
   });
 
   it('numbers the buttons within each tab, restarting on the next one', () => {

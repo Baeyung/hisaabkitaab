@@ -103,13 +103,8 @@ export type NavItem = NavLink | NavGroup;
 // puts the current store in front. The whole menu lives inside /s/:storeId, where a
 // store always exists by definition — what varies is the caller's role in it.
 export const NAV: NavItem[] = [
+  // Loose at the top, alone: the screen you land on, not something you go looking for.
   { kind: 'link', key: 'nav.dashboard', path: 'dashboard', icon: 'dashboard' },
-  { kind: 'link', key: 'nav.cashbook', path: 'cashbook', icon: 'cashbook' },
-  { kind: 'link', key: 'nav.ledger', path: 'ledger', icon: 'ledger' },
-  { kind: 'link', key: 'nav.inventory', path: 'inventory', icon: 'stock' },
-  { kind: 'link', key: 'nav.processedGoods', path: 'processing', icon: 'stock' },
-  { kind: 'link', key: 'nav.billManagement', path: 'bill-management', icon: 'bill' },
-  { kind: 'link', key: 'nav.purchases', path: 'purchases', icon: 'bill' },
   {
     kind: 'group',
     key: 'nav.newEntry',
@@ -127,13 +122,40 @@ export const NAV: NavItem[] = [
       { kind: 'link', key: 'nav.payment', path: 'new-entry/payment', icon: 'payment' },
     ],
   },
+  // The four screens you open to look something up: two books and the two piles of paper
+  // they were written from. Money, not goods — what you counted on the shelf is next door.
   {
     kind: 'group',
+    key: 'nav.reports',
+    icon: 'reports',
+    children: [
+      { kind: 'link', key: 'nav.cashbook', path: 'cashbook', icon: 'cashbook' },
+      { kind: 'link', key: 'nav.ledger', path: 'ledger', icon: 'ledger' },
+      { kind: 'link', key: 'nav.billManagement', path: 'bill-management', icon: 'bill' },
+      { kind: 'link', key: 'nav.purchases', path: 'purchases', icon: 'bill' },
+    ],
+  },
+  {
+    kind: 'group',
+    key: 'nav.stock',
+    icon: 'stock',
+    children: [
+      { kind: 'link', key: 'nav.inventory', path: 'inventory', icon: 'stock' },
+      { kind: 'link', key: 'nav.processedGoods', path: 'processing', icon: 'stock' },
+    ],
+  },
+  {
+    kind: 'group',
+    // Keyed `nav.settings` and not renamed, though it is now called Shop and holds half of
+    // what it used to: a shop that has already arranged its menu has this key written into
+    // its saved document, and `mergeMenu` reads a key it does not recognise as an entry that
+    // is gone — taking the placement of everything the document nested under it with it.
+    // The heading's wording is free to change; its key is not.
     key: 'nav.settings',
     icon: 'settings',
-    // The one group that cannot be arranged away. Everything a shop can undo lives behind
-    // it, including the screen that does the arranging — hiding this would leave an owner
-    // with a menu they can no longer change from inside the app.
+    // The one group that cannot be arranged away, because the screen that does the arranging
+    // lives in it — hiding this would leave an owner with a menu they can no longer change
+    // from inside the app. Catalogue, next door, carries no such screen and is fair game.
     //
     // Emptying it is a different thing and is allowed: dragging every child out to the top
     // level leaves the heading with nothing to hold, so `visible` drops it — and every screen
@@ -154,6 +176,36 @@ export const NAV: NavItem[] = [
       // are still the owner's alone, and that half of the screen only appears for them.
       // Freeing a seat is one way out of an overage, so this stays open on a closed shop too.
       { kind: 'link', key: 'nav.settings.users', path: 'settings/users', icon: 'users' },
+      // Owner-only, and locked for the same reason its group is: this is the screen that
+      // un-hides the others. No `writes` — arranging a menu records no business, so it stays
+      // usable on a shop the plan has closed.
+      {
+        kind: 'link',
+        key: 'nav.settings.menu',
+        path: 'settings/menu',
+        icon: 'menu',
+        requires: 'OWNER',
+        locked: true,
+      },
+      // Owner-only: these sends are metered against their plan and go to their customers. No
+      // `writes` — a closed shop records nothing, but its owner should still be able to reach
+      // this and switch the reminders off rather than have them keep going out unseen.
+      {
+        kind: 'link',
+        key: 'nav.settings.reports',
+        path: 'settings/reports',
+        icon: 'reports',
+        requires: 'OWNER',
+      },
+    ],
+  },
+  // What the shop sells and who it sells to, split off from Shop: the settings a shopkeeper
+  // opens while working, as against the ones they set once and leave alone.
+  {
+    kind: 'group',
+    key: 'nav.catalogue',
+    icon: 'items',
+    children: [
       {
         kind: 'link',
         key: 'nav.settings.items',
@@ -177,27 +229,6 @@ export const NAV: NavItem[] = [
         icon: 'units',
         requires: 'EDITOR',
         writes: true,
-      },
-      // Owner-only, and locked for the same reason its group is: this is the screen that
-      // un-hides the others. No `writes` — arranging a menu records no business, so it stays
-      // usable on a shop the plan has closed.
-      {
-        kind: 'link',
-        key: 'nav.settings.menu',
-        path: 'settings/menu',
-        icon: 'menu',
-        requires: 'OWNER',
-        locked: true,
-      },
-      // Owner-only: these sends are metered against their plan and go to their customers. No
-      // `writes` — a closed shop records nothing, but its owner should still be able to reach
-      // this and switch the reminders off rather than have them keep going out unseen.
-      {
-        kind: 'link',
-        key: 'nav.settings.reports',
-        path: 'settings/reports',
-        icon: 'reports',
-        requires: 'OWNER',
       },
       // What the shop asks for on each line of a sale or a purchase. Owner-only: it changes
       // the shape of every bill everyone in the shop writes, which is not an editor's call.
