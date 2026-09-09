@@ -683,15 +683,48 @@ select.fld__input {
      list rather than a card inside a card. */
   .grid__row {
     padding-block: 12px;
+    /* Only the top line has the remove control beside it, so the lane comes off the row and
+       goes on the item box — everything under it then runs the full width of the strip. */
+    padding-inline-end: 0;
     border-bottom: 1px solid var(--kg-line);
   }
-  /* The item box and the amount each get a line to themselves — squeezing "Rs 5,000,000" in
-     beside a column is what was wrapping it into two jittering lines. */
-  .cell--design,
+  .grid__row > .iconbtn {
+    top: 29px;
+  }
+  /* The item box takes the top line to itself; the shop's columns rule two to a line under
+     it. A ceiling that fits a desk row leaves a phone line ending ragged — half a box of
+     column and half a box of nothing — so on a phone the boxes hold a strict half instead,
+     grown by nothing, and a lone last column stops halfway like a column should. */
+  .cell {
+    flex: 0 0 calc(50% - 5px);
+    max-width: none;
+  }
+  .cell--design {
+    flex-basis: calc(100% - 44px);
+  }
+  /* The amount is what closes the line, so it reads as a foot under a rule rather than one
+     more labelled box: its name at the start of the line, the figure at the end of it. */
   .cell--amount {
     flex-basis: 100%;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 2px;
+    padding-top: 10px;
+    border-top: 1px solid var(--kg-line);
+  }
+  .cell--amount .cell__label {
+    margin-bottom: 0;
   }
   .grid__amount {
+    min-height: 0;
     font-size: 17px;
+  }
+  /* Taking a line off the bill is not the loudest thing on it. The glyph keeps its colour;
+     the box around it goes, so a finger still finds it but the eye doesn't land there first. */
+  .grid__row > .iconbtn--danger {
+    background: transparent;
+    border-color: transparent;
   }
 }
