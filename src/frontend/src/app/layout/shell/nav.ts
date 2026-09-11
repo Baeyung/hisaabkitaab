@@ -122,8 +122,9 @@ export const NAV: NavItem[] = [
       { kind: 'link', key: 'nav.payment', path: 'new-entry/payment', icon: 'payment' },
     ],
   },
-  // The four screens you open to look something up: two books and the two piles of paper
-  // they were written from. Money, not goods — what you counted on the shelf is next door.
+  // The screens you open to look something up: two books, the two piles of paper they were
+  // written from, and what the whole lot came to. Money, not goods — what you counted on the
+  // shelf is next door.
   {
     kind: 'group',
     key: 'nav.reports',
@@ -131,6 +132,7 @@ export const NAV: NavItem[] = [
     children: [
       { kind: 'link', key: 'nav.cashbook', path: 'cashbook', icon: 'cashbook' },
       { kind: 'link', key: 'nav.ledger', path: 'ledger', icon: 'ledger' },
+      { kind: 'link', key: 'nav.profit', path: 'profit', icon: 'reports' },
       { kind: 'link', key: 'nav.billManagement', path: 'bill-management', icon: 'bill' },
       { kind: 'link', key: 'nav.purchases', path: 'purchases', icon: 'bill' },
     ],

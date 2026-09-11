@@ -106,6 +106,7 @@ const BOARD: readonly TabDef[] = [
           { key: 'nav.dashboard', icon: 'dashboard' },
           { key: 'nav.cashbook', icon: 'cashbook' },
           { key: 'nav.ledger', icon: 'ledger' },
+          { key: 'nav.profit', icon: 'reports' },
         ],
       },
       {

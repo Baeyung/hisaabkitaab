@@ -51,7 +51,9 @@ describe('mergeMenu', () => {
     // The regroup — Entry, Reports, Stock, Shop, Catalogue — is for shops that never touched
     // the menu. One that did has every key below written into its document already, so the
     // three headings added with the regroup have nothing to claim, are built empty, and are
-    // dropped by `visible` before the sidebar sees them. This is why the Settings group kept
+    // dropped by `visible` before the sidebar sees them — all but Reports, which holds Profit:
+    // a screen shipped since that document was written is appended to the group it ships in, so
+    // an arrangement made two builds ago still finds it. This is why the Settings group kept
     // its `nav.settings` key through being renamed: a key this build did not recognise would
     // take the placement of all eight screens under it down with it.
     const before: MenuSetting[] = [
@@ -88,7 +90,7 @@ describe('mergeMenu', () => {
 
     const shown = visible(mergeMenu(NAV, before));
 
-    expect(keys(shown)).toEqual(before.map((item) => item.key));
+    expect(keys(shown)).toEqual([...before.map((item) => item.key), 'nav.reports']);
     expect(groupIn(shown, 'nav.settings')?.children.map((child) => child.key)).toEqual(
       before[8].children?.map((child) => child.key),
     );

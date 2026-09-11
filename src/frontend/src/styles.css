@@ -589,6 +589,14 @@ html[dir='rtl'] .kg-flip {
   padding: 12px 16px;
   border-bottom: 1px solid var(--kg-line);
 }
+/* A toolbar inside a card is the card's top strip, so it is padded and ruled off
+   from the rows under it. A toolbar in a page header is not: it sits beside the
+   title with nothing beneath it to divide, and the inherited rule drew a hairline
+   that started halfway across the page and stopped at its edge. */
+.rm-head > .rm-toolbar {
+  padding: 0;
+  border-bottom: 0;
+}
 .rm-input {
   height: 42px;
   padding: 0 13px;
@@ -1859,26 +1867,53 @@ html[dir='rtl'] select.rm-input {
   grid-template-columns: 1fr auto;
   align-items: center;
   column-gap: 12px;
-  padding: 11px 18px;
+  padding: 11px 18px 13px;
 }
 .dw-row + .dw-row {
   border-top: 1px solid var(--kg-line);
 }
-/* Faint proportional fill behind ranked rows — reads as a bar chart without
-   the clutter. Full-bleed; the card's overflow:hidden clips it to the corners.
-   Grows from the inline-start edge, so it mirrors correctly under RTL. */
+/* Proportional measure along the row's baseline.
+   It used to be a full-height wash behind the text, which cannot survive its own top
+   row: the leader is always 100% of itself, so the whole row filled and read as
+   selected, and the row under it as a loose block with a hard vertical edge through
+   the card. Nor can it run the row's full width — the leader's bar then becomes a
+   1500px hairline sitting exactly where a divider goes, and reads as one.
+
+   So the element is a short fixed track and the proportion is drawn inside it: the
+   rows are then measured against each other, which is the only comparison the list
+   makes. The track is left faintly visible so a small bar reads as a small share of
+   something rather than as a stray mark. Grows from the inline-start edge, so it
+   mirrors correctly under RTL. */
 .dw-row__fill {
+  position: absolute;
+  inset-block-end: 6px;
+  inset-inline-start: 18px;
+  z-index: 0;
+  width: min(260px, calc(100% - 36px));
+  height: 3px;
+  border-radius: 999px;
+  background: var(--kg-fill-subtle);
+  overflow: hidden;
+}
+.dw-row__fill::before {
+  content: '';
   position: absolute;
   inset-block: 0;
   inset-inline-start: 0;
-  z-index: 0;
   width: var(--fill, 0%);
+  border-radius: 999px;
+  background: var(--kg-line-strong);
 }
-.dw-row__fill--in {
-  background: color-mix(in srgb, var(--kg-in) 9%, transparent);
+.dw-row__fill--in::before {
+  background: var(--kg-in);
 }
-.dw-row__fill--out {
-  background: color-mix(in srgb, var(--kg-out) 9%, transparent);
+.dw-row__fill--out::before {
+  background: var(--kg-out);
+}
+/* Neither in nor out: the profit screen's unpriced sales, whose whole problem is that
+   nobody can say which of the two they were. */
+.dw-row__fill--muted::before {
+  background: var(--kg-placeholder);
 }
 .dw-row__name {
   position: relative;
@@ -1897,6 +1932,26 @@ a.dw-row__name {
 }
 a.dw-row__name:hover {
   text-decoration: underline;
+}
+/* A row whose name carries the instruction under it — the unpriced-sales list. The
+   fix belongs beneath the design it applies to, not beneath the rupee figure across
+   the row, where it read as a caption on that figure. */
+.dw-row__name:has(.dw-row__sub) {
+  white-space: normal;
+}
+.dw-row__name > a {
+  color: var(--kg-brand);
+  text-decoration: none;
+}
+.dw-row__name > a:hover {
+  text-decoration: underline;
+}
+.dw-row__sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--kg-faint);
 }
 .dw-row__val {
   position: relative;
@@ -1957,9 +2012,316 @@ a.dw-row__name:hover {
   line-height: 1.45;
 }
 
+/* ── Profit screen ───────────────────────────────────────────────────
+   Two blocks the other reporting pages have no use for. Everything else on
+   that page is dw-* as it stands. */
+
+/* The standing caveat: no cost is recorded when a bill is written, so every
+   cost figure on that page was reconstructed from the goods ledger. Above the
+   numbers and edged in amber, because a disclaimer printed under them is one
+   nobody reads. */
+.dw-caveat {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border-inline-start: 3px solid var(--kg-amber);
+  background: color-mix(in srgb, var(--kg-amber) 10%, transparent);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dw-caveat__mark {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--kg-amber);
+  color: var(--kg-card);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* ── The answer, and the working ─────────────────────────────────────────────
+   The page had five equally weighted cards, and on a month with no rent paid two
+   of them held the same figure — so nothing on it said which number was the point.
+   Here one number is the answer at display size, and the four that produce it read
+   down a column with their signs, the way the sum is done on paper. Two panes
+   rather than two cards: the arithmetic belongs to the headline, and a gutter
+   between them would have made it look like separate evidence. */
+.dw-answer {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+}
+
+.dw-answer__hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px;
+  border-inline-end: 1px solid var(--kg-line);
+}
+
+.dw-answer__label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+
+/* The one place this page spends its boldness. Everything else steps down from it. */
+.dw-answer__value {
+  margin: 4px 0 0;
+  font-size: clamp(30px, 3.6vw, 40px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--kg-ink);
+}
+
+.dw-answer__of {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--kg-muted);
+}
+
+/* The sum. Labels start-aligned, figures on one end-aligned tabular column, so the
+   digits stack and the eye can add them without being asked to. */
+.dw-sum {
+  margin: 0;
+  padding: 8px 22px 12px;
+  display: grid;
+  align-content: center;
+}
+
+.dw-sum__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 16px;
+  padding: 7px 0;
+}
+
+.dw-sum__row dt {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kg-ink);
+}
+
+.dw-sum__row dt small {
+  display: block;
+  margin-top: 1px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--kg-faint);
+}
+
+.dw-sum__row dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--kg-ink);
+}
+
+/* A subtotal is ruled off above; the total is ruled off and set heavier. Same two
+   marks a hand-written bill uses, and they carry the structure without a label. */
+.dw-sum__row--sub {
+  border-top: 1px solid var(--kg-line);
+  margin-top: 3px;
+  padding-top: 10px;
+}
+
+.dw-sum__row--total {
+  border-top: 2px solid var(--kg-line-strong);
+  margin-top: 3px;
+  padding-top: 10px;
+}
+
+.dw-sum__row--total dt {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.dw-sum__row--total dd {
+  font-size: 17px;
+}
+
+/* The caveat as a number: how much of the window's revenue could actually be priced.
+   Banded rather than precise — what the bar has to answer is "trust it / mostly /
+   don't". It sits against the headline, because that is the only figure it qualifies;
+   run across the page above the numbers it read as a page loading. */
+.dw-cover {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 20px;
+}
+
+/* Held to a short measure. Run the full width of the pane it read as the page
+   loading, and at 97% there was no visible remainder left to read it against. */
+.dw-cover__track {
+  width: min(100%, 190px);
+  height: 6px;
+  border-radius: 999px;
+  background: var(--kg-line-strong);
+  overflow: hidden;
+}
+
+.dw-cover__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--kg-faint);
+}
+
+.dw-cover[data-tone='good'] .dw-cover__fill {
+  background: var(--kg-in);
+}
+
+.dw-cover[data-tone='good'] .dw-cover__value {
+  color: var(--kg-in);
+}
+
+.dw-cover[data-tone='fair'] .dw-cover__fill {
+  background: var(--kg-amber);
+}
+
+.dw-cover[data-tone='fair'] .dw-cover__value {
+  color: var(--kg-amber);
+}
+
+.dw-cover[data-tone='poor'] .dw-cover__fill {
+  background: var(--kg-out);
+}
+
+.dw-cover[data-tone='poor'] .dw-cover__value {
+  color: var(--kg-out);
+}
+
+.dw-cover__hint {
+  margin: 0;
+  color: var(--kg-faint);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* The reading of the bar, run into the sentence that says what to do about it. */
+.dw-cover__value {
+  font-weight: 700;
+  color: var(--kg-muted);
+}
+
+.dw-cover__value::after {
+  content: ' · ';
+  font-weight: 500;
+  color: var(--kg-faint);
+}
+
+/* ── Best and worst day ──────────────────────────────────────────────────────
+   Two points on the chart above, so they ride under it as its foot rather than in
+   two cards of their own — each of which held a single figure and a date, and a
+   card's worth of empty space under them. */
+.dw-days {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--kg-line);
+}
+
+.dw-day {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 13px 18px;
+}
+
+.dw-day + .dw-day {
+  border-inline-start: 1px solid var(--kg-line);
+}
+
+.dw-day__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kg-faint);
+}
+
+.dw-day__date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kg-ink);
+}
+
+.dw-day__value {
+  margin-inline-start: auto;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.dw-day__on {
+  flex: 1 0 100%;
+  font-size: 12px;
+  color: var(--kg-faint);
+}
+
+/* A card's foot: the line that closes a list rather than belonging to it. Ruled off
+   and tinted, because sat flush under the last row at the same inset it read as one
+   more row of the list with its figures missing. */
+.dw-foot {
+  margin: 0;
+  padding: 11px 18px;
+  border-top: 1px solid var(--kg-line);
+  background: var(--kg-fill-subtle);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--kg-faint);
+}
+
+/* A card's footnote link — "go and fix these" under the uncosted list. */
+.dw-link {
+  display: block;
+  color: var(--kg-brand);
+  font-size: 13px;
+}
+
+.dw-link:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 860px) {
   .dw-grid {
     grid-template-columns: 1fr;
+  }
+  /* The sum drops under the answer it belongs to, and the rule between them turns
+     with it — a vertical divider on a stacked pair points at nothing. */
+  .dw-answer {
+    grid-template-columns: 1fr;
+  }
+  .dw-answer__hero {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--kg-line);
+  }
+  .dw-sum {
+    padding: 6px 18px 14px;
+  }
+  .dw-days {
+    grid-template-columns: 1fr;
+  }
+  .dw-day + .dw-day {
+    border-inline-start: 0;
+    border-top: 1px solid var(--kg-line);
   }
 }
 

@@ -1,0 +1,342 @@
+<section class="rm-page dw-page">
+  <app-print-header />
+  <header class="rm-head">
+    <div>
+      <h1 class="rm-title">{{ locale.t('nav.profit') }}</h1>
+      <p class="rm-sub">{{ locale.t('profit.subtitle') }}</p>
+    </div>
+    <div class="rm-toolbar rm-toolbar--filters rm-noprint">
+      <div class="rm-field">
+        <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
+        <app-date-field
+          [value]="filters.from()"
+          (valueChange)="filters.set('from', $event)"
+          [ariaLabel]="locale.t('bill.filter.from')"
+        />
+      </div>
+      <div class="rm-field">
+        <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
+        <app-date-field
+          [value]="filters.to()"
+          (valueChange)="filters.set('to', $event)"
+          [ariaLabel]="locale.t('bill.filter.to')"
+        />
+      </div>
+      @if (data()) {
+        <button type="button" class="rm-btn rm-btn--ghost" (click)="print()">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"
+            />
+          </svg>
+          {{ locale.t('common.print') }}
+        </button>
+        <app-whatsapp-button
+          [document]="locale.t('whatsapp.doc.profit')"
+          [action]="locale.t('whatsapp.doc.profit')"
+        />
+      }
+    </div>
+  </header>
+
+  <!-- Before any number, not after it. Nothing here was recorded at the till; it was worked
+       out backwards from the bills, and a shopkeeper about to act on a figure is owed that
+       fact where they cannot miss it. -->
+  <p class="dw-caveat" role="note">
+    <span class="dw-caveat__mark" aria-hidden="true">i</span>
+    {{ locale.t('profit.note') }}
+  </p>
+
+  @if (loading()) {
+    <div class="rm-card" aria-hidden="true">
+      <div class="rm-skel"></div>
+      <div class="rm-skel"></div>
+      <div class="rm-skel rm-skel--short"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="rm-state rm-noprint">
+      <p role="alert" class="rm-alert">{{ locale.t('profit.loadError') }}</p>
+      <button type="button" class="rm-btn rm-btn--ghost" (click)="load()">
+        {{ locale.t('settings.general.retry') }}
+      </button>
+    </div>
+  } @else if (isEmpty()) {
+    <div class="rm-state">
+      <h2 class="rm-state__title">{{ locale.t('profit.empty.title') }}</h2>
+      <p class="rm-state__body">{{ locale.t('profit.empty.body') }}</p>
+      <a class="rm-btn rm-btn--primary" [routerLink]="stores.link('new-entry/sale')">{{
+        locale.t('dash.empty.cta')
+      }}</a>
+    </div>
+  } @else if (data(); as d) {
+    <p class="rm-sub rm-printonly">
+      {{ locale.t('cashbook.print.period', { from: filters.from(), to: filters.to() }) }}
+    </p>
+
+    <!-- The answer, then the working. Five equally-sized cards made the reader hunt for which
+         number was the point — and when a shop pays no rent in the window, two of them held the
+         same figure. One headline at display size, and the four figures that produce it read
+         down a column with their signs, the way the sum is done on paper. The coverage meter
+         sits against the headline rather than above the page, because it qualifies that number
+         and nothing else. -->
+    <section class="rm-card dw-answer">
+      <div class="dw-answer__hero">
+        <h2 class="dw-answer__label">{{ locale.t('profit.net') }}</h2>
+        <p class="dw-answer__value num" [class]="measurable() ? tone(d.netProfit) : ''">
+          {{ costFigure(d.netProfit) }}
+        </p>
+        <p class="dw-answer__of">
+          @if (measurable()) {
+            {{
+              locale.t('profit.answer.of', {
+                pct: netPct(d) + '',
+                revenue: locale.money(d.revenue),
+              })
+            }}
+          } @else {
+            {{ locale.t('profit.unmeasured.hint') }}
+          }
+        </p>
+
+        <div class="dw-cover" [attr.data-tone]="coverageTone()">
+          <div
+            class="dw-cover__track"
+            role="progressbar"
+            [attr.aria-valuenow]="coverage()"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="locale.t('profit.coverage.label')"
+          >
+            <span class="dw-cover__fill" [style.width.%]="coverage()"></span>
+          </div>
+          <p class="dw-cover__hint">
+            <span class="dw-cover__value num">{{
+              locale.t('profit.coverage.value', { pct: coverage() + '' })
+            }}</span>
+            @if (d.uncosted.length) {
+              {{ locale.t('profit.coverage.missing', { count: d.uncosted.length + '' }) }}
+            } @else {
+              {{ locale.t('profit.coverage.allCosted') }}
+            }
+          </p>
+        </div>
+      </div>
+
+      <dl class="dw-sum">
+        <div class="dw-sum__row">
+          <dt>
+            {{ locale.t('profit.revenue') }}
+            <small>
+              @if (d.discounts > 0) {
+                {{ locale.t('profit.discounts.hint', { amount: locale.money(d.discounts) }) }}
+              } @else {
+                {{ locale.t('profit.revenue.hint') }}
+              }
+            </small>
+          </dt>
+          <dd class="num amt--in">{{ locale.money(d.revenue) }}</dd>
+        </div>
+        <div class="dw-sum__row">
+          <dt>
+            {{ locale.t('profit.cogs') }}
+            <small>{{
+              measurable() ? locale.t('profit.cogs.hint') : locale.t('profit.unmeasured')
+            }}</small>
+          </dt>
+          <dd class="num amt--out">{{ signed(d.cogs) }}</dd>
+        </div>
+        <div class="dw-sum__row dw-sum__row--sub">
+          <dt>
+            {{ locale.t('profit.gross') }}
+            <small>{{ measurable() ? margin(d.marginPct) : locale.t('profit.unmeasured') }}</small>
+          </dt>
+          <dd class="num" [class]="measurable() ? tone(d.grossProfit) : ''">
+            {{ costFigure(d.grossProfit) }}
+          </dd>
+        </div>
+        <div class="dw-sum__row">
+          <dt>
+            {{ locale.t('profit.expenses') }}
+            <small>{{ locale.t('profit.expenses.hint') }}</small>
+          </dt>
+          <dd class="num amt--out">{{ signed(d.expenses) }}</dd>
+        </div>
+        <div class="dw-sum__row dw-sum__row--total">
+          <dt>{{ locale.t('profit.net') }}</dt>
+          <dd class="num" [class]="measurable() ? tone(d.netProfit) : ''">
+            {{ costFigure(d.netProfit) }}
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Bars for what each day made, a dashed line for the margin it took to make it. The best
+         and worst days ride under the chart rather than in cards of their own: they are two
+         points on it, and two near-empty cards holding one figure each said so less clearly.
+         On paper the same two series become a table — a printed chart has no tooltip to ask. -->
+    <section class="rm-card dw-card">
+      <header class="dw-card__head">
+        <h2 class="dw-card__title">{{ locale.t('profit.trend.title') }}</h2>
+        <span class="dw-card__hint">{{ locale.t('profit.trend.hint') }}</span>
+      </header>
+      <div class="dw-chart rm-noprint">
+        <app-chart [config]="trendConfig()" [label]="trendLabel()" />
+      </div>
+      <div class="rm-printonly">
+        <table class="dw-ptbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('profit.print.date') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.print.revenue') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.print.cogs') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.print.profit') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.print.margin') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (point of dailyRows(); track point.date) {
+              <tr>
+                <td>{{ day(point.date) }}</td>
+                <td class="end num">{{ locale.money(point.revenue) }}</td>
+                <td class="end num">{{ locale.money(point.cogs) }}</td>
+                <td class="end num" [class]="tone(point.profit)">
+                  {{ locale.money(point.profit) }}
+                </td>
+                <td class="end num">{{ margin(point.marginPct) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Only drawn when more than one day traded: a shop's single trading day is both its
+           best and its worst, and two lines saying the same date read as two facts. -->
+      @if (d.bestDay || d.worstDay) {
+        <footer class="dw-days">
+          @if (d.bestDay; as best) {
+            <div class="dw-day">
+              <span class="dw-day__label">{{ locale.t('profit.best.title') }}</span>
+              <span class="dw-day__date">{{ day(best.date) }}</span>
+              <span class="dw-day__value num" [class]="tone(best.profit)">{{
+                locale.money(best.profit)
+              }}</span>
+              <span class="dw-day__on">{{
+                locale.t('profit.day.on', { revenue: locale.money(best.revenue) })
+              }}</span>
+            </div>
+          }
+          @if (d.worstDay; as worst) {
+            <div class="dw-day">
+              <span class="dw-day__label">{{ locale.t('profit.worst.title') }}</span>
+              <span class="dw-day__date">{{ day(worst.date) }}</span>
+              <span class="dw-day__value num" [class]="tone(worst.profit)">{{
+                locale.money(worst.profit)
+              }}</span>
+              <span class="dw-day__on">{{
+                locale.t('profit.day.on', { revenue: locale.money(worst.revenue) })
+              }}</span>
+            </div>
+          }
+        </footer>
+      }
+    </section>
+
+    <!-- Ranked by profit, not by revenue: the busiest thing on the shelf is not always the one
+         paying for the shop, and that gap is the whole reason this screen exists. It takes the
+         full width whenever nothing sold below cost — an exception report with no exceptions is
+         a sentence, and holding a column open for it left half the row empty. -->
+    <div [class.dw-grid]="d.lossMakers.length > 0">
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('profit.topItems.title') }}</h2>
+          <span class="dw-card__hint">{{ locale.t('profit.byProfit') }}</span>
+        </header>
+        <ul class="dw-list">
+          @for (item of d.topItems; track item.itemId) {
+            <li class="dw-row dw-row--bar" [style.--fill.%]="itemPct(item.profit)">
+              <span class="dw-row__fill dw-row__fill--in" aria-hidden="true"></span>
+              <a class="dw-row__name" [routerLink]="stores.link('inventory', item.itemId)">{{
+                item.name
+              }}</a>
+              <span class="dw-row__val num">
+                <span [class]="tone(item.profit)">{{ locale.money(item.profit) }}</span>
+                <small class="num">
+                  {{ locale.qtyUnit(item.quantity, item.unit) }} · {{ margin(item.marginPct) }}
+                </small>
+              </span>
+            </li>
+          } @empty {
+            <li class="dw-empty">{{ locale.t('profit.topItems.empty') }}</li>
+          }
+        </ul>
+        @if (!d.lossMakers.length && d.topItems.length) {
+          <p class="dw-foot">{{ locale.t('profit.loss.empty') }}</p>
+        }
+      </section>
+
+      <!-- Its own card rather than the bottom of the list above. This is usually an old rate
+           left on an item or a bill discounted past its cost, and both are fixable the same
+           week they are noticed. -->
+      @if (d.lossMakers.length) {
+        <section class="rm-card dw-card">
+          <header class="dw-card__head">
+            <h2 class="dw-card__title">{{ locale.t('profit.loss.title') }}</h2>
+            <span class="dw-card__hint">{{ locale.t('profit.loss.sub') }}</span>
+          </header>
+          <ul class="dw-list">
+            @for (item of d.lossMakers; track item.itemId) {
+              <li class="dw-row dw-row--bar" [style.--fill.%]="lossPct(item.profit)">
+                <span class="dw-row__fill dw-row__fill--out" aria-hidden="true"></span>
+                <a class="dw-row__name" [routerLink]="stores.link('inventory', item.itemId)">{{
+                  item.name
+                }}</a>
+                <span class="dw-row__val num">
+                  <span class="amt--out">{{ locale.money(item.profit) }}</span>
+                  <small class="num">
+                    {{ locale.qtyUnit(item.quantity, item.unit) }} ·
+                    {{ locale.money(item.revenue) }}
+                  </small>
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+
+    <!-- The coverage meter's work list. Each row names the fix it needs rather than the fault
+         it has, and names it under the design rather than under the money: an instruction
+         hanging beneath a rupee figure read as a caption on that figure. -->
+    @if (d.uncosted.length) {
+      <section class="rm-card dw-card">
+        <header class="dw-card__head">
+          <h2 class="dw-card__title">{{ locale.t('profit.uncosted.title') }}</h2>
+          <span class="dw-card__hint">{{ locale.t('profit.uncosted.sub') }}</span>
+        </header>
+        <ul class="dw-list">
+          @for (item of d.uncosted; track item.itemId) {
+            <li class="dw-row dw-row--bar" [style.--fill.%]="uncostedPct(item.revenue)">
+              <span class="dw-row__fill dw-row__fill--muted" aria-hidden="true"></span>
+              <span class="dw-row__name">
+                <a [routerLink]="stores.link('inventory', item.itemId)">{{ item.name }}</a>
+                <small class="dw-row__sub">{{ fixFor(item.everPurchased) }}</small>
+              </span>
+              <span class="dw-row__val num">{{ locale.money(item.revenue) }}</span>
+            </li>
+          }
+        </ul>
+        <a class="dw-link dw-foot rm-noprint" [routerLink]="stores.link('settings/items')">{{
+          locale.t('profit.uncosted.link')
+        }}</a>
+      </section>
+    }
+  }
+</section>

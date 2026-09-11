@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.service.query.support.PartyLedgerRow;
+import io.github.baeyung.hisaabkitaab.service.query.support.StockLedgerRow;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 
@@ -212,6 +213,34 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
     List<PartyLedgerRow> findPartyLedgerRowsByStore(@Param("storeId") String storeId);
+
+    /**
+     * Every STOCK line the store has, up to {@code to}, chronological — the raw material for the
+     * cost replay behind profit analysis.
+     *
+     * <p>Deliberately not windowed at the near end. What a sale cost is the weighted average of
+     * everything bought before it, so a walk that started at the window's first day would price
+     * that day's bills off an empty shelf. The far end is cut because nothing bought after a sale
+     * can change what that sale cost.
+     *
+     * <p>A projection, and the joins are here rather than in the walk: the bill's discount and the
+     * item's cost price live on other tables, and the replay reads one row at a time with no way
+     * back. {@code left join} on the item because a job-work entry's raw-material rows name cloth
+     * that was never in the catalogue.
+     */
+    @Query("""
+            select new io.github.baeyung.hisaabkitaab.service.query.support.StockLedgerRow(
+                       i.id, i.name, i.unit, tl.inOut, tl.quantity, tl.itemSoldAt,
+                       coalesce(t.eventDate, t.entryDate), t.event, t.id, t.discount, i.costPrice)
+            from TransactionLine tl
+            join tl.transaction t
+            left join tl.item i
+            where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.STOCK
+              and t.store.id = :storeId
+              and coalesce(t.eventDate, t.entryDate) <= :to
+            order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
+            """)
+    List<StockLedgerRow> findStockLedgerRowsByStore(@Param("storeId") String storeId, @Param("to") LocalDate to);
 
     /** One net stock quantity per item over its full STOCK-line history. */
     @Query("""
