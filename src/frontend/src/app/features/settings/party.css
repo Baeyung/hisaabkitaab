@@ -12,6 +12,13 @@
   padding: var(--kg-page-pad);
 }
 
+/* The header's own buttons — copy, add — sit in a row with a gap, off the title. */
+.custom__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
 .set__head {
   display: flex;
   align-items: flex-start;
