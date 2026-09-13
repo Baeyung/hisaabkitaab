@@ -73,6 +73,11 @@ class WalkInNameApiTest extends ApiTest
                 .andExpect(jsonPath("$.rows[0].khata.direction").value("SETTLED"))
                 .andExpect(jsonPath("$.totalKhata.direction").value("SETTLED"));
 
+        // The cash-sales statement row carries the name too, so the ledger can search by it.
+        mvc.perform(get(api(store, "/ledger/cash/SALE")).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows[0].walkInName").value("Ali Traders"));
+
         // The entry reads back for edit with the name and no party.
         mvc.perform(get(api(store, "/event/" + billId)).with(as(USER)))
                 .andExpect(status().isOk())

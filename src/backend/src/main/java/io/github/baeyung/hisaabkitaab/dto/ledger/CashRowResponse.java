@@ -8,6 +8,8 @@ public record CashRowResponse(
         String transactionId,
         LocalDate date,
         Instant occurredAt,
+        /** Walk-in customer's name when one was typed on the entry; null otherwise. */
+        String walkInName,
         String itemSummary,
         String description,
         double amount,

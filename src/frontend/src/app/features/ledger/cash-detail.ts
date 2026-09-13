@@ -22,7 +22,15 @@ import { todayIso } from '../../shared/date.util';
  */
 @Component({
   selector: 'app-cash-detail',
-  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend, DateField, Combobox, RowWindowDirective],
+  imports: [
+    RouterLink,
+    PrintHeader,
+    WhatsAppButton,
+    AmountLegend,
+    DateField,
+    Combobox,
+    RowWindowDirective,
+  ],
   templateUrl: './cash-detail.html',
 })
 export class CashDetail {
@@ -42,7 +50,7 @@ export class CashDetail {
   protected readonly loadError = signal(false);
   protected readonly notFound = signal(false);
 
-  // `q` narrows by item/description; `from`/`to` by business date — client-side
+  // `q` narrows by customer name/item/description; `from`/`to` by business date — client-side
   // over the already-loaded rows, and carried in the URL so Back walks them back.
   protected readonly filters = urlFilters({ q: '', from: todayIso(), to: todayIso() });
 
@@ -55,6 +63,7 @@ export class CashDetail {
         (!from || row.date >= from) &&
         (!to || row.date <= to) &&
         (!q ||
+          (row.walkInName ?? '').toLowerCase().includes(q) ||
           (row.itemSummary ?? '').toLowerCase().includes(q) ||
           (row.description ?? '').toLowerCase().includes(q)),
     );

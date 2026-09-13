@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.github.baeyung.hisaabkitaab.dto.cashbook.CashbookDayResponse;
 import io.github.baeyung.hisaabkitaab.dto.common.BalanceDirection;
+import io.github.baeyung.hisaabkitaab.entity.Party;
 import io.github.baeyung.hisaabkitaab.entity.Transaction;
 import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
@@ -46,8 +47,9 @@ class CashbookKhataTest
     void hangsEachEntrysKhataMovementOnItsCashRow()
     {
         // A 5,000 sale that took 2,000 in cash, then the customer clearing 1,500 of the rest.
-        TransactionLine sale = cashRow("t1", TransactionEvent.SALE, InOut.IN, 2000.0);
-        TransactionLine receipt = cashRow("t2", TransactionEvent.RECEIPT, InOut.IN, 1500.0);
+        Party customer = Party.builder().id("p1").name("Ali").build();
+        TransactionLine sale = cashRow("t1", TransactionEvent.SALE, InOut.IN, 2000.0, customer);
+        TransactionLine receipt = cashRow("t2", TransactionEvent.RECEIPT, InOut.IN, 1500.0, customer);
         seedRange(List.of(sale, receipt));
         when(transactionLineRepository.sumPartyNetByTransactionInRange(STORE, DAY, DAY))
                 .thenReturn(List.of(net("t1", 3000.0), net("t2", -1500.0)));
@@ -67,9 +69,23 @@ class CashbookKhataTest
     @Test
     void leavesAnEntryThatTouchesNoPartySettled()
     {
-        seedRange(List.of(cashRow("t1", TransactionEvent.EXPENSE, InOut.OUT, 300.0)));
+        seedRange(List.of(cashRow("t1", TransactionEvent.EXPENSE, InOut.OUT, 300.0, null)));
         when(transactionLineRepository.sumPartyNetByTransactionInRange(STORE, DAY, DAY))
                 .thenReturn(List.of());
+
+        CashbookDayResponse res = service.getRange(STORE, DAY, DAY);
+
+        assertEquals(BalanceDirection.SETTLED, res.rows().getFirst().khata().direction());
+        assertEquals(BalanceDirection.SETTLED, res.totalKhata().direction());
+    }
+
+    @Test
+    void leavesAWalkInCashSaleSettledEvenWhenShortPaid()
+    {
+        // No party, so nobody owes the 3,000 the cash fell short by — it is not a khata entry.
+        seedRange(List.of(cashRow("t1", TransactionEvent.SALE, InOut.IN, 2000.0, null)));
+        when(transactionLineRepository.sumPartyNetByTransactionInRange(STORE, DAY, DAY))
+                .thenReturn(List.of(net("t1", 3000.0)));
 
         CashbookDayResponse res = service.getRange(STORE, DAY, DAY);
 
@@ -85,9 +101,9 @@ class CashbookKhataTest
                 .thenReturn(Optional.empty());
     }
 
-    private TransactionLine cashRow(String id, TransactionEvent event, InOut inOut, double value)
+    private TransactionLine cashRow(String id, TransactionEvent event, InOut inOut, double value, Party party)
     {
-        Transaction t = Transaction.builder().id(id).event(event).entryDate(DAY).build();
+        Transaction t = Transaction.builder().id(id).event(event).entryDate(DAY).party(party).build();
         TransactionLine line = TransactionLine.builder()
                 .transaction(t).targetKind(TargetKind.CASH).inOut(inOut).value(value).build();
         t.getLines().add(line);

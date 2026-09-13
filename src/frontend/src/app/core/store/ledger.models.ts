@@ -71,6 +71,8 @@ export interface CashRow {
   transactionId: string;
   date: string;
   occurredAt: string;
+  /** Walk-in customer's name when one was typed on the entry. */
+  walkInName: string | null;
   /** Goods on the line ("Lawn Print × 12") — null when none were recorded. */
   itemSummary: string | null;
   description: string | null;

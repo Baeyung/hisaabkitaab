@@ -197,6 +197,7 @@ public class LedgerQueryService
                             transaction.getId(),
                             transaction.getEventDate() != null ? transaction.getEventDate() : transaction.getEntryDate(),
                             transaction.getCreatedAt(),
+                            transaction.getWalkInName(),
                             ItemSummary.of(transaction),
                             transaction.getDescription(),
                             value(line),
