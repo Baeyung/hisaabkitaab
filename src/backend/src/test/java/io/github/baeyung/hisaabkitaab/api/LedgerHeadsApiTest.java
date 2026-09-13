@@ -49,16 +49,34 @@ class LedgerHeadsApiTest extends ApiTest
                 // The list's total is the head's last running total — the two must never drift.
                 .andExpect(jsonPath("$.rows[1].runningTotal").value(1000.0));
 
-        // A head with nothing in it is a stale link, not an empty head.
-        mvc.perform(get(api(store, "/ledger/expense-categories/SALARIES")).with(as(USER)))
-                .andExpect(status().isNotFound());
+        // The range is by business date: both entries are today's, so a window ending yesterday
+        // has no heads, and the head opened on that window is empty rather than missing — the
+        // screen carries the list's range along and lets the shopkeeper widen it.
+        mvc.perform(get(api(store, "/ledger/expense-categories")).with(as(USER))
+                        .param("to", LocalDate.now().minusDays(1).toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get(api(store, "/ledger/expense-categories/" + ExpenseCategoryService.UNCATEGORIZED)).with(as(USER))
+                        .param("to", LocalDate.now().minusDays(1).toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(0))
+                .andExpect(jsonPath("$.total").value(0.0))
+                .andExpect(jsonPath("$.rows.length()").value(0));
 
-        // Same for walk-in cash: this shop has rung up none, so neither kind exists.
+        // A head with nothing in it at all is likewise empty, not missing.
+        mvc.perform(get(api(store, "/ledger/expense-categories/SALARIES")).with(as(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(0));
+
+        // Same for walk-in cash: this shop has rung up none, so neither kind has anything —
+        // but a kind that isn't one is still a typed URL.
         mvc.perform(get(api(store, "/ledger/cash")).with(as(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
         mvc.perform(get(api(store, "/ledger/cash/SALE")).with(as(USER)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(0))
+                .andExpect(jsonPath("$.total").value(0.0));
         mvc.perform(get(api(store, "/ledger/cash/NOPE")).with(as(USER)))
                 .andExpect(status().isNotFound());
     }

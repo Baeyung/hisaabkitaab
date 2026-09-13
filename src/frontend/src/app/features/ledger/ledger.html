@@ -200,121 +200,197 @@
       </details>
     }
 
-    @if (categories().length > 0) {
-      <details
-        class="fold fold--section"
-        [class.rm-noprint]="!printSections().categories"
-        [open]="categoriesOpen() || capture.capturing()"
-        (toggle)="capture.capturing() || toggleCategories($any($event.target).open)"
-      >
-        <summary class="fold__sum fold__sum--section">
-          <svg
-            class="fold__chev"
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            aria-hidden="true"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-          {{ locale.t('ledger.category.title') }}
-          <span class="fold__count">{{ categories().length }}</span>
-        </summary>
-        <div class="fold__body">
-          <div class="rm-tablewrap">
-            <table class="rm-tbl">
-              <thead>
-                <tr>
-                  <th scope="col">{{ locale.t('ledger.category.col.name') }}</th>
-                  <th scope="col" class="end">{{ locale.t('ledger.category.col.count') }}</th>
-                  <th scope="col" class="end">{{ locale.t('ledger.category.col.total') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (group of categories(); track group.category) {
-                  <tr class="rm-rowlink" (click)="openCategory(group.category)">
-                    <td class="rm-cell-head">
-                      <a
-                        [routerLink]="stores.link('ledger/category', group.category)"
-                        class="rm-tbl__name"
-                        >{{ categoryLabel(group.category) }}</a
-                      >
-                    </td>
-                    <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">
-                      {{ group.count }}
-                    </td>
-                    <td class="end num amt--out rm-cell-amt">
-                      {{ locale.money(group.total) }}
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+    <!-- The expense and cash folds stay on the page even with nothing in their range:
+         the range picker lives inside, and it's how the shopkeeper widens it. -->
+    <details
+      class="fold fold--section"
+      [class.rm-noprint]="!printSections().categories"
+      [open]="categoriesOpen() || capture.capturing()"
+      (toggle)="capture.capturing() || toggleCategories($any($event.target).open)"
+    >
+      <summary class="fold__sum fold__sum--section">
+        <svg
+          class="fold__chev"
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          aria-hidden="true"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+        {{ locale.t('ledger.category.title') }}
+        <span class="fold__count">{{ filteredCategories().length }}</span>
+      </summary>
+      <div class="fold__body">
+        <div class="rm-toolbar rm-toolbar--filters rm-noprint">
+          <label class="rm-field rm-field--search rm-field--addr">
+            <span class="rm-field__label">{{ locale.t('ledger.filter.search') }}</span>
+            <input
+              class="rm-input"
+              type="search"
+              [value]="filters.cq()"
+              (input)="filters.replace({ cq: cqInput.value })"
+              #cqInput
+              [attr.placeholder]="locale.t('ledger.category.search.ph')"
+              [attr.aria-label]="locale.t('ledger.category.search.ph')"
+            />
+          </label>
+          <div class="rm-field">
+            <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
+            <app-date-field
+              [value]="filters.cFrom()"
+              (valueChange)="filters.set('cFrom', $event)"
+              [ariaLabel]="locale.t('bill.filter.from')"
+            />
+          </div>
+          <div class="rm-field">
+            <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
+            <app-date-field
+              [value]="filters.cTo()"
+              (valueChange)="filters.set('cTo', $event)"
+              [ariaLabel]="locale.t('bill.filter.to')"
+            />
           </div>
         </div>
-      </details>
-    }
+        <p class="rm-sub rm-printonly">
+          {{ locale.t('cashbook.print.period', { from: filters.cFrom(), to: filters.cTo() }) }}
+        </p>
+        <div class="rm-tablewrap">
+          <table class="rm-tbl">
+            <thead>
+              <tr>
+                <th scope="col">{{ locale.t('ledger.category.col.name') }}</th>
+                <th scope="col" class="end">{{ locale.t('ledger.category.col.count') }}</th>
+                <th scope="col" class="end">{{ locale.t('ledger.category.col.total') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (group of filteredCategories(); track group.category) {
+                <tr class="rm-rowlink" (click)="openCategory(group.category)">
+                  <td class="rm-cell-head">
+                    <a
+                      [routerLink]="stores.link('ledger/category', group.category)"
+                      [queryParams]="categoryRange()"
+                      class="rm-tbl__name"
+                      >{{ categoryLabel(group.category) }}</a
+                    >
+                  </td>
+                  <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">
+                    {{ group.count }}
+                  </td>
+                  <td class="end num amt--out rm-cell-amt">
+                    {{ locale.money(group.total) }}
+                  </td>
+                </tr>
+              }
+              @if (!filteredCategories().length) {
+                <tr>
+                  <td colspan="3">{{ locale.t('ledger.category.none') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
 
-    @if (cashGroups().length > 0) {
-      <details
-        class="fold fold--section"
-        [class.rm-noprint]="!printSections().cash"
-        [open]="cashOpen() || capture.capturing()"
-        (toggle)="capture.capturing() || toggleCash($any($event.target).open)"
-      >
-        <summary class="fold__sum fold__sum--section">
-          <svg
-            class="fold__chev"
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            aria-hidden="true"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-          {{ locale.t('ledger.cash.title') }}
-          <span class="fold__count">{{ cashGroups().length }}</span>
-        </summary>
-        <div class="fold__body">
-          <div class="rm-tablewrap">
-            <table class="rm-tbl">
-              <thead>
-                <tr>
-                  <th scope="col">{{ locale.t('ledger.cash.col.type') }}</th>
-                  <th scope="col" class="end">{{ locale.t('ledger.category.col.count') }}</th>
-                  <th scope="col" class="end">{{ locale.t('ledger.cash.col.total') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (group of cashGroups(); track group.kind) {
-                  <tr class="rm-rowlink" (click)="openCashGroup(group.kind)">
-                    <td class="rm-cell-head">
-                      <a
-                        [routerLink]="stores.link('ledger/cash', group.kind)"
-                        class="rm-tbl__name"
-                        >{{ cashKindLabel(group.kind) }}</a
-                      >
-                    </td>
-                    <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">
-                      {{ group.count }}
-                    </td>
-                    <td class="end num rm-cell-amt">
-                      {{ locale.money(group.total) }}
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+    <details
+      class="fold fold--section"
+      [class.rm-noprint]="!printSections().cash"
+      [open]="cashOpen() || capture.capturing()"
+      (toggle)="capture.capturing() || toggleCash($any($event.target).open)"
+    >
+      <summary class="fold__sum fold__sum--section">
+        <svg
+          class="fold__chev"
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          aria-hidden="true"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+        {{ locale.t('ledger.cash.title') }}
+        <span class="fold__count">{{ filteredCash().length }}</span>
+      </summary>
+      <div class="fold__body">
+        <div class="rm-toolbar rm-toolbar--filters rm-noprint">
+          <label class="rm-field rm-field--search rm-field--addr">
+            <span class="rm-field__label">{{ locale.t('ledger.filter.search') }}</span>
+            <input
+              class="rm-input"
+              type="search"
+              [value]="filters.kq()"
+              (input)="filters.replace({ kq: kqInput.value })"
+              #kqInput
+              [attr.placeholder]="locale.t('ledger.cash.kind.ph')"
+              [attr.aria-label]="locale.t('ledger.cash.kind.ph')"
+            />
+          </label>
+          <div class="rm-field">
+            <span class="rm-field__label">{{ locale.t('bill.filter.from') }}</span>
+            <app-date-field
+              [value]="filters.kFrom()"
+              (valueChange)="filters.set('kFrom', $event)"
+              [ariaLabel]="locale.t('bill.filter.from')"
+            />
+          </div>
+          <div class="rm-field">
+            <span class="rm-field__label">{{ locale.t('bill.filter.to') }}</span>
+            <app-date-field
+              [value]="filters.kTo()"
+              (valueChange)="filters.set('kTo', $event)"
+              [ariaLabel]="locale.t('bill.filter.to')"
+            />
           </div>
         </div>
-      </details>
-    }
+        <p class="rm-sub rm-printonly">
+          {{ locale.t('cashbook.print.period', { from: filters.kFrom(), to: filters.kTo() }) }}
+        </p>
+        <div class="rm-tablewrap">
+          <table class="rm-tbl">
+            <thead>
+              <tr>
+                <th scope="col">{{ locale.t('ledger.cash.col.type') }}</th>
+                <th scope="col" class="end">{{ locale.t('ledger.category.col.count') }}</th>
+                <th scope="col" class="end">{{ locale.t('ledger.cash.col.total') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (group of filteredCash(); track group.kind) {
+                <tr class="rm-rowlink" (click)="openCashGroup(group.kind)">
+                  <td class="rm-cell-head">
+                    <a
+                      [routerLink]="stores.link('ledger/cash', group.kind)"
+                      [queryParams]="cashRange()"
+                      class="rm-tbl__name"
+                      >{{ cashKindLabel(group.kind) }}</a
+                    >
+                  </td>
+                  <td class="end num" [attr.data-label]="locale.t('ledger.category.col.count')">
+                    {{ group.count }}
+                  </td>
+                  <td class="end num rm-cell-amt">
+                    {{ locale.money(group.total) }}
+                  </td>
+                </tr>
+              }
+              @if (!filteredCash().length) {
+                <tr>
+                  <td colspan="3">{{ locale.t('ledger.cash.none') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
   }
 
   <dialog

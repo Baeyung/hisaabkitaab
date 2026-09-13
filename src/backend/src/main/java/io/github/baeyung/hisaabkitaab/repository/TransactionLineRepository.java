@@ -111,9 +111,11 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
             where tl.targetKind = io.github.baeyung.hisaabkitaab.enums.TargetKind.CASH
               and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.EXPENSE
               and t.store.id = :storeId
+              and coalesce(t.eventDate, t.entryDate) between :from and :to
             group by coalesce(ec.name, 'UNCATEGORIZED')
             """)
-    List<ExpenseCategoryTotalRow> sumExpensesByCategory(@Param("storeId") String storeId);
+    List<ExpenseCategoryTotalRow> sumExpensesByCategory(
+            @Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
     /** One spend head's EXPENSE lines, chronological — the rows behind a category the shopkeeper opened. */
     @Query("""
@@ -124,9 +126,12 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
               and t.event = io.github.baeyung.hisaabkitaab.enums.TransactionEvent.EXPENSE
               and t.store.id = :storeId
               and coalesce(ec.name, 'UNCATEGORIZED') = :category
+              and coalesce(t.eventDate, t.entryDate) between :from and :to
             order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
-    List<TransactionLine> findExpenseLinesByCategory(@Param("storeId") String storeId, @Param("category") String category);
+    List<TransactionLine> findExpenseLinesByCategory(
+            @Param("storeId") String storeId, @Param("category") String category,
+            @Param("from") LocalDate from, @Param("to") LocalDate to);
 
     /**
      * Walk-in cash trade — entries with no party, which never touch a khata and so never appear
@@ -148,9 +153,11 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
                               io.github.baeyung.hisaabkitaab.enums.TransactionEvent.PURCHASE)
               and t.party is null
               and t.store.id = :storeId
+              and coalesce(t.eventDate, t.entryDate) between :from and :to
             group by t.event
             """)
-    List<CashKindTotalRow> sumCashByEvent(@Param("storeId") String storeId);
+    List<CashKindTotalRow> sumCashByEvent(
+            @Param("storeId") String storeId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
     /** One kind of walk-in cash trade, chronological — the entries behind a cash head the shopkeeper opened. */
     @Query("""
@@ -160,9 +167,12 @@ public interface TransactionLineRepository extends JpaRepository<TransactionLine
               and t.event = :event
               and t.party is null
               and t.store.id = :storeId
+              and coalesce(t.eventDate, t.entryDate) between :from and :to
             order by coalesce(t.eventDate, t.entryDate) asc, t.createdAt asc, tl.id asc
             """)
-    List<TransactionLine> findCashLinesByEvent(@Param("storeId") String storeId, @Param("event") TransactionEvent event);
+    List<TransactionLine> findCashLinesByEvent(
+            @Param("storeId") String storeId, @Param("event") TransactionEvent event,
+            @Param("from") LocalDate from, @Param("to") LocalDate to);
 
     /** One net balance per party over its full PARTY-line history (positive = they owe the store). */
     @Query("""

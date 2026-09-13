@@ -79,10 +79,13 @@ public class LedgerQueryService
      * prints a name, a count and a total per head, and shipping every expense the
      * shop ever filed to render three columns was several megabytes of JSON and the
      * slowest call in the app on a shop a few years in.
+     *
+     * <p>Bounded by business date: the screen opens on the last month, and the totals
+     * are the range's, not the shop's lifetime.
      */
-    public List<ExpenseCategoryGroupResponse> listExpenseCategories(String storeId)
+    public List<ExpenseCategoryGroupResponse> listExpenseCategories(String storeId, LocalDate from, LocalDate to)
     {
-        return transactionLineRepository.sumExpensesByCategory(storeId)
+        return transactionLineRepository.sumExpensesByCategory(storeId, from, to)
                 .stream()
                 .map(row -> new ExpenseCategoryGroupResponse(
                         row.getCategory(),
@@ -95,21 +98,14 @@ public class LedgerQueryService
     }
 
     /**
-     * One spend head with its entries and their running total — the category the
-     * shopkeeper opened. Unknown or empty heads 404 rather than returning a head with
-     * nothing in it: the khata screen only ever links to heads that have entries, so an
-     * empty one means a stale link or a typed URL.
+     * One spend head with its entries and their running total, within the range — the
+     * category the shopkeeper opened. A head with nothing in the range comes back empty
+     * rather than 404ing: the screen carries the range the list was on, and the
+     * shopkeeper widens it from there.
      */
-    public ExpenseCategoryGroupResponse getExpenseCategory(String storeId, String category)
+    public ExpenseCategoryGroupResponse getExpenseCategory(String storeId, String category, LocalDate from, LocalDate to)
     {
-        List<TransactionLine> lines = transactionLineRepository.findExpenseLinesByCategory(storeId, category);
-
-        if (lines.isEmpty())
-        {
-            throw ResourceNotFoundException.forEntity("Expense category", category);
-        }
-
-        return toCategoryGroup(category, lines);
+        return toCategoryGroup(category, transactionLineRepository.findExpenseLinesByCategory(storeId, category, from, to));
     }
 
     private ExpenseCategoryGroupResponse toCategoryGroup(String category, List<TransactionLine> lines)
@@ -144,9 +140,9 @@ public class LedgerQueryService
      * <p>Heads only, for the same reason as {@link #listExpenseCategories}: the entries
      * behind a kind arrive when the shopkeeper opens it ({@link #getCashGroup}).
      */
-    public List<CashGroupResponse> listCash(String storeId)
+    public List<CashGroupResponse> listCash(String storeId, LocalDate from, LocalDate to)
     {
-        return transactionLineRepository.sumCashByEvent(storeId)
+        return transactionLineRepository.sumCashByEvent(storeId, from, to)
                 .stream()
                 .map(row -> new CashGroupResponse(
                         row.getEvent().name(),
@@ -160,10 +156,11 @@ public class LedgerQueryService
     }
 
     /**
-     * One kind of walk-in cash trade with its entries and their running total — the head
-     * the shopkeeper opened. 404s on an unknown or empty kind, as {@link #getExpenseCategory} does.
+     * One kind of walk-in cash trade with its entries and their running total, within the
+     * range — the head the shopkeeper opened. 404s on an unknown kind; an empty range is an
+     * empty head, as {@link #getExpenseCategory} returns.
      */
-    public CashGroupResponse getCashGroup(String storeId, String kind)
+    public CashGroupResponse getCashGroup(String storeId, String kind, LocalDate from, LocalDate to)
     {
         TransactionEvent event;
         try
@@ -175,14 +172,7 @@ public class LedgerQueryService
             throw ResourceNotFoundException.forEntity("Cash group", kind);
         }
 
-        List<TransactionLine> lines = transactionLineRepository.findCashLinesByEvent(storeId, event);
-
-        if (lines.isEmpty())
-        {
-            throw ResourceNotFoundException.forEntity("Cash group", kind);
-        }
-
-        return toCashGroup(kind, lines);
+        return toCashGroup(kind, transactionLineRepository.findCashLinesByEvent(storeId, event, from, to));
     }
 
     private CashGroupResponse toCashGroup(String kind, List<TransactionLine> lines)
@@ -206,7 +196,9 @@ public class LedgerQueryService
                 }
         );
 
-        return new CashGroupResponse(kind, rows.size(), rows.getLast().runningTotal(), rows);
+        double total = rows.isEmpty() ? 0 : rows.getLast().runningTotal();
+
+        return new CashGroupResponse(kind, rows.size(), total, rows);
     }
 
     public PartyStatementResponse getStatement(String storeId, String partyId)

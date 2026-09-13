@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { TranslationKey } from '../../core/i18n/translations/en';
@@ -12,6 +12,8 @@ import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { urlFilters } from '../../shared/url-filters';
 import { Combobox } from '../../shared/combobox/combobox';
 import { Select } from '../../shared/select/select';
+import { DateField } from '../../shared/date-field/date-field';
+import { daysAgoIso, todayIso } from '../../shared/date.util';
 import { PrintHeader } from '../../shared/print-header';
 import { WhatsAppButton } from '../../shared/whatsapp-button';
 import { AmountLegend } from '../../shared/amount-legend';
@@ -32,6 +34,7 @@ type Section = 'parties' | 'categories' | 'cash';
     RouterLink,
     Combobox,
     Select,
+    DateField,
     PrintHeader,
     WhatsAppButton,
     AmountLegend,
@@ -76,7 +79,10 @@ export class Ledger {
    *  `pOpen`/`cOpen`/`kOpen` whether the parties/categories/cash sections are expanded —
    *  in the URL so Back and a copied link land on the sections the user left open. All
    *  three default shut: a khata with hundreds of parties would otherwise force a scroll
-   *  past all of them just to reach the expenses/cash blocks below. */
+   *  past all of them just to reach the expenses/cash blocks below.
+   *  `cq`/`cFrom`/`cTo` and `kq`/`kFrom`/`kTo` are the expense and cash sections' own
+   *  search and range — the search over the head names here, the range sent to the
+   *  server and carried into the head's page. Both open on the last month. */
   protected readonly filters = urlFilters({
     q: '',
     addr: '',
@@ -84,6 +90,27 @@ export class Ledger {
     pOpen: '',
     cOpen: '',
     kOpen: '',
+    cq: '',
+    cFrom: daysAgoIso(30),
+    cTo: todayIso(),
+    kq: '',
+    kFrom: daysAgoIso(30),
+    kTo: todayIso(),
+  });
+
+  /** The heads whose label matches the section's search box. */
+  protected readonly filteredCategories = computed(() => {
+    const q = this.filters.cq().trim().toLowerCase();
+    return this.categories().filter(
+      (g) => !q || this.categoryLabel(g.category).toLowerCase().includes(q),
+    );
+  });
+
+  protected readonly filteredCash = computed(() => {
+    const q = this.filters.kq().trim().toLowerCase();
+    return this.cashGroups().filter(
+      (g) => !q || this.cashKindLabel(g.kind).toLowerCase().includes(q),
+    );
   });
 
   protected readonly partiesOpen = computed(() => this.filters.pOpen() === '1');
@@ -188,7 +215,12 @@ export class Ledger {
     this.locale.t(`ledger.cash.kind.${kind}` as TranslationKey);
 
   constructor() {
-    void this.load();
+    // Refetch whenever either section's range changes — a picked date, or a Back that
+    // restored one. Runs once on init. The party list rides along; it is a few hundred
+    // rows at most, and one path beats two.
+    effect(() => {
+      void this.load();
+    });
   }
 
   async load(): Promise<void> {
@@ -197,8 +229,8 @@ export class Ledger {
     try {
       const [parties, categories, cashGroups] = await Promise.all([
         this.api.list(),
-        this.api.listExpenseCategories(),
-        this.api.listCash(),
+        this.api.listExpenseCategories(this.filters.cFrom(), this.filters.cTo()),
+        this.api.listCash(this.filters.kFrom(), this.filters.kTo()),
       ]);
       this.parties.set(parties);
       this.categories.set(categories);
@@ -214,12 +246,27 @@ export class Ledger {
     void this.router.navigate(this.stores.link('ledger', partyId));
   }
 
+  /** The head's page opens on the range this section is showing. */
+  protected readonly categoryRange = computed(() => ({
+    from: this.filters.cFrom(),
+    to: this.filters.cTo(),
+  }));
+
+  protected readonly cashRange = computed(() => ({
+    from: this.filters.kFrom(),
+    to: this.filters.kTo(),
+  }));
+
   openCategory(category: string): void {
-    void this.router.navigate(this.stores.link('ledger/category', category));
+    void this.router.navigate(this.stores.link('ledger/category', category), {
+      queryParams: this.categoryRange(),
+    });
   }
 
   openCashGroup(kind: string): void {
-    void this.router.navigate(this.stores.link('ledger/cash', kind));
+    void this.router.navigate(this.stores.link('ledger/cash', kind), {
+      queryParams: this.cashRange(),
+    });
   }
 
   /** Which of the three sections actually have anything in them right now. */

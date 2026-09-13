@@ -57,6 +57,9 @@
     </header>
 
     <app-amount-legend />
+    <p class="rm-sub rm-printonly">
+      {{ locale.t('cashbook.print.period', { from: filters.from(), to: filters.to() }) }}
+    </p>
 
     <div class="rm-card">
       <div class="rm-toolbar rm-toolbar--filters rm-noprint">

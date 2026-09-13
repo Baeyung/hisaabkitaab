@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { LedgerService } from '../../core/store/ledger.service';
 import { StoreService } from '../../core/store/store.service';
@@ -12,7 +12,7 @@ import { DateField } from '../../shared/date-field/date-field';
 import { Combobox } from '../../shared/combobox/combobox';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { urlFilters } from '../../shared/url-filters';
-import { todayIso } from '../../shared/date.util';
+import { daysAgoIso, todayIso } from '../../shared/date.util';
 
 /**
  * One cash kind's statement: every walk-in Sale or Purchase — no party — with a
@@ -40,7 +40,6 @@ export class CashDetail {
   protected readonly stores = inject(StoreService);
   private readonly api = inject(LedgerService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
   protected readonly cashKindLabel = (kind: string): string =>
     this.locale.t(`ledger.cash.kind.${kind}` as TranslationKey);
@@ -50,22 +49,20 @@ export class CashDetail {
   protected readonly loadError = signal(false);
   protected readonly notFound = signal(false);
 
-  // `q` narrows by customer name/item/description; `from`/`to` by business date — client-side
-  // over the already-loaded rows, and carried in the URL so Back walks them back.
-  protected readonly filters = urlFilters({ q: '', from: todayIso(), to: todayIso() });
+  // `q` narrows by customer name/item/description, client-side over the loaded rows.
+  // `from`/`to` is the business-date range the server is asked for — the khata list hands
+  // its own range across, and the picker here edits it. Both live in the URL so Back walks
+  // them back.
+  protected readonly filters = urlFilters({ q: '', from: daysAgoIso(30), to: todayIso() });
 
   protected readonly filteredRows = computed<CashRow[]>(() => {
     const q = this.filters.q().trim().toLowerCase();
-    const from = this.filters.from();
-    const to = this.filters.to();
     return (this.group()?.rows ?? []).filter(
       (row) =>
-        (!from || row.date >= from) &&
-        (!to || row.date <= to) &&
-        (!q ||
-          (row.walkInName ?? '').toLowerCase().includes(q) ||
-          (row.itemSummary ?? '').toLowerCase().includes(q) ||
-          (row.description ?? '').toLowerCase().includes(q)),
+        !q ||
+        (row.walkInName ?? '').toLowerCase().includes(q) ||
+        (row.itemSummary ?? '').toLowerCase().includes(q) ||
+        (row.description ?? '').toLowerCase().includes(q),
     );
   });
 
@@ -78,31 +75,18 @@ export class CashDetail {
   );
 
   constructor() {
+    // Refetch on a new kind or range — a picked date, or a Back that restored one.
     effect(() => {
-      void this.load(this.key());
+      void this.load(this.key(), this.filters.from(), this.filters.to());
     });
   }
 
-  async load(key: string): Promise<void> {
+  async load(key: string, from = this.filters.from(), to = this.filters.to()): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
     this.notFound.set(false);
     try {
-      const match = await this.api.getCashGroup(key);
-      this.group.set(match);
-      // Seed the range from the group's own span, same as the party statement —
-      // reads as "everything so far" instead of two blank, collapsed date fields.
-      // A URL already naming a range wins: it's a shared link, or a Back landing
-      // here, and re-seeding would throw away what it asked for.
-      if (!this.route.snapshot.queryParamMap.has('from')) {
-        const rows = match.rows;
-        const today = todayIso();
-        const last = rows.at(-1)?.date ?? '';
-        this.filters.replace({
-          from: rows[0]?.date ?? today,
-          to: last > today ? last : today,
-        });
-      }
+      this.group.set(await this.api.getCashGroup(key, from, to));
     } catch (err) {
       if ((err as { status?: number }).status === 404) {
         this.notFound.set(true);

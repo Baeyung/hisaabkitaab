@@ -171,7 +171,8 @@ class EventEditApiTest extends ApiTest
                 .andExpect(jsonPath("$.count").value(1))
                 .andExpect(jsonPath("$.total").value(800.0));
         mvc.perform(get(api(store, "/ledger/expense-categories/BILLS")).with(as(user)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(0));
 
         // Delete puts the drawer back: no expense, no head.
         mvc.perform(delete(api(store, "/event/" + entryId)).with(as(user)))

@@ -13,6 +13,9 @@ import { EventService } from '../../core/store/event.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import { deleteErrorKey } from '../../core/store/delete-error';
 import { entryEditLink } from '../../shared/entry-route';
+import { DateField } from '../../shared/date-field/date-field';
+import { urlFilters } from '../../shared/url-filters';
+import { daysAgoIso, todayIso } from '../../shared/date.util';
 
 /**
  * One expense category's statement: every expense filed under it (parts, bijli,
@@ -22,7 +25,7 @@ import { entryEditLink } from '../../shared/entry-route';
  */
 @Component({
   selector: 'app-category-detail',
-  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend, RowWindowDirective],
+  imports: [RouterLink, PrintHeader, WhatsAppButton, AmountLegend, DateField, RowWindowDirective],
   templateUrl: './category-detail.html',
 })
 export class CategoryDetail {
@@ -41,6 +44,12 @@ export class CategoryDetail {
     expenseCategoryLabel(name, (k) => this.locale.t(k));
 
   protected readonly group = signal<ExpenseCategoryGroup | null>(null);
+
+  /**
+   * The business-date range the server is asked for — the khata list hands its own range
+   * across, and the picker here edits it. In the URL so Back walks it back.
+   */
+  protected readonly filters = urlFilters({ from: daysAgoIso(30), to: todayIso() });
   /**
    * The rows the table renders. A busy shop's bijli or salaries head runs to five figures
    * over a few years, and this screen is the whole of one — see shared/row-window.ts.
@@ -56,17 +65,18 @@ export class CategoryDetail {
   protected readonly deleting = signal(false);
 
   constructor() {
+    // Refetch on a new head or range — a picked date, or a Back that restored one.
     effect(() => {
-      void this.load(this.key());
+      void this.load(this.key(), this.filters.from(), this.filters.to());
     });
   }
 
-  async load(key: string): Promise<void> {
+  async load(key: string, from = this.filters.from(), to = this.filters.to()): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
     this.notFound.set(false);
     try {
-      this.group.set(await this.api.getExpenseCategory(key));
+      this.group.set(await this.api.getExpenseCategory(key, from, to));
     } catch (err) {
       if ((err as { status?: number }).status === 404) {
         this.notFound.set(true);

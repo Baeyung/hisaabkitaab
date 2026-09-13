@@ -23,31 +23,40 @@ export class LedgerService {
   }
 
   /**
-   * Expenses totalled by category — the khata's spend heads, with a count and a total
-   * each and no rows. The entries behind a head come from {@link getExpenseCategory}
-   * when it is opened; a shop a few years in has tens of thousands of them, and the
-   * khata screen prints none.
+   * Expenses totalled by category within a business-date range — the khata's spend heads,
+   * with a count and a total each and no rows. The entries behind a head come from
+   * {@link getExpenseCategory} when it is opened; a shop a few years in has tens of
+   * thousands of them, and the khata screen prints none.
    */
-  listExpenseCategories(): Promise<ExpenseCategoryGroup[]> {
-    return firstValueFrom(this.http.get<ExpenseCategoryGroup[]>(`${this.url}/expense-categories`));
+  listExpenseCategories(from: string, to: string): Promise<ExpenseCategoryGroup[]> {
+    return firstValueFrom(
+      this.http.get<ExpenseCategoryGroup[]>(`${this.url}/expense-categories`, {
+        params: { from, to },
+      }),
+    );
   }
 
-  /** One spend head with its entries — 404s on a head with nothing in it. */
-  getExpenseCategory(category: string): Promise<ExpenseCategoryGroup> {
+  /** One spend head with its entries in the range — empty, not 404, when nothing falls in it. */
+  getExpenseCategory(category: string, from: string, to: string): Promise<ExpenseCategoryGroup> {
     return firstValueFrom(
       this.http.get<ExpenseCategoryGroup>(
         `${this.url}/expense-categories/${encodeURIComponent(category)}`,
+        { params: { from, to } },
       ),
     );
   }
 
-  /** Walk-in cash trade — no party — grouped into Sales and Purchases with their grand totals, no rows. */
-  listCash(): Promise<CashGroup[]> {
-    return firstValueFrom(this.http.get<CashGroup[]>(`${this.url}/cash`));
+  /** Walk-in cash trade in the range — no party — grouped into Sales and Purchases with their totals, no rows. */
+  listCash(from: string, to: string): Promise<CashGroup[]> {
+    return firstValueFrom(this.http.get<CashGroup[]>(`${this.url}/cash`, { params: { from, to } }));
   }
 
-  /** One walk-in cash head with its entries — 404s on a head with nothing in it. */
-  getCashGroup(kind: string): Promise<CashGroup> {
-    return firstValueFrom(this.http.get<CashGroup>(`${this.url}/cash/${encodeURIComponent(kind)}`));
+  /** One walk-in cash head with its entries in the range — 404s only on a kind that isn't one. */
+  getCashGroup(kind: string, from: string, to: string): Promise<CashGroup> {
+    return firstValueFrom(
+      this.http.get<CashGroup>(`${this.url}/cash/${encodeURIComponent(kind)}`, {
+        params: { from, to },
+      }),
+    );
   }
 }

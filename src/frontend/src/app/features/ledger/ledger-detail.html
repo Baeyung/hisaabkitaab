@@ -30,9 +30,7 @@
         <div class="rm-baqaya" [class]="toneClass(st.currentBalance.direction)">
           <span class="rm-baqaya__label">{{ locale.t('ledger.detail.balance') }}</span>
           <span class="rm-baqaya__amt num">{{ locale.money(st.currentBalance.amount) }}</span>
-          <span class="rm-baqaya__dir">{{
-            locale.t(toneKey(st.currentBalance.direction))
-          }}</span>
+          <span class="rm-baqaya__dir">{{ locale.t(toneKey(st.currentBalance.direction)) }}</span>
         </div>
       </div>
       <div class="rm-actions rm-noprint">
@@ -135,7 +133,9 @@
         <div class="rm-stat">
           <span class="rm-stat__label">{{ locale.t('report.lastPayment') }}</span>
           <span class="rm-stat__value num">{{
-            stats().lastPaymentDate ? locale.date(stats().lastPaymentDate!) : locale.t('report.never')
+            stats().lastPaymentDate
+              ? locale.date(stats().lastPaymentDate!)
+              : locale.t('report.never')
           }}</span>
         </div>
       </div>
@@ -342,7 +342,8 @@
                                 <span class="bill-line__calc num">
                                   @if (line.quantity != null) {
                                     {{ locale.formatNumber(line.quantity)
-                                    }}{{ line.unit ? ' ' + line.unit : '' }} × {{ locale.money(line.rate) }} =
+                                    }}{{ line.unit ? ' ' + line.unit : '' }} ×
+                                    {{ locale.money(line.rate) }} =
                                   }
                                   {{ locale.money(line.amount) }}
                                 </span>
@@ -352,13 +353,17 @@
                         }
                       </div>
                       <div class="bill-total">
-                        <span class="bill-total__label">{{ locale.t('bill.detail.goodsTotal') }}</span>
+                        <span class="bill-total__label">{{
+                          locale.t('bill.detail.goodsTotal')
+                        }}</span>
                         <span class="bill-line__leader" aria-hidden="true"></span>
                         <span class="bill-total__amt num">{{ locale.money(doc.goodsTotal) }}</span>
                       </div>
                       <div class="rm-foot bill-foot">
                         <div class="bill-line">
-                          <span class="bill-line__name">{{ locale.t(docKeys[sidedDocKind(doc.kind)].cash) }}</span>
+                          <span class="bill-line__name">{{
+                            locale.t(docKeys[sidedDocKind(doc.kind)].cash)
+                          }}</span>
                           <span class="bill-line__leader" aria-hidden="true"></span>
                           <span
                             class="bill-line__calc num"
@@ -369,16 +374,24 @@
                         </div>
                         @if (doc.discount) {
                           <div class="bill-line">
-                            <span class="bill-line__name">{{ locale.t(docKeys[sidedDocKind(doc.kind)].discount) }}</span>
+                            <span class="bill-line__name">{{
+                              locale.t(docKeys[sidedDocKind(doc.kind)].discount)
+                            }}</span>
                             <span class="bill-line__leader" aria-hidden="true"></span>
-                            <span class="bill-line__calc num">{{ locale.money(doc.discount) }}</span>
+                            <span class="bill-line__calc num">{{
+                              locale.money(doc.discount)
+                            }}</span>
                           </div>
                         }
                         @if (doc.partyName && doc.outstanding.direction !== 'SETTLED') {
                           <div class="bill-line">
-                            <span class="bill-line__name">{{ locale.t(docKeys[sidedDocKind(doc.kind)].outstanding) }}</span>
+                            <span class="bill-line__name">{{
+                              locale.t(docKeys[sidedDocKind(doc.kind)].outstanding)
+                            }}</span>
                             <span class="bill-line__leader" aria-hidden="true"></span>
-                            <span class="bill-line__calc num">{{ locale.money(doc.outstanding.amount) }}</span>
+                            <span class="bill-line__calc num">{{
+                              locale.money(doc.outstanding.amount)
+                            }}</span>
                           </div>
                         }
                       </div>
