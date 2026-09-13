@@ -24,6 +24,7 @@ export class Sale {
       partyPh: 'sale.party.ph',
       partyCashToggle: 'sale.party.cashToggle',
       partyCash: 'sale.party.cash',
+      partyCashPh: 'sale.party.cash.ph',
       lines: 'sale.lines',
       colDesign: 'sale.col.design',
       colDesignPh: 'sale.col.design.ph',

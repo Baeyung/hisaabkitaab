@@ -19,6 +19,8 @@ export interface EventRequest {
   billNumber: string | null;
   billDate: string | null;
   party: EventParty | null;
+  /** Who a cash (party-less) SALE/PURCHASE is made out to — a bill label only, no khata. */
+  walkInName?: string | null;
   items: EventItem[];
   /** Only sent for EXPENSE; the spend head the cash went to, by name. Auto-created if new. */
   expenseCategory?: string;

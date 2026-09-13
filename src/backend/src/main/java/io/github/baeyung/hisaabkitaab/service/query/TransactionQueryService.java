@@ -47,7 +47,7 @@ public class TransactionQueryService
                         transaction.getId(),
                         transaction.getBill(),
                         dateOf(transaction),
-                        transaction.getParty() != null ? transaction.getParty().getName() : null,
+                        transaction.partyLabel(),
                         DocumentTotals.goods(transaction),
                         DocumentTotals.cash(transaction),
                         transaction.getDiscount(),
@@ -125,7 +125,7 @@ public class TransactionQueryService
                 dateOf(transaction),
                 transaction.getDescription(),
                 transaction.getParty() != null ? transaction.getParty().getId() : null,
-                transaction.getParty() != null ? transaction.getParty().getName() : null,
+                transaction.partyLabel(),
                 transaction.getParty() != null ? transaction.getParty().getContact() : null,
                 lines,
                 DocumentTotals.goods(transaction),
@@ -142,6 +142,12 @@ public class TransactionQueryService
      */
     private PartyBalance outstanding(Transaction transaction)
     {
+        // A cash entry has no khata for a shortfall to land on — whatever its PARTY line
+        // says, nobody is owed anything, and the list must not badge a named walk-in as such.
+        if (transaction.getParty() == null)
+        {
+            return PartyBalance.of(0);
+        }
         double partyNet = transaction.getLines()
                 .stream()
                 .filter(line -> line.getTargetKind() == TargetKind.PARTY)

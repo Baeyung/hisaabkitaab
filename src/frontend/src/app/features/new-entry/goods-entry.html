@@ -163,13 +163,16 @@
       <label class="fld__label" [attr.for]="config().idPrefix + '-party'">
         {{ locale.t(config().labels.party) }}
       </label>
+      <!-- A cash customer can still be named for the bill; no khata is opened, so the
+           box offers no party suggestions in that mode — picking one would look like it did. -->
       <app-combobox
         [inputId]="config().idPrefix + '-party'"
-        [options]="partyNames()"
+        [options]="cashParty() ? [] : partyNames()"
         [value]="partyName()"
         (valueChange)="partyName.set($event)"
-        [disabled]="cashParty()"
-        [placeholder]="locale.t(config().labels.partyPh)"
+        [placeholder]="
+          locale.t(cashParty() ? config().labels.partyCashPh : config().labels.partyPh)
+        "
       />
       <button
         type="button"

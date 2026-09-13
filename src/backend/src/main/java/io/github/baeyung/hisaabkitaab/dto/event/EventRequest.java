@@ -27,6 +27,12 @@ public class EventRequest
     String billNumber;
     LocalDate billDate;
     Party party;
+    /**
+     * The name a cash SALE/PURCHASE is made out to, when there is no {@link #party}. Only a
+     * label for the bill — no khata is opened for it. Ignored when a party is given.
+     */
+    @Size(max = 255)
+    String walkInName;
     List<Item> items;
     /** The spend head for an EXPENSE, by name; blank defaults to UNCATEGORIZED. Auto-created if new. */
     String expenseCategory;

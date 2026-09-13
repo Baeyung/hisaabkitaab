@@ -74,7 +74,7 @@ public class CashbookQueryService
                             transaction.getEvent(),
                             transaction.getDescription(),
                             ItemSummary.of(transaction),
-                            transaction.getParty() != null ? transaction.getParty().getName() : null,
+                            transaction.partyLabel(),
                             line.getInOut(),
                             value(line),
                             PartyBalance.of(khataNet(khataNets, transaction)),
@@ -114,7 +114,8 @@ public class CashbookQueryService
 
     private double khataNet(Map<String, Double> nets, Transaction transaction)
     {
-        return nets.getOrDefault(transaction.getId(), 0.0);
+        // A cash entry has no khata; its PARTY line is not owed by anyone (see TransactionQueryService#outstanding).
+        return transaction.getParty() == null ? 0.0 : nets.getOrDefault(transaction.getId(), 0.0);
     }
 
     private double sumWhere(List<TransactionLine> lines, InOut inOut)

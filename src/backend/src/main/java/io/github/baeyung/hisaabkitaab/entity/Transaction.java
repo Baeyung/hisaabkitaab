@@ -54,6 +54,12 @@ public class Transaction
     @JoinColumn(name = "party_id")
     private Party party;
 
+    /**
+     * Who a party-less (cash) entry was made out to, if anyone — see the V16 migration.
+     * Never set alongside {@link #party}; {@link #partyLabel()} is how readers pick one.
+     */
+    private String walkInName;
+
     private String bill;
 
     private LocalDate eventDate;
@@ -100,6 +106,12 @@ public class Transaction
      * those are typed into the form and would otherwise reopen the window at will.
      */
     public static final Duration DELETE_WINDOW = Duration.ofHours(24);
+
+    /** The name this entry is made out to: the party's, else the walk-in's, else null. */
+    public String partyLabel()
+    {
+        return party != null ? party.getName() : walkInName;
+    }
 
     /** Whether this entry is still inside {@link #DELETE_WINDOW}. */
     public boolean isRecent()

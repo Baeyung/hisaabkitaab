@@ -46,7 +46,8 @@
 - [x] editing/deletion of expenses
 - [ ] address to be shown in ledger?
 - [ ] numbers being cut off in pdfs, and screen, due to large amounts, need to look into that!
-- [ ] profit analysis on the reports given everything is honored (cost price, sale price, discount, item soldAt, etc all tje vars should be respected)
+- [x] profit analysis on the reports given everything is honored (cost price, sale price, discount, item soldAt, etc all tje vars should be respected)
 - [x] custom fields enhancements, UI/UX, and more, sale/purchase as well, maybe later add it for other screens
 - [x] same item grouping etc in bill
-- [ ] menu enhancement, more logical grouping
+- [x] menu enhancement, more logical grouping
+- [ ] copy prod data in mac so that we can test things with em

@@ -113,6 +113,7 @@ public class EventService
                         .store(store)
                         .event(eventRequest.getTransactionEvent())
                         .party(resolveParty(eventRequest, store))
+                        .walkInName(walkInName(eventRequest))
                         .bill(eventRequest.getBillNumber())
                         .eventDate(eventRequest.getBillDate())
                         .entryDate(LocalDate.now())
@@ -160,6 +161,7 @@ public class EventService
 
         transaction.getLines().clear();
         transaction.setParty(resolveParty(eventRequest, store));
+        transaction.setWalkInName(walkInName(eventRequest));
         transaction.setBill(eventRequest.getBillNumber());
         transaction.setEventDate(eventRequest.getBillDate());
         transaction.setDescription(cleanDescription(eventRequest));
@@ -245,6 +247,14 @@ public class EventService
                 : null;
     }
 
+    /** A walk-in name only means something on a party-less entry; a party's own name wins otherwise. */
+    private String walkInName(EventRequest eventRequest)
+    {
+        return eventRequest.getParty() == null && StringUtils.hasText(eventRequest.getWalkInName())
+                ? eventRequest.getWalkInName().trim()
+                : null;
+    }
+
     private double discount(EventRequest eventRequest)
     {
         return eventRequest.getDiscountAmount() != null ? eventRequest.getDiscountAmount() : 0;
@@ -258,6 +268,7 @@ public class EventService
         request.setBillNumber(transaction.getBill());
         request.setBillDate(transaction.getEventDate());
         request.setDescription(transaction.getDescription());
+        request.setWalkInName(transaction.getWalkInName());
         if (transaction.getParty() != null)
         {
             request.setParty(new EventRequest.Party(

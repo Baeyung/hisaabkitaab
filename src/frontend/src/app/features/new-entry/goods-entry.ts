@@ -96,6 +96,8 @@ export interface GoodsEntryLabels {
   partyCashToggle: TranslationKey;
   /** Stands in for the party name when there's no khata (walk-in / one-off). */
   partyCash: TranslationKey;
+  /** Placeholder for the optional walk-in name a cash entry can still be made out to. */
+  partyCashPh: TranslationKey;
   lines: TranslationKey;
   colDesign: TranslationKey;
   colDesignPh: TranslationKey;
@@ -339,11 +341,11 @@ export class GoodsEntry {
 
   protected readonly canSave = computed(() => this.validLines().length > 0 && !this.saving());
 
-  /** Who the printed bill is made out to — the party, or the cash-sale label. */
-  protected readonly printParty = computed(() => {
-    const name = this.partyName().trim();
-    return this.cashParty() || !name ? this.locale.t(this.config().labels.partyCash) : name;
-  });
+  /** Who the bill is made out to — the party or the walk-in's name as typed, else the
+   *  cash-sale label. A cash entry keeps no khata for the name, it is only what prints. */
+  protected readonly printParty = computed(
+    () => this.partyName().trim() || this.locale.t(this.config().labels.partyCash),
+  );
 
   /**
    * Valid lines flattened for the print-only bill table.
@@ -491,7 +493,7 @@ export class GoodsEntry {
       this.editId.set(id);
       // No party on the entry means it was a cash sale/purchase — the same walk-in toggle.
       this.cashParty.set(e.party == null);
-      this.partyName.set(e.party?.name ?? '');
+      this.partyName.set(e.party?.name ?? e.walkInName ?? '');
       this.billNumber.set(e.billNumber ?? '');
       this.description.set(e.description ?? '');
       if (e.billDate) {
@@ -527,9 +529,6 @@ export class GoodsEntry {
     // empty for a credit one) instead of carrying a stale override across.
     this.cash.set(null);
     this.cashTouched.set(false);
-    if (next) {
-      this.partyName.set('');
-    }
   }
 
   // ── lines ──────────────────────────────────────────────────────────────
@@ -860,7 +859,7 @@ export class GoodsEntry {
     const labels = this.config().labels;
     const total = this.total();
     const name = this.partyName().trim();
-    const partyLabel = this.cashParty() || !name ? this.locale.t(labels.partyCash) : name;
+    const partyLabel = this.printParty();
 
     const request: EventRequest = {
       transactionEvent: this.config().eventType,
@@ -872,6 +871,9 @@ export class GoodsEntry {
       description: this.description().trim() || null,
       party:
         this.cashParty() || !name ? null : { partyId: this.matchParty(name)?.id ?? null, name },
+      // A cash entry's name is only a bill label — the backend stores it beside the (null)
+      // party rather than opening a khata for it.
+      walkInName: this.cashParty() && name ? name : null,
       // `itemSoldAt` is the wire name for the line rate on both events — what you
       // sold it at on a sale, what you bought it at on a purchase.
       //
@@ -1029,8 +1031,7 @@ export class GoodsEntry {
     const labels = this.config().labels;
     const flow = this.config().drawerFlow;
     const opposite = flow === 'in' ? 'out' : 'in';
-    const name = this.partyName().trim();
-    const party = this.cashParty() || !name ? this.locale.t(labels.partyCash) : name;
+    const party = this.printParty();
     return b > 0
       ? {
           tone: flow,
