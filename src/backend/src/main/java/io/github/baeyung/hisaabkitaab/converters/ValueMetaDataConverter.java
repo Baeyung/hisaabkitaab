@@ -12,7 +12,7 @@ public class ValueMetaDataConverter implements AttributeConverter<ValueMetaData,
 {
     private static final Logger log = LoggerFactory.getLogger(ValueMetaDataConverter.class);
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = ColumnJson.MAPPER;
 
     @Override
     public String convertToDatabaseColumn(ValueMetaData attribute)

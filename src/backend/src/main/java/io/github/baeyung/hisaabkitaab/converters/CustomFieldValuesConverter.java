@@ -30,7 +30,7 @@ public class CustomFieldValuesConverter implements AttributeConverter<Map<String
 {
     private static final Logger log = LoggerFactory.getLogger(CustomFieldValuesConverter.class);
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = ColumnJson.MAPPER;
 
     private static final TypeReference<Map<String, BigDecimal>> TYPE = new TypeReference<>() {};
 

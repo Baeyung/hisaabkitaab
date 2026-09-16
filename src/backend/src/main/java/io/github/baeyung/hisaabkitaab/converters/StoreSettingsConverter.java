@@ -22,7 +22,7 @@ public class StoreSettingsConverter implements AttributeConverter<StoreSettings,
 {
     private static final Logger log = LoggerFactory.getLogger(StoreSettingsConverter.class);
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = ColumnJson.MAPPER;
 
     @Override
     public String convertToDatabaseColumn(StoreSettings attribute)
