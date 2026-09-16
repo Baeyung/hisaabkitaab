@@ -5,7 +5,9 @@ import { InventoryService } from '../../core/store/inventory.service';
 import { StoreItemService } from '../../core/store/store-item.service';
 import { StoreService } from '../../core/store/store.service';
 import { ItemMovement } from '../../core/store/inventory.models';
+import { TransactionEventKind } from '../../core/store/cashbook.models';
 import { AmountLegend } from '../../shared/amount-legend';
+import { entryDetailLink } from '../../shared/entry-route';
 import { RowWindowDirective, rowWindow } from '../../shared/row-window';
 import { ToastService } from '../../shared/toast/toast.service';
 
@@ -64,6 +66,24 @@ export class InventoryDetail {
       }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /**
+   * The row's own page, when it has one: the bill a sale went out on, the supplier's
+   * record a purchase came in on, the batch a processing run made. Opening stock and
+   * adjustments have no page, and the template leaves those rows unlinked — same rule as
+   * the ledger.
+   */
+  protected detailLink(event: TransactionEventKind, transactionId: string): string[] | null {
+    const link = entryDetailLink(event, transactionId);
+    return link ? this.stores.link(...link) : null;
+  }
+
+  openDetail(event: TransactionEventKind, transactionId: string): void {
+    const link = this.detailLink(event, transactionId);
+    if (link) {
+      void this.router.navigate(link);
     }
   }
 

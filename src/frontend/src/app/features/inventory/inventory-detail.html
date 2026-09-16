@@ -112,9 +112,20 @@
                 </tr>
               }
               @for (row of win.rows(); track row.transactionId + row.occurredAt) {
-                <tr>
+                <tr
+                  [class.rm-rowlink]="!!detailLink(row.event, row.transactionId)"
+                  (click)="openDetail(row.event, row.transactionId)"
+                >
                   <td class="num">{{ locale.date(row.date) }}</td>
-                  <td class="rm-cell-head">{{ locale.describe(row.event) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</td>
+                  <td class="rm-cell-head">
+                    @if (detailLink(row.event, row.transactionId); as link) {
+                      <a [routerLink]="link" (click)="$event.stopPropagation()"
+                        >{{ locale.describe(row.event) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}</a
+                      >
+                    } @else {
+                      {{ locale.describe(row.event) }}@if (row.description) {<em class="rm-note"> ({{ row.description }})</em>}
+                    }
+                  </td>
                   <td class="end num rm-cell-amt" [class.amt--in]="row.inOut === 'IN'" [class.amt--out]="row.inOut === 'OUT'">
                     {{ locale.formatNumber(row.quantity) }}
                   </td>
