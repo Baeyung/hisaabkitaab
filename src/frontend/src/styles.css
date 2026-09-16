@@ -704,6 +704,35 @@ html[dir='rtl'] select.rm-input {
   padding-top: 0;
   color: var(--kg-muted);
 }
+/* The grid's own totals, closing it: the shop's footed columns and the money, each under
+   the figures it adds up, then the cash and khata rows a bill pad writes under the total.
+   Ruled off from the lines so the eye lands on the total; the rows after it are quieter,
+   being what happened to the money rather than more of what was sold. Background and rule
+   on the row, not the cells, so the same rules hold once the row re-forms as a card. See
+   shared/bill-invoice.html and goods-entry.html's print block. */
+.rm-tbl tbody.rm-tbl__foot tr {
+  background: var(--kg-cream);
+}
+.rm-tbl tbody.rm-tbl__foot tr:first-child {
+  border-top: 1px solid var(--kg-line-strong);
+}
+.rm-tbl tbody.rm-tbl__foot td {
+  padding-block: 6px;
+  border-bottom: 0;
+}
+.rm-tbl tbody.rm-tbl__foot tr:first-child td {
+  padding-top: 12px;
+}
+.rm-tbl tbody.rm-tbl__foot tr:last-child td {
+  padding-bottom: 12px;
+}
+.rm-tbl tr.rm-row--total td {
+  font-weight: 700;
+}
+.rm-tbl tbody.rm-tbl__foot tr:not(.rm-row--total) td.rm-cell-head {
+  font-weight: 500;
+  color: var(--kg-muted);
+}
 .rm-tbl .end {
   text-align: end;
 }
@@ -1398,6 +1427,77 @@ html[dir='rtl'] select.rm-input {
   .rm-tbl__meta {
     font-size: 10px;
   }
+  /* A bill or purchase as the shop's own pad rules it: one grid with every cell ruled, so a
+     figure sits squarely under its column and the customer checks the copy by running a
+     finger down it. Numeric columns shrink-wrap their figures and the item takes the rest,
+     which is what keeps the amounts in one straight column whatever the item names do.
+     Scoped to .rm-invoice — the cashbook and khata keep their lighter row rules. */
+  .rm-invoice .rm-tbl {
+    font-size: 12px;
+    border: 1.5px solid #000;
+  }
+  .rm-invoice .rm-tbl th,
+  .rm-invoice .rm-tbl td {
+    padding: 5px 8px;
+    border: 1px solid #000;
+    vertical-align: top;
+  }
+  /* Headed the way the pad is — "Thans", not a tracked-out caption: this is a bill, not a
+     report, and the customer reads it against the paper one they already know. */
+  .rm-invoice .rm-tbl thead th {
+    font-size: 11.5px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #000;
+    background: none;
+    border-bottom-width: 1.5px;
+  }
+  .rm-invoice .rm-tbl th.end,
+  .rm-invoice .rm-tbl td.end {
+    width: 1%;
+    white-space: nowrap;
+    /* Right, not end: figures on a pad line up on the right in either language. */
+    text-align: right;
+  }
+  .rm-invoice .rm-tbl__name {
+    color: #000;
+  }
+  /* The unit and the khata direction sit beside their line rather than under it, so every
+     line of the bill takes one rule of the grid, the way it does on the pad. */
+  .rm-invoice .rm-tbl__meta {
+    display: inline;
+    margin-inline-start: 6px;
+    color: #444;
+    /* Its own bidi run: under Urdu, a Latin unit after a Latin name would otherwise be
+       ordered as one left-to-right phrase and the gap would land on the wrong side. */
+    unicode-bidi: isolate;
+  }
+  /* On paper the counterparty is a name on a line, not a chip. */
+  .rm-billto__name {
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+  }
+  .rm-invoice .rm-tbl tr.rm-row--groupfoot td {
+    color: #333;
+  }
+  .rm-invoice .rm-tbl tbody.rm-tbl__foot tr {
+    background: none;
+    break-inside: avoid;
+  }
+  .rm-invoice .rm-tbl tbody.rm-tbl__foot tr:first-child {
+    border-top: 1.5px solid #000;
+  }
+  .rm-invoice .rm-tbl tbody.rm-tbl__foot td {
+    padding-block: 5px;
+  }
+  .rm-invoice .rm-tbl tr.rm-row--total td {
+    font-size: 13px;
+  }
+  .rm-invoice .rm-tbl tbody.rm-tbl__foot tr:not(.rm-row--total) td.rm-cell-head {
+    color: #333;
+  }
   /* Compact print for the receipt-style line items — same intent as the
      .rm-tbl rules above: tighter spacing, smaller type, room for more rows
      on a page. */
@@ -1661,6 +1761,13 @@ html[dir='rtl'] select.rm-input {
     margin-inline-end: 4px;
     font-weight: 600;
     color: var(--kg-faint);
+  }
+  /* The invoice grid rules its items apart and its totals off per cell, at a specificity
+     the reset above doesn't reach; a card rules itself, so those come back off here. */
+  .rm-tbl tbody.rm-group:not(:last-of-type) tr:last-child td,
+  .rm-tbl tbody.rm-tbl__foot tr td {
+    padding: 0;
+    border: 0;
   }
   /* One fact stays on one line, so a value and its qualifier don't split. */
   .rm-tbl td:not(.rm-cell-head):not(.rm-cell-amt) .rm-tbl__meta {

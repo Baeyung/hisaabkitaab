@@ -12,7 +12,11 @@
     </div>
   </header>
 
-  <div class="rm-card">
+  <!-- The grid a saved bill prints (shared/bill-invoice.html), off the lines being written:
+       item, the shop's columns, amount, with the totals closing the grid under the columns
+       they foot. Keep the two templates in step — the customer gets one copy from here and
+       the shopkeeper reprints the other from the bill's own page. -->
+  <div class="rm-card rm-invoice">
     @if (printLines().length === 0) {
       <div class="rm-state" style="border: 0">
         <p class="rm-state__body">{{ locale.t('bill.detail.empty') }}</p>
@@ -73,50 +77,65 @@
               }
             </tbody>
           }
+          <tbody class="rm-tbl__foot">
+            <!-- The shop's own columns footed under themselves — 10 thans on one line and 5
+                 on another read as 15 — beside the money they came to. -->
+            <tr class="rm-row--total">
+              <td class="rm-cell-head">{{ locale.t('bill.detail.goodsTotal') }}</td>
+              @for (total of printColumnTotals(); track $index) {
+                <td
+                  class="end num"
+                  [attr.data-label]="total == null ? null : columnLabel(columns()[$index])"
+                >
+                  {{ total == null ? '' : locale.formatNumber(total) }}
+                </td>
+              }
+              <td class="end num rm-tbl__name rm-cell-amt">{{ locale.money(total()) }}</td>
+            </tr>
+            <tr>
+              <td class="rm-cell-head">{{ locale.t(config().labels.cash) }}</td>
+              @for (col of columns(); track col.id) {
+                <td></td>
+              }
+              <td
+                class="end num rm-cell-amt"
+                [class.amt--in]="config().drawerFlow === 'in'"
+                [class.amt--out]="config().drawerFlow === 'out'"
+              >
+                {{ locale.money(effectiveCash()) }}
+              </td>
+            </tr>
+            @if (discountAmount() > 0) {
+              <tr>
+                <td class="rm-cell-head">{{ locale.t(config().labels.discount) }}</td>
+                @for (col of columns(); track col.id) {
+                  <td></td>
+                }
+                <td class="end num rm-cell-amt">{{ locale.money(discountAmount()) }}</td>
+              </tr>
+            }
+            @if (!cashParty() && balance() !== 0) {
+              <tr>
+                <td class="rm-cell-head">
+                  {{ locale.t('bill.detail.outstanding') }}
+                  <span class="rm-tbl__meta">{{
+                    balance() > 0
+                      ? locale.t(config().labels.effectOutstanding)
+                      : locale.t(config().labels.effectOverpaid)
+                  }}</span>
+                </td>
+                @for (col of columns(); track col.id) {
+                  <td></td>
+                }
+                <td class="end num rm-cell-amt" [class]="balance() > 0 ? 'amt--out' : 'amt--in'">
+                  {{ locale.money(abs(balance())) }}
+                </td>
+              </tr>
+            }
+          </tbody>
         </table>
       </div>
     }
-    <div class="rm-foot">
-      <!-- The shop's own columns, footed — 10 thans on one line and 5 on another read as 15. -->
-      @for (t of printTotals(); track t.label) {
-        <span>
-          {{ locale.t('bill.detail.totalOf', { name: t.label }) }}
-          <strong class="num">{{ locale.formatNumber(t.value) }}</strong>
-        </span>
-      }
-      <span>
-        {{ locale.t('bill.detail.goodsTotal') }}
-        <strong class="num">{{ locale.money(total()) }}</strong>
-      </span>
-      <span>
-        {{ locale.t(config().labels.cash) }}
-        <strong
-          class="num"
-          [class.amt--in]="config().drawerFlow === 'in'"
-          [class.amt--out]="config().drawerFlow === 'out'"
-          >{{ locale.money(effectiveCash()) }}</strong
-        >
-      </span>
-      @if (discountAmount() > 0) {
-        <span>
-          {{ locale.t(config().labels.discount) }}
-          <strong class="num">{{ locale.money(discountAmount()) }}</strong>
-        </span>
-      }
-      @if (!cashParty() && balance() !== 0) {
-        <span>
-          {{ locale.t('bill.detail.outstanding') }}
-          <strong class="num" [class]="balance() > 0 ? 'amt--out' : 'amt--in'">
-            {{ locale.money(abs(balance())) }}
-          </strong>
-          <span class="rm-tbl__meta">{{
-            balance() > 0
-              ? locale.t(config().labels.effectOutstanding)
-              : locale.t(config().labels.effectOverpaid)
-          }}</span>
-        </span>
-      }
-    </div>
   </div>
 
   @if (description()) {

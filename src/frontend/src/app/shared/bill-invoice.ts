@@ -6,7 +6,13 @@ import { BalanceDirection } from '../core/store/balance.models';
 import { directionClass, directionKey, invertDirection, invertInOut } from './balance.util';
 import { Perspective } from './print-details.service';
 import { StoreService } from '../core/store/store.service';
-import { CustomField } from '../core/store/custom-field.models';
+import {
+  CustomField,
+  DEFAULT_CUSTOM_FIELDS,
+  DEFAULT_QTY_FIELD,
+  DEFAULT_RATE_FIELD,
+  storedValues,
+} from '../core/store/custom-field.models';
 
 /**
  * The wording of one goods document. Keys are passed in as literals rather than
@@ -87,13 +93,14 @@ export class BillInvoice {
   }
 
   /**
-   * The shop's own columns as this line recorded them, or null for a line that has none —
-   * which is every line of every shop running the grid the app ships with, and every line
-   * written before this existed. Null is what keeps the familiar `63 Gaz × 100 = 6300`
-   * rendering below exactly as it has always been.
+   * The grid's columns between the item and the amount, as the bill's lines recorded them —
+   * one per stored column, in the order they were written. A line written before this shop
+   * had columns of its own reads as the two the app has always had, quantity and rate, so
+   * every bill lands in the same grid and the figures of one line sit under the figures of
+   * the next: the printed copy is checked by running a finger down a column.
    *
-   * Read off the line, not off the shop's current arrangement: a bill shows what it was
-   * written with. Take a column away in settings and a bill from before it went still reads
+   * Read off the lines, not off the shop's current arrangement: a bill shows what it was
+   * written with. Take a column away in settings and a bill from before it went still shows
    * `3 · 21 · 100 = 6300` rather than dropping a figure and leaving arithmetic that no longer
    * works — the customer is holding the printed copy of the first one.
    *
@@ -102,20 +109,28 @@ export class BillInvoice {
    * ponytail: labels are not stored per line; storing them would put the shop's whole
    * vocabulary on every row to survive a rename that nobody has asked to survive yet.
    */
-  protected cells(line: BillLine): { label: string; value: number }[] | null {
-    const stored = line.customFields;
-    if (!stored || Object.keys(stored).length === 0) {
-      return null;
-    }
-    const labels = new Map(
-      (this.stores.current()?.settings?.customFields?.fields ?? []).map((f) => [f.id, f.label]),
+  protected columns(): InvoiceColumn[] {
+    return invoiceColumns(this.bill().lines, this.fields(), (id) =>
+      this.locale.t(id === DEFAULT_QTY_FIELD ? 'bill.detail.col.qty' : 'bill.detail.col.rate'),
     );
-    // Insertion order is the order the columns were in when the line was written — a JSON
-    // object keeps it, on both sides of the wire.
-    return Object.entries(stored).map(([id, value]) => ({
-      label: labels.get(id) || id,
-      value,
-    }));
+  }
+
+  /**
+   * Whether a column holds a price, so the bill puts a currency on it — the rate column, which
+   * on the grid the app ships with is `rate` and has always printed as money. A count of thans
+   * is not money and reads wrong with "Rs" in front of it. Mirrors the entry screen.
+   */
+  protected isMoneyColumn(id: string): boolean {
+    return id === (this.stores.current()?.settings?.customFields ?? DEFAULT_CUSTOM_FIELDS).rateField;
+  }
+
+  /** What this line recorded under a column, as that column shows it — blank where nothing was. */
+  protected cell(line: BillLine, id: string): string {
+    const value = storedValues(line.customFields, line.quantity, line.rate)[id];
+    if (value == null) {
+      return '';
+    }
+    return this.isMoneyColumn(id) ? this.locale.money(value) : this.locale.formatNumber(value);
   }
 
   /**
@@ -128,28 +143,87 @@ export class BillInvoice {
    * {@link sumItems} keys its rollup, so two free-text lines typed alike still gather.
    */
   protected groups(): BillGroup[] {
-    return groupLines(this.bill().lines, this.stores.current()?.settings?.customFields?.fields ?? []);
+    return groupLines(this.bill().lines, this.fields());
   }
 
   /**
    * The columns this shop has asked to see footed, added up across the bill's lines — ten
-   * thans on one line and five on another footing fifteen.
+   * thans on one line and five on another footing fifteen. Keyed by column, so each total
+   * lands in the grid directly under the figures it adds up.
    *
    * Off the shop's current arrangement rather than off the lines, because the request is
    * "show me my thans": a column dropped from the grid is no longer footed even on the bills
    * that recorded it. Lines written before the column existed simply have nothing to add, and
    * a column no line carries is left off rather than footed as a zero.
    */
-  protected totals(): { label: string; value: number }[] {
-    return footedTotals(this.stores.current()?.settings?.customFields?.fields ?? [], this.bill().lines);
+  protected totals(): Map<string, number> {
+    return new Map(footedTotals(this.fields(), this.bill().lines).map((t) => [t.id, t.value]));
   }
+
+  /** The item's own footed figure under a column, or blank where the item took one line. */
+  protected groupTotal(group: BillGroup, id: string): string {
+    const found = group.totals.find((t) => t.id === id);
+    return found ? this.locale.formatNumber(found.value) : '';
+  }
+
+  /** A bill-level footed figure under a column, or blank where the column isn't footed. */
+  protected total(id: string): string {
+    const value = this.totals().get(id);
+    return value == null ? '' : this.locale.formatNumber(value);
+  }
+
+  private fields(): readonly CustomField[] {
+    return this.stores.current()?.settings?.customFields?.fields ?? [];
+  }
+}
+
+/** One column of the bill's grid — see {@link BillInvoice.columns}. */
+export interface InvoiceColumn {
+  id: string;
+  label: string;
+}
+
+/** A footed figure, keyed by the column it foots so it can sit under that column. */
+export interface FootedTotal {
+  id: string;
+  label: string;
+  value: number;
+}
+
+/**
+ * See {@link BillInvoice.columns} — pulled out so it can be checked without a fixture.
+ * `defaultLabel` names the two built-in columns, whose arrangement entries carry no label of
+ * their own because theirs follow the language.
+ */
+export function invoiceColumns(
+  lines: readonly BillLine[],
+  fields: readonly CustomField[],
+  defaultLabel: (id: string) => string,
+): InvoiceColumn[] {
+  const ids: string[] = [];
+  for (const line of lines) {
+    // Insertion order is the order the columns were in when the line was written — a JSON
+    // object keeps it, on both sides of the wire.
+    for (const id of Object.keys(storedValues(line.customFields, line.quantity, line.rate))) {
+      if (!ids.includes(id)) {
+        ids.push(id);
+      }
+    }
+  }
+  const labels = new Map(fields.map((f) => [f.id, f.label]));
+  return ids.map((id) => ({
+    id,
+    label:
+      labels.get(id) ||
+      (id === DEFAULT_QTY_FIELD || id === DEFAULT_RATE_FIELD ? defaultLabel(id) : id),
+  }));
 }
 
 /** See {@link BillInvoice.totals} — pulled out so it can be checked without a fixture. */
 export function footedTotals(
   fields: readonly CustomField[],
   lines: readonly BillLine[],
-): { label: string; value: number }[] {
+): FootedTotal[] {
   return fields
     .filter((f) => f.showTotal)
     .flatMap((f) => {
@@ -157,7 +231,7 @@ export function footedTotals(
         .map((l) => l.customFields?.[f.id])
         .filter((v): v is number => v != null);
       return values.length
-        ? [{ label: f.label || f.id, value: values.reduce((sum, v) => sum + v, 0) }]
+        ? [{ id: f.id, label: f.label || f.id, value: values.reduce((sum, v) => sum + v, 0) }]
         : [];
     });
 }
@@ -171,7 +245,7 @@ export interface BillGroup {
    * as fifteen against the item. Empty where the item took a single line, since a foot there
    * would only restate the figure directly above it.
    */
-  totals: { label: string; value: number }[];
+  totals: FootedTotal[];
 }
 
 /** See {@link BillInvoice.groups} — pulled out so it can be checked without a fixture. */

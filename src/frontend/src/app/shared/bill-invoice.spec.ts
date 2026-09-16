@@ -1,4 +1,4 @@
-import { footedTotals, groupLines } from './bill-invoice';
+import { footedTotals, groupLines, invoiceColumns } from './bill-invoice';
 import { BillLine } from '../core/store/bill.models';
 
 function line(customFields: Record<string, number> | null, item?: Partial<BillLine>): BillLine {
@@ -13,7 +13,7 @@ describe('footedTotals', () => {
 
   it('adds a footed column down the bill', () => {
     const rows = footedTotals(fields, [line({ thans: 10, rate: 5 }), line({ thans: 5, rate: 5 })]);
-    expect(rows).toEqual([{ label: 'Thans', value: 15 }]);
+    expect(rows).toEqual([{ id: 'thans', label: 'Thans', value: 15 }]);
   });
 
   it('leaves out a column no line recorded', () => {
@@ -31,7 +31,7 @@ describe('groupLines', () => {
     const groups = groupLines([a1, b1, a2], fields);
     expect(groups.map((g) => g.name)).toEqual(['Item A', 'Item B']);
     expect(groups[0].lines).toEqual([a1, a2]);
-    expect(groups[0].totals).toEqual([{ label: 'Thans', value: 10 }]);
+    expect(groups[0].totals).toEqual([{ id: 'thans', label: 'Thans', value: 10 }]);
   });
 
   it('leaves an item that took one line unfooted', () => {
@@ -41,5 +41,38 @@ describe('groupLines', () => {
   it('gathers free-text lines on their name, and keeps different names apart', () => {
     const groups = groupLines([line(null, { itemName: 'Cloth' }), line(null, { itemName: 'Silk' }), line(null, { itemName: 'Cloth' })]);
     expect(groups.map((g) => [g.name, g.lines.length])).toEqual([['Cloth', 2], ['Silk', 1]]);
+  });
+});
+
+describe('invoiceColumns', () => {
+  const fields = [
+    { id: 'thans', label: 'Thans' },
+    { id: 'rate', label: 'Rate' },
+  ];
+  const defaults = (id: string) => (id === 'qty' ? 'Qty' : 'Rate');
+
+  it('lists the columns in the order the lines recorded them, named by the arrangement', () => {
+    const cols = invoiceColumns([line({ thans: 10, rate: 315 })], fields, defaults);
+    expect(cols).toEqual([
+      { id: 'thans', label: 'Thans' },
+      { id: 'rate', label: 'Rate' },
+    ]);
+  });
+
+  it('reads a line written before the shop had columns as quantity and rate', () => {
+    expect(invoiceColumns([line(null, { quantity: 63, rate: 100 })], fields, defaults)).toEqual([
+      { id: 'qty', label: 'Qty' },
+      { id: 'rate', label: 'Rate' },
+    ]);
+  });
+
+  it('keeps a column the shop has since removed, under its own id', () => {
+    const cols = invoiceColumns([line({ gazana: 21, rate: 100 })], fields, defaults);
+    expect(cols[0]).toEqual({ id: 'gazana', label: 'gazana' });
+  });
+
+  it('gathers every column any line recorded, once', () => {
+    const cols = invoiceColumns([line({ thans: 1 }), line({ thans: 2, rate: 5 })], fields, defaults);
+    expect(cols.map((c) => c.id)).toEqual(['thans', 'rate']);
   });
 });

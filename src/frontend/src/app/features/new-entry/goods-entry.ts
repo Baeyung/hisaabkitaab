@@ -373,16 +373,14 @@ export class GoodsEntry {
    * The columns this shop has asked to see footed, added up down the bill being written — the
    * same figures {@link footedTotals} puts on a saved bill, off the line cells rather than off
    * stored values because nothing here has been stored yet.
+   *
+   * One entry per grid column, null where the shop hasn't asked for that column to be footed,
+   * so each figure lands in the grid directly under the column it adds up.
    */
-  protected readonly printTotals = computed(() => {
+  protected readonly printColumnTotals = computed<(number | null)[]>(() => {
     const lines = this.printLines();
-    if (lines.length === 0) {
-      return [];
-    }
-    return this.columns().flatMap((f, i) =>
-      f.showTotal
-        ? [{ label: this.columnLabel(f), value: lines.reduce((sum, l) => sum + l.cells[i], 0) }]
-        : [],
+    return this.columns().map((f, i) =>
+      f.showTotal && lines.length ? lines.reduce((sum, l) => sum + l.cells[i], 0) : null,
     );
   });
 
