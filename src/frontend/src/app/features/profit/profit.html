@@ -98,7 +98,7 @@
             {{
               locale.t('profit.answer.of', {
                 pct: netPct(d) + '',
-                revenue: locale.money(d.revenue),
+                revenue: money(d.revenue),
               })
             }}
           } @else {
@@ -136,13 +136,13 @@
             {{ locale.t('profit.revenue') }}
             <small>
               @if (d.discounts > 0) {
-                {{ locale.t('profit.discounts.hint', { amount: locale.money(d.discounts) }) }}
+                {{ locale.t('profit.discounts.hint', { amount: money(d.discounts) }) }}
               } @else {
                 {{ locale.t('profit.revenue.hint') }}
               }
             </small>
           </dt>
-          <dd class="num amt--in">{{ locale.money(d.revenue) }}</dd>
+          <dd class="num amt--in">{{ money(d.revenue) }}</dd>
         </div>
         <div class="dw-sum__row">
           <dt>
@@ -178,6 +178,135 @@
       </dl>
     </section>
 
+    <!-- The working, written out the way it is done by hand: one line per design across the
+         page — how much went, at what rate, what it had cost, what was kept — then the expense
+         heads, then the same net figure the headline gave. Nothing on this list is left out for
+         want of a cost; a design that could only be part-priced shows its priced part and
+         says, under its name, how much of it it could not. -->
+    <section class="rm-card dw-card dw-stmt">
+      <header class="dw-card__head">
+        <h2 class="dw-card__title">{{ locale.t('profit.stmt.title') }}</h2>
+        <span class="dw-card__hint">{{ locale.t('profit.stmt.hint') }}</span>
+      </header>
+      <div class="rm-tablewrap">
+        <table class="rm-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ locale.t('profit.stmt.item') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.stmt.qty') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.stmt.saleRate') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.stmt.costRate') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.print.revenue') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.print.cogs') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.print.profit') }}</th>
+              <th scope="col" class="end">{{ locale.t('profit.print.margin') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of d.statement; track line.itemId) {
+              <tr>
+                <td class="rm-cell-head">
+                  <a [routerLink]="stores.link('inventory', line.itemId)" class="rm-tbl__name">{{
+                    line.name
+                  }}</a>
+                  @if (line.uncostedRevenue > 0) {
+                    <span class="rm-tbl__meta dw-stmt__gap">
+                      {{
+                        locale.t('profit.stmt.unpriced', {
+                          qty: locale.qtyUnit(line.quantity - line.costedQuantity, line.unit),
+                          amount: money(line.uncostedRevenue),
+                        })
+                      }}
+                    </span>
+                  }
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('profit.stmt.qty')">
+                  {{ locale.qtyUnit(line.quantity, line.unit) }}
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('profit.stmt.saleRate')">
+                  {{ rate(line.saleRate) }}
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('profit.stmt.costRate')">
+                  {{ line.costedQuantity > 0 ? rate(line.costRate) : '—' }}
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('profit.print.revenue')">
+                  {{ money(line.revenue) }}
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('profit.print.cogs')">
+                  {{ line.costedQuantity > 0 ? money(line.cogs) : '—' }}
+                </td>
+                <td
+                  class="end num rm-tbl__name rm-cell-amt"
+                  [class]="line.costedQuantity > 0 ? tone(line.profit) : ''"
+                  [attr.data-label]="locale.t('profit.print.profit')"
+                >
+                  {{ line.costedQuantity > 0 ? money(line.profit) : '—' }}
+                </td>
+                <td class="end num" [attr.data-label]="locale.t('profit.print.margin')">
+                  {{ line.costedQuantity > 0 ? margin(line.marginPct) : '—' }}
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8">{{ locale.t('profit.empty.title') }}</td>
+              </tr>
+            }
+          </tbody>
+          <!-- The sum under the goods, then the money that ran the shop, then what was left:
+               the three steps of the headline card, footed here under the columns they add. -->
+          <tbody class="rm-tbl__foot">
+            <tr class="rm-row--total">
+              <td class="rm-cell-head" colspan="4">{{ locale.t('profit.gross') }}</td>
+              <td class="end num" [attr.data-label]="locale.t('profit.print.revenue')">
+                {{ money(d.revenue) }}
+              </td>
+              <td class="end num" [attr.data-label]="locale.t('profit.print.cogs')">
+                {{ costFigure(d.cogs) }}
+              </td>
+              <td
+                class="end num rm-cell-amt"
+                [class]="measurable() ? tone(d.grossProfit) : ''"
+                [attr.data-label]="locale.t('profit.print.profit')"
+              >
+                {{ costFigure(d.grossProfit) }}
+              </td>
+              <td class="end num" [attr.data-label]="locale.t('profit.print.margin')">
+                {{ measurable() ? margin(d.marginPct) : '—' }}
+              </td>
+            </tr>
+            @for (line of d.expensesByCategory; track line.category) {
+              <tr>
+                <td class="rm-cell-head" colspan="6">
+                  <span class="rm-tbl__meta dw-stmt__head">{{ locale.t('profit.expenses') }}</span>
+                  {{ line.category ?? locale.t('profit.stmt.uncategorised') }}
+                </td>
+                <td class="end num amt--out" [attr.data-label]="locale.t('profit.expenses')">
+                  {{ signed(line.amount) }}
+                </td>
+                <td></td>
+              </tr>
+            }
+            <tr class="rm-row--total">
+              <td class="rm-cell-head" colspan="6">{{ locale.t('profit.net') }}</td>
+              <td
+                class="end num rm-cell-amt"
+                [class]="measurable() ? tone(d.netProfit) : ''"
+                [attr.data-label]="locale.t('profit.net')"
+              >
+                {{ costFigure(d.netProfit) }}
+              </td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      @if (d.uncostedRevenue > 0) {
+        <p class="dw-foot">
+          {{ locale.t('profit.stmt.gapNote', { amount: money(d.uncostedRevenue) }) }}
+        </p>
+      }
+    </section>
+
     <!-- Bars for what each day made, a dashed line for the margin it took to make it. The best
          and worst days ride under the chart rather than in cards of their own: they are two
          points on it, and two near-empty cards holding one figure each said so less clearly.
@@ -205,10 +334,10 @@
             @for (point of dailyRows(); track point.date) {
               <tr>
                 <td>{{ day(point.date) }}</td>
-                <td class="end num">{{ locale.money(point.revenue) }}</td>
-                <td class="end num">{{ locale.money(point.cogs) }}</td>
+                <td class="end num">{{ money(point.revenue) }}</td>
+                <td class="end num">{{ money(point.cogs) }}</td>
                 <td class="end num" [class]="tone(point.profit)">
-                  {{ locale.money(point.profit) }}
+                  {{ money(point.profit) }}
                 </td>
                 <td class="end num">{{ margin(point.marginPct) }}</td>
               </tr>
@@ -226,10 +355,10 @@
               <span class="dw-day__label">{{ locale.t('profit.best.title') }}</span>
               <span class="dw-day__date">{{ day(best.date) }}</span>
               <span class="dw-day__value num" [class]="tone(best.profit)">{{
-                locale.money(best.profit)
+                money(best.profit)
               }}</span>
               <span class="dw-day__on">{{
-                locale.t('profit.day.on', { revenue: locale.money(best.revenue) })
+                locale.t('profit.day.on', { revenue: money(best.revenue) })
               }}</span>
             </div>
           }
@@ -238,10 +367,10 @@
               <span class="dw-day__label">{{ locale.t('profit.worst.title') }}</span>
               <span class="dw-day__date">{{ day(worst.date) }}</span>
               <span class="dw-day__value num" [class]="tone(worst.profit)">{{
-                locale.money(worst.profit)
+                money(worst.profit)
               }}</span>
               <span class="dw-day__on">{{
-                locale.t('profit.day.on', { revenue: locale.money(worst.revenue) })
+                locale.t('profit.day.on', { revenue: money(worst.revenue) })
               }}</span>
             </div>
           }
@@ -267,7 +396,7 @@
                 item.name
               }}</a>
               <span class="dw-row__val num">
-                <span [class]="tone(item.profit)">{{ locale.money(item.profit) }}</span>
+                <span [class]="tone(item.profit)">{{ money(item.profit) }}</span>
                 <small class="num">
                   {{ locale.qtyUnit(item.quantity, item.unit) }} · {{ margin(item.marginPct) }}
                 </small>
@@ -299,10 +428,10 @@
                   item.name
                 }}</a>
                 <span class="dw-row__val num">
-                  <span class="amt--out">{{ locale.money(item.profit) }}</span>
+                  <span class="amt--out">{{ money(item.profit) }}</span>
                   <small class="num">
                     {{ locale.qtyUnit(item.quantity, item.unit) }} ·
-                    {{ locale.money(item.revenue) }}
+                    {{ money(item.revenue) }}
                   </small>
                 </span>
               </li>
@@ -329,7 +458,7 @@
                 <a [routerLink]="stores.link('inventory', item.itemId)">{{ item.name }}</a>
                 <small class="dw-row__sub">{{ fixFor(item.everPurchased) }}</small>
               </span>
-              <span class="dw-row__val num">{{ locale.money(item.revenue) }}</span>
+              <span class="dw-row__val num">{{ money(item.revenue) }}</span>
             </li>
           }
         </ul>

@@ -18,8 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 import io.github.baeyung.hisaabkitaab.dto.profit.ProfitResponse;
 import io.github.baeyung.hisaabkitaab.dto.profit.ProfitResponse.DailyProfit;
 import io.github.baeyung.hisaabkitaab.dto.profit.ProfitResponse.DayRef;
+import io.github.baeyung.hisaabkitaab.dto.profit.ProfitResponse.ExpenseLine;
 import io.github.baeyung.hisaabkitaab.dto.profit.ProfitResponse.ItemProfit;
+import io.github.baeyung.hisaabkitaab.dto.profit.ProfitResponse.StatementLine;
 import io.github.baeyung.hisaabkitaab.dto.profit.ProfitResponse.UncostedItem;
+import io.github.baeyung.hisaabkitaab.entity.TransactionLine;
 import io.github.baeyung.hisaabkitaab.enums.InOut;
 import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
 import io.github.baeyung.hisaabkitaab.repository.TransactionLineRepository;
@@ -70,7 +73,8 @@ public class ProfitQueryService
         double costedRevenue = revenue - uncostedRevenue;
         double grossProfit = costedRevenue - cogs;
 
-        double expenses = expensesInRange(storeId, from, to);
+        List<ExpenseLine> expensesByCategory = expensesByCategory(storeId, from, to);
+        double expenses = expensesByCategory.stream().mapToDouble(ExpenseLine::amount).sum();
         double netProfit = grossProfit - expenses;
 
         List<DailyProfit> daily = daily(sales, from, to);
@@ -92,7 +96,9 @@ public class ProfitQueryService
                 lossMakers(sales),
                 uncosted(history, sales),
                 pick(daily, Comparator.comparingDouble(DailyProfit::profit)),
-                pick(daily, Comparator.comparingDouble(DailyProfit::profit).reversed())
+                pick(daily, Comparator.comparingDouble(DailyProfit::profit).reversed()),
+                statement(sales),
+                expensesByCategory
         );
 
         // The whole cost of this page is the size of that first read, so it is what gets logged:
@@ -109,15 +115,27 @@ public class ProfitQueryService
      * Running the shop, not stocking it: an expense is a cash-out whose entry is an EXPENSE.
      * Read off the window's cash lines the way the dashboard reads them, because the only query
      * that returns a shop's expenses returns every one it ever filed.
+     *
+     * <p>Kept by head rather than summed, largest first, because the one figure is what gets
+     * argued with. A shop that books the house's groceries under the shop's expenses is showing
+     * a smaller profit than it made, and the way to see that is to see the heads.
      */
-    private double expensesInRange(String storeId, LocalDate from, LocalDate to)
+    private List<ExpenseLine> expensesByCategory(String storeId, LocalDate from, LocalDate to)
     {
-        return transactionLineRepository.findCashLinesInRange(storeId, from, to)
-                .stream()
-                .filter(line -> line.getTransaction().getEvent() == TransactionEvent.EXPENSE)
-                .filter(line -> line.getInOut() == InOut.OUT)
-                .mapToDouble(line -> line.getValue() != null ? line.getValue() : 0)
-                .sum();
+        Map<String, Double> byCategory = new HashMap<>();
+        for (TransactionLine line : transactionLineRepository.findCashLinesInRange(storeId, from, to))
+        {
+            if (line.getTransaction().getEvent() != TransactionEvent.EXPENSE || line.getInOut() != InOut.OUT)
+            {
+                continue;
+            }
+            String category = line.getExpenseCategory() != null ? line.getExpenseCategory().getName() : null;
+            byCategory.merge(category, line.getValue() != null ? line.getValue() : 0, Double::sum);
+        }
+        return byCategory.entrySet().stream()
+                .map(e -> new ExpenseLine(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparingDouble(ExpenseLine::amount).reversed())
+                .toList();
     }
 
     /**
@@ -227,6 +245,60 @@ public class ProfitQueryService
                     itemId, sale.itemName(), sale.unit(), slot[0], slot[1], slot[2], profit, pct(profit, slot[1])));
         });
         return items;
+    }
+
+    /**
+     * Every design that sold, one line each, most revenue first — the page a shopkeeper would
+     * have written out by hand: how much went, at what rate, what it had cost, what was kept.
+     *
+     * <p>Folds costed and uncosted sales of the same design into the one row. Nothing is left
+     * out on this list, unlike the two ranked ones above it; a design the replay could only
+     * half price shows the half it priced, and says how much it could not.
+     */
+    private List<StatementLine> statement(List<Sale> sales)
+    {
+        // [quantity, revenue, costedQuantity, cogs, uncostedRevenue]
+        Map<String, double[]> totals = new LinkedHashMap<>();
+        Map<String, Sale> firstSeen = new LinkedHashMap<>();
+        for (Sale sale : sales)
+        {
+            firstSeen.putIfAbsent(sale.itemId(), sale);
+            double[] slot = totals.computeIfAbsent(sale.itemId(), id -> new double[5]);
+            slot[0] += sale.quantity();
+            slot[1] += sale.revenue();
+            if (sale.costed())
+            {
+                slot[2] += sale.quantity();
+                slot[3] += sale.cost();
+            }
+            else
+            {
+                slot[4] += sale.revenue();
+            }
+        }
+
+        List<StatementLine> lines = new ArrayList<>(totals.size());
+        totals.forEach((itemId, slot) -> {
+            Sale sale = firstSeen.get(itemId);
+            double costedRevenue = slot[1] - slot[4];
+            double profit = costedRevenue - slot[3];
+            lines.add(new StatementLine(
+                    itemId,
+                    sale.itemName(),
+                    sale.unit(),
+                    slot[0],
+                    slot[0] > EPSILON ? slot[1] / slot[0] : 0,
+                    slot[1],
+                    slot[2],
+                    slot[2] > EPSILON ? slot[3] / slot[2] : 0,
+                    slot[3],
+                    profit,
+                    pct(profit, costedRevenue),
+                    slot[4]));
+        });
+        return lines.stream()
+                .sorted(Comparator.comparingDouble(StatementLine::revenue).reversed())
+                .toList();
     }
 
     /**

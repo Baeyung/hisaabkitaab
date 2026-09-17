@@ -193,7 +193,7 @@ export class Profit {
               label: (c) =>
                 c.datasetIndex === 1
                   ? `${c.dataset.label}: ${Math.round(Number(c.parsed.y))}%`
-                  : `${c.dataset.label}: ${this.locale.money(Number(c.parsed.y))}`,
+                  : `${c.dataset.label}: ${this.money(Number(c.parsed.y))}`,
             },
           },
         },
@@ -225,12 +225,21 @@ export class Profit {
   }
 
   /**
+   * A rupee amount on this page, to the rupee. Everything here is folded from weighted
+   * averages and pro-rata discount shares, so the raw doubles carry paisa that no bill ever
+   * had — "Rs 3,662,752.07" — and the tail reads as precision the figure does not possess.
+   */
+  protected money(value: number): string {
+    return this.locale.money(Math.round(value));
+  }
+
+  /**
    * A cost-derived figure, or a dash when nothing was costed. Used for every number the replay
    * had to price to produce: at zero coverage those are all structurally zero, and a zero read as
    * a measurement is worse than an admission that there is nothing to measure.
    */
   protected costFigure(value: number): string {
-    return this.measurable() ? this.locale.money(value) : '—';
+    return this.measurable() ? this.money(value) : '—';
   }
 
   /**
@@ -242,7 +251,7 @@ export class Profit {
   protected signed(value: number): string {
     return value === 0
       ? this.locale.money(0)
-      : `\u2066− ${this.locale.money(Math.abs(value))}\u2069`;
+      : `\u2066− ${this.money(Math.abs(value))}\u2069`;
   }
 
   /** What share of the money taken the shop actually kept — the headline's one line of context. */
@@ -252,6 +261,15 @@ export class Profit {
 
   protected margin(pct: number): string {
     return this.locale.t('profit.margin', { pct: Math.round(pct) + '' });
+  }
+
+  /**
+   * A per-unit rate on the statement. Rounded to the paisa before formatting: an average over
+   * a window is a long fraction, and "Rs 448.5478" beside "Rs 450" reads as a different kind
+   * of number rather than a nearby one.
+   */
+  protected rate(value: number): string {
+    return this.locale.money(Math.round(value * 100) / 100);
   }
 
   /** Green above water, red below — the same reading as every other amount in the app. */
@@ -289,8 +307,8 @@ export class Profit {
       return '';
     }
     return this.locale.t('profit.trend.aria', {
-      profit: this.locale.money(d.grossProfit),
-      revenue: this.locale.money(d.revenue),
+      profit: this.money(d.grossProfit),
+      revenue: this.money(d.revenue),
     });
   }
 

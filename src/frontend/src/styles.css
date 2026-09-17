@@ -2407,7 +2407,54 @@ a.dw-row__name:hover {
   text-decoration: underline;
 }
 
+/* ── The statement ──────────────────────────────────────────────────────────
+   The working behind the headline as one ruled table — a design a line, the
+   expense heads footed under it, the net at the bottom. The table itself is the
+   app's ordinary .rm-tbl; these two are the notes it carries that no other table
+   does. */
+
+/* Eight columns of figures: a rupee amount that breaks after its "Rs" is two
+   numbers to the eye. Figures hold their line and the wrap scrolls instead, which
+   is what .rm-tablewrap is for; the design's name is the one cell left to wrap. */
+.dw-stmt .rm-tbl td.num,
+.dw-stmt .rm-tbl th {
+  white-space: nowrap;
+}
+
+/* Under a design's name: how much of it sold with no cost known. Amber, not the
+   faint grey the meta line usually takes, because it is the one line on the row
+   that says the figures beside it are incomplete. */
+.dw-stmt__gap {
+  color: var(--kg-amber);
+}
+
+/* The "Expenses" tag ahead of each head in the foot, so the heads read as one
+   group between the gross line and the net without a row of their own to say so. */
+.dw-stmt__head {
+  display: inline;
+  margin-inline-end: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media print {
+  /* A season's statement runs past one page; a card that refuses to break would
+     push it whole onto the next and leave the first half empty. Rows hold. */
+  .dw-stmt {
+    break-inside: auto;
+  }
+  .dw-stmt tr {
+    break-inside: avoid;
+  }
+}
+
 @media (max-width: 860px) {
+  /* A card's hint holds its line on a monitor, where it has the room; on a phone the
+     title and a nowrap hint fight for 350px and the hint loses off the edge. */
+  .dw-card__hint {
+    white-space: normal;
+    text-align: end;
+  }
   .dw-grid {
     grid-template-columns: 1fr;
   }

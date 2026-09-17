@@ -2,6 +2,7 @@ package io.github.baeyung.hisaabkitaab.service.query.support;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,10 @@ import io.github.baeyung.hisaabkitaab.enums.TransactionEvent;
  *       there would read as pure profit, which is a lie in the direction that flatters.</li>
  *   <li>Money is compared with a tolerance, not with {@code ==}: these are doubles folded over
  *       thousands of lines.</li>
+ *   <li>Within one day, goods in are walked before goods out. A bill and the purchase that
+ *       stocked it carry the same date and nothing else orders them — an imported history has
+ *       them seconds apart in whatever order the import ran — and a walk that took the sale
+ *       first would price a shelf that was, by the end of the day, full.</li>
  * </ol>
  *
  * <p>Pure and deterministic, like {@link ReceivableAging} — given the same rows it returns the same
@@ -80,6 +85,7 @@ public final class CostReplay
      * not the window. The average a sale meets is the sum of everything bought before it, so
      * starting the walk at {@code from} would price the window's first bills off an empty shelf.
      * The far end is cut because nothing bought after a sale can change what that sale cost.
+     * Within a day the walk reorders for itself: arrivals first, then everything that left.
      */
     public static List<Sale> priceSales(List<StockLedgerRow> history, LocalDate from, LocalDate to)
     {
@@ -87,7 +93,7 @@ public final class CostReplay
         Map<String, Pool> pools = new HashMap<>();
         List<Sale> sales = new ArrayList<>();
 
-        for (StockLedgerRow row : history)
+        for (StockLedgerRow row : arrivalsFirstWithinADay(history))
         {
             // A PROCESSING entry's raw-material rows name cloth that is not in the catalogue
             // (see V5__processing.sql), so they have no item and no pool to move.
@@ -141,6 +147,22 @@ public final class CostReplay
             pool.give(quantity);
         }
         return sales;
+    }
+
+    /**
+     * The same rows, with each day's goods-in ahead of its goods-out and nothing else moved.
+     *
+     * <p>A stable sort on two keys the caller already ordered by the first of, so rows keep
+     * their given order everywhere this has no opinion. Sorted here rather than in the query
+     * because this is the one reader that cares, and a reader that depends on its input's
+     * ordering for a correct answer should be the one to establish it.
+     */
+    private static List<StockLedgerRow> arrivalsFirstWithinADay(List<StockLedgerRow> history)
+    {
+        List<StockLedgerRow> ordered = new ArrayList<>(history);
+        ordered.sort(Comparator.comparing(StockLedgerRow::businessDate)
+                .thenComparing(row -> row.inOut() == InOut.IN ? 0 : 1));
+        return ordered;
     }
 
     /**

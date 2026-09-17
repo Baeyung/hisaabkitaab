@@ -42,6 +42,32 @@ export interface ProfitDayRef {
   revenue: number;
 }
 
+/**
+ * One design's line on the statement — every sale of it in the window, whether or not the
+ * replay could price it. Rates are window averages; profit and margin cover the costed part
+ * only, and `uncostedRevenue` is the slice they leave out.
+ */
+export interface ProfitStatementLine {
+  itemId: string;
+  name: string;
+  unit: string | null;
+  quantity: number;
+  saleRate: number;
+  revenue: number;
+  costedQuantity: number;
+  costRate: number;
+  cogs: number;
+  profit: number;
+  marginPct: number;
+  uncostedRevenue: number;
+}
+
+/** One expense head's total. `category` is null for lines filed without one. */
+export interface ProfitExpenseLine {
+  category: string | null;
+  amount: number;
+}
+
 export interface Profit {
   from: string;
   to: string;
@@ -62,4 +88,8 @@ export interface Profit {
   /** Null when only one day traded — one day is both, and two cards would read as two facts. */
   bestDay: ProfitDayRef | null;
   worstDay: ProfitDayRef | null;
+  /** The working behind the headline, most revenue first. */
+  statement: ProfitStatementLine[];
+  /** The expenses figure by head, largest first. */
+  expensesByCategory: ProfitExpenseLine[];
 }

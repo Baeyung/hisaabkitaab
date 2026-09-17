@@ -125,6 +125,29 @@ class CostReplayTest
     }
 
     @Test
+    void pricesASaleOffAPurchaseMadeLaterTheSameDay()
+    {
+        // Entered in this order — the bill first, then the invoice it was cut from — which is
+        // how an import lands them and how a shopkeeper catching up on paperwork does too.
+        sell(DAY_1, 4, 340);
+        buy(DAY_1, 864, 258);
+
+        Sale sale = replay(DAY_1, DAY_1).getFirst();
+
+        assertTrue(sale.costed(), "same-day goods are on the shelf for that day's bills");
+        assertEquals(4 * 258, sale.cost(), TOLERANCE);
+    }
+
+    @Test
+    void doesNotLetALaterDaysPurchasePriceAnEarlierSale()
+    {
+        sell(DAY_1, 4, 340);
+        buy(DAY_1.plusDays(1), 864, 258);
+
+        assertFalse(replay(DAY_1, DAY_1).getFirst().costed());
+    }
+
+    @Test
     void walksHistoryBeforeTheWindowButOnlyReportsInsideIt()
     {
         buy(DAY_1, 10, 100);

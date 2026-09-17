@@ -38,7 +38,11 @@ public record ProfitResponse(
         List<ItemProfit> lossMakers,
         List<UncostedItem> uncosted,
         DayRef bestDay,
-        DayRef worstDay
+        DayRef worstDay,
+        /** The working behind the headline: every design sold in the window, one row each. */
+        List<StatementLine> statement,
+        /** The expenses figure, opened up by category, largest first. */
+        List<ExpenseLine> expensesByCategory
 )
 {
     /**
@@ -86,6 +90,45 @@ public record ProfitResponse(
 
     /** The window's best and worst day, for the two callouts over the trend. */
     public record DayRef(LocalDate date, double profit, double revenue)
+    {
+    }
+
+    /**
+     * One design's line on the statement — the figures a shopkeeper would write across a page
+     * to work profit out by hand: how much went, at what rate, what it had cost, what was left.
+     *
+     * <p>Unlike {@link ItemProfit} this row is never dropped for want of a cost. A design whose
+     * sales could not all be priced still sold, and its revenue is still in the total; what it
+     * lacks is shown as the gap between {@code quantity} and {@code costedQuantity}, and the
+     * rates and profit are taken over the costed part only, so nothing here is a guess.
+     *
+     * <p>{@code saleRate} and {@code costRate} are averages over the window, not any one bill's —
+     * the same cloth goes out at three rates in a week, and the statement wants one line for it.
+     */
+    public record StatementLine(
+            String itemId,
+            String name,
+            String unit,
+            double quantity,
+            /** revenue ÷ quantity: what a unit fetched on average, after discounts. */
+            double saleRate,
+            double revenue,
+            /** How much of {@code quantity} the replay could put a cost against. */
+            double costedQuantity,
+            /** cogs ÷ costedQuantity: what a unit had cost on average. Zero when nothing was costed. */
+            double costRate,
+            double cogs,
+            /** Over the costed part only — see the record note. */
+            double profit,
+            double marginPct,
+            /** The slice of this row's revenue that the profit above does not cover. */
+            double uncostedRevenue
+    )
+    {
+    }
+
+    /** One expense head's total over the window. {@code category} is null for the uncategorised. */
+    public record ExpenseLine(String category, double amount)
     {
     }
 }
